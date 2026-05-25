@@ -1,4 +1,4 @@
-.PHONY: dev build lint preview install clean check
+.PHONY: dev build lint preview install clean check generate-api
 
 dev:
 	pnpm dev
@@ -19,3 +19,6 @@ clean:
 	rm -rf dist node_modules
 
 check: lint build
+
+generate-api:
+	pnpm generate-api

@@ -9,13 +9,14 @@ Kinoshka — movie catalog SPA with a home feed, search, filters, and detail pag
 A `Makefile` at the project root wraps all pnpm scripts. Prefer `make` over direct `pnpm` calls.
 
 ```bash
-make dev        # start dev server with HMR
-make build      # type-check (tsc -b) then Vite production build
-make lint       # ESLint over all TS/TSX files
-make preview    # serve the production build locally
-make install    # install dependencies
-make clean      # remove dist and node_modules
-make check      # lint + build (full validation)
+make dev          # start dev server with HMR
+make build        # type-check (tsc -b) then Vite production build
+make lint         # ESLint over all TS/TSX files
+make preview      # serve the production build locally
+make install      # install dependencies
+make clean        # remove dist and node_modules
+make check        # lint + build (full validation)
+make generate-api # regenerate API client from OpenAPI spec (re-run after spec changes)
 ```
 
 No test runner is configured yet.
@@ -33,6 +34,8 @@ React 19 + TypeScript 6 + Vite 8 single-page app.
 **Icons** are sprite-based: `public/icons.svg` holds an SVG sprite; components reference symbols via `<use href="/icons.svg#<id>" />`.
 
 **Fonts:** `index.html` loads three Google Fonts — Instrument Serif (display), Instrument Sans (UI), JetBrains Mono (mono). Use these; don't add new font imports.
+
+**Path aliases** correspond to FSD layers and are configured in both `vite.config.ts` and `tsconfig.app.json`: `@app`, `@pages`, `@widgets`, `@features`, `@entities`, `@shared`. Use these aliases for all cross-layer imports.
 
 ## Project structure
 
@@ -53,6 +56,26 @@ Import direction: `pages → widgets → features → entities → shared`. Neve
 ## Routing
 
 React Router 7 (`react-router@^7.15.1`). Route config lives in `src/app/router.tsx`; provider setup in `src/app/providers.tsx`.
+
+Routes: `/` (home feed), `/search` (search + filters), `/movie/:id` (detail — overview, cast, media tabs).
+
+## API layer
+
+The API client is auto-generated from the Kinopoisk OpenAPI spec using `@siberiacancode/apicraft`.
+
+**Generated files** — never edit manually, regenerate instead:
+- `src/shared/api/instance.gen.ts` — typed `ApiInstance` class built on `@siberiacancode/fetches`
+- `src/shared/api/types.gen.ts` — all request/response types
+
+**Config:** `apicraft.config.ts` reads `APP_API_URL` from `.env.local` as the OpenAPI spec source.
+
+**Environment:** create `.env.local` at the project root before running `make generate-api`:
+```
+APP_API_URL=<Kinopoisk OpenAPI spec URL>
+APP_API_KEY=<your API key>
+```
+
+Import the client via `@shared/api`.
 
 ## Responsive pattern
 
