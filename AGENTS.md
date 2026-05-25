@@ -6,11 +6,16 @@ Kinoshka — movie catalog SPA with a home feed, search, filters, and detail pag
 
 ## Commands
 
+A `Makefile` at the project root wraps all pnpm scripts. Prefer `make` over direct `pnpm` calls.
+
 ```bash
-pnpm dev        # start dev server with HMR
-pnpm build      # type-check (tsc -b) then Vite production build
-pnpm lint       # ESLint over all TS/TSX files
-pnpm preview    # serve the production build locally
+make dev        # start dev server with HMR
+make build      # type-check (tsc -b) then Vite production build
+make lint       # ESLint over all TS/TSX files
+make preview    # serve the production build locally
+make install    # install dependencies
+make clean      # remove dist and node_modules
+make check      # lint + build (full validation)
 ```
 
 No test runner is configured yet.
