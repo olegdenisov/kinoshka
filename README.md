@@ -1,75 +1,48 @@
-# React + TypeScript + Vite
+# Kinoshka
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Каталог фильмов — SPA с лентой на главной, поиском, фильтрами и страницами фильмов (обзор, каст, медиа).
 
-Currently, two official plugins are available:
+## Стек
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19** + **TypeScript 6** + **Vite 8**
+- **React Router 7** — клиентская маршрутизация
+- **React Compiler** — автоматическая мемоизация (`babel-plugin-react-compiler`); ручные `useMemo` / `useCallback` / `memo` не нужны
+- **ESLint 10** + `typescript-eslint`
 
-## React Compiler
+## Команды
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm dev        # dev-сервер с HMR
+pnpm build      # проверка типов (tsc -b) + production-сборка
+pnpm lint       # ESLint по всем TS/TSX-файлам
+pnpm preview    # раздача production-сборки локально
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+> Тест-раннер не настроен.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Архитектура
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Проект следует [Feature-Sliced Design](https://feature-sliced.design/):
+
 ```
+src/
+├── app/        # провайдеры, роутер, глобальные стили
+├── pages/      # компоненты уровня роута
+├── widgets/    # крупные переиспользуемые секции UI (хедер, нижняя навигация, рейлы)
+├── features/   # интерактивные фичи (catalog-filter)
+├── entities/   # бизнес-объекты (movie — типы, данные, UI)
+└── shared/     # утилиты и примитивы (lib/, ui/)
+```
+
+Направление импортов: `pages → widgets → features → entities → shared`. Импорты вверх по слоям запрещены.
+
+## Адаптивность
+
+Страницы и виджеты реализованы парами `*Desktop.tsx` / `*Mobile.tsx`. Хук `useViewport` (`src/shared/lib/useViewport.ts`) определяет, какой вариант отрендерить.
+
+## Соглашения
+
+- **Типы:** использовать `type`, не `interface`
+- **TypeScript:** включены `noUnusedLocals`, `noUnusedParameters`, `erasableSyntaxOnly` — `enum` и `namespace` запрещены
+- **Иконки:** SVG-спрайт `public/icons.svg`; ссылка через `<use href="/icons.svg#<id>" />`
+- **Шрифты:** Instrument Serif, Instrument Sans, JetBrains Mono (Google Fonts, загружаются в `index.html`) — новые шрифты не добавлять
