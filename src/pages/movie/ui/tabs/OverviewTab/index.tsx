@@ -2,29 +2,41 @@ import type { Movie } from '@entities/movie'
 import { MOCK_DETAIL } from '@entities/movie'
 import s from './OverviewTab.module.css'
 
-function SectionHead({ children }: { children: React.ReactNode }) {
-  return <div className={s.sectionHead}>{children}</div>
+type SectionHeadProps = React.PropsWithChildren
+
+const SectionHead = ({ children }: SectionHeadProps) => (
+  <div className={s.sectionHead}>{children}</div>
+)
+
+type MetaRowProps = {
+  label: string
+  value: string
 }
 
-function MetaRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className={s.metaRow}>
-      <div className={s.metaLabel}>{label}</div>
-      <div className={s.metaValue}>{value}</div>
-    </div>
-  )
+const MetaRow = ({ label, value }: MetaRowProps) => (
+  <div className={s.metaRow}>
+    <div className={s.metaLabel}>{label}</div>
+    <div className={s.metaValue}>{value}</div>
+  </div>
+)
+
+type SignalRowProps = {
+  label: string
+  value: string
 }
 
-function SignalRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className={s.signalRow}>
-      <span className={s.signalLabel}>{label}</span>
-      <span className={s.signalValue}>{value}</span>
-    </div>
-  )
+const SignalRow = ({ label, value }: SignalRowProps) => (
+  <div className={s.signalRow}>
+    <span className={s.signalLabel}>{label}</span>
+    <span className={s.signalValue}>{value}</span>
+  </div>
+)
+
+type OverviewTabProps = {
+  m: Movie
 }
 
-export function OverviewTab({ m }: { m: Movie }) {
+export const OverviewTab = ({ m }: OverviewTabProps) => {
   const detail = MOCK_DETAIL
 
   return (

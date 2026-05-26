@@ -6,19 +6,27 @@ import type { LikedState } from '../MovieDesktop/types'
 import { MovieActions } from '../MovieActions'
 import s from './MovieHero.module.css'
 
-function TagPill({ children }: { children: React.ReactNode }) {
-  return <span className={s.tagPill}>{children}</span>
+type TagPillProps = React.PropsWithChildren
+
+const TagPill = ({ children }: TagPillProps) => (
+  <span className={s.tagPill}>{children}</span>
+)
+
+type RatingBlockProps = {
+  label: string
+  value: string
+  sub: string
+  accentClass: string
+  icon?: React.ReactNode
 }
 
-function RatingBlock({ label, value, sub, accentClass, icon }: { label: string; value: string; sub: string; accentClass: string; icon?: React.ReactNode }) {
-  return (
-    <div className={s.ratingBlock}>
-      <div className={s.ratingLabel}>{label}</div>
-      <div className={`${s.ratingValue} ${accentClass}`}>{icon}{value}</div>
-      <div className={s.ratingSub}>{sub}</div>
-    </div>
-  )
-}
+const RatingBlock = ({ label, value, sub, accentClass, icon }: RatingBlockProps) => (
+  <div className={s.ratingBlock}>
+    <div className={s.ratingLabel}>{label}</div>
+    <div className={`${s.ratingValue} ${accentClass}`}>{icon}{value}</div>
+    <div className={s.ratingSub}>{sub}</div>
+  </div>
+)
 
 type MovieHeroProps = {
   movie: Movie
@@ -26,7 +34,7 @@ type MovieHeroProps = {
   onLikedChange: (l: LikedState) => void
 }
 
-export function MovieHero({ movie, liked, onLikedChange }: MovieHeroProps) {
+export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
   const navigate = useNavigate()
 
   return (

@@ -8,22 +8,33 @@ import { StarIcon, PlusIcon, EyeIcon, HeartIcon, ShareIcon, PlayIcon } from '../
 
 type LikedState = { rate: boolean; list: boolean; watched: boolean; fav: boolean }
 
-function TagPillMini({ children }: { children: React.ReactNode }) {
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', height: 20, padding: '0 7px', border: '1px solid rgba(184,173,171,0.15)', borderRadius: 3, fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 500, letterSpacing: '0.1em' }}>{children}</span>
-  )
+type TagPillMiniProps = React.PropsWithChildren
+
+const TagPillMini = ({ children }: TagPillMiniProps) => (
+  <span style={{ display: 'inline-flex', alignItems: 'center', height: 20, padding: '0 7px', border: '1px solid rgba(184,173,171,0.15)', borderRadius: 3, fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 500, letterSpacing: '0.1em' }}>{children}</span>
+)
+
+type MiniStatProps = {
+  label: string
+  value: string
+  accent: string
 }
 
-function MiniStat({ label, value, accent }: { label: string; value: string; accent: string }) {
-  return (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em', color: accent }}>{value}</div>
-    </div>
-  )
+const MiniStat = ({ label, value, accent }: MiniStatProps) => (
+  <div style={{ textAlign: 'center' }}>
+    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+    <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em', color: accent }}>{value}</div>
+  </div>
+)
+
+type MobileActionBtnProps = {
+  icon: React.ReactNode
+  label: string
+  active: boolean
+  onClick: () => void
 }
 
-function MobileActionBtn({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) {
+const MobileActionBtn = ({ icon, label, active, onClick }: MobileActionBtnProps) => {
   return (
     <button onClick={onClick} style={{
       height: 44, borderRadius: 8,
@@ -36,7 +47,11 @@ function MobileActionBtn({ icon, label, active, onClick }: { icon: React.ReactNo
   )
 }
 
-export function MovieMobile({ movie }: { movie: Movie }) {
+type MovieMobileProps = {
+  movie: Movie
+}
+
+export const MovieMobile = ({ movie }: MovieMobileProps) => {
   const navigate = useNavigate()
   const [tab, setTab] = useState('Overview')
   const [liked, setLiked] = useState<LikedState>({ rate: false, list: false, watched: true, fav: false })
@@ -149,7 +164,11 @@ export function MovieMobile({ movie }: { movie: Movie }) {
   )
 }
 
-function MobileOverview({ m }: { m: Movie }) {
+type MobileOverviewProps = {
+  m: Movie
+}
+
+const MobileOverview = ({ m }: MobileOverviewProps) => {
   const detail = MOCK_DETAIL
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -186,7 +205,7 @@ function MobileOverview({ m }: { m: Movie }) {
   )
 }
 
-function MobileCast() {
+const MobileCast = () => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
       {MOCK_DETAIL.cast.map((c) => (
@@ -202,7 +221,11 @@ function MobileCast() {
   )
 }
 
-function MobileMedia({ m }: { m: Movie }) {
+type MobileMediaProps = {
+  m: Movie
+}
+
+const MobileMedia = ({ m }: MobileMediaProps) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ aspectRatio: '16/9', background: `linear-gradient(135deg, oklch(0.2 0.05 ${m.hue}), oklch(0.1 0.03 ${m.hue + 20}))`, border: '1px solid rgba(184,173,171,0.08)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -220,7 +243,11 @@ function MobileMedia({ m }: { m: Movie }) {
   )
 }
 
-function MobileDetailsContent({ m }: { m: Movie }) {
+type MobileDetailsContentProps = {
+  m: Movie
+}
+
+const MobileDetailsContent = ({ m }: MobileDetailsContentProps) => {
   const { details } = MOCK_DETAIL
   const rows = [
     { label: 'Release date', value: details.releaseDate },

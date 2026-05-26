@@ -8,7 +8,7 @@ type ActiveFilterChipsProps = {
   compact?: boolean
 }
 
-export function ActiveFilterChips({ chips, onClearAll, compact = false }: ActiveFilterChipsProps) {
+export const ActiveFilterChips = ({ chips, onClearAll, compact = false }: ActiveFilterChipsProps) => {
   if (compact) {
     return (
       <>

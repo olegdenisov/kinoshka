@@ -6,7 +6,7 @@ type SortSelectProps = {
   onChange: (v: string) => void
 }
 
-export function SortSelect({ value }: SortSelectProps) {
+export const SortSelect = ({ value }: SortSelectProps) => {
   return (
     <div className={s.wrapper}>
       <span className={s.label}>Sort</span>

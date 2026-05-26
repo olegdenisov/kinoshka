@@ -8,7 +8,7 @@ type BottomNavProps = {
   active: NavKey
 }
 
-export function BottomNav({ active }: BottomNavProps) {
+export const BottomNav = ({ active }: BottomNavProps) => {
   const navigate = useNavigate()
 
   const items: { key: NavKey; label: string; icon: typeof HomeIcon; path: string | null }[] = [

@@ -7,7 +7,7 @@ type SearchResultsGridProps = {
   onOpen: (movie: Movie) => void
 }
 
-export function SearchResultsGrid({ movies, onOpen }: SearchResultsGridProps) {
+export const SearchResultsGrid = ({ movies, onOpen }: SearchResultsGridProps) => {
   return (
     <div className={s.grid}>
       {movies.map((m) => (

@@ -1,6 +1,6 @@
 import { RouterProvider } from 'react-router'
 import { router } from './router'
 
-export function Providers() {
+export const Providers = () => {
   return <RouterProvider router={router} />
 }

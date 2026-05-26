@@ -16,7 +16,11 @@ export type { LikedState }
 
 const TABS = ['Overview', 'Cast', 'Media', 'Details']
 
-export function MovieDesktop({ movie }: { movie: Movie }) {
+type MovieDesktopProps = {
+  movie: Movie
+}
+
+export const MovieDesktop = ({ movie }: MovieDesktopProps) => {
   const [tab, setTab] = useState('Overview')
   const [liked, setLiked] = useState<LikedState>({ rate: false, list: false, watched: true, fav: false })
   const related = CATALOG.filter((x) => x.id !== movie.id).slice(0, 6)

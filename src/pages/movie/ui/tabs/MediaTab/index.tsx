@@ -2,7 +2,11 @@ import type { Movie } from '@entities/movie'
 import { PlayIcon } from '@shared/ui'
 import s from './MediaTab.module.css'
 
-export function MediaTab({ m }: { m: Movie }) {
+type MediaTabProps = {
+  m: Movie
+}
+
+export const MediaTab = ({ m }: MediaTabProps) => {
   return (
     <div className={s.root}>
       <div>

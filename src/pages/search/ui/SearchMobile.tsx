@@ -11,7 +11,13 @@ const PER_PAGE = 16
 const TOTAL_PAGES = Math.ceil(TOTAL_RESULTS / PER_PAGE)
 const SORT_OPTIONS = ['Popular', 'Newest', 'Highest rated', 'Most watched', 'A to Z']
 
-function MobilePagination({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
+type MobilePaginationProps = {
+  page: number
+  totalPages: number
+  onChange: (p: number) => void
+}
+
+const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps) => {
   const pages: (number | string)[] = [1]
   const left = Math.max(2, page - 1)
   const right = Math.min(totalPages - 1, page + 1)
@@ -47,7 +53,7 @@ function MobilePagination({ page, totalPages, onChange }: { page: number; totalP
   )
 }
 
-export function SearchMobile() {
+export const SearchMobile = () => {
   const navigate = useNavigate()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)

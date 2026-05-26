@@ -7,7 +7,7 @@ type PosterProps = {
   showLabel?: boolean
 }
 
-export function Poster({ movie, ratio = '2/3', showLabel = true }: PosterProps) {
+export const Poster = ({ movie, ratio = '2/3', showLabel = true }: PosterProps) => {
   const hue = movie.hue ?? 20
 
   const bg = `linear-gradient(155deg,

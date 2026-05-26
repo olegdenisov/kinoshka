@@ -10,7 +10,7 @@ type CardProps = {
   onOpen?: (movie: Movie) => void
 }
 
-export function Card({ movie, variant = 'grid', onOpen }: CardProps) {
+export const Card = ({ movie, variant = 'grid', onOpen }: CardProps) => {
   return (
     <div className={s.card} onClick={() => onOpen?.(movie)}>
       <div className={s.posterContainer}>

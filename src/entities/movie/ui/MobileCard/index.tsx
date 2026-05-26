@@ -8,7 +8,7 @@ type MobileCardProps = {
   onOpen?: (movie: Movie) => void
 }
 
-export function MobileCard({ movie, onOpen }: MobileCardProps) {
+export const MobileCard = ({ movie, onOpen }: MobileCardProps) => {
   return (
     <div onClick={() => onOpen?.(movie)} className={s.card}>
       <div className={s.posterWrapper}>

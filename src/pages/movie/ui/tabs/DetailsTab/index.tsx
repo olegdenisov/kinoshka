@@ -2,7 +2,11 @@ import type { Movie } from '@entities/movie'
 import { MOCK_DETAIL } from '@entities/movie'
 import s from './DetailsTab.module.css'
 
-export function DetailsTab({ m }: { m: Movie }) {
+type DetailsTabProps = {
+  m: Movie
+}
+
+export const DetailsTab = ({ m }: DetailsTabProps) => {
   const { details } = MOCK_DETAIL
   const rows = [
     { label: 'Release date', value: details.releaseDate },

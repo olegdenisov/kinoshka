@@ -6,7 +6,7 @@ type NavPillProps = {
   onClick: () => void
 }
 
-export function NavPill({ label, active, onClick }: NavPillProps) {
+export const NavPill = ({ label, active, onClick }: NavPillProps) => {
   return (
     <button
       onClick={onClick}

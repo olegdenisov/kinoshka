@@ -5,7 +5,7 @@ import { MovieRailMobile } from '@widgets/movie-rail'
 import { SearchIcon } from '../../../shared/ui/Icon'
 import { CATALOG } from '@entities/movie'
 
-export function HomeMobile() {
+export const HomeMobile = () => {
   const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState('all')
 

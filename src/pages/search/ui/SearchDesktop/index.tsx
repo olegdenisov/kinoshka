@@ -15,7 +15,7 @@ const TOTAL_RESULTS = 2846
 const PER_PAGE = 16
 const TOTAL_PAGES = Math.ceil(TOTAL_RESULTS / PER_PAGE)
 
-export function SearchDesktop() {
+export const SearchDesktop = () => {
   const navigate = useNavigate()
   const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } = useFilterState()
   const [page, setPage] = useState(1)

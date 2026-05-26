@@ -10,24 +10,30 @@ const CHIPS = [
   { key: 'anime', label: 'Anime' },
 ]
 
-function Chip({ children, active, onClick }: { children: React.ReactNode; active: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} className={`${s.chip}${active ? ` ${s.chipActive}` : ''}`}>
-      {children}
-    </button>
-  )
+type ChipProps = React.PropsWithChildren<{
+  active: boolean
+  onClick: () => void
+}>
+
+const Chip = ({ children, active, onClick }: ChipProps) => (
+  <button onClick={onClick} className={`${s.chip}${active ? ` ${s.chipActive}` : ''}`}>
+    {children}
+  </button>
+)
+
+type StatProps = {
+  value: string
+  label: string
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className={s.stat}>
-      <div className={s.statValue}>{value}</div>
-      <div className={s.statLabel}>{label}</div>
-    </div>
-  )
-}
+const Stat = ({ value, label }: StatProps) => (
+  <div className={s.stat}>
+    <div className={s.statValue}>{value}</div>
+    <div className={s.statLabel}>{label}</div>
+  </div>
+)
 
-export function HeroSection() {
+export const HeroSection = () => {
   const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState('all')
   const [q, setQ] = useState('')

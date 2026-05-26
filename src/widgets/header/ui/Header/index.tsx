@@ -17,7 +17,7 @@ const navItems = [
   { key: 'anime', label: 'Anime', path: '/search' },
 ]
 
-export function Header({ variant = 'default', activeNav }: HeaderProps) {
+export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
 

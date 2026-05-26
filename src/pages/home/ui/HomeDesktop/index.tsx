@@ -12,7 +12,7 @@ const sections = [
   { title: 'Because you watched "Orbit of Silence"', subtitle: 'Personal', items: CATALOG.slice(6, 14) },
 ]
 
-export function HomeDesktop() {
+export const HomeDesktop = () => {
   return (
     <div className={s.root}>
       <Header activeNav="home" />

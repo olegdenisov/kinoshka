@@ -11,7 +11,7 @@ type MovieRailDesktopProps = {
   items: Movie[]
 }
 
-export function MovieRailDesktop({ title, subtitle, items }: MovieRailDesktopProps) {
+export const MovieRailDesktop = ({ title, subtitle, items }: MovieRailDesktopProps) => {
   const navigate = useNavigate()
   const scrollRef = useRef<HTMLDivElement>(null)
 

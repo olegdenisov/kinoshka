@@ -9,7 +9,7 @@ type MovieRailMobileProps = {
   items: Movie[]
 }
 
-export function MovieRailMobile({ title, subtitle, items }: MovieRailMobileProps) {
+export const MovieRailMobile = ({ title, subtitle, items }: MovieRailMobileProps) => {
   const navigate = useNavigate()
   const openMovie = (movie: Movie) => navigate(`/movie/${movie.id}`)
 

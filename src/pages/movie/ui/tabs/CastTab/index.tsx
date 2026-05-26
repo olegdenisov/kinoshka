@@ -1,7 +1,7 @@
 import { MOCK_DETAIL } from '@entities/movie'
 import s from './CastTab.module.css'
 
-export function CastTab() {
+export const CastTab = () => {
   const { cast } = MOCK_DETAIL
   return (
     <div>

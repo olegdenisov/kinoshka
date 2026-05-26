@@ -1,11 +1,10 @@
 import s from './IconButton.module.css'
 
-type IconButtonProps = {
-  children: React.ReactNode
+type IconButtonProps = React.PropsWithChildren<{
   onClick?: () => void
-}
+}>
 
-export function IconButton({ children, onClick }: IconButtonProps) {
+export const IconButton = ({ children, onClick }: IconButtonProps) => {
   return (
     <button onClick={onClick} className={s.iconButton}>
       {children}

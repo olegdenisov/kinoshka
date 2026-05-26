@@ -2,24 +2,33 @@ import { StarIcon, PlusIcon, EyeIcon, HeartIcon, ShareIcon } from '@shared/ui'
 import type { LikedState } from '../MovieDesktop/types'
 import s from './MovieActions.module.css'
 
-function PrimaryAction({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
-  return (
-    <button onClick={onClick} className={s.primaryBtn}>{icon}{label}</button>
-  )
+type PrimaryActionProps = {
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
 }
 
-function SecondaryAction({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active?: boolean; onClick?: () => void }) {
-  return (
-    <button onClick={onClick} className={`${s.secondaryBtn}${active ? ` ${s.secondaryBtnActive}` : ''}`}>{icon}{label}</button>
-  )
+const PrimaryAction = ({ icon, label, onClick }: PrimaryActionProps) => (
+  <button onClick={onClick} className={s.primaryBtn}>{icon}{label}</button>
+)
+
+type SecondaryActionProps = {
+  icon: React.ReactNode
+  label: string
+  active?: boolean
+  onClick?: () => void
 }
+
+const SecondaryAction = ({ icon, label, active, onClick }: SecondaryActionProps) => (
+  <button onClick={onClick} className={`${s.secondaryBtn}${active ? ` ${s.secondaryBtnActive}` : ''}`}>{icon}{label}</button>
+)
 
 type MovieActionsProps = {
   liked: LikedState
   onChange: (l: LikedState) => void
 }
 
-export function MovieActions({ liked, onChange }: MovieActionsProps) {
+export const MovieActions = ({ liked, onChange }: MovieActionsProps) => {
   return (
     <div className={s.actions}>
       <PrimaryAction icon={<StarIcon filled={liked.rate} size={14} />} label="Rate" onClick={() => onChange({ ...liked, rate: !liked.rate })} />

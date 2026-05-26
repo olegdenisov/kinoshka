@@ -8,7 +8,7 @@ type RelatedMoviesProps = {
   movieTitle: string
 }
 
-export function RelatedMovies({ movies, movieTitle }: RelatedMoviesProps) {
+export const RelatedMovies = ({ movies, movieTitle }: RelatedMoviesProps) => {
   const navigate = useNavigate()
   return (
     <div className={s.section}>

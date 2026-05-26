@@ -6,7 +6,7 @@ type CardBtnProps = {
   square?: boolean
 }
 
-export function CardBtn({ icon, label, square }: CardBtnProps) {
+export const CardBtn = ({ icon, label, square }: CardBtnProps) => {
   return (
     <button
       onClick={(e) => e.stopPropagation()}

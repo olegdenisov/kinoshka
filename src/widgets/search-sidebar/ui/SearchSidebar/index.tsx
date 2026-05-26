@@ -13,44 +13,55 @@ const ALL_GENRES = [
   'Mystery', 'Documentary', 'Historical', 'Adventure', 'Family', 'Slice of Life', 'Fantasy',
 ]
 
-function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className={s.filterGroup}>
-      <div className={s.filterGroupTitle}>{title}</div>
-      {children}
-    </div>
-  )
+type FilterGroupProps = React.PropsWithChildren<{
+  title: string
+}>
+
+const FilterGroup = ({ title, children }: FilterGroupProps) => (
+  <div className={s.filterGroup}>
+    <div className={s.filterGroupTitle}>{title}</div>
+    {children}
+  </div>
+)
+
+type RadioRowProps = {
+  label: string
+  count: string
+  active: boolean
+  onClick: () => void
 }
 
-function RadioRow({ label, count, active, onClick }: { label: string; count: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`${s.radioRow} ${active ? s.radioRowActive : ''}`}
-    >
-      <span className={s.radioRowLeft}>
-        <span className={`${s.radioCircle} ${active ? s.radioCircleActive : ''}`}>
-          {active && <span className={s.radioDot} />}
-        </span>
-        <span className={`${s.radioLabel} ${active ? s.radioLabelActive : ''}`}>{label}</span>
+const RadioRow = ({ label, count, active, onClick }: RadioRowProps) => (
+  <button
+    onClick={onClick}
+    className={`${s.radioRow} ${active ? s.radioRowActive : ''}`}
+  >
+    <span className={s.radioRowLeft}>
+      <span className={`${s.radioCircle} ${active ? s.radioCircleActive : ''}`}>
+        {active && <span className={s.radioDot} />}
       </span>
-      <span className={s.radioCount}>{count}</span>
-    </button>
-  )
+      <span className={`${s.radioLabel} ${active ? s.radioLabelActive : ''}`}>{label}</span>
+    </span>
+    <span className={s.radioCount}>{count}</span>
+  </button>
+)
+
+type GenreChipProps = {
+  label: string
+  active: boolean
+  onClick: () => void
 }
 
-function GenreChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`${s.genreChip} ${active ? s.genreChipActive : ''}`}
-    >
-      {label}
-    </button>
-  )
-}
+const GenreChip = ({ label, active, onClick }: GenreChipProps) => (
+  <button
+    onClick={onClick}
+    className={`${s.genreChip} ${active ? s.genreChipActive : ''}`}
+  >
+    {label}
+  </button>
+)
 
-export function SearchSidebar({ filters, onFiltersChange, onToggleGenre, onReset }: SearchSidebarProps) {
+export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset }: SearchSidebarProps) => {
   return (
     <aside className={s.sidebar}>
       <FilterGroup title="Type">

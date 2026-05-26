@@ -10,7 +10,7 @@ type SearchControlsProps = {
   onSortChange: (v: string) => void
 }
 
-export function SearchControls({ chips, onClearAll, sort, onSortChange }: SearchControlsProps) {
+export const SearchControls = ({ chips, onClearAll, sort, onSortChange }: SearchControlsProps) => {
   return (
     <div className={s.row}>
       <ActiveFilterChips chips={chips} onClearAll={onClearAll} />

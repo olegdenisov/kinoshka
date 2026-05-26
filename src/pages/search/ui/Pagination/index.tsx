@@ -7,7 +7,7 @@ type PaginationProps = {
   onChange: (p: number) => void
 }
 
-export function Pagination({ page, totalPages, onChange }: PaginationProps) {
+export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
   const pages: (number | string)[] = []
   pages.push(1)
   const left = Math.max(2, page - 1)

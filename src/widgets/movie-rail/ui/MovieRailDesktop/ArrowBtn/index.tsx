@@ -5,7 +5,7 @@ type ArrowBtnProps = {
   onClick: () => void
 }
 
-export function ArrowBtn({ dir, onClick }: ArrowBtnProps) {
+export const ArrowBtn = ({ dir, onClick }: ArrowBtnProps) => {
   return (
     <button onClick={onClick} className={s.arrowBtn}>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
