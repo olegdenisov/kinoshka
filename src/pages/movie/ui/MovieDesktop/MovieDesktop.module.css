@@ -1,0 +1,11 @@
+.root {
+  background: #0F0D11;
+  color: #F2F0EF;
+  min-height: 100vh;
+}
+
+.tabContent {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 48px 40px;
+}

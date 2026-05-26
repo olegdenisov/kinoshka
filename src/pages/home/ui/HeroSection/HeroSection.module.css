@@ -1,0 +1,224 @@
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.backgroundGradient {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 20% 20%, oklch(0.35 0.1 30 / 0.45), transparent 60%),
+    radial-gradient(ellipse 50% 70% at 80% 30%, oklch(0.32 0.08 220 / 0.25), transparent 60%),
+    radial-gradient(ellipse 80% 60% at 50% 100%, oklch(0.12 0.02 20), transparent 80%);
+}
+
+.backgroundGrid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image:
+    linear-gradient(to right, rgba(184,173,171,0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(184,173,171,0.3) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black, transparent);
+}
+
+.backgroundFade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, #0F0D11 100%);
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 120px 40px 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  background: rgba(24,22,27,0.7);
+  border: 1px solid rgba(184,173,171,0.12);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #B8ADAB;
+}
+
+.badgeDot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #D18E5F;
+  box-shadow: 0 0 0 4px rgba(209,142,95,0.18);
+  flex-shrink: 0;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: 82px;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  font-weight: 500;
+  margin: 0;
+  text-align: center;
+  max-width: 900px;
+  color: #F2F0EF;
+}
+
+.headingAccent {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: #D18E5F;
+  font-weight: 400;
+}
+
+.headingPunct {
+  color: #D18E5F;
+}
+
+.description {
+  margin: 0;
+  max-width: 540px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  color: #B8ADAB;
+  letter-spacing: -0.005em;
+}
+
+.searchBar {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 18px;
+  background: #18161B;
+  border: 1px solid rgba(184,173,171,0.15);
+  border-radius: 8px;
+  transition: border-color 200ms, box-shadow 200ms;
+}
+
+.searchBar:focus-within {
+  border-color: #D18E5F;
+  box-shadow: 0 0 0 4px rgba(209,142,95,0.12);
+}
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #F2F0EF;
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  letter-spacing: -0.005em;
+}
+
+.searchInput::placeholder {
+  color: #5A5059;
+}
+
+.searchBtn {
+  height: 36px;
+  padding: 0 14px;
+  background: #D18E5F;
+  color: #0F0D11;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 160ms;
+}
+
+.searchBtn:hover {
+  background: #B97A4F;
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+}
+
+.chip {
+  height: 32px;
+  padding: 0 14px;
+  background: rgba(24,22,27,0.6);
+  color: #F2F0EF;
+  border: 1px solid rgba(184,173,171,0.12);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  transition: all 160ms;
+}
+
+.chip:not(.chipActive):hover {
+  background: rgba(184,173,171,0.08);
+}
+
+.chipActive {
+  background: rgba(209,142,95,0.15);
+  color: #D18E5F;
+  border-color: rgba(209,142,95,0.35);
+}
+
+.stats {
+  display: flex;
+  gap: 48px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(184,173,171,0.08);
+  width: 100%;
+  max-width: 640px;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: #92887F;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  color: #F2F0EF;
+  letter-spacing: -0.02em;
+}
+
+.statLabel {
+  text-transform: uppercase;
+}

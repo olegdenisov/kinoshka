@@ -1,0 +1,22 @@
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  background: #18161B;
+  border: 1px solid rgba(184, 173, 171, 0.12);
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #F2F0EF;
+  cursor: pointer;
+}
+
+.label {
+  color: #92887F;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}

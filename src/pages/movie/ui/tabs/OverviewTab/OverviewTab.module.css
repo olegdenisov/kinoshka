@@ -1,0 +1,134 @@
+.root {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 64px;
+}
+
+.sectionHead {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #92887F;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.synopsis {
+  margin: 0 0 32px;
+  max-width: 640px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  color: #F2F0EF;
+  letter-spacing: -0.003em;
+}
+
+.genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 32px;
+}
+
+.genreBadge {
+  height: 28px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(184,173,171,0.06);
+  border: 1px solid rgba(184,173,171,0.12);
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  color: #B8ADAB;
+}
+
+.crew {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.metaRow {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(184,173,171,0.08);
+}
+
+.metaLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #5A5059;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.metaValue {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #F2F0EF;
+}
+
+.signalsBox {
+  background: #18161B;
+  border: 1px solid rgba(184,173,171,0.08);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.signalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(184,173,171,0.06);
+}
+
+.signalRow:last-child {
+  border-bottom: none;
+}
+
+.signalLabel {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #92887F;
+}
+
+.signalValue {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: #F2F0EF;
+}
+
+.recommendBox {
+  margin-top: 16px;
+  background: linear-gradient(135deg, rgba(209,142,95,0.12), rgba(209,142,95,0.02));
+  border: 1px solid rgba(209,142,95,0.25);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.recommendLabel {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #D18E5F;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.recommendText {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #F2F0EF;
+}
+
+.recommendHighlight {
+  color: #D7EEF3;
+  font-style: normal;
+}

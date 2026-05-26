@@ -1,0 +1,24 @@
+.page {
+  background: #0F0D11;
+  color: #F2F0EF;
+  min-height: 100vh;
+}
+
+.layout {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 40px 80px;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 40px;
+}
+
+.countText {
+  text-align: center;
+  margin-top: 16px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #5A5059;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}

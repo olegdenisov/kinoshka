@@ -1,0 +1,11 @@
+.root {
+  background: #0F0D11;
+  color: #F2F0EF;
+  min-height: 100vh;
+}
+
+.rails {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 40px 40px 80px;
+}
