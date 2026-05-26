@@ -1,13 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { MobileHeader } from '../../../widgets/mobile-chrome/ui/MobileHeader'
-import { BottomNav } from '../../../widgets/mobile-chrome/ui/BottomNav'
-import { BottomSheet } from '../../../widgets/mobile-chrome/ui/BottomSheet'
-import { ActiveFilterChips } from '../../../features/catalog-filter/ui/ActiveFilterChips'
-import { useFilterState } from '../../../features/catalog-filter/model/useFilterState'
-import { MobileCard } from '../../../entities/movie/ui/MobileCard'
-import { CATALOG, ALL_GENRES } from '../../../entities/movie/model/catalog'
-import type { Movie } from '../../../entities/movie/model/types'
+import { MobileHeader, BottomNav, BottomSheet } from '@widgets/mobile-chrome'
+import { ActiveFilterChips, useFilterState } from '@features/catalog-filter'
+import { MobileCard, CATALOG, ALL_GENRES } from '@entities/movie'
+import type { Movie } from '@entities/movie'
 import { FilterIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '../../../shared/ui/Icon'
 
 const TOTAL_RESULTS = 2846

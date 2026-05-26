@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router'
-import type { Movie } from '@entities/movie/model/types'
-import { Card } from '@entities/movie/ui/Card'
+import type { Movie } from '@entities/movie'
+import { Card } from '@entities/movie'
 import s from './RelatedMovies.module.css'
 
 type RelatedMoviesProps = {

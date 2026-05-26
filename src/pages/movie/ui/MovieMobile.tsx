@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import type { Movie } from '../../../entities/movie/model/types'
-import { Poster } from '../../../entities/movie/ui/Poster'
-import { MobileCard } from '../../../entities/movie/ui/MobileCard'
-import { MobileHeader } from '../../../widgets/mobile-chrome/ui/MobileHeader'
-import { BottomNav } from '../../../widgets/mobile-chrome/ui/BottomNav'
-import { CATALOG, MOCK_DETAIL } from '../../../entities/movie/model/catalog'
+import type { Movie } from '@entities/movie'
+import { Poster, MobileCard } from '@entities/movie'
+import { MobileHeader, BottomNav } from '@widgets/mobile-chrome'
+import { CATALOG, MOCK_DETAIL } from '@entities/movie'
 import { StarIcon, PlusIcon, EyeIcon, HeartIcon, ShareIcon, PlayIcon } from '../../../shared/ui/Icon'
 
 type LikedState = { rate: boolean; list: boolean; watched: boolean; fav: boolean }

@@ -38,11 +38,29 @@ src/
 
 ## Адаптивность
 
-Страницы и виджеты реализованы парами `*Desktop.tsx` / `*Mobile.tsx`. Хук `useViewport` (`src/shared/lib/useViewport.ts`) определяет, какой вариант отрендерить.
+Страницы и виджеты реализованы парами `*Desktop` / `*Mobile`. Хук `useViewport` (`src/shared/lib/useViewport.ts`) определяет, какой вариант отрендерить.
+
+## Структура компонентов
+
+Каждый компонент живёт в собственной директории с CSS-модулем:
+
+```
+ComponentName/
+├── index.tsx
+└── ComponentName.module.css
+```
+
+Каждый слайс `widgets/` и `features/` предоставляет публичный API через `index.ts` в корне слайса. Всегда импортируй через него, не через внутренние пути:
+
+```ts
+import { Header } from '@widgets/header'          // ✓
+import { Header } from '@widgets/header/ui/Header' // ✗
+```
 
 ## Соглашения
 
 - **Типы:** использовать `type`, не `interface`
 - **TypeScript:** включены `noUnusedLocals`, `noUnusedParameters`, `erasableSyntaxOnly` — `enum` и `namespace` запрещены
+- **Стили:** CSS Modules (`ComponentName.module.css`), hover-состояния через `:hover`, не через `useState`
 - **Иконки:** SVG-спрайт `public/icons.svg`; ссылка через `<use href="/icons.svg#<id>" />`
 - **Шрифты:** Instrument Serif, Instrument Sans, JetBrains Mono (Google Fonts, загружаются в `index.html`) — новые шрифты не добавлять

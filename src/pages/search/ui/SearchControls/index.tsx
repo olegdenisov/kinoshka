@@ -1,5 +1,5 @@
-import { ActiveFilterChips } from '@features/catalog-filter/ui/ActiveFilterChips'
-import type { ActiveChip } from '@features/catalog-filter/model/useFilterState'
+import { ActiveFilterChips } from '@features/catalog-filter'
+import type { ActiveChip } from '@features/catalog-filter'
 import { SortSelect } from '../SortSelect'
 import s from './SearchControls.module.css'
 

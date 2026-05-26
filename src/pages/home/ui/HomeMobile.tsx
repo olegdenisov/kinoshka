@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { MobileHeader } from '../../../widgets/mobile-chrome/ui/MobileHeader'
-import { BottomNav } from '../../../widgets/mobile-chrome/ui/BottomNav'
-import { MovieRail } from '../../../widgets/movie-rail/ui/MovieRail'
+import { MobileHeader, BottomNav } from '@widgets/mobile-chrome'
+import { MovieRailMobile } from '@widgets/movie-rail'
 import { SearchIcon } from '../../../shared/ui/Icon'
-import { CATALOG } from '../../../entities/movie/model/catalog'
+import { CATALOG } from '@entities/movie'
 
 export function HomeMobile() {
   const navigate = useNavigate()
@@ -90,7 +89,7 @@ export function HomeMobile() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 36, paddingBottom: 20 }}>
         {sections.map((s, i) => (
-          <MovieRail key={i} title={s.title} subtitle={s.subtitle} items={s.items} mobile />
+          <MovieRailMobile key={i} title={s.title} subtitle={s.subtitle} items={s.items} />
         ))}
       </div>
 

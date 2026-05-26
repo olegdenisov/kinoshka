@@ -1,6 +1,6 @@
 import { useParams } from 'react-router'
 import { useViewport } from '../../shared/lib/useViewport'
-import { CATALOG } from '../../entities/movie/model/catalog'
+import { CATALOG } from '@entities/movie'
 import { MovieDesktop } from './ui/MovieDesktop'
 import { MovieMobile } from './ui/MovieMobile'
 

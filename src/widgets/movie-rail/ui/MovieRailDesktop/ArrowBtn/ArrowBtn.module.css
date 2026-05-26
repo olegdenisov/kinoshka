@@ -1,0 +1,19 @@
+.arrowBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(184, 173, 171, 0.15);
+  color: #b8adab;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 160ms;
+}
+
+.arrowBtn:hover {
+  background: rgba(209, 142, 95, 0.12);
+  border-color: rgba(209, 142, 95, 0.35);
+  color: #d18e5f;
+}

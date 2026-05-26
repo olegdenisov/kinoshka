@@ -1,5 +1,5 @@
-import type { Movie } from '@entities/movie/model/types'
-import { MOCK_DETAIL } from '@entities/movie/model/catalog'
+import type { Movie } from '@entities/movie'
+import { MOCK_DETAIL } from '@entities/movie'
 import s from './DetailsTab.module.css'
 
 export function DetailsTab({ m }: { m: Movie }) {

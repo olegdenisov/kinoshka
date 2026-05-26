@@ -1,5 +1,5 @@
-import { Card } from '@entities/movie/ui/Card'
-import type { Movie } from '@entities/movie/model/types'
+import { Card } from '@entities/movie'
+import type { Movie } from '@entities/movie'
 import s from './SearchResultsGrid.module.css'
 
 type SearchResultsGridProps = {

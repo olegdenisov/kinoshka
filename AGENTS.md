@@ -79,4 +79,50 @@ Import the client via `@shared/api`.
 
 ## Responsive pattern
 
-Pages and widgets ship paired `*Desktop.tsx` / `*Mobile.tsx` components. The `useViewport` hook (`src/shared/lib/useViewport.ts`) drives which variant renders. Follow this pattern when adding new page or widget components.
+Pages and widgets ship paired `*Desktop` / `*Mobile` components. The `useViewport` hook (`src/shared/lib/useViewport.ts`) drives which variant renders. Follow this pattern when adding new page or widget components.
+
+## Component structure
+
+Every UI component lives in its own directory with a co-located CSS module:
+
+```
+ComponentName/
+├── index.tsx              # named export of the component
+└── ComponentName.module.css
+```
+
+Sub-components (e.g. `NavPill`, `ArrowBtn`) get their own nested directories following the same pattern.
+
+Each slice in `widgets/` and `features/` exposes a **public API** via an `index.ts` at the slice root:
+
+```
+src/widgets/header/
+├── index.ts               # export { Header } from './ui/Header'
+└── ui/
+    ├── Header/
+    │   ├── index.tsx
+    │   └── Header.module.css
+    └── NavPill/
+        ├── index.tsx
+        └── NavPill.module.css
+```
+
+**Imports must always use the slice's public index, not internal paths:**
+
+```ts
+// ✓ correct
+import { Header } from '@widgets/header'
+import { useFilterState } from '@features/catalog-filter'
+
+// ✗ wrong — reaches into internals
+import { Header } from '@widgets/header/ui/Header'
+```
+
+## Styles
+
+All styles use **CSS Modules** (`ComponentName.module.css`). Import as `import s from './ComponentName.module.css'` and apply via `className={s.className}`.
+
+- Hover states → CSS `:hover` pseudo-class (not `useState` + inline style toggling)
+- Conditional classes → template literals: `` `${s.btn} ${active ? s.active : ''}` ``
+- Dynamic values (e.g. computed heights) → inline `style` only when truly necessary
+- CSS variables (`var(--font-body)`, etc.) defined in `src/app/styles/global.css` — use them, don't hardcode

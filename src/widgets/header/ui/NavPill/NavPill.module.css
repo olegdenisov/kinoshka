@@ -1,0 +1,29 @@
+.navPill {
+  height: 34px;
+  padding: 0 14px;
+  background: transparent;
+  color: #b8adab;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  transition: all 160ms;
+}
+
+.navPill:hover {
+  background: rgba(184, 173, 171, 0.06);
+  color: #f2f0ef;
+}
+
+.navPillActive {
+  background: rgba(209, 142, 95, 0.12);
+  color: #d18e5f;
+}
+
+.navPillActive:hover {
+  background: rgba(209, 142, 95, 0.12);
+  color: #d18e5f;
+}

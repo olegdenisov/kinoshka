@@ -1,0 +1,19 @@
+import s from './CardBtn.module.css'
+
+type CardBtnProps = {
+  icon: React.ReactNode
+  label?: string
+  square?: boolean
+}
+
+export function CardBtn({ icon, label, square }: CardBtnProps) {
+  return (
+    <button
+      onClick={(e) => e.stopPropagation()}
+      className={`${s.btn} ${square ? s.btnSquare : ''}`}
+    >
+      {icon}
+      {label && <span>{label}</span>}
+    </button>
+  )
+}

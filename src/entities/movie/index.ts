@@ -1,0 +1,5 @@
+export { Card } from './ui/Card'
+export { MobileCard } from './ui/MobileCard'
+export { Poster } from './ui/Poster'
+export type { Movie, MovieDetail } from './model/types'
+export { CATALOG, ALL_GENRES, MOCK_DETAIL } from './model/catalog'

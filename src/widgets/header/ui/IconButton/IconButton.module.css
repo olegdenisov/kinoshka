@@ -1,0 +1,19 @@
+.iconButton {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: #b8adab;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 160ms;
+}
+
+.iconButton:hover {
+  background: rgba(184, 173, 171, 0.08);
+  color: #f2f0ef;
+}

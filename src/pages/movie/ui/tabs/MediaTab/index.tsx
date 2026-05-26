@@ -1,4 +1,4 @@
-import type { Movie } from '@entities/movie/model/types'
+import type { Movie } from '@entities/movie'
 import { PlayIcon } from '@shared/ui'
 import s from './MediaTab.module.css'
 

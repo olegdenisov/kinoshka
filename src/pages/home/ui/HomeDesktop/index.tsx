@@ -1,7 +1,7 @@
-import { MovieRail } from '@widgets/movie-rail/ui/MovieRail'
-import { CATALOG } from '@entities/movie/model/catalog'
+import { MovieRailDesktop } from '@widgets/movie-rail'
+import { CATALOG } from '@entities/movie'
 import { Footer } from '@shared/ui'
-import { Header } from '@widgets/header/ui/Header'
+import { Header } from '@widgets/header'
 import { HeroSection } from '../HeroSection'
 import s from './HomeDesktop.module.css'
 
@@ -19,7 +19,7 @@ export function HomeDesktop() {
       <HeroSection />
       <div className={s.rails}>
         {sections.map((section, i) => (
-          <MovieRail key={i} title={section.title} subtitle={section.subtitle} items={section.items} />
+          <MovieRailDesktop key={i} title={section.title} subtitle={section.subtitle} items={section.items} />
         ))}
       </div>
       <Footer />

@@ -1,4 +1,4 @@
-import { MOCK_DETAIL } from '@entities/movie/model/catalog'
+import { MOCK_DETAIL } from '@entities/movie'
 import s from './CastTab.module.css'
 
 export function CastTab() {

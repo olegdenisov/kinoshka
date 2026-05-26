@@ -1,0 +1,31 @@
+.btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(184, 173, 171, 0.18);
+  cursor: pointer;
+  background: rgba(15, 13, 17, 0.8);
+  color: #f2f0ef;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+  transition: all 160ms;
+}
+
+.btnSquare {
+  flex: 0 0 auto;
+  padding: 0 8px;
+}
+
+.btn:hover {
+  background: #d18e5f;
+  color: #0f0d11;
+  border-color: transparent;
+}

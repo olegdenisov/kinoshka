@@ -1,0 +1,124 @@
+.card {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.posterWrapper {
+  transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transform-origin: center;
+}
+
+.card:hover .posterWrapper {
+  transform: scale(1.02);
+}
+
+.posterContainer {
+  position: relative;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: linear-gradient(180deg, transparent 40%, rgba(209, 142, 95, 0.18) 100%);
+  opacity: 0;
+  transition: opacity 220ms;
+  pointer-events: none;
+}
+
+.card:hover .overlay {
+  opacity: 1;
+}
+
+.actions {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 220ms;
+}
+
+.card:hover .actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ratingBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px 4px 6px;
+  border-radius: 4px;
+  background: rgba(15, 13, 17, 0.72);
+  backdrop-filter: blur(6px);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #e6b86a;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(230, 184, 106, 0.2);
+}
+
+.typeBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: rgba(15, 13, 17, 0.72);
+  backdrop-filter: blur(6px);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(242, 240, 239, 0.7);
+  border: 1px solid rgba(184, 173, 171, 0.12);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  transition: color 200ms;
+}
+
+.card:hover .title {
+  color: #d7eef3;
+}
+
+.meta {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.metaDot {
+  opacity: 0.4;
+}

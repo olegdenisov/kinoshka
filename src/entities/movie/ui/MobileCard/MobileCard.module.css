@@ -1,0 +1,55 @@
+.card {
+  cursor: pointer;
+}
+
+.posterWrapper {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.rating {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 6px 3px 5px;
+  border-radius: 3px;
+  background: rgba(15, 13, 17, 0.75);
+  backdrop-filter: blur(6px);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  color: #e6b86a;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(230, 184, 106, 0.2);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  color: #f2f0ef;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  margin-bottom: 2px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #92887f;
+  letter-spacing: 0.04em;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.metaDot {
+  opacity: 0.4;
+}
