@@ -31,7 +31,7 @@ React 19 + TypeScript 6 + Vite 8 single-page app.
 
 **TypeScript style:** use `type` (not `interface`) for all type definitions.
 
-**Icons** are sprite-based: `public/icons.svg` holds an SVG sprite; components reference symbols via `<use href="/icons.svg#<id>" />`.
+**Icons** are sprite-based: `public/icons.svg` holds an SVG sprite; components reference symbols via `<use href="/icons.svg#<id>" />`. See the [Icons](#icons) section for available IDs.
 
 **Fonts:** `index.html` loads three Google Fonts — Instrument Serif (display), Instrument Sans (UI), JetBrains Mono (mono). Use these; don't add new font imports.
 
@@ -81,6 +81,9 @@ Import the client via `@shared/api`.
 
 Pages and widgets ship paired `*Desktop` / `*Mobile` components. The `useViewport` hook (`src/shared/lib/useViewport.ts`) drives which variant renders. Follow this pattern when adding new page or widget components.
 
+- Mobile breakpoint: **720px** (`MOBILE_BREAKPOINT` in `useViewport.ts`)
+- `HomeMobile`, `SearchMobile`, `MovieMobile` are flat `.tsx` stubs with no CSS module — desktop variants are complete, mobile variants are scaffolding only.
+
 ## Component structure
 
 Every UI component lives in its own directory with a co-located CSS module:
@@ -126,3 +129,45 @@ All styles use **CSS Modules** (`ComponentName.module.css`). Import as `import s
 - Conditional classes → template literals: `` `${s.btn} ${active ? s.active : ''}` ``
 - Dynamic values (e.g. computed heights) → inline `style` only when truly necessary
 - CSS variables (`var(--font-body)`, etc.) defined in `src/app/styles/global.css` — use them, don't hardcode
+
+### Design tokens
+
+```
+Backgrounds  --bg-primary #0F0D11 · --bg-secondary #18161B · --bg-elevated #211E24 · --bg-hover #2A262F
+Text         --text-primary · --text-secondary · --text-muted · --text-faint
+Accent       --accent-warm (CTA/links) · --accent-warm-hover · --accent-warm-soft (bg tint) · --accent-rating (stars)
+Borders      --border-faint · --border-soft · --border-medium
+Fonts        --font-display · --font-body · --font-serif · --font-mono
+```
+
+### Global utility classes
+
+- `.fade-up` — entrance animation (fadeUp 320ms)
+- `.hide-scrollbar` — hides scrollbar cross-browser
+
+Available keyframes: `shimmer`, `pulse`, `fadeUp`.
+
+## Icons
+
+`public/icons.svg` currently contains only social icons:
+
+```
+bluesky-icon  bluesky-clip  discord-icon  documentation-icon
+github-icon   social-icon   x-icon
+```
+
+For UI icons (search, arrow, close, etc.) either add new symbols to the sprite or use inline SVG — they do not exist yet.
+
+## Key public APIs
+
+| Import | Exports |
+|--------|---------|
+| `@entities/movie` | `Card`, `MobileCard`, `Poster`, `Movie`, `MovieDetail`, `CATALOG`, `MOCK_DETAIL`, `ALL_GENRES` |
+| `@features/catalog-filter` | `useFilterState()`, `ActiveFilterChips`, `FilterState`, `ActiveChip` |
+| `@shared/ui` | `Icon`, `Footer` |
+| `@shared/lib` | `useViewport()` → `{ isMobile: boolean }` |
+| `@shared/api` | `ApiInstance` (generated, not yet wired to any component) |
+
+## Data state
+
+All pages currently render **mock data** from `@entities/movie` (`CATALOG`, `MOCK_DETAIL`, `ALL_GENRES`). The generated `ApiInstance` exists but is not connected to any component. New features should use mock data until API integration is explicitly scoped.
