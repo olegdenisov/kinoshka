@@ -27,12 +27,12 @@
   cursor: pointer;
   padding: 8px 4px;
   border-radius: 6px;
-  color: #92887f;
+  color: var(--text-muted);
   transition: color 140ms;
 }
 
 .navItemActive {
-  color: #d18e5f;
+  color: var(--accent-warm);
 }
 
 .navItemDisabled {

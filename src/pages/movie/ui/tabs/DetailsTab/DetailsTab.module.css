@@ -5,7 +5,7 @@
 .sectionHead {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #92887F;
+  color: var(--text-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 12px;
@@ -15,13 +15,13 @@
   display: grid;
   grid-template-columns: 200px 1fr;
   padding: 14px 0;
-  border-bottom: 1px solid rgba(184,173,171,0.08);
+  border-bottom: 1px solid var(--border-faint);
 }
 
 .rowLabel {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: #92887F;
+  color: var(--text-muted);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -29,5 +29,5 @@
 .rowValue {
   font-family: var(--font-body);
   font-size: 14px;
-  color: #F2F0EF;
+  color: var(--text-primary);
 }

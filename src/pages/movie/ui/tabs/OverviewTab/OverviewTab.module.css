@@ -7,7 +7,7 @@
 .sectionHead {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #92887F;
+  color: var(--text-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 12px;
@@ -19,7 +19,7 @@
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.65;
-  color: #F2F0EF;
+  color: var(--text-primary);
   letter-spacing: -0.003em;
 }
 
@@ -35,12 +35,12 @@
   padding: 0 12px;
   display: inline-flex;
   align-items: center;
-  background: rgba(184,173,171,0.06);
+  background: var(--bg-chip);
   border: 1px solid rgba(184,173,171,0.12);
   border-radius: 4px;
   font-family: var(--font-body);
   font-size: 12.5px;
-  color: #B8ADAB;
+  color: var(--text-secondary);
 }
 
 .crew {
@@ -54,13 +54,13 @@
   flex-direction: column;
   gap: 3px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(184,173,171,0.08);
+  border-bottom: 1px solid var(--border-faint);
 }
 
 .metaLabel {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: #5A5059;
+  color: var(--text-faint);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -68,12 +68,12 @@
 .metaValue {
   font-family: var(--font-body);
   font-size: 14px;
-  color: #F2F0EF;
+  color: var(--text-primary);
 }
 
 .signalsBox {
-  background: #18161B;
-  border: 1px solid rgba(184,173,171,0.08);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-faint);
   border-radius: 8px;
   padding: 24px;
 }
@@ -83,7 +83,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(184,173,171,0.06);
+  border-bottom: 1px solid var(--bg-chip);
 }
 
 .signalRow:last-child {
@@ -93,19 +93,19 @@
 .signalLabel {
   font-family: var(--font-body);
   font-size: 13px;
-  color: #92887F;
+  color: var(--text-muted);
 }
 
 .signalValue {
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 500;
-  color: #F2F0EF;
+  color: var(--text-primary);
 }
 
 .recommendBox {
   margin-top: 16px;
-  background: linear-gradient(135deg, rgba(209,142,95,0.12), rgba(209,142,95,0.02));
+  background: linear-gradient(135deg, var(--accent-warm-tint), rgba(209,142,95,0.02));
   border: 1px solid rgba(209,142,95,0.25);
   border-radius: 8px;
   padding: 20px;
@@ -114,7 +114,7 @@
 .recommendLabel {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #D18E5F;
+  color: var(--accent-warm);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -125,10 +125,10 @@
   font-family: var(--font-body);
   font-size: 13.5px;
   line-height: 1.55;
-  color: #F2F0EF;
+  color: var(--text-primary);
 }
 
 .recommendHighlight {
-  color: #D7EEF3;
+  color: var(--accent-cool);
   font-style: normal;
 }

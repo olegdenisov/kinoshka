@@ -12,7 +12,7 @@
   padding: 0 10px;
   border-radius: 4px;
   background: transparent;
-  color: #B8ADAB;
+  color: var(--text-secondary);
   border: 1px solid rgba(184, 173, 171, 0.1);
   cursor: pointer;
   font-family: var(--font-mono);
@@ -26,24 +26,24 @@
 }
 
 .btn:hover:not(:disabled) {
-  background: rgba(184, 173, 171, 0.08);
-  color: #F2F0EF;
+  background: var(--border-faint);
+  color: var(--text-primary);
 }
 
 .btn:disabled {
-  color: #3A3639;
+  color: var(--text-disabled);
   cursor: default;
 }
 
 .btnActive {
-  background: rgba(209, 142, 95, 0.15);
-  color: #D18E5F;
-  border-color: rgba(209, 142, 95, 0.35);
+  background: var(--accent-warm-soft);
+  color: var(--accent-warm);
+  border-color: var(--accent-warm-border);
 }
 
 .btnActive:hover {
-  background: rgba(209, 142, 95, 0.15);
-  color: #D18E5F;
+  background: var(--accent-warm-soft);
+  color: var(--accent-warm);
 }
 
 .ellipsis {
@@ -54,5 +54,5 @@
   justify-content: center;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: #5A5059;
+  color: var(--text-faint);
 }

@@ -4,17 +4,17 @@
   gap: 8px;
   height: 32px;
   padding: 0 12px;
-  background: #18161B;
+  background: var(--bg-secondary);
   border: 1px solid rgba(184, 173, 171, 0.12);
   border-radius: 4px;
   font-family: var(--font-body);
   font-size: 13px;
-  color: #F2F0EF;
+  color: var(--text-primary);
   cursor: pointer;
 }
 
 .label {
-  color: #92887F;
+  color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 10.5px;
   letter-spacing: 0.1em;

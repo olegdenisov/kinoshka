@@ -3,8 +3,8 @@
   height: 36px;
   border-radius: 999px;
   background: transparent;
-  border: 1px solid rgba(184, 173, 171, 0.15);
-  color: #b8adab;
+  border: 1px solid var(--border-soft);
+  color: var(--text-secondary);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -13,7 +13,7 @@
 }
 
 .arrowBtn:hover {
-  background: rgba(209, 142, 95, 0.12);
-  border-color: rgba(209, 142, 95, 0.35);
-  color: #d18e5f;
+  background: var(--accent-warm-tint);
+  border-color: var(--accent-warm-border);
+  color: var(--accent-warm);
 }

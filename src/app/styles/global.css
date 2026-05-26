@@ -8,14 +8,17 @@
   --bg-secondary: #18161B;
   --bg-elevated: #211E24;
   --bg-hover: #2A262F;
+  --bg-chip: rgba(184, 173, 171, 0.06);
 
   --text-primary: #F2F0EF;
   --text-secondary: #B8ADAB;
   --text-muted: #92887F;
   --text-faint: #5A5059;
+  --text-disabled: #3A3639;
 
   --accent-warm: #D18E5F;
   --accent-warm-hover: #B97A4F;
+  --accent-warm-tint: rgba(209, 142, 95, 0.12);
   --accent-warm-soft: rgba(209, 142, 95, 0.15);
   --accent-warm-border: rgba(209, 142, 95, 0.35);
   --accent-cool: #D7EEF3;
@@ -24,6 +27,8 @@
   --border-faint: rgba(184, 173, 171, 0.08);
   --border-soft: rgba(184, 173, 171, 0.15);
   --border-medium: rgba(184, 173, 171, 0.25);
+
+  --overlay-backdrop: rgba(0, 0, 0, 0.55);
 }
 
 *,

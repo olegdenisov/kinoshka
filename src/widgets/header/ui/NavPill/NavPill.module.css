@@ -2,7 +2,7 @@
   height: 34px;
   padding: 0 14px;
   background: transparent;
-  color: #b8adab;
+  color: var(--text-secondary);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -14,16 +14,16 @@
 }
 
 .navPill:hover {
-  background: rgba(184, 173, 171, 0.06);
-  color: #f2f0ef;
+  background: var(--bg-chip);
+  color: var(--text-primary);
 }
 
 .navPillActive {
-  background: rgba(209, 142, 95, 0.12);
-  color: #d18e5f;
+  background: var(--accent-warm-tint);
+  color: var(--accent-warm);
 }
 
 .navPillActive:hover {
-  background: rgba(209, 142, 95, 0.12);
-  color: #d18e5f;
+  background: var(--accent-warm-tint);
+  color: var(--accent-warm);
 }

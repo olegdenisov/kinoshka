@@ -12,10 +12,10 @@
   gap: 6px;
   height: 30px;
   padding: 0 6px 0 10px;
-  background: rgba(209, 142, 95, 0.12);
+  background: var(--accent-warm-tint);
   border: 1px solid rgba(209, 142, 95, 0.3);
   border-radius: 999px;
-  color: #d18e5f;
+  color: var(--accent-warm);
   font-family: var(--font-body);
   font-size: 12px;
 }
@@ -26,7 +26,7 @@
   border-radius: 999px;
   border: none;
   background: transparent;
-  color: #d18e5f;
+  color: var(--accent-warm);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -39,10 +39,10 @@
   gap: 8px;
   height: 28px;
   padding: 0 6px 0 10px;
-  background: rgba(209, 142, 95, 0.15);
-  border: 1px solid rgba(209, 142, 95, 0.35);
+  background: var(--accent-warm-soft);
+  border: 1px solid var(--accent-warm-border);
   border-radius: 4px;
-  color: #d18e5f;
+  color: var(--accent-warm);
   font-family: var(--font-body);
   font-size: 12px;
   font-weight: 500;
@@ -54,7 +54,7 @@
   border-radius: 3px;
   border: none;
   background: transparent;
-  color: #d18e5f;
+  color: var(--accent-warm);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -66,7 +66,7 @@
   padding: 0 10px;
   background: transparent;
   border: none;
-  color: #92887f;
+  color: var(--text-muted);
   cursor: pointer;
   font-family: var(--font-mono);
   font-size: 10.5px;

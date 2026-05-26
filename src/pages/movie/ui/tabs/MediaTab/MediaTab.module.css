@@ -7,7 +7,7 @@
 .sectionHead {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #92887F;
+  color: var(--text-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 12px;
@@ -16,7 +16,7 @@
 .trailer {
   aspect-ratio: 16 / 9;
   max-width: 900px;
-  border: 1px solid rgba(184,173,171,0.08);
+  border: 1px solid var(--border-faint);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -29,15 +29,15 @@
   position: absolute;
   inset: 0;
   opacity: 0.04;
-  background-image: repeating-linear-gradient(0deg, #F2F0EF 0, #F2F0EF 1px, transparent 1px, transparent 4px);
+  background-image: repeating-linear-gradient(0deg, var(--text-primary) 0, var(--text-primary) 1px, transparent 1px, transparent 4px);
 }
 
 .trailerPlay {
   width: 72px;
   height: 72px;
   border-radius: 999px;
-  background: #D18E5F;
-  color: #0F0D11;
+  background: var(--accent-warm);
+  color: var(--bg-primary);
   border: none;
   cursor: pointer;
   display: flex;
@@ -54,6 +54,6 @@
 
 .screenshot {
   aspect-ratio: 16 / 9;
-  border: 1px solid rgba(184,173,171,0.06);
+  border: 1px solid var(--bg-chip);
   border-radius: 4px;
 }

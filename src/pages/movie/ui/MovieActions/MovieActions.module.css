@@ -11,8 +11,8 @@
   gap: 8px;
   height: 42px;
   padding: 0 20px;
-  background: #D18E5F;
-  color: #0F0D11;
+  background: var(--accent-warm);
+  color: var(--bg-primary);
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -24,7 +24,7 @@
 }
 
 .primaryBtn:hover {
-  background: #B97A4F;
+  background: var(--accent-warm-hover);
 }
 
 .secondaryBtn {
@@ -34,7 +34,7 @@
   height: 42px;
   padding: 0 16px;
   background: transparent;
-  color: #F2F0EF;
+  color: var(--text-primary);
   border: 1px solid rgba(184,173,171,0.2);
   border-radius: 5px;
   cursor: pointer;
@@ -46,11 +46,11 @@
 }
 
 .secondaryBtn:hover:not(.secondaryBtnActive) {
-  color: #D7EEF3;
+  color: var(--accent-cool);
 }
 
 .secondaryBtnActive {
-  background: rgba(209,142,95,0.12);
-  color: #D18E5F;
-  border-color: rgba(209,142,95,0.35);
+  background: var(--accent-warm-tint);
+  color: var(--accent-warm);
+  border-color: var(--accent-warm-border);
 }

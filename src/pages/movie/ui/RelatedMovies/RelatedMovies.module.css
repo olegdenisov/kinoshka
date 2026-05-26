@@ -2,7 +2,7 @@
   max-width: 1440px;
   margin: 40px auto 0;
   padding: 24px 40px 80px;
-  border-top: 1px solid rgba(184,173,171,0.08);
+  border-top: 1px solid var(--border-faint);
 }
 
 .header {
@@ -12,7 +12,7 @@
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #92887F;
+  color: var(--text-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 4px;

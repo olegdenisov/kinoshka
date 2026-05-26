@@ -4,7 +4,7 @@
   z-index: 10;
   background: rgba(15,13,17,0.85);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(184,173,171,0.08);
+  border-bottom: 1px solid var(--border-faint);
 }
 
 .inner {
@@ -21,7 +21,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #92887F;
+  color: var(--text-muted);
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 500;
@@ -30,11 +30,11 @@
 }
 
 .tabBtn:hover {
-  color: #F2F0EF;
+  color: var(--text-primary);
 }
 
 .tabBtnActive {
-  color: #F2F0EF;
+  color: var(--text-primary);
 }
 
 .tabBtnIndicator {
@@ -48,5 +48,5 @@
 }
 
 .tabBtnActive .tabBtnIndicator {
-  background: #D18E5F;
+  background: var(--accent-warm);
 }

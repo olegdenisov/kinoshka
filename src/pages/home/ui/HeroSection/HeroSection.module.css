@@ -32,7 +32,7 @@
 .backgroundFade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 40%, #0F0D11 100%);
+  background: linear-gradient(180deg, transparent 40%, var(--bg-primary) 100%);
 }
 
 .content {
@@ -59,7 +59,7 @@
   font-size: 10.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #B8ADAB;
+  color: var(--text-secondary);
 }
 
 .badgeDot {
@@ -67,7 +67,7 @@
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: #D18E5F;
+  background: var(--accent-warm);
   box-shadow: 0 0 0 4px rgba(209,142,95,0.18);
   flex-shrink: 0;
 }
@@ -81,18 +81,18 @@
   margin: 0;
   text-align: center;
   max-width: 900px;
-  color: #F2F0EF;
+  color: var(--text-primary);
 }
 
 .headingAccent {
   font-family: var(--font-serif);
   font-style: italic;
-  color: #D18E5F;
+  color: var(--accent-warm);
   font-weight: 400;
 }
 
 .headingPunct {
-  color: #D18E5F;
+  color: var(--accent-warm);
 }
 
 .description {
@@ -102,7 +102,7 @@
   font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.55;
-  color: #B8ADAB;
+  color: var(--text-secondary);
   letter-spacing: -0.005em;
 }
 
@@ -114,15 +114,15 @@
   gap: 12px;
   height: 56px;
   padding: 0 18px;
-  background: #18161B;
-  border: 1px solid rgba(184,173,171,0.15);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-soft);
   border-radius: 8px;
   transition: border-color 200ms, box-shadow 200ms;
 }
 
 .searchBar:focus-within {
-  border-color: #D18E5F;
-  box-shadow: 0 0 0 4px rgba(209,142,95,0.12);
+  border-color: var(--accent-warm);
+  box-shadow: 0 0 0 4px var(--accent-warm-tint);
 }
 
 .searchInput {
@@ -130,21 +130,21 @@
   background: transparent;
   border: none;
   outline: none;
-  color: #F2F0EF;
+  color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 15.5px;
   letter-spacing: -0.005em;
 }
 
 .searchInput::placeholder {
-  color: #5A5059;
+  color: var(--text-faint);
 }
 
 .searchBtn {
   height: 36px;
   padding: 0 14px;
-  background: #D18E5F;
-  color: #0F0D11;
+  background: var(--accent-warm);
+  color: var(--bg-primary);
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -157,7 +157,7 @@
 }
 
 .searchBtn:hover {
-  background: #B97A4F;
+  background: var(--accent-warm-hover);
 }
 
 .chips {
@@ -169,7 +169,7 @@
   height: 32px;
   padding: 0 14px;
   background: rgba(24,22,27,0.6);
-  color: #F2F0EF;
+  color: var(--text-primary);
   border: 1px solid rgba(184,173,171,0.12);
   border-radius: 999px;
   cursor: pointer;
@@ -181,13 +181,13 @@
 }
 
 .chip:not(.chipActive):hover {
-  background: rgba(184,173,171,0.08);
+  background: var(--border-faint);
 }
 
 .chipActive {
-  background: rgba(209,142,95,0.15);
-  color: #D18E5F;
-  border-color: rgba(209,142,95,0.35);
+  background: var(--accent-warm-soft);
+  color: var(--accent-warm);
+  border-color: var(--accent-warm-border);
 }
 
 .stats {
@@ -195,14 +195,14 @@
   gap: 48px;
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid rgba(184,173,171,0.08);
+  border-top: 1px solid var(--border-faint);
   width: 100%;
   max-width: 640px;
   justify-content: space-between;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
-  color: #92887F;
+  color: var(--text-muted);
 }
 
 .stat {
@@ -215,7 +215,7 @@
   font-family: var(--font-display);
   font-size: 20px;
   font-weight: 500;
-  color: #F2F0EF;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 

@@ -1,6 +1,6 @@
 .page {
-  background: #0F0D11;
-  color: #F2F0EF;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   min-height: 100vh;
 }
 
@@ -18,7 +18,7 @@
   margin-top: 16px;
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #5A5059;
+  color: var(--text-faint);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }

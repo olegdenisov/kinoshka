@@ -18,7 +18,7 @@
 .backdropOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15,13,17,0.3) 0%, rgba(15,13,17,0.7) 60%, #0F0D11 100%);
+  background: linear-gradient(180deg, rgba(15,13,17,0.3) 0%, rgba(15,13,17,0.7) 60%, var(--bg-primary) 100%);
 }
 
 .backdropLines {
@@ -46,7 +46,7 @@
   font-size: 10.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #92887F;
+  color: var(--text-muted);
 }
 
 .breadcrumbLink {
@@ -58,7 +58,7 @@
 }
 
 .breadcrumbCurrent {
-  color: #B8ADAB;
+  color: var(--text-secondary);
 }
 
 .layout {
@@ -87,7 +87,7 @@
   background: rgba(15,13,17,0.8);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(184,173,171,0.2);
-  color: #F2F0EF;
+  color: var(--text-primary);
   border-radius: 4px;
   cursor: pointer;
   font-family: var(--font-mono);
@@ -109,7 +109,7 @@
   font-size: 10.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #B8ADAB;
+  color: var(--text-secondary);
 }
 
 .tagPill {
@@ -117,7 +117,7 @@
   align-items: center;
   height: 22px;
   padding: 0 8px;
-  border: 1px solid rgba(184,173,171,0.15);
+  border: 1px solid var(--border-soft);
   border-radius: 3px;
   font-family: var(--font-mono);
   font-size: 10px;
@@ -138,7 +138,7 @@
   font-family: var(--font-serif);
   font-style: italic;
   font-size: 18px;
-  color: #92887F;
+  color: var(--text-muted);
   margin-bottom: 32px;
 }
 
@@ -147,8 +147,8 @@
   gap: 32px;
   margin-bottom: 32px;
   padding: 20px 0;
-  border-top: 1px solid rgba(184,173,171,0.08);
-  border-bottom: 1px solid rgba(184,173,171,0.08);
+  border-top: 1px solid var(--border-faint);
+  border-bottom: 1px solid var(--border-faint);
 }
 
 .ratingBlock {
@@ -160,7 +160,7 @@
 .ratingLabel {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #92887F;
+  color: var(--text-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -178,13 +178,13 @@
 .ratingSub {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #5A5059;
+  color: var(--text-faint);
   letter-spacing: 0.04em;
 }
 
-.accentGold { color: #E6B86A; }
-.accentBlue { color: #D7EEF3; }
-.accentMuted { color: #92887F; }
+.accentGold { color: var(--accent-rating); }
+.accentBlue { color: var(--accent-cool); }
+.accentMuted { color: var(--text-muted); }
 
 .synopsis {
   margin: 0;
@@ -192,6 +192,6 @@
   font-family: var(--font-body);
   font-size: 15.5px;
   line-height: 1.6;
-  color: #B8ADAB;
+  color: var(--text-secondary);
   letter-spacing: -0.003em;
 }

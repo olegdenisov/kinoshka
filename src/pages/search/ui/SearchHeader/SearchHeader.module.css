@@ -5,7 +5,7 @@
 .breadcrumb {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #92887F;
+  color: var(--text-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -23,7 +23,7 @@
   margin-left: 14px;
   font-family: var(--font-mono);
   font-size: 14px;
-  color: #92887F;
+  color: var(--text-muted);
   letter-spacing: 0.06em;
   font-weight: 400;
 }

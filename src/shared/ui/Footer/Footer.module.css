@@ -1,5 +1,5 @@
 .footer {
-  border-top: 1px solid rgba(184, 173, 171, 0.08);
+  border-top: 1px solid var(--border-faint);
   padding: 48px 40px;
   max-width: 1440px;
   margin: 0 auto;
@@ -24,18 +24,18 @@
 }
 
 .logoMain {
-  color: #f2f0ef;
+  color: var(--text-primary);
 }
 
 .logoDot {
-  color: #d18e5f;
+  color: var(--accent-warm);
 }
 
 .tagline {
   margin: 0;
   font-family: var(--font-body);
   font-size: 13px;
-  color: #92887f;
+  color: var(--text-muted);
   line-height: 1.55;
   max-width: 240px;
 }
@@ -43,7 +43,7 @@
 .colHeader {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #92887f;
+  color: var(--text-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 14px;
@@ -61,7 +61,7 @@
 .colItem {
   font-family: var(--font-body);
   font-size: 13.5px;
-  color: #b8adab;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
@@ -69,10 +69,10 @@
   display: flex;
   justify-content: space-between;
   padding-top: 24px;
-  border-top: 1px solid rgba(184, 173, 171, 0.08);
+  border-top: 1px solid var(--border-faint);
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #5a5059;
+  color: var(--text-faint);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }

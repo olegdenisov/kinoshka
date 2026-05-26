@@ -6,7 +6,7 @@
   cursor: pointer;
   background: transparent;
   border: none;
-  color: #b8adab;
+  color: var(--text-secondary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -14,6 +14,6 @@
 }
 
 .iconButton:hover {
-  background: rgba(184, 173, 171, 0.08);
-  color: #f2f0ef;
+  background: var(--border-faint);
+  color: var(--text-primary);
 }

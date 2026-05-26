@@ -4,8 +4,8 @@
   align-self: start;
   max-height: calc(100vh - 108px);
   overflow-y: auto;
-  background: #18161b;
-  border: 1px solid rgba(184, 173, 171, 0.08);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-faint);
   border-radius: 8px;
   padding: 4px;
 }
@@ -13,13 +13,13 @@
 /* FilterGroup */
 .filterGroup {
   padding: 16px;
-  border-bottom: 1px solid rgba(184, 173, 171, 0.08);
+  border-bottom: 1px solid var(--border-faint);
 }
 
 .filterGroupTitle {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #92887f;
+  color: var(--text-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 12px;
@@ -48,15 +48,15 @@
 }
 
 .radioRow:hover {
-  background: rgba(184, 173, 171, 0.05);
+  background: var(--bg-chip);
 }
 
 .radioRowActive {
-  background: rgba(209, 142, 95, 0.12);
+  background: var(--accent-warm-tint);
 }
 
 .radioRowActive:hover {
-  background: rgba(209, 142, 95, 0.12);
+  background: var(--accent-warm-tint);
 }
 
 .radioRowLeft {
@@ -70,37 +70,37 @@
   height: 14px;
   border-radius: 999px;
   flex-shrink: 0;
-  border: 1.5px solid rgba(184, 173, 171, 0.25);
+  border: 1.5px solid var(--border-medium);
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .radioCircleActive {
-  border-color: #d18e5f;
+  border-color: var(--accent-warm);
 }
 
 .radioDot {
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: #d18e5f;
+  background: var(--accent-warm);
 }
 
 .radioLabel {
   font-family: var(--font-body);
   font-size: 13.5px;
-  color: #b8adab;
+  color: var(--text-secondary);
 }
 
 .radioLabelActive {
-  color: #f2f0ef;
+  color: var(--text-primary);
 }
 
 .radioCount {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: #5a5059;
+  color: var(--text-faint);
   letter-spacing: 0.04em;
 }
 
@@ -114,9 +114,9 @@
 .genreChip {
   height: 28px;
   padding: 0 10px;
-  background: rgba(184, 173, 171, 0.04);
-  color: #b8adab;
-  border: 1px solid rgba(184, 173, 171, 0.08);
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-faint);
   border-radius: 4px;
   cursor: pointer;
   font-family: var(--font-body);
@@ -126,9 +126,9 @@
 }
 
 .genreChipActive {
-  background: rgba(209, 142, 95, 0.15);
-  color: #d18e5f;
-  border-color: rgba(209, 142, 95, 0.35);
+  background: var(--accent-warm-soft);
+  color: var(--accent-warm);
+  border-color: var(--accent-warm-border);
 }
 
 /* Year range */
@@ -137,7 +137,7 @@
   justify-content: space-between;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: #b8adab;
+  color: var(--text-secondary);
   letter-spacing: 0.04em;
   margin-bottom: 10px;
 }
@@ -155,7 +155,7 @@
   right: 5%;
   top: 0;
   bottom: 0;
-  background: #d18e5f;
+  background: var(--accent-warm);
   border-radius: 2px;
 }
 
@@ -165,8 +165,8 @@
   width: 12px;
   height: 12px;
   border-radius: 999px;
-  background: #f2f0ef;
-  border: 2px solid #d18e5f;
+  background: var(--text-primary);
+  border: 2px solid var(--accent-warm);
   transform: translateX(-50%);
 }
 
@@ -188,9 +188,9 @@
   flex: 1;
   height: 32px;
   border-radius: 4px;
-  background: rgba(184, 173, 171, 0.04);
-  color: #b8adab;
-  border: 1px solid rgba(184, 173, 171, 0.08);
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-faint);
   cursor: pointer;
   font-family: var(--font-mono);
   font-size: 11.5px;
@@ -199,9 +199,9 @@
 }
 
 .ratingBtnActive {
-  background: rgba(209, 142, 95, 0.15);
-  color: #d18e5f;
-  border-color: rgba(209, 142, 95, 0.35);
+  background: var(--accent-warm-soft);
+  color: var(--accent-warm);
+  border-color: var(--accent-warm-border);
 }
 
 /* Reset */
@@ -213,8 +213,8 @@
   width: 100%;
   height: 36px;
   background: transparent;
-  border: 1px solid rgba(184, 173, 171, 0.15);
-  color: #b8adab;
+  border: 1px solid var(--border-soft);
+  color: var(--text-secondary);
   border-radius: 4px;
   cursor: pointer;
   font-family: var(--font-mono);

@@ -134,9 +134,21 @@ All styles use **CSS Modules** (`ComponentName.module.css`). Import as `import s
 
 ```
 Backgrounds  --bg-primary #0F0D11 · --bg-secondary #18161B · --bg-elevated #211E24 · --bg-hover #2A262F
+             --bg-chip rgba(184,173,171,0.06) — subtle chip/button background
+
 Text         --text-primary · --text-secondary · --text-muted · --text-faint
-Accent       --accent-warm (CTA/links) · --accent-warm-hover · --accent-warm-soft (bg tint) · --accent-rating (stars)
-Borders      --border-faint · --border-soft · --border-medium
+             --text-disabled #3A3639 — disabled controls
+
+Accent       --accent-warm (CTA/links) · --accent-warm-hover
+             --accent-warm-tint rgba(209,142,95,0.12) — lightest warm bg (active states)
+             --accent-warm-soft rgba(209,142,95,0.15) — warm bg tint (selected chips)
+             --accent-warm-border rgba(209,142,95,0.35) — warm border
+             --accent-cool #D7EEF3 · --accent-rating #E6B86A (stars)
+
+Borders      --border-faint rgba(184,173,171,0.08) · --border-soft rgba(184,173,171,0.15) · --border-medium rgba(184,173,171,0.25)
+
+Overlay      --overlay-backdrop rgba(0,0,0,0.55) — modal/drawer backdrop
+
 Fonts        --font-display · --font-body · --font-serif · --font-mono
 ```
 
