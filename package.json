@@ -11,10 +11,12 @@
     "generate-api": "npx apicraft generate --config apicraft.config.ts"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.12.0",
     "@siberiacancode/apicraft": "^1.11.1",
     "@siberiacancode/fetches": "^1.14.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-redux": "^9.3.0",
     "react-router": "^7.15.1"
   },
   "devDependencies": {

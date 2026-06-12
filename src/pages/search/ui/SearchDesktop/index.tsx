@@ -10,6 +10,7 @@ import { SearchControls } from '../SearchControls'
 import { SearchResultsGrid } from '../SearchResultsGrid'
 import { Pagination } from '../Pagination'
 import s from './SearchDesktop.module.css'
+import { useGetMoviesQuery } from '@pages/search/api'
 
 const TOTAL_RESULTS = 2846
 const PER_PAGE = 16
@@ -27,6 +28,17 @@ export const SearchDesktop = () => {
 
   const openMovie = (movie: Movie) => navigate(`/movie/${movie.id}`)
 
+  const {
+    data,
+    isLoading,
+  } = useGetMoviesQuery('paris')
+
+  if (isLoading) {
+    return <>Loading...</>
+  }
+
+  console.log({data})
+
   return (
     <div className={s.page}>
       <Header variant="search" activeNav="search" />
@@ -35,7 +47,7 @@ export const SearchDesktop = () => {
         <main>
           <SearchHeader title="Drama films, 2020 onwards" resultsCount={TOTAL_RESULTS} route="/search" />
           <SearchControls chips={activeChips} onClearAll={resetFilters} sort={sort} onSortChange={setSort} />
-          <SearchResultsGrid movies={CATALOG} onOpen={openMovie} />
+          <SearchResultsGrid movies={data?.movies || CATALOG} onOpen={openMovie} />
           <Pagination page={page} totalPages={TOTAL_PAGES} onChange={goToPage} />
           <div className={s.countText}>
             Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, TOTAL_RESULTS)} of {TOTAL_RESULTS.toLocaleString()}

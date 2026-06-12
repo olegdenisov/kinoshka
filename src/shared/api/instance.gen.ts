@@ -227,4 +227,10 @@ export class ApiInstance {
     }
 }
 
-export const instance = new ApiInstance();
+export const instance = new ApiInstance({
+    baseURL: import.meta.env.APP_BASE_URL,
+    headers: {
+        'X-API-KEY': import.meta.env.APP_API_KEY,
+    },
+    parse: 'json'
+});

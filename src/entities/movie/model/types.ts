@@ -9,6 +9,7 @@ export type Movie = {
   genre: string[]
   runtime: string
   hue: number
+  poster?: string
 }
 
 export type CastMember = {
