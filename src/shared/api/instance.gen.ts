@@ -68,6 +68,7 @@ export class ApiInstance {
         this.instance = fetches.create(config);
     }
     getV14MovieById({ config, path }: GetV14MovieByIdRequestParams = {}): Promise<ApicraftFetchesResponse<MovieControllerFindOneV14Response, MovieControllerFindOneV14Error>> {
+        // @ts-ignore — generated: path typed as optional due to default `= {}`
         return this.instance.call("GET", `/v1.4/movie/${path.id}`, {
             ...config
         });

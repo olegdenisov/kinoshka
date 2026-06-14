@@ -1,4 +1,7 @@
-export type MovieType = 'movie' | 'series' | 'anime'
+const MOVIE_TYPES: readonly MovieType[] = ['movie', 'tv-series', 'cartoon', 'animated-series', 'anime']
+export const isMovieType = (s: string): s is MovieType => (MOVIE_TYPES as string[]).includes(s)
+
+export type MovieType = 'movie' | 'tv-series' | 'cartoon' | 'animated-series' | 'anime'
 
 export type Movie = {
   id: number

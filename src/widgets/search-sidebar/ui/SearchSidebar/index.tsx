@@ -1,5 +1,7 @@
 import type { FilterState } from '@features/catalog-filter'
 import s from './SearchSidebar.module.css'
+import { useGetGenresQuery } from '../../api'
+import { isMovieType } from '@entities/movie'
 
 type SearchSidebarProps = {
   filters: FilterState
@@ -7,11 +9,6 @@ type SearchSidebarProps = {
   onToggleGenre: (g: string) => void
   onReset: () => void
 }
-
-const ALL_GENRES = [
-  'Action', 'Drama', 'Sci-Fi', 'Thriller', 'Romance', 'Horror',
-  'Mystery', 'Documentary', 'Historical', 'Adventure', 'Family', 'Slice of Life', 'Fantasy',
-]
 
 type FilterGroupProps = React.PropsWithChildren<{
   title: string
@@ -62,29 +59,39 @@ const GenreChip = ({ label, active, onClick }: GenreChipProps) => (
 )
 
 export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset }: SearchSidebarProps) => {
+  const {data: genres = []} = useGetGenresQuery('genres.name')
+  const {data: types = []} = useGetGenresQuery('type')
+
   return (
     <aside className={s.sidebar}>
       <FilterGroup title="Type">
         <div className={s.radioList}>
-          {[
-            { key: 'movie', label: 'Movies', count: '42,180' },
-            { key: 'series', label: 'Series', count: '8,640' },
-            { key: 'anime', label: 'Anime', count: '4,920' },
-          ].map((t) => (
-            <RadioRow
-              key={t.key} label={t.label} count={t.count}
-              active={filters.type === t.key}
-              onClick={() => onFiltersChange({ ...filters, type: t.key })}
-            />
-          ))}
+          {types.map((t) => {
+            const name = t.name ?? ''
+            const slug = t.slug ?? name
+            return isMovieType(name) ? <RadioRow
+              key={slug} label={name} count={''}
+              active={filters.type === name}
+              onClick={() => onFiltersChange({ ...filters, type: name })}
+            /> : null
+          })}
         </div>
       </FilterGroup>
 
       <FilterGroup title="Genre">
         <div className={s.genreList}>
-          {ALL_GENRES.map((g) => (
-            <GenreChip key={g} label={g} active={filters.genres.includes(g)} onClick={() => onToggleGenre(g)} />
-          ))}
+          {genres.map((g) => {
+            const name = g.name ?? ''
+            const slug = g.slug ?? name
+            return name
+              ? <GenreChip
+                  key={slug}
+                  label={name}
+                  active={filters.genres.includes(name)}
+                  onClick={() => onToggleGenre(name)}
+                />
+              : null
+          })}
         </div>
       </FilterGroup>
 

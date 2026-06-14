@@ -139,7 +139,7 @@ export const SearchMobile = () => {
           <div>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Type</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-              {[{ key: 'movie', label: 'Movies' }, { key: 'series', label: 'Series' }, { key: 'anime', label: 'Anime' }].map((t) => (
+              {([{ key: 'movie', label: 'Movies' }, { key: 'tv-series', label: 'Series' }, { key: 'anime', label: 'Anime' }] as const).map((t) => (
                 <button key={t.key} onClick={() => setFilters({ ...filters, type: t.key })} style={{
                   height: 40, borderRadius: 6,
                   background: filters.type === t.key ? 'rgba(209,142,95,0.15)' : 'rgba(184,173,171,0.04)',

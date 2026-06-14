@@ -18,6 +18,7 @@ const TOTAL_PAGES = Math.ceil(TOTAL_RESULTS / PER_PAGE)
 
 export const SearchDesktop = () => {
   const navigate = useNavigate()
+
   const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } = useFilterState()
   const [page, setPage] = useState(1)
 
@@ -31,13 +32,13 @@ export const SearchDesktop = () => {
   const {
     data,
     isLoading,
-  } = useGetMoviesQuery('paris')
+  } = useGetMoviesQuery(filters)
 
   if (isLoading) {
     return <>Loading...</>
   }
 
-  console.log({data})
+  console.log({data, filters})
 
   return (
     <div className={s.page}>

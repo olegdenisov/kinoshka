@@ -7,7 +7,7 @@ import s from './HomeDesktop.module.css'
 
 const sections = [
   { title: 'Popular this week', subtitle: 'What everyone is watching', items: CATALOG.slice(0, 7) },
-  { title: 'Trending series', subtitle: 'Binge-worthy', items: CATALOG.filter((m) => m.type === 'series').concat(CATALOG.slice(0, 3)).slice(0, 7) },
+  { title: 'Trending series', subtitle: 'Binge-worthy', items: CATALOG.filter((m) => m.type === 'tv-series').concat(CATALOG.slice(0, 3)).slice(0, 7) },
   { title: 'Top anime', subtitle: 'Hand-picked', items: CATALOG.filter((m) => m.type === 'anime').concat(CATALOG.slice(4, 8)).slice(0, 7) },
   { title: 'Because you watched "Orbit of Silence"', subtitle: 'Personal', items: CATALOG.slice(6, 14) },
 ]
