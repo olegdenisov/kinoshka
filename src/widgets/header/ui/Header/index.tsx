@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { SearchIcon, BellIcon } from '@shared/ui'
 import { NavPill } from '../NavPill'
 import { IconButton } from '../IconButton'
+import { SearchField } from '../SearchField'
 import s from './Header.module.css'
 
 type HeaderProps = {
@@ -21,6 +22,10 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
 
+  const handleSearchSubmit = (query: string) => {
+    navigate(`/search?q=${encodeURIComponent(query)}`)
+  }
+
   return (
     <header className={s.header}>
       <div className={s.inner}>
@@ -32,15 +37,7 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
 
         {variant === 'search' ? (
           <div className={s.searchVariantCenter}>
-            <div className={s.searchBox}>
-              <SearchIcon />
-              <input
-                value={q} onChange={(e) => setQ(e.target.value)}
-                placeholder="Search movies, series, anime…"
-                className={s.searchInput}
-              />
-              <span className={s.searchHint}>⌘K</span>
-            </div>
+            <SearchField value={q} onChange={setQ} onSubmit={handleSearchSubmit} />
             <nav className={s.searchVariantNav}>
               {navItems.slice(1).map((n) => (
                 <NavPill key={n.key} label={n.label} active={activeNav === n.key} onClick={() => navigate('/search')} />

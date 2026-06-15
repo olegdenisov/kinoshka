@@ -38,8 +38,6 @@ export const SearchDesktop = () => {
     return <>Loading...</>
   }
 
-  console.log({data, filters})
-
   return (
     <div className={s.page}>
       <Header variant="search" activeNav="search" />

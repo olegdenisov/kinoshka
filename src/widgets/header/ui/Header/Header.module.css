@@ -49,37 +49,6 @@
   gap: 16px;
 }
 
-.searchBox {
-  flex: 1;
-  max-width: 640px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 40px;
-  padding: 0 14px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-soft);
-  border-radius: 6px;
-}
-
-.searchInput {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 13.5px;
-  letter-spacing: -0.005em;
-}
-
-.searchHint {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-  letter-spacing: 0.1em;
-}
-
 .searchVariantNav {
   display: flex;
   gap: 4px;
