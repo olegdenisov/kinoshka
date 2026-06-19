@@ -1,0 +1,946 @@
+# План реализации Kinoshka — Middle → Senior roadmap
+
+## Context
+
+Проект — каталог фильмов/сериалов/анимации на React 19 + TS + Vite + FSD. Цель — продемонстрировать архитектурную зрелость уровня Senior. Текущее состояние `main`: UI-каркас полностью собран, но всё данные мок (`CATALOG` из `@entities/movie`), фильтры/поиск/пагинация — нефункциональный shell, нет global state, нет API-интеграции, нет favorites/theme/popular. Сгенерированный API-клиент (`src/shared/api/instance.gen.ts`) существует, но не подключён и не получает `X-API-KEY`.
+
+В ветке `rtk` уже сделан фундамент: configureStore + RTK Query + `sdkBaseQuery` (обёртка над apicraft SDK) + endpoints `getMovies/getGenres` + URL-sync фильтров.
+
+**Цель плана** — дать roadmap по фазам, который ты последовательно реализуешь на `main`, а затем повторно применишь в ветках для сравнения state-libs, SSR-фреймворков и подходов к auth. Под каждой задачей — короткая заметка «как лучше реализовать». Все пункты — с чекбоксами для отслеживания прогресса.
+
+---
+
+## Прогресс (живой трекер)
+
+Обновляй галочки по мере выполнения. Сводка статуса по фазам:
+
+- [ ] **Phase 0** — Foundation (включая CI/CD, pre-commit, a11y-lint, security baseline)
+- [ ] **Phase 1** — MVP на API (с React 19 Suspense/use/useTransition)
+- [ ] **Phase 2** — Advanced-фичи (с useOptimistic для favorites)
+- [ ] **Phase 2.5** — Pre-launch readiness (Sentry, CSP, E2E, performance budgets)
+- [ ] **Phase 3** — State-libs ветки (multi)
+- [ ] **Phase 4** — SSR ветки (multi)
+- [ ] **Phase 5** — Auth/BFF ветки (multi) + monorepo + Docker
+- [ ] **Phase 6** — Scaling & product polish (Storybook, ADRs, i18n, PWA, visual regression)
+
+**Логика порядка:** соответствует real-world timing — что в продакшен-команде делается на каждом этапе. CI/lint/a11y-baseline ставятся сразу. Observability/Sentry/E2E — перед публичным релизом (иначе нет данных и тесты ломаются). Storybook/ADR/i18n/PWA — когда стек устоялся и есть конкретное требование. Monorepo/Docker — когда появляется второй пакет (BFF).
+
+---
+
+## Фаза 0. Foundation (на `main`, общая база)
+
+База, которая нужна всем последующим фазам и веткам. Делается один раз.
+
+### 0.1 Авторизация API (`X-API-KEY`)
+- [ ] Создан `src/shared/api/client.ts` с singleton `new ApiInstance({ headers: { 'X-API-KEY': ... } })`.
+- [ ] Env переименованы в `VITE_*` (`VITE_APP_API_KEY`, `VITE_APP_BASE_URL`).
+- [ ] `.env.example` добавлен в репо.
+- [ ] `apicraft.config.ts` использует отдельную переменную для генерации.
+- [ ] Все импорты `instance` идут через `client.ts`, а не напрямую из `instance.gen.ts`.
+
+**Как лучше:** `instance.gen.ts` — авто-генерируемый, править нельзя. `ApiInstance` принимает `FetchesParams` (объект из `@siberiacancode/fetches`) — передавай туда `headers` и `baseURL`. Не клади ключ в bundle напрямую — это временное решение, в фазе 5 (BFF) ключ переедет на сервер.
+
+**📚 Refs:**
+- Vite env vars: https://vite.dev/guide/env-and-mode
+- siberiacancode/fetches: https://github.com/siberiacancode/fetches
+
+### 0.2 Универсальные UI-состояния (`src/shared/ui/`)
+- [ ] `Spinner` — CSS-only через `@keyframes`.
+- [ ] `Skeleton` — шиммер (использует `shimmer` keyframe из `global.css`).
+- [ ] `EmptyState` — пустой результат.
+- [ ] `ErrorState` — ошибка + retry-кнопка.
+- [ ] `ErrorBoundary` (классовый — единственное оправданное место) + дефолтный fallback.
+- [ ] `AsyncBoundary` — HOC, инкапсулирующий loading/error/empty/children.
+
+**Как лучше:** один `<AsyncBoundary>` HOC вместо ручного `if loading / if error / if empty / else` в каждом компоненте — не дублируешь код. С React 19 + Suspense это становится `<Suspense fallback={<Skeleton/>}><ErrorBoundary fallback={<ErrorState/>}>{children}</ErrorBoundary></Suspense>` — больше не нужны `isLoading`/`error` пропы.
+
+**📚 Refs:**
+- React Suspense: https://react.dev/reference/react/Suspense
+- react-error-boundary: https://github.com/bvaughn/react-error-boundary
+- React 19 use(): https://react.dev/reference/react/use
+
+### 0.3 Тесты (Vitest + Testing Library)
+- [ ] `pnpm add -D vitest @testing-library/react @testing-library/jest-dom jsdom`.
+- [ ] `vite.config.ts` → секция `test: { environment: 'jsdom', setupFiles, globals: true }`.
+- [ ] `make test` в `Makefile`.
+- [ ] `src/test/setup.ts` с `@testing-library/jest-dom/vitest`.
+- [ ] Минимум один проходящий smoke-тест.
+
+**Как лучше:** не тестируй UI mock-ами — тестируй pure functions (фильтры, selectors, recommendations rule). Для компонентов — только smoke + accessibility через `user-event`. MSW (Mock Service Worker) для мокирования API на integration-уровне — единственное место, где моки оправданы.
+
+**📚 Refs:**
+- Vitest: https://vitest.dev/guide/
+- React Testing Library: https://testing-library.com/docs/react-testing-library/intro/
+- MSW: https://mswjs.io/docs/
+
+### 0.4 Абстракция над localStorage
+- [ ] `src/shared/lib/storage.ts` — `createStorageSlot<T>(key, schema)`.
+- [ ] Zod-валидация при чтении.
+- [ ] Подписка через `window.storage` event (синк между табами).
+- [ ] Тест на edge cases (невалидный JSON, отсутствие ключа, mismatched schema).
+
+**Как лучше:** zod-схема закрывает edge case «несовпадение схем данных» из `plans/main.md` 3.4. Используй `useSyncExternalStore` чтобы React-компоненты подписывались на storage event — это нативный API для интеграции внешних store с React.
+
+**📚 Refs:**
+- Zod: https://zod.dev/
+- useSyncExternalStore: https://react.dev/reference/react/useSyncExternalStore
+- MDN storage event: https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event
+
+### 0.5 Feature Flags (`src/shared/config/features.ts`)
+- [ ] Статический объект с типом `Record<FeatureName, boolean>`.
+- [ ] Хук `useFeatureFlag(name)`.
+- [ ] Опционально: компонент-обёртка `<FeatureGate name="...">`.
+
+**Как лучше:** не привязывай к env — пусть будет в коде, чтобы переключать локально. Позже можно подменить source без изменения сигнатуры.
+
+### 0.6 CI/CD baseline (GitHub Actions)
+- [ ] `.github/workflows/ci.yml`: lint + typecheck + test + build на каждый PR и push в main.
+- [ ] Кэширование `node_modules` / pnpm store (`actions/cache` или `pnpm/action-setup` с встроенным кэшем).
+- [ ] Branch protection на `main`: required checks, no direct push.
+- [ ] PR template `.github/pull_request_template.md` (что поменялось / почему / how to test).
+- [ ] Deploy preview per PR (Vercel или Netlify, free tier — оба подходят для SPA).
+- [ ] Бейджи статуса в README.
+
+**Как лучше:** PR-чек должен быть быстрый (< 3 мин), иначе никто не ждёт. Параллель jobs: lint, typecheck, test — отдельные jobs, не последовательно. Build — отдельно, в конце. Использовать `actions/setup-node@v4` + `cache: 'pnpm'` для авто-кэширования.
+
+**📚 Refs:**
+- GitHub Actions для Node: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+- pnpm в CI: https://pnpm.io/continuous-integration
+- Vercel CLI deploy: https://vercel.com/docs/deployments/git
+- Branch protection: https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches
+
+### 0.7 Pre-commit hooks + commit conventions
+- [ ] `pnpm add -D husky lint-staged @commitlint/cli @commitlint/config-conventional`.
+- [ ] `husky init` → `.husky/pre-commit` запускает `lint-staged`.
+- [ ] `lint-staged` в `package.json`: только staged-файлы (`eslint --fix`, `prettier --write`).
+- [ ] `.husky/commit-msg` запускает `commitlint`.
+- [ ] `commitlint.config.js` extends `@commitlint/config-conventional`.
+- [ ] Опционально: `pnpm dlx commitizen init` для интерактивных коммитов.
+
+**Как лучше:** не запускай весь lint/test в pre-commit — слишком медленно, разработчики начнут использовать `--no-verify`. Только staged-файлы через `lint-staged`. Полный test/typecheck — в pre-push или CI. Commitlint конфигурация: `extends: ['@commitlint/config-conventional']` — типы `feat/fix/docs/refactor/test/chore` + scope = название FSD-слоя.
+
+**📚 Refs:**
+- Husky: https://typicode.github.io/husky/
+- lint-staged: https://github.com/lint-staged/lint-staged
+- commitlint: https://commitlint.js.org/guides/getting-started.html
+- Conventional Commits: https://www.conventionalcommits.org/ru/v1.0.0/
+
+### 0.8 A11y baseline
+- [ ] `pnpm add -D eslint-plugin-jsx-a11y`.
+- [ ] Подключить в eslint config (`plugin:jsx-a11y/recommended`).
+- [ ] Проходка по существующим компонентам: alt на постерах, aria-label на iconic-buttons, label на input'ах.
+- [ ] Smoke keyboard nav: открой каждую страницу с клавиатуры (Tab/Enter/Esc) — все интерактивы доступны.
+- [ ] Focus-visible стили в `global.css` (`:focus-visible { outline: 2px solid var(--accent-warm); }`).
+
+**Как лучше:** включай линтер с первого дня — переписывать a11y потом дороже на порядок. `jsx-a11y` ловит 80% типичных проблем автоматически. Для интерактивов без явной семантики (`<div onClick>`) — заменяй на `<button>` (получишь focus/keyboard/screen reader бесплатно).
+
+**📚 Refs:**
+- eslint-plugin-jsx-a11y: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y
+- WAI-ARIA Authoring Practices: https://www.w3.org/WAI/ARIA/apg/
+- A11y Project checklist: https://www.a11yproject.com/checklist/
+- :focus-visible: https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-visible
+
+### 0.9 Security baseline
+- [ ] Pre-commit hook `gitleaks` (или `trufflehog`) — блокировать коммиты с секретами.
+- [ ] `Dependabot` или `Renovate` config (`.github/dependabot.yml`) — weekly PR с обновлениями зависимостей.
+- [ ] `npm audit --audit-level=high` в CI (fail на high+).
+- [ ] `.env.local` точно в `.gitignore`, `.env.example` с пустыми значениями в репо.
+- [ ] CodeQL action `.github/workflows/codeql.yml` (бесплатно для public-репо).
+
+**Как лучше:** Renovate гибче Dependabot (group updates, schedules, лучше для монорепо). Для одного frontend-репо — Dependabot достаточен. CodeQL — статический анализ от GitHub, ловит security-bugs в TS-коде.
+
+**📚 Refs:**
+- gitleaks: https://github.com/gitleaks/gitleaks
+- Dependabot: https://docs.github.com/en/code-security/dependabot
+- Renovate: https://docs.renovatebot.com/
+- CodeQL для JS/TS: https://codeql.github.com/docs/codeql-language-guides/codeql-for-javascript/
+
+---
+
+## Фаза 1. MVP-фичи на реальном API (на `main`, без global state)
+
+**React 19 заметка:** все новые async-хуки в этой фазе сразу пиши через Suspense + `use()`, а не `useEffect + useState`. Это даст естественную интеграцию с `<AsyncBoundary>` (0.2 — оборачивает `<Suspense fallback={...}>` + `<ErrorBoundary>`). Фильтры/поиск — через `useTransition` для non-blocking updates.
+
+Цель — переход с мока на API без введения state-менеджера. Использовать пока хуки + `useState`/`useReducer`.
+
+### 1.1 Каталог на главной с реальным API
+- [ ] `src/entities/movie/api/getMovies.ts` — обёртка над `instance.getV15Movie(...)` с маппингом DTO → `Movie`.
+- [ ] Хук `useTopRatedMovies()` (sortField=rating.kp, sortType=-1).
+- [ ] Хук `useNewMovies()` (year=current).
+- [ ] Хук `useMoviesByGenre(genre)`.
+- [ ] `HomeDesktop`: rails используют новые хуки, `CATALOG` удалён из импортов на главной.
+- [ ] Skeleton при загрузке rails.
+
+**Как лучше:** не тащи всё в один хук. Узкие хуки — в фазе 3 они станут endpoints/atoms/queries без изменения API на уровне UI. С React 19 use(): `const movies = use(moviesPromise)` внутри Suspense — функции возвращают promise, компонент его читает. Дедупликация запросов: внешний кэш `const cache = new Map<string, Promise>()` (примитивный, но работает до Phase 3).
+
+**📚 Refs:**
+- React use(): https://react.dev/reference/react/use
+- Suspense patterns: https://react.dev/reference/react/Suspense#displaying-a-fallback-while-content-is-loading
+
+### 1.2 Поиск с debounce
+- [ ] Хук `useSearch(query)` с debounce 250ms.
+- [ ] Использование `useDeferredValue` для рендера.
+- [ ] Endpoint `instance.getV14MovieSearch(...)`.
+- [ ] URL-sync через `useSearchParams()` (`?q=...`).
+- [ ] Loading/empty/error состояния.
+
+**Как лучше:** `useDeferredValue` сам по себе не дебаунсит сетевые запросы — это про рендеринг-приоритеты. Нужен явный debounce поверх. `useTransition` для «не блокировать input при дорогом фильтрационном update».
+
+**📚 Refs:**
+- useDeferredValue: https://react.dev/reference/react/useDeferredValue
+- useTransition: https://react.dev/reference/react/useTransition
+- React Router useSearchParams: https://reactrouter.com/api/hooks/useSearchParams
+
+### 1.3 Фильтры с URL-sync
+- [ ] `useFilterState()` расширен URL-sync (паттерн из rtk-ветки перенесён в main).
+- [ ] `getFilterFromSearchParams()` / `filtersToParams()` в `features/catalog-filter/lib/`.
+- [ ] `/search` использует фильтры в запросе к API.
+- [ ] Жанры подгружаются через `getV1MoviePossibleValuesByField({ field: 'genres.name' })`.
+- [ ] Активные чипы рендерятся из URL-параметров.
+
+**Как лучше:** URL — single source of truth для фильтров (shareable links, back/forward работают). Локальный state — только для UI-черновика, если будет «Применить».
+
+### 1.4 Пагинация
+- [ ] `/search` — нумерованная (offset, v1.4).
+- [ ] Главная rails — `limit: 10`, без пагинации.
+- [ ] Корректная обработка last page / total = 0.
+- [ ] Сохранение страницы в URL (`?page=2`).
+
+**Как лучше:** для каталога/главной планируй infinite scroll (см. 2.7 virtualization) — современнее.
+
+### 1.5 Детальная страница
+- [ ] `instance.getV14MovieById(...)` подключён, `MOCK_DETAIL` удалён.
+- [ ] Tabs: Overview, Cast, Details, Media.
+- [ ] Параллельные запросы (movie + images + similar) через `Promise.allSettled`.
+- [ ] Skeleton при загрузке деталей.
+- [ ] 404-обработка несуществующих ID.
+
+**Как лучше:** не делай waterfall — параллель через `Promise.allSettled` (допускаешь частичный отказ media/similar). В Suspense-стиле: дёрни оба promise сразу, передай в use() — Suspense сам разберётся с lifecycle.
+
+**📚 Refs:**
+- Promise.allSettled: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled
+
+### 1.6 Loading / Empty / Error везде
+- [ ] `AsyncBoundary` (из 0.2) обёрнут вокруг каждой async-секции.
+- [ ] Skeleton — для контентных страниц.
+- [ ] Spinner — для коротких операций.
+- [ ] Retry-кнопки реально дёргают повторный fetch.
+
+**Как лучше:** Skeleton > Spinner для контента — UX лучше (видно структуру до загрузки).
+
+---
+
+## Фаза 2. Advanced-фичи (на `main`)
+
+### 2.1 Favorites ⭐
+- [ ] `features/favorites/` создан, модель `{ ids: number[] }`.
+- [ ] Хранение через `createStorageSlot` (0.4) с zod-схемой.
+- [ ] Хук `useFavorites()` + actions `toggle/add/remove/clear`.
+- [ ] Selector `isFavorite(id)`.
+- [ ] Хук `useFavoriteMovies()` подгружает данные по ID (`Promise.allSettled`).
+- [ ] Кнопка-сердечко в `entities/movie/ui/Card` с `useOptimistic` (мгновенный UI-отклик).
+- [ ] Страница `/favorites` с пустым state.
+- [ ] Edge case: удалённый контент (server 404) — фильтр fulfilled.
+- [ ] Edge case: cross-tab sync через `storage` event.
+- [ ] Edge case: zod-валидация при init, fallback на пустой массив.
+
+**Как лучше:** только ID (как в плане). Подгрузка батчем + кэширование. С глобальным state (фаза 3) станет тривиально. `useOptimistic` особенно важен на медленной сети (фаза 5, когда favorites переедут на сервер) — UI не ждёт ответа.
+
+**📚 Refs:**
+- useOptimistic: https://react.dev/reference/react/useOptimistic
+- BroadcastChannel API (для cross-tab — альтернатива storage-event): https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel
+
+### 2.2 Theme toggle 🌙
+- [ ] Светлые токены `:root[data-theme="light"] { ... }` в `global.css`.
+- [ ] `features/theme/`, модель `'light' | 'dark' | 'system'`.
+- [ ] `useTheme()` — атрибут `data-theme` на `<html>`, слушает `prefers-color-scheme` если `system`.
+- [ ] Persist в localStorage.
+- [ ] Toggle-кнопка в `Header`.
+- [ ] Нет FOUC (применять тему до первого рендера, inline `<script>` в `index.html`).
+
+**Как лучше:** один атрибут на `<html>` + CSS-переменные = O(1) переключение без re-render всего дерева. FOUC решается inline-скриптом в `<head>` ДО `<body>`: читает localStorage, ставит `data-theme` синхронно. Скрипт минимальный (10 строк) — embed прямо в `index.html`.
+
+**📚 Refs:**
+- prefers-color-scheme: https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme
+- Theme switching no-FOUC pattern: https://www.joshwcomeau.com/react/dark-mode/
+- color-scheme CSS property: https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme
+
+### 2.3 Popular this week 🔥
+- [ ] Endpoint `getV14ListBySlug({ path: { slug: 'top10-week' } })` (или аналогичный — проверь slug в spec).
+- [ ] Rail на главной + страница `/popular`.
+- [ ] Кэш на 24h (при появлении Query-tool в фазе 3 — `staleTime: 24h`).
+
+**Как лучше:** агрессивный кэш — popular меняется редко.
+
+### 2.4 Recommendations 🎯 (rule-based)
+- [ ] `features/recommendations/` создан.
+- [ ] Pure-функция `computeRecommendationQuery(favorites): Query` — топ-3 жанра + средний рейтинг, exclude favoriteIds.
+- [ ] Юнит-тесты на pure rule.
+- [ ] Хук `useRecommendations()`.
+- [ ] Страница `/recommendations` с empty-state «добавь в избранное».
+
+**Как лучше:** правило в pure-функции (тестируется в 0.3). Composition: data → pure rule → query → data.
+
+### 2.5 Mobile-варианты
+- [ ] `HomeMobile` полноценная версия (вертикальные rails).
+- [ ] `SearchMobile` полноценная версия (drawer-фильтры).
+- [ ] `MovieMobile` полноценная версия.
+- [ ] Data-логика вынесена в `model/` и переиспользована между desktop+mobile.
+
+**Как лучше:** не дублируй data-логику — общие хуки, различные UI-композиции.
+
+### 2.6 Error boundaries
+- [ ] Один global ErrorBoundary в `app/`.
+- [ ] Per-route ErrorBoundary в `pages/*`.
+- [ ] Fallback с retry + ссылкой на главную.
+- [ ] Опционально: `react-error-boundary` библиотека.
+
+**Как лучше:** `react-error-boundary` > свой класс, если не хочешь писать `componentDidCatch`.
+
+### 2.7 Performance — virtualization
+- [ ] `@tanstack/react-virtual` (либо `react-window`) для grid на `/search`.
+- [ ] То же для rails на главной.
+- [ ] `<img loading="lazy" decoding="async" />` на постерах.
+- [ ] Lighthouse Performance измерен до/после.
+
+**Как лучше:** React Compiler уже мемоизирует — `useMemo`/`useCallback` НЕ добавляй (см. AGENTS.md). `IntersectionObserver` для lazy-mount тяжёлых секций (related movies, cast tab). `content-visibility: auto` в CSS для off-screen rails — браузер сам пропускает рендер невидимого.
+
+**📚 Refs:**
+- @tanstack/react-virtual: https://tanstack.com/virtual/latest/docs/introduction
+- react-window: https://github.com/bvaughn/react-window
+- content-visibility: https://developer.chrome.com/docs/css-ui/content-visibility
+- Image loading=lazy: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#lazy
+- React Compiler: https://react.dev/learn/react-compiler
+
+---
+
+## Фаза 2.5. Pre-launch readiness (на `main`, перед публичным релизом)
+
+После Phase 2 у тебя working SPA с фичами. Прежде чем дальше углубляться в state-libs / SSR / auth — приведи в порядок то, что в реальной команде делается за 1-4 недели до публичного запуска.
+
+### 2.5.1 Sentry — error tracking + source maps
+- [ ] `pnpm add @sentry/react @sentry/vite-plugin`.
+- [ ] Инициализация в `src/app/providers.tsx` (только production-сборка).
+- [ ] Sentry-вариант `ErrorBoundary` оборачивает global boundary.
+- [ ] Source maps загружаются в Sentry при build (Vite plugin), но не паблишатся в `dist/`.
+- [ ] DSN в `.env.local` как `VITE_SENTRY_DSN`.
+- [ ] PII scrubbing включён.
+
+**Как лучше:** sample rate 0.1-0.2 в production — не платишь за весь трафик. Release tagging через `process.env.npm_package_version` + git SHA в meta. Подключи Sentry через `Sentry.ErrorBoundary` — оно само сообщает в Sentry о пойманных ошибках.
+
+**📚 Refs:**
+- Sentry React: https://docs.sentry.io/platforms/javascript/guides/react/
+- Sentry Vite plugin (source maps): https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite/
+- Sentry releases: https://docs.sentry.io/product/releases/
+
+### 2.5.2 Web Vitals + analytics
+- [ ] `pnpm add web-vitals`.
+- [ ] Репортинг LCP/CLS/INP/FCP/TTFB в Sentry (через `Sentry.metrics`) или PostHog.
+- [ ] Analytics: PostHog (self-hosted free tier) либо Plausible (privacy-first, без cookie-баннера).
+- [ ] Event tracking минимальный: page view, search submitted, filter changed, favorite added.
+
+**Как лучше:** не Google Analytics — для портфолио privacy-friendly стек (Plausible/PostHog/Umami) выглядит зрелее. Cookie banner с GA = legal-overhead, для каталога фильмов не нужно. INP (Interaction to Next Paint) — новая Core Web Vital вместо FID с 2024, обязательно её мониторь.
+
+**📚 Refs:**
+- web-vitals: https://github.com/GoogleChrome/web-vitals
+- Plausible: https://plausible.io/docs
+- PostHog: https://posthog.com/docs
+- INP метрика: https://web.dev/articles/inp
+
+### 2.5.3 Performance budgets + bundle visualization
+- [ ] `pnpm add -D size-limit @size-limit/preset-app rollup-plugin-visualizer`.
+- [ ] `size-limit` config в `package.json`: лимиты на entry bundle, vendor, per-route chunk.
+- [ ] `size-limit` job в CI — fail при превышении.
+- [ ] `rollup-plugin-visualizer` в `vite.config.ts` (mode `--analyze` → `dist/stats.html`).
+- [ ] Route-based code splitting через `React.lazy` (если ещё не сделано).
+
+**Как лучше:** не ставь лимит «с потолка» — измерь текущий размер, прибавь 10-20%, поставь как baseline. Каждый новый чанк/dep — explicit решение. `bundle-stats-action` в CI комментирует diff бандла в PR.
+
+**📚 Refs:**
+- size-limit: https://github.com/ai/size-limit
+- rollup-plugin-visualizer: https://github.com/btd/rollup-plugin-visualizer
+- React lazy + Suspense (code splitting): https://react.dev/reference/react/lazy
+- bundlejs.com (онлайн bundle size check): https://bundlejs.com/
+
+### 2.5.4 CSP headers + security
+- [ ] CSP meta-тег в `index.html` в `report-only` режиме сначала.
+- [ ] Endpoint для CSP-violations (можно в Sentry).
+- [ ] После 1-2 недель без legitimate violations — переключение на enforce.
+- [ ] Дополнительно: `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` (через хостинг-конфиг — `vercel.json`, `netlify.toml`, `_headers`).
+- [ ] SRI (Subresource Integrity) для external scripts (если есть).
+
+**Как лучше:** включай CSP в production, не в dev — иначе мешает HMR. В фазе 4 (SSR) — заголовки выставляются сервером, не meta-тегом. Прогони итоговую конфигурацию через CSP Evaluator.
+
+**📚 Refs:**
+- MDN CSP: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
+- CSP Evaluator (Google): https://csp-evaluator.withgoogle.com/
+- Vercel security headers: https://vercel.com/guides/how-to-add-security-headers-to-your-nextjs-app
+- securityheaders.com — оценка прод-сайта: https://securityheaders.com/
+
+### 2.5.5 E2E тесты (Playwright) с axe-core
+- [ ] `pnpm add -D @playwright/test @axe-core/playwright`.
+- [ ] `npx playwright install` — установка браузеров.
+- [ ] `e2e/` папка с smoke-тестами:
+  - [ ] Главная грузится, rails отрисованы.
+  - [ ] Поиск работает (введи → результаты).
+  - [ ] Фильтр работает (выбери жанр → URL обновился → результаты изменились).
+  - [ ] Деталь открывается, табы переключаются.
+  - [ ] Favorites: добавить → перезагрузить → присутствует.
+  - [ ] Theme toggle меняет атрибут на `<html>`.
+- [ ] A11y-проверка через `AxeBuilder` в каждом E2E-тесте (нет critical violations).
+- [ ] E2E job в CI на каждый PR (параллельные шарды, `--workers=4`).
+
+**Как лучше:** только critical user journeys в E2E. Не пытайся покрыть всё — это будет hell maintenance. Edge-cases — unit/integration тесты. Используй `data-testid` только когда нет семантического селектора — приоритет: role > label > text > testid.
+
+**📚 Refs:**
+- Playwright: https://playwright.dev/docs/intro
+- Playwright a11y testing: https://playwright.dev/docs/accessibility-testing
+- @axe-core/playwright: https://github.com/dequelabs/axe-core-npm/tree/develop/packages/playwright
+- Testing Library priority guide: https://testing-library.com/docs/queries/about/#priority
+
+### 2.5.6 Lighthouse в CI
+- [ ] `@lhci/cli` job в CI на preview-deploy URL.
+- [ ] Бюджеты: Performance ≥ 90, A11y ≥ 95, SEO ≥ 95, Best Practices ≥ 90.
+- [ ] Fail PR при просадке.
+- [ ] Lighthouse-bot комментирует diff в PR (опционально).
+
+**Как лучше:** запускай на preview URL, а не локально — реальное сетевое окружение, корректные метрики.
+
+**📚 Refs:**
+- Lighthouse CI: https://github.com/GoogleChrome/lighthouse-ci
+- Lighthouse CI GitHub Action: https://github.com/treosh/lighthouse-ci-action
+- web.dev Lighthouse guide: https://developer.chrome.com/docs/lighthouse/overview
+
+### 2.5.7 Telemetry дашборд
+- [ ] Sentry — alert на error rate > X%.
+- [ ] Web Vitals в Sentry/PostHog — алёрт на P75 LCP > 2.5s.
+- [ ] PostHog/Plausible — конверсия по ключевым flows.
+
+**Как лучше:** алёрты должны быть actionable. Не «error rate > 0» — это шум. «P95 LCP > 4s в течение 10 мин» — это сигнал.
+
+---
+
+## Фаза 3. State management — параллельные ветки
+
+Каждая ветка повторяет Phases 1+2, но через свой state-tool. Цель — сравнить DX, бойлерплейт, перформанс, размер бандла.
+
+### 3.1 `rtk` (уже начато)
+- [ ] Favorites в `createSlice` с persist (`redux-persist` или listener middleware).
+- [ ] Theme в `createSlice` с persist.
+- [ ] `RTK Query` mutation для `toggleFavorite` (демо optimistic update).
+- [ ] Server-side pagination в `getMovies` endpoint.
+- [ ] Tag-based invalidation для recommendations.
+- [ ] README ветки: разбор паттернов RTK.
+
+**Как лучше:** не дроби slices попасно — один `uiSlice` для глобального UI-стейта + RTK Query для async.
+
+**📚 Refs:**
+- Redux Toolkit: https://redux-toolkit.js.org/
+- RTK Query: https://redux-toolkit.js.org/rtk-query/overview
+- redux-persist: https://github.com/rt2zz/redux-persist
+- RTK Listener Middleware (альтернатива redux-persist): https://redux-toolkit.js.org/api/createListenerMiddleware
+
+### 3.2 `zustand`
+- [ ] `pnpm add zustand`.
+- [ ] Несколько изолированных stores: `useFavoritesStore`, `useThemeStore`, `useFiltersStore`.
+- [ ] `persist` middleware для favorites/theme.
+- [ ] Селекторы с `shallow` для объектных слайсов.
+- [ ] README ветки.
+
+**Как лучше:** маленькие изолированные сторы = лучшая re-render-производительность. НЕ делай один gigant-store.
+
+**📚 Refs:**
+- Zustand: https://zustand.docs.pmnd.rs/
+- Zustand persist middleware: https://zustand.docs.pmnd.rs/integrations/persisting-store-data
+- Zustand + TypeScript: https://zustand.docs.pmnd.rs/guides/typescript
+
+### 3.3 `reatom`
+- [ ] `pnpm add @reatom/framework @reatom/npm-react`.
+- [ ] Atoms на каждое поле, actions для мутаций.
+- [ ] `reatomAsync` / `reatomResource` для async.
+- [ ] Memoized derived atoms (явная демонстрация — `plans/main.md` 3.9).
+- [ ] README ветки.
+
+**Как лучше:** Reatom v3 — granular reactivity, не пытайся повторить redux-паттерны.
+
+**📚 Refs:**
+- Reatom: https://www.reatom.dev/
+- Reatom для React: https://www.reatom.dev/package/npm-react/
+- reatomAsync / reatomResource: https://www.reatom.dev/package/async/
+
+### 3.4 `jotai`
+- [ ] `pnpm add jotai`.
+- [ ] Atomic state, `atomWithStorage` для favorites/theme.
+- [ ] `atomFamily` для `movieByIdAtom(id)`.
+- [ ] README ветки.
+
+**Как лучше:** Jotai силён в granular subscriptions — грамотный split атомов критичен.
+
+**📚 Refs:**
+- Jotai: https://jotai.org/
+- atomWithStorage: https://jotai.org/docs/utilities/storage
+- atomFamily: https://jotai.org/docs/utilities/family
+
+### 3.5 `effector`
+- [ ] `pnpm add effector effector-react`.
+- [ ] Stores + events + effects.
+- [ ] `combine` для derived, `sample` для side-effects.
+- [ ] README ветки.
+
+**Как лучше:** event-driven, декларативные графы > императивные reducer'ы.
+
+**📚 Refs:**
+- Effector: https://effector.dev/
+- Effector + React: https://effector.dev/en/api/effector-react/
+- sample / combine: https://effector.dev/en/api/effector/sample/
+
+### 3.6 `mobx`
+- [ ] `pnpm add mobx mobx-react-lite`.
+- [ ] Классы-сторы (`MoviesStore`, `FavoritesStore`).
+- [ ] `observable`/`action`/`computed`.
+- [ ] `observer(Component)` для подписки.
+- [ ] README ветки.
+
+**Как лучше:** ООП-подход в функциональном React-проекте может ощущаться чужеродно — это инсайт для сравнения.
+
+**📚 Refs:**
+- MobX: https://mobx.js.org/README.html
+- mobx-react-lite: https://github.com/mobxjs/mobx/tree/main/packages/mobx-react-lite
+- MobX best practices: https://mobx.js.org/defining-data-stores.html
+
+### 3.7 `tanstack-query` + Zustand
+- [ ] `pnpm add @tanstack/react-query`.
+- [ ] Server-state — целиком в Query.
+- [ ] UI-state — Zustand.
+- [ ] `QueryClient` с дефолтами `staleTime: 5min`, `gcTime: 30min`.
+- [ ] DevTools подключены.
+- [ ] README ветки.
+
+**Как лучше:** наиболее современный production-default. Чёткое разделение server vs client state.
+
+**📚 Refs:**
+- TanStack Query: https://tanstack.com/query/latest/docs/framework/react/overview
+- Query keys best practices: https://tkdodo.eu/blog/effective-react-query-keys
+- TkDodo blog (must-read для Query): https://tkdodo.eu/blog/practical-react-query
+- DevTools: https://tanstack.com/query/latest/docs/framework/react/devtools
+
+### 3.8 Сводная таблица в README на main
+- [ ] Таблица: lib | bundle size | DX-баллы | best for.
+- [ ] Bundle-size diff через `rollup-plugin-visualizer`, скриншот в README.
+
+---
+
+## Фаза 4. SSR/SSG — параллельные ветки
+
+Брать `tanstack-query` (3.7) как базу — Query поддерживает hydration из коробки.
+
+### 4.1 `ssr/nextjs`
+- [ ] Миграция Vite → Next.js 15 (App Router).
+- [ ] File-routing: `app/page.tsx`, `app/movie/[id]/page.tsx`, `app/search/page.tsx`.
+- [ ] RSC по умолчанию, `'use client'` точечно.
+- [ ] ISR на главной (`revalidate: 3600`).
+- [ ] Динамический OG-image (`opengraph-image.tsx`).
+- [ ] React Compiler в `next.config.ts`.
+- [ ] README с метриками LCP/TTFB.
+
+**Как лучше:** наш `src/app/` пересекается с Next-овым `app/` — переименуй FSD-слой в `_app/` или используй Next `app/` как entry.
+
+**📚 Refs:**
+- Next.js App Router: https://nextjs.org/docs/app
+- Server Components: https://nextjs.org/docs/app/getting-started/server-and-client-components
+- ISR: https://nextjs.org/docs/app/guides/incremental-static-regeneration
+- Metadata API: https://nextjs.org/docs/app/api-reference/file-conventions/metadata
+- React Compiler в Next: https://nextjs.org/docs/app/api-reference/config/next-config-js/reactCompiler
+
+### 4.2 `ssr/tanstack-start`
+- [ ] Миграция на TanStack Start.
+- [ ] File-based routing (type-safe).
+- [ ] Server functions через `createServerFn`.
+- [ ] Hydration TanStack Query без warnings.
+- [ ] README с метриками.
+
+**Как лучше:** идеологически ближе к текущему стеку — портирование из `tanstack-query` минимально.
+
+**📚 Refs:**
+- TanStack Start: https://tanstack.com/start/latest
+- TanStack Router (file-based routes): https://tanstack.com/router/latest/docs/framework/react/routing/file-based-routing
+- Server Functions: https://tanstack.com/start/latest/docs/framework/react/server-functions
+
+### 4.3 `ssr/vite-ssr`
+- [ ] `entry-server.tsx` + `entry-client.tsx`.
+- [ ] `server.js` (Hono/Express) для SSR-рендера.
+- [ ] Hydration через `hydrateRoot`.
+- [ ] Streaming через `renderToPipeableStream`.
+- [ ] README с метриками + объяснение «магии под капотом».
+
+**Как лучше:** образовательная ветка — покажет, как фреймворки делают SSR. В production не используется.
+
+**📚 Refs:**
+- Vite SSR guide: https://vite.dev/guide/ssr
+- Vike (бывший vite-plugin-ssr): https://vike.dev/
+- React renderToPipeableStream: https://react.dev/reference/react-dom/server/renderToPipeableStream
+- hydrateRoot: https://react.dev/reference/react-dom/client/hydrateRoot
+
+### 4.4 Общие требования ко всем SSR-веткам
+- [ ] Нет hydration mismatch (контроль `Date.now()`, `window`, `Math.random()`).
+- [ ] SEO meta (title/description/OG) per page.
+- [ ] Lighthouse SEO = 100.
+- [ ] view-source: содержит реальный HTML.
+
+---
+
+## Фаза 5. Backend / Auth — параллельные ветки
+
+С появлением BFF появляется второй пакет — самое время для monorepo и Docker. Эти задачи делаются один раз в первой auth-ветке и переиспользуются в остальных.
+
+### 5.0 Monorepo + Docker setup (делается в первой auth-ветке)
+- [ ] Конвертация в pnpm workspaces: `pnpm-workspace.yaml` с `packages/*`.
+- [ ] Структура: `packages/web/` (текущее приложение), `packages/server/` (BFF), `packages/shared/` (общие типы/схемы).
+- [ ] Path aliases переиграны через workspace-packages (`@kinoshka/shared` в `package.json` dependencies).
+- [ ] `pnpm add -D turbo` + `turbo.json` с pipeline (`build`, `dev`, `lint`, `test`).
+- [ ] `Dockerfile` для server (multi-stage build, non-root user, healthcheck).
+- [ ] `docker-compose.yml` для local dev (server + Postgres + Redis если нужно).
+- [ ] `.dockerignore` (node_modules, dist, .env).
+- [ ] Deploy target: Fly.io или Railway (бесплатный tier для портфолио).
+
+**Как лучше:** Turborepo — overkill для 2 пакетов, но showcase. Для реального небольшого проекта `pnpm workspaces` без Turbo достаточно. Docker — multi-stage build обязателен (final image без dev deps), non-root для security.
+
+**📚 Refs:**
+- pnpm workspaces: https://pnpm.io/workspaces
+- Turborepo: https://turborepo.com/docs
+- Dockerfile best practices: https://docs.docker.com/build/building/best-practices/
+- Docker для Node.js: https://nodejs.org/en/learn/getting-started/nodejs-docker-webapp
+- Fly.io launch guide: https://fly.io/docs/launch/
+- Railway: https://docs.railway.com/guides/foundations
+
+### 5.1 `auth/hono-bff` + OAuth
+- [ ] Hono-сервер с TypeScript.
+- [ ] Проксирование `/api/movies/*` → Kinopoisk API с серверным `X-API-KEY`.
+- [ ] OAuth (`GitHub` или `Yandex`) через `oslo`.
+- [ ] httpOnly session cookies (sameSite=lax, secure).
+- [ ] `/api/me/favorites` CRUD (SQLite через `better-sqlite3`).
+- [ ] Logout invalidates session.
+- [ ] CSRF protection.
+- [ ] Rate limiting на auth endpoints.
+
+**Как лучше:** edge-deployable (CF Workers, Vercel Edge). Хорошо комбинируется с SSR-веткой Next/TanStack Start.
+
+**📚 Refs:**
+- Hono: https://hono.dev/
+- Hono cookies: https://hono.dev/docs/helpers/cookie
+- oslo (auth primitives, от автора Lucia): https://oslojs.dev/
+- Lucia auth resources (архивно, но guide отличный): https://lucia-auth.com/
+- better-sqlite3: https://github.com/WiseLibs/better-sqlite3
+
+### 5.2 `auth/fastify-sessions` + email/password
+- [ ] Fastify-сервер (faster + schema-validation).
+- [ ] Drizzle ORM + SQLite (потом миграция на Postgres).
+- [ ] `/api/auth/register` — argon2 hash.
+- [ ] `/api/auth/login` — verify + httpOnly session cookie.
+- [ ] `/api/auth/logout` — invalidate.
+- [ ] `/api/me/favorites` protected route.
+- [ ] CSRF + rate limiting.
+
+**Как лучше:** session cookies (httpOnly), НЕ JWT в localStorage (XSS-уязвимо). `argon2` современнее `bcrypt`.
+
+**📚 Refs:**
+- Fastify: https://fastify.dev/docs/latest/
+- Drizzle ORM: https://orm.drizzle.team/docs/overview
+- @node-rs/argon2 (быстрая Rust-имплементация): https://github.com/napi-rs/node-rs/tree/main/packages/argon2
+- Why session cookies > JWT in browser: https://thecopenhagenbook.com/sessions
+- OWASP Session Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+
+### 5.3 `auth/nextjs-webauthn` (passkeys)
+- [ ] Next.js API routes.
+- [ ] `@simplewebauthn/server` + `@simplewebauthn/browser`.
+- [ ] Postgres + Drizzle для credentials store.
+- [ ] Register passkey → login через biometric (Touch ID / Face ID).
+- [ ] Fallback на email-magic-link.
+- [ ] CSRF + rate limiting.
+
+**Как лучше:** «вау» в портфолио — WebAuthn = production-grade современный auth.
+
+**📚 Refs:**
+- SimpleWebAuthn: https://simplewebauthn.dev/docs/
+- Passkeys на passkeys.dev: https://passkeys.dev/
+- WebAuthn explainer: https://webauthn.guide/
+- Webauthn.io (тестовый стенд): https://webauthn.io/
+
+### 5.4 Общие требования ко всем auth-веткам
+- [ ] API-key НЕ виден в client bundle (`grep` по `dist/`).
+- [ ] httpOnly + Secure + SameSite=Lax на cookies.
+- [ ] Cross-tab session sync.
+- [ ] Logout очищает cookie и server session.
+- [ ] Favorites guest → user merge при логине.
+- [ ] README с архитектурной диаграммой.
+
+---
+
+## Фаза 6. Scaling & product polish
+
+Делается, когда базовый продукт стабилен. В реальной команде эти вещи появляются «по требованию» — когда команда растёт, когда выходишь на новый рынок, когда есть offline-use case. Для портфолио — отличные дифференциаторы.
+
+### 6.1 Storybook + design system docs
+- [ ] `pnpm dlx storybook@latest init`.
+- [ ] Stories для `shared/ui` компонентов (Spinner, Skeleton, Card, AsyncBoundary).
+- [ ] Stories для widgets (Header, Footer, BottomNav).
+- [ ] MDX-страница с design tokens (показывает все CSS-переменные с превью).
+- [ ] Controls + actions + a11y addon (`@storybook/addon-a11y`).
+- [ ] Storybook deploys в Vercel/Chromatic-static как отдельный URL, ссылка в README.
+
+**Как лучше:** Storybook 8+ — Vite-based, быстрый. Не пытайся покрыть всё — focus на shared/ui + критичные widgets. Per-component stories — `Default`, `Loading`, `Error`, `Empty`. CSF 3 format — короче, чище. Args + ArgTypes — авто-генерят controls.
+
+**📚 Refs:**
+- Storybook: https://storybook.js.org/docs
+- CSF 3: https://storybook.js.org/docs/api/csf
+- @storybook/addon-a11y: https://storybook.js.org/addons/@storybook/addon-a11y
+- Storybook + Vite: https://storybook.js.org/docs/builders/vite
+
+### 6.2 ADRs (Architecture Decision Records)
+- [ ] `docs/adr/` папка, шаблон Michael Nygard (`README.md` с шаблоном).
+- [ ] `0001-feature-sliced-design.md` — почему FSD, какие альтернативы рассмотрены.
+- [ ] `0002-state-management-comparison.md` — выбор стратегии сравнения state-libs.
+- [ ] `0003-api-client-generation.md` — почему apicraft, какие проблемы решает.
+- [ ] `0004-auth-strategy.md` — обзор подходов из Phase 5 (BFF/sessions/passkeys), trade-offs.
+- [ ] `0005-ssr-framework-choice.md` — критерии выбора Next/TanStack Start/Vite SSR.
+- [ ] Mermaid-диаграммы архитектуры в README (data flow, layered architecture).
+- [ ] Опционально: log4brains для красивого Web-UI над ADRs.
+
+**Как лучше:** ADR — это не «как мы сделали», а «почему мы так решили». Format: Context → Decision → Consequences. Каждый ADR — 1-2 страницы, не больше. Status: Proposed → Accepted → Superseded. Никогда не редактируй принятый ADR — пиши новый со ссылкой «supersedes 0003».
+
+**📚 Refs:**
+- ADR templates (Joel Parker Henderson): https://github.com/joelparkerhenderson/architecture-decision-record
+- Michael Nygard оригинальный пост: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions
+- log4brains (Web UI для ADRs): https://github.com/thomvaill/log4brains
+- Mermaid в GitHub Markdown: https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams
+
+### 6.3 i18n (ru/en switching)
+- [ ] `pnpm add i18next react-i18next i18next-browser-languagedetector`.
+- [ ] `public/locales/{ru,en}/common.json` (и др. namespaces).
+- [ ] Все хардкодные русские строки вынесены в `t('...')` (используй codemod типа `i18next-scanner` для extraction).
+- [ ] LanguageSwitcher в Header.
+- [ ] `Intl.DateTimeFormat` для дат, `Intl.NumberFormat` для рейтингов/runtime, `Intl.PluralRules` для «3 сезона/5 сезонов».
+- [ ] `Intl.Collator` для locale-aware сортировки.
+- [ ] SEO: `<html lang="...">` обновляется, hreflang теги на SSR-страницах (Phase 4).
+- [ ] Persist выбранного языка в localStorage + cookie (для SSR).
+
+**Как лучше:** i18next + react-i18next — стандарт. Не путай i18n (внешний слой) с локалью данных (приходит из API). Postpone API-locale до того, как поймёшь, поддерживает ли Kinopoisk API мульти-локали. Lazy-load локалей через `i18next-http-backend` — не грузишь сразу все языки. Lokalise/Crowdin/Tolgee — translation management (для команды), для соло-проекта избыточно.
+
+**📚 Refs:**
+- react-i18next: https://react.i18next.com/
+- i18next: https://www.i18next.com/
+- i18next-scanner (extraction): https://github.com/i18next/i18next-scanner
+- MDN Intl: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl
+- formatjs (альтернатива i18next): https://formatjs.io/
+
+### 6.4 PWA + offline
+- [ ] `pnpm add -D vite-plugin-pwa workbox-window`.
+- [ ] `manifest.webmanifest` (name, icons, theme_color, display: standalone).
+- [ ] Service worker через Workbox: cache-first для постеров, stale-while-revalidate для API.
+- [ ] Offline-banner: «Вы offline, показаны кэшированные данные».
+- [ ] Favorites работают offline (уже работают через localStorage из 2.1).
+- [ ] Install prompt компонент (отслеживай `beforeinstallprompt` event).
+- [ ] Lighthouse PWA audit ≥ 90.
+
+**Как лучше:** Workbox через `vite-plugin-pwa` проще, чем писать SW руками. Не кэшируй `index.html` long-term (иначе stuck users). Workbox revision-aware для статики. `registerType: 'autoUpdate'` — UI обновится при появлении новой версии SW (с консент-промптом или без).
+
+**📚 Refs:**
+- vite-plugin-pwa: https://vite-pwa-org.netlify.app/
+- Workbox: https://developer.chrome.com/docs/workbox
+- Web App Manifest: https://developer.mozilla.org/en-US/docs/Web/Manifest
+- web.dev PWA guide: https://web.dev/explore/progressive-web-apps
+- PWABuilder (генератор assets): https://www.pwabuilder.com/
+
+### 6.5 Visual regression
+- [ ] Вариант А: Playwright screenshots (`expect(page).toHaveScreenshot()`) + baseline в репо.
+- [ ] Вариант Б: Chromatic (если уже есть Storybook — интеграция в 1 строку, free для open-source).
+- [ ] Snapshots для критичных pages (главная, /search, /movie/:id) на desktop + mobile.
+- [ ] Auto-approve trivial diffs (>X% pixel diff = manual review).
+- [ ] CI job — fail PR при визуальной регрессии.
+
+**Как лучше:** Chromatic > self-hosted Playwright snapshots если есть Storybook (UI для approve diffs, история). Если без Storybook — Playwright. Не делай visual regression до того, как дизайн стабилизировался — будешь approve diffs каждый PR. Снапшоты разных тем (light/dark) — отдельно.
+
+**📚 Refs:**
+- Chromatic: https://www.chromatic.com/docs/
+- Playwright screenshots: https://playwright.dev/docs/screenshots
+- Playwright visual comparisons: https://playwright.dev/docs/test-snapshots
+- Percy (альтернатива Chromatic): https://percy.io/
+
+---
+
+## Verification (детальные критерии)
+
+### Phase 0
+- [ ] `make build` зелёный.
+- [ ] `make test` запускается и проходит хотя бы один тест.
+- [ ] DevTools → Network: API возвращает 200 на `/`.
+- [ ] ErrorBoundary ловит `throw new Error()` в компоненте → показывает fallback.
+- [ ] CI на PR проходит lint+typecheck+test+build за < 5 мин.
+- [ ] Preview-deploy URL появляется в комментарии PR.
+- [ ] Попытка коммита с `console.log` или ESLint error блокируется pre-commit hook.
+- [ ] Попытка коммита `git commit -m "fix stuff"` блокируется commitlint (нужен conventional format).
+- [ ] `eslint-plugin-jsx-a11y` ловит компонент без alt/aria-label.
+- [ ] `gitleaks` ловит попытку коммита `.env.local`.
+- [ ] `Dependabot/Renovate` PR появляются автоматически.
+
+### Phase 1
+- [ ] На `/` — реальные фильмы (не из `CATALOG`).
+- [ ] `/search?q=Inception` — реальный поиск.
+- [ ] `/search?genres=драма&year=2020` после reload — состояние сохранено.
+- [ ] Пагинация ходит на сервер.
+- [ ] `/movie/666` → ErrorState с retry.
+
+### Phase 2
+- [ ] Сердечко → reload → сохранено.
+- [ ] Очистка localStorage → реакция в UI.
+- [ ] Theme reload-persist + cross-tab sync.
+- [ ] `/popular` отображает данные из endpoint.
+- [ ] 3-5 favorites → `/recommendations` показывает релевантные.
+- [ ] <720px → mobile-варианты страниц.
+- [ ] Lighthouse Performance ≥ 90 для главной.
+- [ ] `useOptimistic` на favorites — клик по сердечку даёт мгновенный UI-отклик до завершения операции.
+
+### Phase 2.5
+- [ ] Кинь `throw new Error('test')` в production-сборке → ошибка появляется в Sentry с source-map.
+- [ ] Web Vitals видны в Sentry/PostHog dashboard (открой страницу — событие пришло).
+- [ ] `pnpm size-limit` — все бюджеты в пределах нормы.
+- [ ] CSP включён, в DevTools нет CSP violations на main flow.
+- [ ] `npx playwright test` — все E2E проходят локально.
+- [ ] Lighthouse CI в PR показывает Performance ≥ 90, A11y ≥ 95.
+- [ ] `@axe-core/playwright` не находит critical violations.
+- [ ] Намеренное превышение size-limit (добавь жирную dep) — CI падает.
+
+### Phase 3 (per ветка)
+- [ ] Все фичи Phase 1+2 работают.
+- [ ] DevTools видит state-tool артефакты.
+- [ ] README с разбором паттернов + плюсы/минусы.
+- [ ] Bundle-size diff в README.
+
+### Phase 4 (per SSR-ветка)
+- [ ] `view-source:` страницы — реальный HTML.
+- [ ] Lighthouse SEO = 100.
+- [ ] Нет hydration warnings.
+- [ ] OG-preview работает (opengraph.xyz).
+
+### Phase 5 (per auth-ветка)
+- [ ] API-key не в bundle.
+- [ ] Cookie: `HttpOnly; Secure; SameSite=Lax`.
+- [ ] Login в одной вкладке → реакция в другой.
+- [ ] Logout очищает state, защищённые endpoints возвращают 401.
+- [ ] (5.3) WebAuthn работает на Touch ID / Face ID.
+- [ ] `pnpm -w build` собирает все workspace-packages.
+- [ ] `docker compose up` поднимает server + (Postgres/Redis) локально.
+- [ ] Deploy в Fly.io/Railway успешен, healthcheck зелёный.
+- [ ] Final Docker image НЕ содержит dev deps (`docker image inspect ...`).
+
+### Phase 6
+- [ ] Storybook deploy-URL доступен, ссылка в README.
+- [ ] `@storybook/addon-a11y` не показывает violations на ключевых stories.
+- [ ] Минимум 5 ADRs в `docs/adr/`, каждый по шаблону.
+- [ ] Mermaid-диаграмма архитектуры рендерится в GitHub README.
+- [ ] LanguageSwitcher переключает ru → en, все строки локализованы.
+- [ ] `Intl.NumberFormat` показывает рейтинг как `8,4` в ru и `8.4` в en.
+- [ ] Offline-режим: выключи сеть → favorites доступны, на остальных страницах банер.
+- [ ] Lighthouse PWA audit ≥ 90.
+- [ ] Намеренное визуальное изменение (цвет кнопки) → visual regression PR падает.
+
+---
+
+## Файлы для базовой реализации (Phase 0+1+2 на main)
+
+- `src/shared/api/client.ts` — singleton instance с auth.
+- `src/shared/ui/{AsyncBoundary,Skeleton,EmptyState,ErrorState,Spinner,ErrorBoundary}/`.
+- `src/shared/lib/storage.ts`.
+- `src/shared/config/features.ts`.
+- `src/entities/movie/api/` — обёртки над generated client.
+- `src/features/{favorites,theme,weekly-popular,recommendations}/`.
+- `src/features/catalog-filter/` — допилить URL-sync + реальное API.
+- `src/pages/{home,search,movie}/ui/*Desktop/` — заменить mock на API.
+- `src/pages/{home,search,movie}/ui/*Mobile/` — полноценные реализации.
+- `src/pages/favorites/` — новая страница.
+- `vite.config.ts` — test config + `rollup-plugin-visualizer`.
+- `Makefile` — `test`, `e2e`, `analyze` targets.
+- `package.json` — новые dev-deps + `lint-staged` config + `size-limit` config.
+
+### Дополнительно (Phase 0 production-engineering)
+- `.github/workflows/{ci,lighthouse,codeql}.yml`
+- `.github/dependabot.yml` (или `renovate.json`)
+- `.github/pull_request_template.md`
+- `.husky/{pre-commit,commit-msg}`
+- `commitlint.config.js`
+- `eslint.config.js` — добавить `jsx-a11y`.
+- `vercel.json` / `netlify.toml` / `_headers` — security headers.
+
+### Phase 2.5 (pre-launch)
+- `src/app/sentry.ts` — Sentry init.
+- `src/shared/lib/analytics.ts` — web-vitals reporter + analytics wrapper.
+- `e2e/{home,search,movie,favorites}.spec.ts` — Playwright тесты.
+- `playwright.config.ts`.
+- `lighthouserc.js` — Lighthouse CI config.
+- `index.html` — CSP meta-тег.
+
+### Phase 5 (monorepo + Docker)
+- `pnpm-workspace.yaml`
+- `turbo.json`
+- `packages/{web,server,shared}/`
+- `packages/server/Dockerfile`
+- `docker-compose.yml`
+- `.dockerignore`
+
+### Phase 6 (scaling)
+- `.storybook/{main.ts,preview.ts}`
+- `*.stories.tsx` — рядом с компонентами.
+- `docs/adr/{template.md,0001-...md,0002-...md,...}`
+- `public/locales/{ru,en}/*.json`
+- `src/shared/i18n/index.ts` — i18next init.
+- `public/manifest.webmanifest`
+- `chromatic.config.json` (если Chromatic).
+
+Ветки наследуют этот же набор + tool-specific файлы.
+
+---
+
+## Дополнительные ресурсы (общее)
+
+**Архитектура и FSD:**
+- Feature-Sliced Design (официально): https://feature-sliced.design/
+- FSD 2.x examples: https://github.com/feature-sliced/examples
+- Bulletproof React (другой взгляд на структуру): https://github.com/alan2207/bulletproof-react
+
+**React 19 и Compiler:**
+- React 19 release notes: https://react.dev/blog/2024/12/05/react-19
+- React Compiler: https://react.dev/learn/react-compiler
+- React Compiler playground: https://playground.react.dev/
+
+**TypeScript:**
+- Total TypeScript (Matt Pocock): https://www.totaltypescript.com/
+- Type Challenges: https://github.com/type-challenges/type-challenges
+- TS handbook: https://www.typescriptlang.org/docs/handbook/intro.html
+
+**Performance:**
+- web.dev performance: https://web.dev/explore/performance
+- Core Web Vitals: https://web.dev/articles/vitals
+- Patterns.dev (perf patterns): https://www.patterns.dev/
+
+**Security:**
+- OWASP Top 10: https://owasp.org/www-project-top-ten/
+- OWASP Cheat Sheets: https://cheatsheetseries.owasp.org/
+- web.dev secure: https://web.dev/explore/secure
+
+**A11y:**
+- web.dev accessible: https://web.dev/explore/accessible
+- Inclusive Components (Heydon Pickering): https://inclusive-components.design/
+- WAI-ARIA APG: https://www.w3.org/WAI/ARIA/apg/
+
+**Блоги, которые стоит читать регулярно:**
+- TkDodo (React Query / React patterns): https://tkdodo.eu/blog/
+- Josh W. Comeau (React / CSS / DX): https://www.joshwcomeau.com/
+- Kent C. Dodds (testing / React): https://kentcdodds.com/blog
+- Mark Erikson (Redux maintainer): https://blog.isquaredsoftware.com/
+- Lee Robinson (Vercel/Next): https://leerob.com/n
+- Theo Browne (стек, экосистема): https://t3.gg/
+
+**Карьерный рост Senior:**
+- Staff Engineer Path: https://staffeng.com/
+- Will Larson's "Staff Engineer": https://lethain.com/
+- The Pragmatic Engineer (Gergely Orosz): https://newsletter.pragmaticengineer.com/
