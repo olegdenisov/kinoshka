@@ -7,6 +7,7 @@ export const baseApi = createApi({
     'Movie',
     'Movies',
     'Anime',
+    'Genres'
   ],
   endpoints: () => ({}),
 })

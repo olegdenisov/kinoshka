@@ -25,7 +25,7 @@ export const searchApi = baseApi.injectEndpoints({
         }
       },
 
-      providesTags: ['Movies'],
+      providesTags: ['Genres'],
     }),
   }),
 })
