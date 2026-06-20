@@ -60,11 +60,11 @@
 - React 19 use(): https://react.dev/reference/react/use
 
 ### 0.3 Тесты (Vitest + Testing Library)
-- [ ] `pnpm add -D vitest @testing-library/react @testing-library/jest-dom jsdom`.
-- [ ] `vite.config.ts` → секция `test: { environment: 'jsdom', setupFiles, globals: true }`.
-- [ ] `make test` в `Makefile`.
-- [ ] `src/test/setup.ts` с `@testing-library/jest-dom/vitest`.
-- [ ] Минимум один проходящий smoke-тест.
+- [x] `pnpm add -D vitest @testing-library/react @testing-library/jest-dom jsdom`.
+- [x] `vite.config.ts` → секция `test: { environment: 'jsdom', setupFiles, globals: true }`.
+- [x] `make test` в `Makefile`.
+- [x] `src/test/setup.ts` с `@testing-library/jest-dom/vitest`.
+- [x] Минимум один проходящий smoke-тест.
 
 **Как лучше:** не тестируй UI mock-ами — тестируй pure functions (фильтры, selectors, recommendations rule). Для компонентов — только smoke + accessibility через `user-event`. MSW (Mock Service Worker) для мокирования API на integration-уровне — единственное место, где моки оправданы.
 

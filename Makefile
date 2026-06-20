@@ -1,4 +1,4 @@
-.PHONY: dev build lint preview install clean check generate-api
+.PHONY: dev build lint preview install clean check generate-api test test-watch coverage
 
 dev:
 	pnpm dev
@@ -22,3 +22,12 @@ check: lint build
 
 generate-api:
 	pnpm generate-api
+
+test:
+	pnpm vitest run
+
+test-watch:
+	pnpm vitest
+
+coverage:
+	pnpm vitest run --coverage
