@@ -32,11 +32,11 @@
 База, которая нужна всем последующим фазам и веткам. Делается один раз.
 
 ### 0.1 Авторизация API (`X-API-KEY`)
-- [ ] Создан `src/shared/api/client.ts` с singleton `new ApiInstance({ headers: { 'X-API-KEY': ... } })`.
-- [ ] Env переименованы в `VITE_*` (`VITE_APP_API_KEY`, `VITE_APP_BASE_URL`).
-- [ ] `.env.example` добавлен в репо.
-- [ ] `apicraft.config.ts` использует отдельную переменную для генерации.
-- [ ] Все импорты `instance` идут через `client.ts`, а не напрямую из `instance.gen.ts`.
+- [x] Создан `src/shared/api/client.ts` с singleton `new ApiInstance({ headers: { 'X-API-KEY': ... } })`.
+- [x] Env переименованы в `VITE_*` (`VITE_API_KEY`, `VITE_BASE_URL`).
+- [x] `.env.example` добавлен в репо.
+- [x] `apicraft.config.ts` использует отдельную переменную для генерации.
+- [x] Все импорты `instance` идут через `client.ts`, а не напрямую из `instance.gen.ts`.
 
 **Как лучше:** `instance.gen.ts` — авто-генерируемый, править нельзя. `ApiInstance` принимает `FetchesParams` (объект из `@siberiacancode/fetches`) — передавай туда `headers` и `baseURL`. Не клади ключ в bundle напрямую — это временное решение, в фазе 5 (BFF) ключ переедет на сервер.
 
