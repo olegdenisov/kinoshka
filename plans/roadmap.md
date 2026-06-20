@@ -45,12 +45,12 @@
 - siberiacancode/fetches: https://github.com/siberiacancode/fetches
 
 ### 0.2 Универсальные UI-состояния (`src/shared/ui/`)
-- [ ] `Spinner` — CSS-only через `@keyframes`.
-- [ ] `Skeleton` — шиммер (использует `shimmer` keyframe из `global.css`).
-- [ ] `EmptyState` — пустой результат.
-- [ ] `ErrorState` — ошибка + retry-кнопка.
-- [ ] `ErrorBoundary` (классовый — единственное оправданное место) + дефолтный fallback.
-- [ ] `AsyncBoundary` — HOC, инкапсулирующий loading/error/empty/children.
+- [x] `Spinner` — CSS-only через `@keyframes`.
+- [x] `Skeleton` — шиммер (использует `shimmer` keyframe из `global.css`).
+- [x] `EmptyState` — пустой результат.
+- [x] `ErrorState` — ошибка + retry-кнопка.
+- [x] `ErrorBoundary` (классовый — единственное оправданное место) + дефолтный fallback.
+- [x] `AsyncBoundary` — HOC, инкапсулирующий loading/error/empty/children.
 
 **Как лучше:** один `<AsyncBoundary>` HOC вместо ручного `if loading / if error / if empty / else` в каждом компоненте — не дублируешь код. С React 19 + Suspense это становится `<Suspense fallback={<Skeleton/>}><ErrorBoundary fallback={<ErrorState/>}>{children}</ErrorBoundary></Suspense>` — больше не нужны `isLoading`/`error` пропы.
 

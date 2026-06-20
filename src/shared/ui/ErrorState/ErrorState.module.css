@@ -1,0 +1,34 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.description {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.retryButton {
+  margin-top: 8px;
+  padding: 8px 20px;
+  font-size: 0.9375rem;
+  color: var(--accent-warm);
+  background: var(--accent-warm-tint);
+  border: 1px solid var(--accent-warm-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.retryButton:hover {
+  background: var(--accent-warm-soft);
+}
