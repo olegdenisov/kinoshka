@@ -74,10 +74,10 @@
 - MSW: https://mswjs.io/docs/
 
 ### 0.4 Абстракция над localStorage
-- [ ] `src/shared/lib/storage.ts` — `createStorageSlot<T>(key, schema)`.
-- [ ] Zod-валидация при чтении.
-- [ ] Подписка через `window.storage` event (синк между табами).
-- [ ] Тест на edge cases (невалидный JSON, отсутствие ключа, mismatched schema).
+- [x] `src/shared/lib/storage.ts` — `createStorageSlot<T>(key, schema)`.
+- [x] Zod-валидация при чтении.
+- [x] Подписка через `window.storage` event (синк между табами).
+- [x] Тест на edge cases (невалидный JSON, отсутствие ключа, mismatched schema).
 
 **Как лучше:** zod-схема закрывает edge case «несовпадение схем данных» из `plans/main.md` 3.4. Используй `useSyncExternalStore` чтобы React-компоненты подписывались на storage event — это нативный API для интеграции внешних store с React.
 

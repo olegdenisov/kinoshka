@@ -1,4 +1,4 @@
-import { useViewport } from '../../shared/lib/useViewport'
+import { useViewport } from '../../shared/lib/viewport/useViewport'
 import { SearchDesktop } from './ui/SearchDesktop'
 import { SearchMobile } from './ui/SearchMobile'
 
