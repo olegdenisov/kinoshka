@@ -116,7 +116,7 @@
 - [x] `.husky/commit-msg` запускает `commitlint`.
 - [x] `commitlint.config.js` extends `@commitlint/config-conventional`.
 - [x] Опционально: `pnpm dlx commitizen init` для интерактивных коммитов.
-
+ 
 **Как лучше:** не запускай весь lint/test в pre-commit — слишком медленно, разработчики начнут использовать `--no-verify`. Только staged-файлы через `lint-staged`. Полный test/typecheck — в pre-push или CI. Commitlint конфигурация: `extends: ['@commitlint/config-conventional']` — типы `feat/fix/docs/refactor/test/chore` + scope = название FSD-слоя.
 
 **📚 Refs:**
@@ -126,11 +126,11 @@
 - Conventional Commits: https://www.conventionalcommits.org/ru/v1.0.0/
 
 ### 0.8 A11y baseline
-- [ ] `pnpm add -D eslint-plugin-jsx-a11y`.
-- [ ] Подключить в eslint config (`plugin:jsx-a11y/recommended`).
-- [ ] Проходка по существующим компонентам: alt на постерах, aria-label на iconic-buttons, label на input'ах.
-- [ ] Smoke keyboard nav: открой каждую страницу с клавиатуры (Tab/Enter/Esc) — все интерактивы доступны.
-- [ ] Focus-visible стили в `global.css` (`:focus-visible { outline: 2px solid var(--accent-warm); }`).
+- [x] `pnpm add -D eslint-plugin-jsx-a11y`.
+- [x] Подключить в eslint config (`plugin:jsx-a11y/recommended`).
+- [x] Проходка по существующим компонентам: все `div onClick` заменены на `<Link>` (навигация) или `<button>` (действие); lint чистый.
+- [x] Smoke keyboard nav: открой каждую страницу с клавиатуры (Tab/Enter/Esc) — все интерактивы доступны.
+- [x] Focus-visible стили в `global.css` (`:focus-visible { outline: 2px solid var(--accent-warm); }`).
 
 **Как лучше:** включай линтер с первого дня — переписывать a11y потом дороже на порядок. `jsx-a11y` ловит 80% типичных проблем автоматически. Для интерактивов без явной семантики (`<div onClick>`) — заменяй на `<button>` (получишь focus/keyboard/screen reader бесплатно).
 

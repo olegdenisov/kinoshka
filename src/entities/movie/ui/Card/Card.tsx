@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import type { Movie } from '../../model/types'
 import { Poster } from '../Poster'
 import { StarIcon, PlusIcon, EyeIcon } from '@shared/ui'
@@ -7,12 +8,11 @@ import s from './Card.module.css'
 type CardProps = {
   movie: Movie
   variant?: 'grid' | 'compact'
-  onOpen?: (movie: Movie) => void
 }
 
-export const Card = ({ movie, variant = 'grid', onOpen }: CardProps) => {
+export const Card = ({ movie, variant = 'grid' }: CardProps) => {
   return (
-    <div className={s.card} onClick={() => onOpen?.(movie)}>
+    <Link to={`/movie/${movie.id}`} className={s.card}>
       <div className={s.posterContainer}>
         <div className={s.posterWrapper}>
           <Poster movie={movie} />
@@ -42,6 +42,6 @@ export const Card = ({ movie, variant = 'grid', onOpen }: CardProps) => {
           <span>{movie.genre[0]}</span>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }

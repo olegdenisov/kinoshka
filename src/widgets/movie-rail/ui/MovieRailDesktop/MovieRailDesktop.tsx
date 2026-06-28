@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useNavigate } from 'react-router'
+import { Link } from 'react-router'
 import type { Movie } from '@entities/movie'
 import { Card } from '@entities/movie'
 import { ArrowBtn } from './ArrowBtn'
@@ -12,23 +12,22 @@ type MovieRailDesktopProps = {
 }
 
 export const MovieRailDesktop = ({ title, subtitle, items }: MovieRailDesktopProps) => {
-  const navigate = useNavigate()
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const scroll = (dir: number) => {
     scrollRef.current?.scrollBy({ left: dir * 480, behavior: 'smooth' })
   }
 
-  const openMovie = (movie: Movie) => navigate(`/movie/${movie.id}`)
-
   return (
     <section className={s.section}>
       <div className={s.header}>
         <div className={s.titleGroup}>
           <div className={s.subtitle}>{subtitle}</div>
-          <h2 className={s.title} onClick={() => navigate('/search')}>
-            {title}
-            <span className={s.titleArrow}>→</span>
+          <h2 className={s.title}>
+            <Link to="/search" className={s.titleLink}>
+              {title}
+              <span className={s.titleArrow}>→</span>
+            </Link>
           </h2>
         </div>
         <div className={s.arrows}>
@@ -39,7 +38,7 @@ export const MovieRailDesktop = ({ title, subtitle, items }: MovieRailDesktopPro
 
       <div ref={scrollRef} className={`hide-scrollbar ${s.scroll}`}>
         {items.map((m) => (
-          <Card key={m.id} movie={m} variant="compact" onOpen={openMovie} />
+          <Card key={m.id} movie={m} variant="compact" />
         ))}
       </div>
     </section>

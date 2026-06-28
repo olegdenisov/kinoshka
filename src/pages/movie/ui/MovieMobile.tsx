@@ -155,7 +155,7 @@ export const MovieMobile = ({ movie }: MovieMobileProps) => {
           <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em' }}>More like this</h2>
         </div>
         <div className="hide-scrollbar" style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: '140px', gap: 12, overflowX: 'auto', padding: '0 20px' }}>
-          {related.map((x) => <MobileCard key={x.id} movie={x} onOpen={(m) => navigate(`/movie/${m.id}`)} />)}
+          {related.map((x) => <MobileCard key={x.id} movie={x} />)}
         </div>
       </div>
 

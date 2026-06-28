@@ -4,14 +4,13 @@ import s from './SearchResultsGrid.module.css'
 
 type SearchResultsGridProps = {
   movies: Movie[]
-  onOpen: (movie: Movie) => void
 }
 
-export const SearchResultsGrid = ({ movies, onOpen }: SearchResultsGridProps) => {
+export const SearchResultsGrid = ({ movies }: SearchResultsGridProps) => {
   return (
     <div className={s.grid}>
       {movies.map((m) => (
-        <Card key={m.id} movie={m} variant="grid" onOpen={onOpen} />
+        <Card key={m.id} movie={m} variant="grid" />
       ))}
     </div>
   )

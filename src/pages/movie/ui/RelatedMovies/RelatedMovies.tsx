@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router'
 import type { Movie } from '@entities/movie'
 import { Card } from '@entities/movie'
 import s from './RelatedMovies.module.css'
@@ -9,7 +8,6 @@ type RelatedMoviesProps = {
 }
 
 export const RelatedMovies = ({ movies, movieTitle }: RelatedMoviesProps) => {
-  const navigate = useNavigate()
   return (
     <div className={s.section}>
       <div className={s.header}>
@@ -18,7 +16,7 @@ export const RelatedMovies = ({ movies, movieTitle }: RelatedMoviesProps) => {
       </div>
       <div className={s.grid}>
         {movies.map((x) => (
-          <Card key={x.id} movie={x} variant="grid" onOpen={(m) => navigate(`/movie/${m.id}`)} />
+          <Card key={x.id} movie={x} variant="grid" />
         ))}
       </div>
     </div>
