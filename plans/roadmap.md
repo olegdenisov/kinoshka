@@ -110,12 +110,12 @@
 - Branch protection: https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches
 
 ### 0.7 Pre-commit hooks + commit conventions
-- [ ] `pnpm add -D husky lint-staged @commitlint/cli @commitlint/config-conventional`.
-- [ ] `husky init` → `.husky/pre-commit` запускает `lint-staged`.
-- [ ] `lint-staged` в `package.json`: только staged-файлы (`eslint --fix`, `prettier --write`).
-- [ ] `.husky/commit-msg` запускает `commitlint`.
-- [ ] `commitlint.config.js` extends `@commitlint/config-conventional`.
-- [ ] Опционально: `pnpm dlx commitizen init` для интерактивных коммитов.
+- [x] `pnpm add -D husky lint-staged @commitlint/cli @commitlint/config-conventional`.
+- [x] `husky init` → `.husky/pre-commit` запускает `lint-staged`.
+- [x] `lint-staged` в `package.json`: только staged-файлы (`eslint --fix`, `prettier --write`).
+- [x] `.husky/commit-msg` запускает `commitlint`.
+- [x] `commitlint.config.js` extends `@commitlint/config-conventional`.
+- [x] Опционально: `pnpm dlx commitizen init` для интерактивных коммитов.
 
 **Как лучше:** не запускай весь lint/test в pre-commit — слишком медленно, разработчики начнут использовать `--no-verify`. Только staged-файлы через `lint-staged`. Полный test/typecheck — в pre-push или CI. Commitlint конфигурация: `extends: ['@commitlint/config-conventional']` — типы `feat/fix/docs/refactor/test/chore` + scope = название FSD-слоя.
 

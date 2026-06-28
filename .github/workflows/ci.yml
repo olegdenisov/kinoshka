@@ -19,6 +19,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
       - run: make lint
 
   typecheck:
@@ -33,6 +35,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
       - run: make typecheck
 
   test:
@@ -47,6 +51,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
       - run: make test
 
   build:
@@ -62,4 +68,6 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
       - run: make build-only
