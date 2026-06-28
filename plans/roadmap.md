@@ -86,10 +86,10 @@
 - useSyncExternalStore: https://react.dev/reference/react/useSyncExternalStore
 - MDN storage event: https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event
 
-### 0.5 Feature Flags (`src/shared/config/features.ts`)
-- [ ] Статический объект с типом `Record<FeatureName, boolean>`.
-- [ ] Хук `useFeatureFlag(name)`.
-- [ ] Опционально: компонент-обёртка `<FeatureGate name="...">`.
+### 0.5 Feature Flags (`src/shared/config/features`)
+- [x] Статический объект с типом `Record<FeatureName, boolean>`.
+- [x] Хук `useFeatureFlag(name)`.
+- [x] Опционально: компонент-обёртка `<FeatureGate name="...">`.
 
 **Как лучше:** не привязывай к env — пусть будет в коде, чтобы переключать локально. Позже можно подменить source без изменения сигнатуры.
 
