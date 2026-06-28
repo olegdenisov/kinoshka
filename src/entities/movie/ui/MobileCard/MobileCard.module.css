@@ -1,5 +1,8 @@
 .card {
   cursor: pointer;
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 
 .posterWrapper {

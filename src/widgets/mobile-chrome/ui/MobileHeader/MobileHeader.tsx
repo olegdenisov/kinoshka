@@ -32,10 +32,10 @@ export const MobileHeader = ({ title, showSearch = true, onSearchFocus, onBack, 
         {title && <div className={s.title}>{title}</div>}
 
         {showSearch && !title && (
-          <div onClick={handleSearchFocus} className={s.searchTrigger}>
+          <button type="button" onClick={handleSearchFocus} className={s.searchTrigger}>
             <SearchIcon size={14} />
             <span>Search…</span>
-          </div>
+          </button>
         )}
 
         {rightAction ?? <div className={s.avatar}>AV</div>}

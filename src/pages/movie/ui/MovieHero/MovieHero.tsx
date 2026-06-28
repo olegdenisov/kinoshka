@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router'
+import { Link } from 'react-router'
 import type { Movie } from '@entities/movie'
 import { Poster, MOCK_DETAIL } from '@entities/movie'
 import { StarIcon, PlayIcon } from '@shared/ui'
@@ -35,8 +35,6 @@ type MovieHeroProps = {
 }
 
 export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
-  const navigate = useNavigate()
-
   return (
     <section className={s.hero}>
       <div className={s.backdrop}>
@@ -50,9 +48,9 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
 
       <div className={s.inner}>
         <nav className={s.breadcrumbs}>
-          <span className={s.breadcrumbLink} onClick={() => navigate('/')}>Home</span>
+          <Link to="/" className={s.breadcrumbLink}>Home</Link>
           <span className={s.breadcrumbSep}>/</span>
-          <span className={s.breadcrumbLink} onClick={() => navigate('/search')}>Catalog</span>
+          <Link to="/search" className={s.breadcrumbLink}>Catalog</Link>
           <span className={s.breadcrumbSep}>/</span>
           <span className={s.breadcrumbCurrent}>{movie.title}</span>
         </nav>

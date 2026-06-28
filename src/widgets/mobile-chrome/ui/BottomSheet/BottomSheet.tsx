@@ -17,7 +17,9 @@ export const BottomSheet = ({ open, onClose, title, children, heightVh = 82 }: B
 
   return (
     <>
-      <div
+      <button
+        type="button"
+        aria-label="Close"
         onClick={onClose}
         className={`${s.backdrop} ${open ? s.backdropOpen : ''}`}
       />

@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link } from 'react-router'
 import { MobileHeader, BottomNav } from '@widgets/mobile-chrome'
 import { MovieRailMobile } from '@widgets/movie-rail'
 import { SearchIcon } from '../../../shared/ui/Icon'
 import { CATALOG } from '@entities/movie'
 
 export const HomeMobile = () => {
-  const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState('all')
 
   const chips = [
@@ -25,7 +24,7 @@ export const HomeMobile = () => {
 
   return (
     <div style={{ background: '#0F0D11', color: '#F2F0EF', minHeight: '100vh', paddingBottom: 80 }}>
-      <MobileHeader onSearchFocus={() => navigate('/search')} />
+      <MobileHeader />
 
       <section style={{ position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0 }}>
@@ -55,18 +54,19 @@ export const HomeMobile = () => {
             What do you <em style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: '#D18E5F', fontWeight: 400 }}>want</em> to watch<span style={{ color: '#D18E5F' }}>?</span>
           </h1>
 
-          <div
-            onClick={() => navigate('/search')}
+          <Link
+            to="/search"
             style={{
               display: 'flex', alignItems: 'center', gap: 10,
               height: 48, padding: '0 14px', background: '#18161B',
               border: '1px solid rgba(184,173,171,0.15)', borderRadius: 8,
               color: '#5A5059', fontFamily: 'var(--font-body)', fontSize: 14, cursor: 'pointer',
+              textDecoration: 'none',
             }}
           >
             <SearchIcon size={16} />
             <span>Search films, series, anime…</span>
-          </div>
+          </Link>
 
           <div className="hide-scrollbar" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
             {chips.map((c) => (

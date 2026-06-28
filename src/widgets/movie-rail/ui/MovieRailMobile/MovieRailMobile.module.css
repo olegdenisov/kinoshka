@@ -30,14 +30,13 @@
 }
 
 .seeAll {
-  background: transparent;
-  border: none;
   color: var(--accent-warm);
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .scroll {

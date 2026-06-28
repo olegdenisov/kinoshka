@@ -76,6 +76,8 @@
   color: var(--text-faint);
   font-family: var(--font-body);
   font-size: 13px;
+  appearance: none;
+  text-align: left;
 }
 
 .avatar {

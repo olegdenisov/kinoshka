@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
 import { MobileHeader, BottomNav, BottomSheet } from '@widgets/mobile-chrome'
 import { ActiveFilterChips, useFilterState } from '@features/catalog-filter'
 import { MobileCard, CATALOG, ALL_GENRES } from '@entities/movie'
-import type { Movie } from '@entities/movie'
 import { FilterIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '../../../shared/ui/Icon'
 
 const TOTAL_RESULTS = 2846
@@ -54,7 +52,6 @@ const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps)
 }
 
 export const SearchMobile = () => {
-  const navigate = useNavigate()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } = useFilterState()
@@ -64,8 +61,6 @@ export const SearchMobile = () => {
     setPage(Math.max(1, Math.min(TOTAL_PAGES, p)))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
-
-  const openMovie = (movie: Movie) => navigate(`/movie/${movie.id}`)
 
   return (
     <div style={{ background: '#0F0D11', color: '#F2F0EF', minHeight: '100vh', paddingBottom: 80 }}>
@@ -122,7 +117,7 @@ export const SearchMobile = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, padding: '0 16px' }}>
-        {CATALOG.map((m) => <MobileCard key={m.id} movie={m} onOpen={openMovie} />)}
+        {CATALOG.map((m) => <MobileCard key={m.id} movie={m} />)}
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 24, padding: '0 16px' }}>

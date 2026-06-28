@@ -7,6 +7,9 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 220ms;
+  border: none;
+  padding: 0;
+  cursor: default;
 }
 
 .backdropOpen {

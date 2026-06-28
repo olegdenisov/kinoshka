@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { SearchIcon, BellIcon } from '@shared/ui'
 import { NavPill } from '../NavPill'
 import { IconButton } from '../IconButton'
@@ -24,11 +24,11 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
   return (
     <header className={s.header}>
       <div className={s.inner}>
-        <div className={s.logo} onClick={() => navigate('/')}>
+        <Link to="/" className={s.logo}>
           <span className={s.logoMain}>kino</span>
           <span className={s.logoDot}>·</span>
           <span className={s.logoMain}>shka</span>
-        </div>
+        </Link>
 
         {variant === 'search' ? (
           <div className={s.searchVariantCenter}>
