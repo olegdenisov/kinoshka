@@ -1,4 +1,4 @@
-.PHONY: dev build typecheck build-only lint preview install clean check generate-api test test-watch coverage
+.PHONY: dev build typecheck build-only lint preview install hooks clean check generate-api test test-watch coverage
 
 dev:
 	pnpm dev
@@ -20,6 +20,9 @@ preview:
 
 install:
 	pnpm install
+
+hooks:
+	pnpm exec husky
 
 clean:
 	rm -rf dist node_modules
