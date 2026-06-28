@@ -94,10 +94,10 @@
 **Как лучше:** не привязывай к env — пусть будет в коде, чтобы переключать локально. Позже можно подменить source без изменения сигнатуры.
 
 ### 0.6 CI/CD baseline (GitHub Actions)
-- [ ] `.github/workflows/ci.yml`: lint + typecheck + test + build на каждый PR и push в main.
-- [ ] Кэширование `node_modules` / pnpm store (`actions/cache` или `pnpm/action-setup` с встроенным кэшем).
+- [x] `.github/workflows/ci.yml`: lint + typecheck + test + build на каждый PR и push в main.
+- [x] Кэширование `node_modules` / pnpm store (`actions/cache` или `pnpm/action-setup` с встроенным кэшем).
 - [ ] Branch protection на `main`: required checks, no direct push.
-- [ ] PR template `.github/pull_request_template.md` (что поменялось / почему / how to test).
+- [x] PR template `.github/pull_request_template.md` (что поменялось / почему / how to test).
 - [ ] Deploy preview per PR (Vercel или Netlify, free tier — оба подходят для SPA).
 - [ ] Бейджи статуса в README.
 

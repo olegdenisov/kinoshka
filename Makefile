@@ -1,10 +1,16 @@
-.PHONY: dev build lint preview install clean check generate-api test test-watch coverage
+.PHONY: dev build typecheck build-only lint preview install clean check generate-api test test-watch coverage
 
 dev:
 	pnpm dev
 
 build:
 	pnpm build
+
+typecheck:
+	pnpm exec tsc --noEmit
+
+build-only:
+	pnpm exec vite build
 
 lint:
 	pnpm lint
