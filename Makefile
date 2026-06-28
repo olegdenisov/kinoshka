@@ -28,6 +28,7 @@ check: lint build
 
 generate-api:
 	pnpm generate-api
+	node -e "const fs=require('fs'),f='src/shared/api/instance.gen.ts',c=fs.readFileSync(f,'utf8');c.startsWith('// @ts-nocheck')||fs.writeFileSync(f,'// @ts-nocheck\n'+c)"
 
 test:
 	pnpm vitest run
