@@ -1,5 +1,11 @@
 # Kino•shka
 
+[![CI](https://github.com/olegdenisov/kinoshka/actions/workflows/ci.yml/badge.svg)](https://github.com/olegdenisov/kinoshka/actions/workflows/ci.yml)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+[![Feature-Sliced Design](https://img.shields.io/badge/Architecture-FSD-blueviolet)](https://feature-sliced.design/)
+
 Каталог фильмов — SPA с лентой на главной, поиском, фильтрами и страницами фильмов (обзор, каст, медиа).
 
 ## Стек
@@ -7,18 +13,24 @@
 - **React 19** + **TypeScript 6** + **Vite 8**
 - **React Router 7** — клиентская маршрутизация
 - **React Compiler** — автоматическая мемоизация (`babel-plugin-react-compiler`); ручные `useMemo` / `useCallback` / `memo` не нужны
+- **Vitest** + **Testing Library** — юнит и интеграционные тесты
+- **Zod** — валидация данных (localStorage, API-границы)
 - **ESLint 10** + `typescript-eslint`
 
 ## Команды
 
 ```bash
-pnpm dev        # dev-сервер с HMR
-pnpm build      # проверка типов (tsc -b) + production-сборка
-pnpm lint       # ESLint по всем TS/TSX-файлам
-pnpm preview    # раздача production-сборки локально
+make dev          # dev-сервер с HMR
+make build        # проверка типов (tsc -b) + production-сборка
+make lint         # ESLint по всем TS/TSX-файлам
+make preview      # раздача production-сборки локально
+make test         # запустить тесты один раз
+make test-watch   # тесты в watch-режиме
+make coverage     # отчёт покрытия
+make generate-api # регенерировать API-клиент из OpenAPI-спецификации
+make check        # lint + build (полная проверка)
+make clean        # удалить dist и node_modules
 ```
-
-> Тест-раннер не настроен.
 
 ## Архитектура
 
@@ -38,7 +50,7 @@ src/
 
 ## Адаптивность
 
-Страницы и виджеты реализованы парами `*Desktop` / `*Mobile`. Хук `useViewport` (`src/shared/lib/useViewport.ts`) определяет, какой вариант отрендерить.
+Страницы и виджеты реализованы парами `*Desktop` / `*Mobile`. Хук `useViewport` (`src/shared/lib/viewport/useViewport.ts`) определяет, какой вариант отрендерить. Breakpoint: **720px**.
 
 ## Структура компонентов
 

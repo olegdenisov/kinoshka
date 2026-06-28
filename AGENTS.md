@@ -17,9 +17,10 @@ make install      # install dependencies
 make clean        # remove dist and node_modules
 make check        # lint + build (full validation)
 make generate-api # regenerate API client from OpenAPI spec (re-run after spec changes)
+make test         # run Vitest once
+make test-watch   # run Vitest in watch mode
+make coverage     # run Vitest with coverage report
 ```
-
-No test runner is configured yet.
 
 ## Architecture
 
@@ -72,14 +73,15 @@ The API client is auto-generated from the Kinopoisk OpenAPI spec using `@siberia
 **Environment:** create `.env.local` at the project root before running `make generate-api`:
 ```
 APP_API_URL=<Kinopoisk OpenAPI spec URL>
-APP_API_KEY=<your API key>
+VITE_API_KEY=<your API key>
+VITE_BASE_URL=<base URL for API requests>
 ```
 
 Import the client via `@shared/api`.
 
 ## Responsive pattern
 
-Pages and widgets ship paired `*Desktop` / `*Mobile` components. The `useViewport` hook (`src/shared/lib/useViewport.ts`) drives which variant renders. Follow this pattern when adding new page or widget components.
+Pages and widgets ship paired `*Desktop` / `*Mobile` components. The `useViewport` hook (`src/shared/lib/viewport/useViewport.ts`) drives which variant renders. Follow this pattern when adding new page or widget components.
 
 - Mobile breakpoint: **720px** (`MOBILE_BREAKPOINT` in `useViewport.ts`)
 - `HomeMobile`, `SearchMobile`, `MovieMobile` are flat `.tsx` stubs with no CSS module — desktop variants are complete, mobile variants are scaffolding only.
@@ -168,7 +170,7 @@ bluesky-icon  bluesky-clip  discord-icon  documentation-icon
 github-icon   social-icon   x-icon
 ```
 
-For UI icons (search, arrow, close, etc.) either add new symbols to the sprite or use inline SVG — they do not exist yet.
+For UI icons (search, arrow, close, chevrons, play, star, etc.) use the React components from `@shared/ui` (e.g. `SearchIcon`, `CloseIcon`, `StarIcon`, `PlayIcon`, `ChevronLeftIcon`). Do not add them to the sprite.
 
 ## Key public APIs
 
@@ -176,10 +178,11 @@ For UI icons (search, arrow, close, etc.) either add new symbols to the sprite o
 |--------|---------|
 | `@entities/movie` | `Card`, `MobileCard`, `Poster`, `Movie`, `MovieDetail`, `CATALOG`, `MOCK_DETAIL`, `ALL_GENRES` |
 | `@features/catalog-filter` | `useFilterState()`, `ActiveFilterChips`, `FilterState`, `ActiveChip` |
-| `@shared/ui` | `Icon`, `Footer` |
-| `@shared/lib` | `useViewport()` → `{ isMobile: boolean }` |
-| `@shared/api` | `ApiInstance` (generated, not yet wired to any component) |
+| `@shared/ui` | `Icon`, `Footer`, `Spinner`, `Skeleton`, `EmptyState`, `ErrorState`, `ErrorBoundary`, `AsyncBoundary` |
+| `@shared/lib` | `useViewport()` → `{ isMobile: boolean }`, `useStorageSlot()`, `createStorageSlot()` |
+| `@shared/config` | `useFeatureFlag()`, `FeatureGate`, `FeatureName` |
+| `@shared/api` | `apiClient` (configured instance, not yet wired to any component) |
 
 ## Data state
 
-All pages currently render **mock data** from `@entities/movie` (`CATALOG`, `MOCK_DETAIL`, `ALL_GENRES`). The generated `ApiInstance` exists but is not connected to any component. New features should use mock data until API integration is explicitly scoped.
+All pages currently render **mock data** from `@entities/movie` (`CATALOG`, `MOCK_DETAIL`, `ALL_GENRES`). The `apiClient` instance exists but is not connected to any component. New features should use mock data until API integration is explicitly scoped.
