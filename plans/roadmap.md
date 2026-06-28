@@ -96,10 +96,10 @@
 ### 0.6 CI/CD baseline (GitHub Actions)
 - [x] `.github/workflows/ci.yml`: lint + typecheck + test + build на каждый PR и push в main.
 - [x] Кэширование `node_modules` / pnpm store (`actions/cache` или `pnpm/action-setup` с встроенным кэшем).
-- [ ] Branch protection на `main`: required checks, no direct push.
+- [x] Branch protection на `main`: required checks, no direct push.
 - [x] PR template `.github/pull_request_template.md` (что поменялось / почему / how to test).
-- [ ] Deploy preview per PR (Vercel или Netlify, free tier — оба подходят для SPA).
-- [ ] Бейджи статуса в README.
+- [х] Deploy preview per PR (Vercel или Netlify, free tier — оба подходят для SPA).
+- [x] Бейджи статуса в README.
 
 **Как лучше:** PR-чек должен быть быстрый (< 3 мин), иначе никто не ждёт. Параллель jobs: lint, typecheck, test — отдельные jobs, не последовательно. Build — отдельно, в конце. Использовать `actions/setup-node@v4` + `cache: 'pnpm'` для авто-кэширования.
 
