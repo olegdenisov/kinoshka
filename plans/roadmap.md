@@ -65,7 +65,7 @@
 - [x] `make test` в `Makefile`.
 - [x] `src/test/setup.ts` с `@testing-library/jest-dom/vitest`.
 - [x] Минимум один проходящий smoke-тест.
-- [ ] `pnpm add -D msw` — для integration-тестов, мокающих API на сетевом уровне (единственное оправданное место моков, см. ниже).
+- [x] `pnpm add -D msw` — для integration-тестов, мокающих API на сетевом уровне (единственное оправданное место моков, см. ниже).
 
 **Как лучше:** не тестируй UI mock-ами — тестируй pure functions (фильтры, selectors, recommendations rule). Для компонентов — только smoke + accessibility через `user-event`. MSW (Mock Service Worker) для мокирования API на integration-уровне — единственное место, где моки оправданы.
 
@@ -115,7 +115,7 @@
 - [x] `pnpm add -D husky lint-staged @commitlint/cli @commitlint/config-conventional`.
 - [x] `husky init` → `.husky/pre-commit` запускает `lint-staged`.
 - [x] `lint-staged` в `package.json`: только staged-файлы (`eslint --fix --max-warnings=0`). Prettier не используется — форматирование через ESLint-правила.
-- [ ] ESLint-правило `no-console` (error, кроме `warn`/`error`) — без него `console.log` не блокируется pre-commit hook (см. Verification Phase 0).
+- [x] ESLint-правило `no-console` (error, кроме `warn`/`error`) — без него `console.log` не блокируется pre-commit hook (см. Verification Phase 0).
 - [x] `.husky/commit-msg` запускает `commitlint`.
 - [x] `commitlint.config.js` extends `@commitlint/config-conventional`.
 - [x] Опционально: `pnpm dlx commitizen init` для интерактивных коммитов.
