@@ -2,7 +2,7 @@
 
 ## Context
 
-Проект — каталог фильмов/сериалов/анимации на React 19 + TS + Vite + FSD. Цель — продемонстрировать архитектурную зрелость уровня Senior. Текущее состояние `main`: UI-каркас полностью собран, но всё данные мок (`CATALOG` из `@entities/movie`), фильтры/поиск/пагинация — нефункциональный shell, нет global state, нет API-интеграции, нет favorites/theme/popular. Сгенерированный API-клиент (`src/shared/api/instance.gen.ts`) существует, но не подключён и не получает `X-API-KEY`.
+Проект — каталог фильмов/сериалов/анимации на React 19 + TS + Vite + FSD. Цель — продемонстрировать архитектурную зрелость уровня Senior. Текущее состояние `main`: UI-каркас полностью собран, но все данные — мок (`CATALOG` из `@entities/movie`), фильтры/поиск/пагинация — нефункциональный shell, нет global state, нет favorites/theme/popular. API-клиент (`src/shared/api/client.ts`) настроен и получает `X-API-KEY` (Phase 0 сделана), но ни один компонент ещё не переведён на реальные данные — это задача Phase 1.
 
 В ветке `rtk` уже сделан фундамент: configureStore + RTK Query + `sdkBaseQuery` (обёртка над apicraft SDK) + endpoints `getMovies/getGenres` + URL-sync фильтров.
 
@@ -50,9 +50,9 @@
 - [x] `EmptyState` — пустой результат.
 - [x] `ErrorState` — ошибка + retry-кнопка.
 - [x] `ErrorBoundary` (классовый — единственное оправданное место) + дефолтный fallback.
-- [x] `AsyncBoundary` — HOC, инкапсулирующий loading/error/empty/children.
+- [x] `AsyncBoundary` — wrapper-компонент, инкапсулирующий loading/error/empty/children.
 
-**Как лучше:** один `<AsyncBoundary>` HOC вместо ручного `if loading / if error / if empty / else` в каждом компоненте — не дублируешь код. С React 19 + Suspense это становится `<Suspense fallback={<Skeleton/>}><ErrorBoundary fallback={<ErrorState/>}>{children}</ErrorBoundary></Suspense>` — больше не нужны `isLoading`/`error` пропы.
+**Как лучше:** один `<AsyncBoundary>` вместо ручного `if loading / if error / if empty / else` в каждом компоненте — не дублируешь код. С React 19 + Suspense это становится `<Suspense fallback={<Skeleton/>}><ErrorBoundary fallback={<ErrorState/>}>{children}</ErrorBoundary></Suspense>` — больше не нужны `isLoading`/`error` пропы.
 
 **📚 Refs:**
 - React Suspense: https://react.dev/reference/react/Suspense
@@ -65,6 +65,7 @@
 - [x] `make test` в `Makefile`.
 - [x] `src/test/setup.ts` с `@testing-library/jest-dom/vitest`.
 - [x] Минимум один проходящий smoke-тест.
+- [ ] `pnpm add -D msw` — для integration-тестов, мокающих API на сетевом уровне (единственное оправданное место моков, см. ниже).
 
 **Как лучше:** не тестируй UI mock-ами — тестируй pure functions (фильтры, selectors, recommendations rule). Для компонентов — только smoke + accessibility через `user-event`. MSW (Mock Service Worker) для мокирования API на integration-уровне — единственное место, где моки оправданы.
 
@@ -98,7 +99,8 @@
 - [x] Кэширование `node_modules` / pnpm store (`actions/cache` или `pnpm/action-setup` с встроенным кэшем).
 - [x] Branch protection на `main`: required checks, no direct push.
 - [x] PR template `.github/pull_request_template.md` (что поменялось / почему / how to test).
-- [х] Deploy preview per PR (Vercel или Netlify, free tier — оба подходят для SPA).
+- [x] Deploy preview per PR (Vercel или Netlify, free tier — оба подходят для SPA).
+- [ ] FSD-линтер (`steiger` или `eslint-plugin-boundaries`) в CI — автоматически проверяет направление импортов `pages → widgets → features → entities → shared`, а не только дисциплиной ревью.
 - [x] Бейджи статуса в README.
 
 **Как лучше:** PR-чек должен быть быстрый (< 3 мин), иначе никто не ждёт. Параллель jobs: lint, typecheck, test — отдельные jobs, не последовательно. Build — отдельно, в конце. Использовать `actions/setup-node@v4` + `cache: 'pnpm'` для авто-кэширования.
@@ -112,7 +114,8 @@
 ### 0.7 Pre-commit hooks + commit conventions
 - [x] `pnpm add -D husky lint-staged @commitlint/cli @commitlint/config-conventional`.
 - [x] `husky init` → `.husky/pre-commit` запускает `lint-staged`.
-- [x] `lint-staged` в `package.json`: только staged-файлы (`eslint --fix`, `prettier --write`).
+- [x] `lint-staged` в `package.json`: только staged-файлы (`eslint --fix --max-warnings=0`). Prettier не используется — форматирование через ESLint-правила.
+- [ ] ESLint-правило `no-console` (error, кроме `warn`/`error`) — без него `console.log` не блокируется pre-commit hook (см. Verification Phase 0).
 - [x] `.husky/commit-msg` запускает `commitlint`.
 - [x] `commitlint.config.js` extends `@commitlint/config-conventional`.
 - [x] Опционально: `pnpm dlx commitizen init` для интерактивных коммитов.
@@ -170,6 +173,7 @@
 - [ ] Хук `useMoviesByGenre(genre)`.
 - [ ] `HomeDesktop`: rails используют новые хуки, `CATALOG` удалён из импортов на главной.
 - [ ] Skeleton при загрузке rails.
+- [ ] Обработка 429 (rate limit бесплатного тарифа Kinopoisk API) + dev-кэш ответов в `sessionStorage`, чтобы не выжигать лимит при разработке.
 
 **Как лучше:** не тащи всё в один хук. Узкие хуки — в фазе 3 они станут endpoints/atoms/queries без изменения API на уровне UI. С React 19 use(): `const movies = use(moviesPromise)` внутри Suspense — функции возвращают promise, компонент его читает. Дедупликация запросов: внешний кэш `const cache = new Map<string, Promise>()` (примитивный, но работает до Phase 3).
 
@@ -201,12 +205,12 @@
 **Как лучше:** URL — single source of truth для фильтров (shareable links, back/forward работают). Локальный state — только для UI-черновика, если будет «Применить».
 
 ### 1.4 Пагинация
-- [ ] `/search` — нумерованная (offset, v1.4).
+- [ ] `/search` — нумерованная (`page`/`limit`, v1.4 — параметра `offset` в этой версии API нет).
 - [ ] Главная rails — `limit: 10`, без пагинации.
 - [ ] Корректная обработка last page / total = 0.
 - [ ] Сохранение страницы в URL (`?page=2`).
 
-**Как лучше:** для каталога/главной планируй infinite scroll (см. 2.7 virtualization) — современнее.
+**Как лучше:** пагинация здесь — только для `/search` (numbered). Виртуализация (2.7) имеет смысл только для infinite scroll — не смешивай оба подхода на одной странице.
 
 ### 1.5 Детальная страница
 - [ ] `instance.getV14MovieById(...)` подключён, `MOCK_DETAIL` удалён.
@@ -238,7 +242,7 @@
 - [ ] Хук `useFavorites()` + actions `toggle/add/remove/clear`.
 - [ ] Selector `isFavorite(id)`.
 - [ ] Хук `useFavoriteMovies()` подгружает данные по ID (`Promise.allSettled`).
-- [ ] Кнопка-сердечко в `entities/movie/ui/Card` с `useOptimistic` (мгновенный UI-отклик).
+- [ ] Кнопка-сердечко в `entities/movie/ui/Card` — синхронный toggle (localStorage-запись мгновенна, `useOptimistic` тут не нужен — пользу он даст только когда favorites уедут на сервер, см. 5.4).
 - [ ] Страница `/favorites` с пустым state.
 - [ ] Edge case: удалённый контент (server 404) — фильтр fulfilled.
 - [ ] Edge case: cross-tab sync через `storage` event.
@@ -251,6 +255,7 @@
 - BroadcastChannel API (для cross-tab — альтернатива storage-event): https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel
 
 ### 2.2 Theme toggle 🌙
+- [ ] Спроектировать светлую палитру (текущие токены — dark-only, `#0F0D11` и тёплый акцент механически не переносятся).
 - [ ] Светлые токены `:root[data-theme="light"] { ... }` в `global.css`.
 - [ ] `features/theme/`, модель `'light' | 'dark' | 'system'`.
 - [ ] `useTheme()` — атрибут `data-theme` на `<html>`, слушает `prefers-color-scheme` если `system`.
@@ -290,16 +295,20 @@
 **Как лучше:** не дублируй data-логику — общие хуки, различные UI-композиции.
 
 ### 2.6 Error boundaries
-- [ ] Один global ErrorBoundary в `app/`.
-- [ ] Per-route ErrorBoundary в `pages/*`.
+- [ ] Global `ErrorBoundary` (уже готов, 0.2) подключён в `app/`.
+- [ ] Per-route `ErrorBoundary` в `pages/*` — используют существующий компонент, не новый.
 - [ ] Fallback с retry + ссылкой на главную.
-- [ ] Опционально: `react-error-boundary` библиотека.
 
-**Как лучше:** `react-error-boundary` > свой класс, если не хочешь писать `componentDidCatch`.
+**Как лучше:** свой класс из 0.2 уже написан и работает — не заводи параллельно `react-error-boundary`, это дублирование одной и той же концепции.
+
+### 2.8 Навигация к новым страницам
+- [ ] `/favorites`, `/popular`, `/recommendations` добавлены в `Header`/`BottomNav`.
+
+**Как лучше:** делай это сразу по мере появления каждой страницы (2.1/2.3/2.4), а не отдельным проходом в конце — иначе часть ссылок забудется.
 
 ### 2.7 Performance — virtualization
-- [ ] `@tanstack/react-virtual` (либо `react-window`) для grid на `/search`.
-- [ ] То же для rails на главной.
+- [ ] `@tanstack/react-virtual` (либо `react-window`) для rails на главной (много карточек в DOM одновременно).
+- [ ] Если `/search` перейдёт на infinite scroll (вместо нумерованной пагинации из 1.4) — виртуализация грида там же; при обычной постраничке (20-50 карточек) виртуализация избыточна.
 - [ ] `<img loading="lazy" decoding="async" />` на постерах.
 - [ ] Lighthouse Performance измерен до/после.
 
@@ -335,7 +344,7 @@
 
 ### 2.5.2 Web Vitals + analytics
 - [ ] `pnpm add web-vitals`.
-- [ ] Репортинг LCP/CLS/INP/FCP/TTFB в Sentry (через `Sentry.metrics`) или PostHog.
+- [ ] Web Vitals в Sentry — через `browserTracingIntegration` (Sentry Performance, `tracesSampleRate > 0`; отдельный API `Sentry.metrics` упразднён в 2024) — либо через `web-vitals` → события в PostHog/Plausible.
 - [ ] Analytics: PostHog (self-hosted free tier) либо Plausible (privacy-first, без cookie-баннера).
 - [ ] Event tracking минимальный: page view, search submitted, filter changed, favorite added.
 
@@ -349,6 +358,7 @@
 
 ### 2.5.3 Performance budgets + bundle visualization
 - [ ] `pnpm add -D size-limit @size-limit/preset-app rollup-plugin-visualizer`.
+- [ ] `pnpm add -D knip` — детектор unused exports/deps/files, job в CI.
 - [ ] `size-limit` config в `package.json`: лимиты на entry bundle, vendor, per-route chunk.
 - [ ] `size-limit` job в CI — fail при превышении.
 - [ ] `rollup-plugin-visualizer` в `vite.config.ts` (mode `--analyze` → `dist/stats.html`).
@@ -363,13 +373,13 @@
 - bundlejs.com (онлайн bundle size check): https://bundlejs.com/
 
 ### 2.5.4 CSP headers + security
-- [ ] CSP meta-тег в `index.html` в `report-only` режиме сначала.
+- [ ] CSP через HTTP-заголовок `Content-Security-Policy-Report-Only` (хостинг-конфиг — `vercel.json`/`netlify.toml`/`_headers`; **не** meta-тег — браузеры не поддерживают `report-uri`/`report-to`/`frame-ancestors` и сам режим report-only в `<meta>`).
 - [ ] Endpoint для CSP-violations (можно в Sentry).
-- [ ] После 1-2 недель без legitimate violations — переключение на enforce.
-- [ ] Дополнительно: `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` (через хостинг-конфиг — `vercel.json`, `netlify.toml`, `_headers`).
+- [ ] После 1-2 недель без legitimate violations — переключение заголовка на enforce (`Content-Security-Policy`).
+- [ ] Дополнительно: `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` (тот же хостинг-конфиг).
 - [ ] SRI (Subresource Integrity) для external scripts (если есть).
 
-**Как лучше:** включай CSP в production, не в dev — иначе мешает HMR. В фазе 4 (SSR) — заголовки выставляются сервером, не meta-тегом. Прогони итоговую конфигурацию через CSP Evaluator.
+**Как лучше:** включай CSP в production, не в dev — иначе мешает HMR. В фазе 4 (SSR) — заголовки выставляются сервером напрямую. Прогони итоговую конфигурацию через CSP Evaluator.
 
 **📚 Refs:**
 - MDN CSP: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
@@ -388,6 +398,7 @@
   - [ ] Favorites: добавить → перезагрузить → присутствует.
   - [ ] Theme toggle меняет атрибут на `<html>`.
 - [ ] A11y-проверка через `AxeBuilder` в каждом E2E-тесте (нет critical violations).
+- [ ] Отдельный Playwright project с mobile viewport emulation (`devices['iPhone 13']`) — хотя бы smoke на `/`, `/search`, `/movie/:id`.
 - [ ] E2E job в CI на каждый PR (параллельные шарды, `--workers=4`).
 
 **Как лучше:** только critical user journeys в E2E. Не пытайся покрыть всё — это будет hell maintenance. Edge-cases — unit/integration тесты. Используй `data-testid` только когда нет семантического селектора — приоритет: role > label > text > testid.
@@ -423,6 +434,8 @@
 ## Фаза 3. State management — параллельные ветки
 
 Каждая ветка повторяет Phases 1+2, но через свой state-tool. Цель — сравнить DX, бойлерплейт, перформанс, размер бандла.
+
+**Приоритизация:** семь веток — это месяцы работы. Для сравнительной таблицы (3.8) достаточно 3-4 идеологически разных подхода: `rtk` (уже начато), `tanstack-query` + Zustand (3.7 — production-default и база для Phase 4 SSR), `jotai` (atomic subscriptions). `mobx`/`reatom`/`effector`/соло-`zustand` — по желанию, как stretch goals.
 
 ### 3.1 `rtk` (уже начато)
 - [ ] Favorites в `createSlice` с persist (`redux-persist` или listener middleware).
@@ -535,7 +548,7 @@
 Брать `tanstack-query` (3.7) как базу — Query поддерживает hydration из коробки.
 
 ### 4.1 `ssr/nextjs`
-- [ ] Миграция Vite → Next.js 15 (App Router).
+- [ ] Миграция Vite → Next.js (актуальный major на момент реализации — на момент написания плана это Next.js 15, но проверь релиз-ноуты перед стартом).
 - [ ] File-routing: `app/page.tsx`, `app/movie/[id]/page.tsx`, `app/search/page.tsx`.
 - [ ] RSC по умолчанию, `'use client'` точечно.
 - [ ] ISR на главной (`revalidate: 3600`).
@@ -672,6 +685,7 @@
 - [ ] Cross-tab session sync.
 - [ ] Logout очищает cookie и server session.
 - [ ] Favorites guest → user merge при логине.
+- [ ] Favorites-мутация переведена на `useOptimistic` (перенесено из Phase 2 — на localStorage оптимистичный UI был избыточен, здесь запрос реально асинхронный).
 - [ ] README с архитектурной диаграммой.
 
 ---
@@ -740,7 +754,7 @@
 - [ ] Offline-banner: «Вы offline, показаны кэшированные данные».
 - [ ] Favorites работают offline (уже работают через localStorage из 2.1).
 - [ ] Install prompt компонент (отслеживай `beforeinstallprompt` event).
-- [ ] Lighthouse PWA audit ≥ 90.
+- [ ] Manifest валиден без ошибок (DevTools → Application → Manifest), приложение устанавливается (`beforeinstallprompt` срабатывает), offline-smoke зелёный (`context.setOffline(true)` в Playwright). *(Категория "PWA" удалена из Lighthouse начиная с v12 — не использовать как числовой критерий.)*
 
 **Как лучше:** Workbox через `vite-plugin-pwa` проще, чем писать SW руками. Не кэшируй `index.html` long-term (иначе stuck users). Workbox revision-aware для статики. `registerType: 'autoUpdate'` — UI обновится при появлении новой версии SW (с консент-промптом или без).
 
@@ -798,7 +812,6 @@
 - [ ] 3-5 favorites → `/recommendations` показывает релевантные.
 - [ ] <720px → mobile-варианты страниц.
 - [ ] Lighthouse Performance ≥ 90 для главной.
-- [ ] `useOptimistic` на favorites — клик по сердечку даёт мгновенный UI-отклик до завершения операции.
 
 ### Phase 2.5
 - [ ] Кинь `throw new Error('test')` в production-сборке → ошибка появляется в Sentry с source-map.
@@ -841,7 +854,7 @@
 - [ ] LanguageSwitcher переключает ru → en, все строки локализованы.
 - [ ] `Intl.NumberFormat` показывает рейтинг как `8,4` в ru и `8.4` в en.
 - [ ] Offline-режим: выключи сеть → favorites доступны, на остальных страницах банер.
-- [ ] Lighthouse PWA audit ≥ 90.
+- [ ] Manifest без ошибок в DevTools, offline-режим проходит smoke-тест.
 - [ ] Намеренное визуальное изменение (цвет кнопки) → visual regression PR падает.
 
 ---
@@ -937,7 +950,7 @@
 - Josh W. Comeau (React / CSS / DX): https://www.joshwcomeau.com/
 - Kent C. Dodds (testing / React): https://kentcdodds.com/blog
 - Mark Erikson (Redux maintainer): https://blog.isquaredsoftware.com/
-- Lee Robinson (Vercel/Next): https://leerob.com/n
+- Lee Robinson (Vercel/Next): https://leerob.com/
 - Theo Browne (стек, экосистема): https://t3.gg/
 
 **Карьерный рост Senior:**
