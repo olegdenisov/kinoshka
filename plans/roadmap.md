@@ -141,13 +141,13 @@
 - :focus-visible: https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-visible
 
 ### 0.9 Security baseline
-- [ ] Pre-commit hook `gitleaks` (или `trufflehog`) — блокировать коммиты с секретами.
-- [ ] `Dependabot` или `Renovate` config (`.github/dependabot.yml`) — weekly PR с обновлениями зависимостей.
-- [ ] `npm audit --audit-level=high` в CI (fail на high+).
-- [ ] `.env.local` точно в `.gitignore`, `.env.example` с пустыми значениями в репо.
-- [ ] CodeQL action `.github/workflows/codeql.yml` (бесплатно для public-репо).
+- [x] Pre-commit hook `gitleaks` (или `trufflehog`) — блокировать коммиты с секретами.
+- [x] `Dependabot` или `Renovate` config (`.github/dependabot.yml`) — weekly PR с обновлениями зависимостей.
+- [x] `pnpm audit --audit-level high --prod` в CI (fail на high+).
+- [x] `.env.local` точно в `.gitignore`, `.env.example` с пустыми значениями в репо.
+- [x] CodeQL action `.github/workflows/codeql.yml` (бесплатно для public-репо).
 
-**Как лучше:** Renovate гибче Dependabot (group updates, schedules, лучше для монорепо). Для одного frontend-репо — Dependabot достаточен. CodeQL — статический анализ от GitHub, ловит security-bugs в TS-коде.
+**Как лучше:** Renovate гибче Dependabot (group updates, schedules, лучше для монорепо). Для одного frontend-репо — Dependabot достаточен. CodeQL — статический анализ от GitHub, ловит security-bugs в TS-коде. Проект на pnpm, а не npm — используется `pnpm audit`, не `npm audit`. Флаг `--prod` нужен, т.к. `apicraft` (codegen-тул, `devDependencies`) тянет транзитивные high/critical уязвимости (handlebars, tar), которые не попадают в рантайм-бандл и не должны блокировать CI. Альтернатива ручному `codeql.yml` — включить CodeQL Default Setup в настройках репозитория на GitHub (без workflow-файла). `cooldown.default-days: 30` в `dependabot.yml` — не предлагать обновление, пока новая версия не «отлежалась» 30 дней (security-обновления это ограничение игнорируют).
 
 **📚 Refs:**
 - gitleaks: https://github.com/gitleaks/gitleaks

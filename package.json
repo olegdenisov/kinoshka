@@ -22,7 +22,6 @@
     "*.{ts,tsx}": "eslint --fix --max-warnings=0"
   },
   "dependencies": {
-    "@siberiacancode/apicraft": "^1.11.1",
     "@siberiacancode/fetches": "^1.14.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
@@ -31,6 +30,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
+    "@siberiacancode/apicraft": "^1.11.1",
     "@commitlint/cli": "^21.1.0",
     "@commitlint/config-conventional": "^21.1.0",
     "@eslint/js": "^10.0.1",
