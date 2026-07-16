@@ -167,10 +167,10 @@
 Цель — переход с мока на API без введения state-менеджера. Использовать пока хуки + `useState`/`useReducer`.
 
 ### 1.1 Каталог на главной с реальным API
-- [ ] `src/entities/movie/api/getMovies.ts` — обёртка над `instance.getV15Movie(...)` с маппингом DTO → `Movie`.
-- [ ] Хук `useTopRatedMovies()` (sortField=rating.kp, sortType=-1).
-- [ ] Хук `useNewMovies()` (year=current).
-- [ ] Хук `useMoviesByGenre(genre)`.
+- [x] `src/entities/movie/api/getMovies.ts` — обёртка над `instance.getV15Movie(...)` с маппингом DTO → `Movie`.
+- [x] Хук `useTopRatedMovies()` (sortField=rating.kp, sortType=-1).
+- [x] Хук `useNewMovies()` (year=current).
+- [x] Хук `useMoviesByGenre(genre)`.
 - [ ] `HomeDesktop`: rails используют новые хуки, `CATALOG` удалён из импортов на главной.
 - [ ] Skeleton при загрузке rails.
 - [ ] Обработка 429 (rate limit бесплатного тарифа Kinopoisk API) + dev-кэш ответов в `sessionStorage`, чтобы не выжигать лимит при разработке.
