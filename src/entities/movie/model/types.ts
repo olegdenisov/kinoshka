@@ -1,4 +1,4 @@
-export type MovieType = 'movie' | 'series' | 'anime'
+export type MovieType = 'movie' | 'tv-series' | 'cartoon' | 'anime' | 'animated-series'
 
 export type Movie = {
   id: number
