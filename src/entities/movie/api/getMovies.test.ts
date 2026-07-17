@@ -120,6 +120,28 @@ describe('getMovies — in-memory кэш', () => {
   })
 })
 
+describe('getMovies — маппинг полей', () => {
+  it('year отсутствует — undefined, а не текущий год', async () => {
+    const counter = { count: 0 }
+    mockSuccess(counter, [doc({ year: null })])
+    const getMovies = await importGetMovies()
+
+    const [movie] = await getMovies({ type: ['movie'] })
+
+    expect(movie.year).toBeUndefined()
+  })
+
+  it('rating.kp равен 0 — используется 0, а не rating.imdb', async () => {
+    const counter = { count: 0 }
+    mockSuccess(counter, [doc({ rating: { kp: 0, imdb: 6.5 } })])
+    const getMovies = await importGetMovies()
+
+    const [movie] = await getMovies({ type: ['movie'] })
+
+    expect(movie.rating).toBe(0)
+  })
+})
+
 describe('getMovies — cooldown при 403', () => {
   it('403 — промис реджектится', async () => {
     const counter = { count: 0 }
@@ -153,6 +175,24 @@ describe('getMovies — cooldown при 403', () => {
 
     expect(counter.count).toBe(2)
   })
+
+  it('Реджект несёт реальное сообщение ошибки сервера, а не generic-текст', async () => {
+    const counter = { count: 0 }
+    mockForbidden(counter)
+    const getMovies = await importGetMovies()
+
+    await expect(getMovies({ type: ['movie'] })).rejects.toThrow('Forbidden')
+  })
+
+  it('В пределах cooldown — реджект из in-memory кэша тоже несёт реальное сообщение', async () => {
+    const counter = { count: 0 }
+    mockForbidden(counter)
+    const getMovies = await importGetMovies()
+    const params = { type: ['movie' as const] }
+
+    await expect(getMovies(params)).rejects.toThrow('Forbidden')
+    await expect(getMovies(params)).rejects.toThrow('Forbidden')
+  })
 })
 
 describe('getMovies — dev-кэш в sessionStorage переживает reload/HMR', () => {
@@ -182,6 +222,20 @@ describe('getMovies — dev-кэш в sessionStorage переживает reload
 
     const secondGetMovies = await importGetMovies()
     await expect(secondGetMovies(params)).rejects.toThrow()
+
+    expect(counter.count).toBe(1)
+  })
+
+  it('403-cooldown — восстановленный из sessionStorage реджект несёт реальное сообщение, а не generic-текст', async () => {
+    const counter = { count: 0 }
+    mockForbidden(counter)
+    const params = { type: ['movie' as const] }
+
+    const firstGetMovies = await importGetMovies()
+    await expect(firstGetMovies(params)).rejects.toThrow('Forbidden')
+
+    const secondGetMovies = await importGetMovies()
+    await expect(secondGetMovies(params)).rejects.toThrow('Forbidden')
 
     expect(counter.count).toBe(1)
   })

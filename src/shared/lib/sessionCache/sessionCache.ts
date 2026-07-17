@@ -1,4 +1,4 @@
-export type SessionCacheEntry<T> = { data: T; timestamp: number; isError: boolean }
+export type SessionCacheEntry<T> = { data: T; timestamp: number; isError: boolean; message?: string }
 
 export type SessionCache<T> = {
   get: (key: string) => SessionCacheEntry<T> | undefined

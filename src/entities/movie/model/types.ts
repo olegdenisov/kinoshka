@@ -3,12 +3,12 @@ export type MovieType = 'movie' | 'tv-series' | 'cartoon' | 'anime' | 'animated-
 export type Movie = {
   id: number
   title: string
-  year: number
   rating: number
   type: MovieType
   genre: string[]
   runtime: string
   hue: number
+  year?: number
   poster?: string
 }
 
