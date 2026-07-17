@@ -146,7 +146,7 @@
   position: relative;
   height: 4px;
   border-radius: 2px;
-  background: rgba(184, 173, 171, 0.1);
+  background: var(--border-subtle);
 }
 
 .rangeFill {

@@ -35,7 +35,7 @@
   padding: 0 16px;
   background: transparent;
   color: var(--text-primary);
-  border: 1px solid rgba(184,173,171,0.2);
+  border: 1px solid var(--border-strong);
   border-radius: 5px;
   cursor: pointer;
   font-family: var(--font-body);

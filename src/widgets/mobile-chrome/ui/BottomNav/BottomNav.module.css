@@ -7,7 +7,7 @@
   background: rgba(15, 13, 17, 0.92);
   backdrop-filter: blur(20px) saturate(1.2);
   -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  border-top: 1px solid rgba(184, 173, 171, 0.1);
+  border-top: 1px solid var(--border-subtle);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
