@@ -6,6 +6,7 @@ import { PopularMoviesRail } from '../PopularMoviesRail'
 import { TrandingSeriesRail } from '../TrandingSeriesRail'
 import { TopAnimeRails } from '../TopAnimeRails'
 import { PersonalRails } from '../PersonalRails'
+import { MovieRailSkeletonDesktop } from '@widgets/movie-rail'
 
 export const HomeDesktop = () => {
   return (
@@ -13,16 +14,16 @@ export const HomeDesktop = () => {
       <Header activeNav="home" />
       <HeroSection />
       <div className={s.rails}>
-        <AsyncBoundary>
+        <AsyncBoundary fallback={<MovieRailSkeletonDesktop />}>
           <PopularMoviesRail />
         </AsyncBoundary>
-        <AsyncBoundary>
+        <AsyncBoundary fallback={<MovieRailSkeletonDesktop />}>
           <TrandingSeriesRail />
         </AsyncBoundary>
-        <AsyncBoundary>
+        <AsyncBoundary fallback={<MovieRailSkeletonDesktop />}>
           <TopAnimeRails />
         </AsyncBoundary>
-        <AsyncBoundary>
+        <AsyncBoundary fallback={<MovieRailSkeletonDesktop />}>
           <PersonalRails />
         </AsyncBoundary>
       </div>

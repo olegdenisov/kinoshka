@@ -1,0 +1,78 @@
+.section {
+  margin-bottom: 64px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subtitle {
+  width: 120px;
+  height: 12px;
+  border-radius: 4px;
+}
+
+.title {
+  width: 200px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.arrows {
+  display: flex;
+  gap: 6px;
+}
+
+.arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 200px;
+  gap: 20px;
+  height: 300px;
+  overflow: hidden;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.poster {
+  width: 200px;
+  height: 300px;
+  border-radius: 6px;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.infoTitle {
+  width: 140px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.infoMeta {
+  width: 100px;
+  height: 12px;
+  border-radius: 4px;
+}
