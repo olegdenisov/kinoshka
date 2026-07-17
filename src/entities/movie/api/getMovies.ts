@@ -1,8 +1,8 @@
-import { apiClient, type MovieControllerFindManyByQueryV14Data } from "@shared/api";
+import { apiClient, type MovieControllerFindManyByQueryV15Data } from "@shared/api";
 import { createSessionCache } from "@shared/lib";
 import type { Movie, MovieType } from "../model/types";
 
-type RequestParams = MovieControllerFindManyByQueryV14Data['query'];
+type RequestParams = MovieControllerFindManyByQueryV15Data['query'];
 
 const fetchMovies = async (params: RequestParams): Promise<Movie[]> => {
   const response = await apiClient.getV15Movie({ 
