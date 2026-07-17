@@ -170,12 +170,15 @@
 - [x] `src/entities/movie/api/getMovies.ts` — обёртка над `instance.getV15Movie(...)` с маппингом DTO → `Movie`.
 - [x] Хук `useTopRatedMovies()` (sortField=rating.kp, sortType=-1).
 - [x] Хук `useNewMovies()` (year=current).
-- [x] Хук `useMoviesByGenre(genre)`.
-- [x] `HomeDesktop`: rails используют новые хуки, `CATALOG` удалён из импортов на главной.
-- [ ] Skeleton при загрузке rails.
-- [ ] Обработка 429 (rate limit бесплатного тарифа Kinopoisk API) + dev-кэш ответов в `sessionStorage`, чтобы не выжигать лимит при разработке.
+- [x] `HomeDesktop`: rails используют новые хуки, `CATALOG` удалён из импортов на главной (desktop; `HomeMobile` остаётся на `CATALOG` до 2.5).
+- [x] Skeleton при загрузке rails.
+- [x] Обработка rate limit: API возвращает **403** (не 429) при исчерпании суточного лимита — isError-кэш с cooldown 20с в `getMovies.ts` + нормализация сообщения в interceptor (коммит ccddf08).
+- [x] Dev-кэш ответов в `sessionStorage` (переживает reload/HMR) — текущий in-memory `Map` умирает при каждой перезагрузке и выжигает квоту 200 запросов/сутки при разработке.
+- [ ] Перетипизировать `RequestParams` в `getMovies.ts` с V14 на V15: реальный эндпоинт `/v1.5/movie` — курсорная пагинация (`next`/`prev`), параметра `page` там нет.
 
 **Как лучше:** не тащи всё в один хук. Узкие хуки — в фазе 3 они станут endpoints/atoms/queries без изменения API на уровне UI. С React 19 use(): `const movies = use(moviesPromise)` внутри Suspense — функции возвращают promise, компонент его читает. Дедупликация запросов: внешний кэш `const cache = new Map<string, Promise>()` (примитивный, но работает до Phase 3).
+
+**Ограничения demo-тарифа (poiskkino.dev, бывший kinopoisk.dev):** 200 запросов/сутки; `limit ≤ 10`; доступны только страницы 1–10. Превышение лимита приходит как **403** с телом `{ statusCode, message, error }` (`ForbiddenErrorResponseDto` в `types.gen.ts`), статуса 429 у API нет — errors-тип `getV15Movie` описывает только 400/401/403. Нюанс выборки: `useNewMovies` с `year=[текущий]` + жёсткий фильтр `rating.kp: 7-10` + `notNullFields` по постерам/рейтингам в первой половине года даёт тощий результат — надёжнее диапазон `«{prev}-{current}»`.
 
 **📚 Refs:**
 - React use(): https://react.dev/reference/react/use
@@ -209,8 +212,9 @@
 - [ ] Главная rails — `limit: 10`, без пагинации.
 - [ ] Корректная обработка last page / total = 0.
 - [ ] Сохранение страницы в URL (`?page=2`).
+- [ ] UI не рисует страницы дальше 10-й на demo-ключе (запрос `page > 10` вернёт 403).
 
-**Как лучше:** пагинация здесь — только для `/search` (numbered). Виртуализация (2.7) имеет смысл только для infinite scroll — не смешивай оба подхода на одной странице.
+**Как лучше:** пагинация здесь — только для `/search` (numbered). Виртуализация (2.7) имеет смысл только для infinite scroll — не смешивай оба подхода на одной странице. Для нумерованной пагинации бери **v1.4** (`page`/`limit`) — v1.5 курсорный (`next`/`prev`), `page` не принимает. На demo-тарифе жёсткий потолок: `limit ≤ 10`, страницы 1–10 → максимум 100 элементов на любую выборку.
 
 ### 1.5 Детальная страница
 - [ ] `instance.getV14MovieById(...)` подключён, `MOCK_DETAIL` удалён.
@@ -801,7 +805,7 @@
 - [ ] На `/` — реальные фильмы (не из `CATALOG`).
 - [ ] `/search?q=Inception` — реальный поиск.
 - [ ] `/search?genres=драма&year=2020` после reload — состояние сохранено.
-- [ ] Пагинация ходит на сервер.
+- [ ] Пагинация ходит на сервер (в пределах страниц 1–10 demo-тарифа).
 - [ ] `/movie/666` → ErrorState с retry.
 
 ### Phase 2
