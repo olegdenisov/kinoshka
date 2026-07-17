@@ -174,7 +174,7 @@
 - [x] Skeleton при загрузке rails.
 - [x] Обработка rate limit: API возвращает **403** (не 429) при исчерпании суточного лимита — isError-кэш с cooldown 20с в `getMovies.ts` + нормализация сообщения в interceptor (коммит ccddf08).
 - [x] Dev-кэш ответов в `sessionStorage` (переживает reload/HMR) — текущий in-memory `Map` умирает при каждой перезагрузке и выжигает квоту 200 запросов/сутки при разработке.
-- [ ] Перетипизировать `RequestParams` в `getMovies.ts` с V14 на V15: реальный эндпоинт `/v1.5/movie` — курсорная пагинация (`next`/`prev`), параметра `page` там нет.
+- [x] Перетипизировать `RequestParams` в `getMovies.ts` с V14 на V15: реальный эндпоинт `/v1.5/movie` — курсорная пагинация (`next`/`prev`), параметра `page` там нет.
 
 **Как лучше:** не тащи всё в один хук. Узкие хуки — в фазе 3 они станут endpoints/atoms/queries без изменения API на уровне UI. С React 19 use(): `const movies = use(moviesPromise)` внутри Suspense — функции возвращают promise, компонент его читает. Дедупликация запросов: внешний кэш `const cache = new Map<string, Promise>()` (примитивный, но работает до Phase 3).
 
