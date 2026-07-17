@@ -24,7 +24,7 @@
   bottom: 0;
   z-index: 61;
   background: var(--bg-secondary);
-  border-top: 1px solid rgba(184, 173, 171, 0.12);
+  border-top: 1px solid var(--border-light);
   border-top-left-radius: 18px;
   border-top-right-radius: 18px;
   transform: translateY(100%);
@@ -48,7 +48,7 @@
   width: 36px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(184, 173, 171, 0.2);
+  background: var(--border-strong);
 }
 
 .titleRow {

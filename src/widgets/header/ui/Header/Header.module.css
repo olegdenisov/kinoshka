@@ -2,7 +2,7 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(15, 13, 17, 0.72);
+  background: var(--bg-glass);
   backdrop-filter: blur(14px) saturate(1.2);
   -webkit-backdrop-filter: blur(14px) saturate(1.2);
   border-bottom: 1px solid var(--border-faint);
@@ -107,8 +107,8 @@
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: linear-gradient(135deg, oklch(0.5 0.09 40), oklch(0.35 0.06 20));
-  border: 1px solid rgba(184, 173, 171, 0.2);
+  background: var(--avatar-gradient);
+  border: 1px solid var(--border-strong);
   display: flex;
   align-items: center;
   justify-content: center;

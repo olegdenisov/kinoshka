@@ -13,7 +13,7 @@
   height: 30px;
   padding: 0 6px 0 10px;
   background: var(--accent-warm-tint);
-  border: 1px solid rgba(209, 142, 95, 0.3);
+  border: 1px solid var(--accent-warm-shadow);
   border-radius: 999px;
   color: var(--accent-warm);
   font-family: var(--font-body);

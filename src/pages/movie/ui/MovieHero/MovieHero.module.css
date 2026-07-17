@@ -25,7 +25,7 @@
   position: absolute;
   inset: 0;
   opacity: 0.08;
-  background-image: linear-gradient(to right, rgba(184,173,171,0.3) 1px, transparent 1px);
+  background-image: linear-gradient(to right, var(--border-heavy) 1px, transparent 1px);
   background-size: 80px 100%;
 }
 
@@ -72,7 +72,7 @@
 
 .poster {
   position: relative;
-  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.7);
+  box-shadow: 0 30px 60px -20px var(--shadow-color);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -86,9 +86,9 @@
   gap: 8px;
   height: 34px;
   padding: 0 14px 0 12px;
-  background: rgba(15,13,17,0.8);
+  background: var(--bg-glass-strong);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(184,173,171,0.2);
+  border: 1px solid var(--border-strong);
   color: var(--text-primary);
   border-radius: 4px;
   cursor: pointer;

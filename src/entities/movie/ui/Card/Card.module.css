@@ -29,7 +29,7 @@
   position: absolute;
   inset: 0;
   border-radius: 6px;
-  background: linear-gradient(180deg, transparent 40%, rgba(209, 142, 95, 0.18) 100%);
+  background: linear-gradient(180deg, transparent 40%, var(--accent-warm-glow) 100%);
   opacity: 0;
   transition: opacity 220ms;
   pointer-events: none;
@@ -65,14 +65,14 @@
   gap: 4px;
   padding: 4px 7px 4px 6px;
   border-radius: 4px;
-  background: rgba(15, 13, 17, 0.72);
+  background: var(--bg-glass);
   backdrop-filter: blur(6px);
   font-family: var(--font-mono);
   font-size: 10.5px;
   font-weight: 500;
   color: var(--accent-rating);
   letter-spacing: 0.02em;
-  border: 1px solid rgba(230, 184, 106, 0.2);
+  border: 1px solid var(--accent-rating-border);
 }
 
 .typeBadge {
@@ -81,14 +81,14 @@
   right: 10px;
   padding: 3px 7px;
   border-radius: 3px;
-  background: rgba(15, 13, 17, 0.72);
+  background: var(--bg-glass);
   backdrop-filter: blur(6px);
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(242, 240, 239, 0.7);
-  border: 1px solid rgba(184, 173, 171, 0.12);
+  border: 1px solid var(--border-light);
 }
 
 .info {
