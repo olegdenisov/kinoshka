@@ -7,3 +7,13 @@ export const apiClient = new ApiInstance({
   },
   parse: "json",
 })
+
+apiClient.instance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const data = error.response?.data as {message: unknown} | undefined
+    const message = typeof data?.message === 'string' ? data.message : error.message
+    
+    return Promise.reject(new Error(message))
+  }
+)
