@@ -185,13 +185,18 @@
 - Suspense patterns: https://react.dev/reference/react/Suspense#displaying-a-fallback-while-content-is-loading
 
 ### 1.2 Поиск с debounce
-- [ ] Хук `useSearch(query)` с debounce 250ms.
-- [ ] Использование `useDeferredValue` для рендера.
-- [ ] Endpoint `instance.getV14MovieSearch(...)`.
-- [ ] URL-sync через `useSearchParams()` (`?q=...`).
-- [ ] Loading/empty/error состояния.
+- [ ] `getSearchMovies(query, page)` — обёртка над `instance.getV14MovieSearch`, маппинг `SearchMovieDtoV14 → Movie` с fallback `name ?? alternativeName ?? enName` и placeholder-постером (у search-эндпоинта нет `notNullFields`/`selectFields` — записи без постера/рейтинга не отсечь на сервере).
+- [ ] Кэш промисов + sessionStorage (переиспользовать паттерн из `getMovies.ts`) — для `use()` это не оптимизация, а условие работоспособности (нестабильный промис = бесконечный цикл fetch); бонусом решает race conditions и дедуплицирует повторный набор.
+- [ ] Хук `useSearch(query)` через `use()` + Suspense; debounce 250ms **до** записи в URL.
+- [ ] `useDeferredValue` для рендера: старые результаты остаются видимы с приглушением (`isStale = query !== deferredQuery`), скелетон не мигает на каждую букву.
+- [ ] URL-sync через `useSearchParams()` (`?q=...`), запись с `replace: true` (иначе каждая буква — запись в history); поисковый инпут в `Header` связан с URL (сейчас — локальный `useState`).
+- [ ] Два режима `/search`: есть `q` → `/v1.4/movie/search`, сайдбар фильтров задизейблен; нет `q` → каталожный эндпоинт с фильтрами (см. 1.3). **API не умеет query+фильтры в одном запросе** — у search только `query/page/limit`, у `/v1.4/movie` нет полнотекстового поиска.
+- [ ] Min length 2 + `trim`, пустой запрос не отправляется (`query` — обязательный параметр эндпоинта).
+- [ ] Loading/empty/error: `EmptyState` с эхом запроса («Ничего не найдено по „…“»), isError-cooldown на 403 как в 1.1 (для search в спеке даже не сгенерирован Error-тип, но реальный 403 при лимите прилетает — interceptor уже нормализует).
+- [ ] ⌘K / `/` фокусирует инпут — подсказка ⌘K уже отрисована в `Header`, без реального хоткея это антипаттерн.
+- [ ] A11y: `role="search"` на форме, `aria-live="polite"` на счётчике результатов, кнопка очистки (×) при непустом `q`.
 
-**Как лучше:** `useDeferredValue` сам по себе не дебаунсит сетевые запросы — это про рендеринг-приоритеты. Нужен явный debounce поверх. `useTransition` для «не блокировать input при дорогом фильтрационном update».
+**Как лучше:** `useDeferredValue` сам по себе не дебаунсит сетевые запросы — это про рендеринг-приоритеты. Нужен явный debounce поверх. `useTransition` для «не блокировать input при дорогом фильтрационном update». Квота demo-тарифа (200 req/сутки) выжигается поиском по мере ввода быстрее всего в приложении — debounce, min length и sessionStorage-кэш обязательны. Лимиты `limit ≤ 10` / страницы 1–10 действуют и здесь: `SearchDesktop` рассчитан на `PER_PAGE = 16` — на demo-ключе больше 10 не получить, привести сетку в соответствие.
 
 **📚 Refs:**
 - useDeferredValue: https://react.dev/reference/react/useDeferredValue
@@ -201,7 +206,7 @@
 ### 1.3 Фильтры с URL-sync
 - [ ] `useFilterState()` расширен URL-sync (паттерн из rtk-ветки перенесён в main).
 - [ ] `getFilterFromSearchParams()` / `filtersToParams()` в `features/catalog-filter/lib/`.
-- [ ] `/search` использует фильтры в запросе к API.
+- [ ] `/search` использует фильтры в запросе к API (только режим без `q` — см. 1.2: search-эндпоинт фильтры не принимает).
 - [ ] Жанры подгружаются через `getV1MoviePossibleValuesByField({ field: 'genres.name' })`.
 - [ ] Активные чипы рендерятся из URL-параметров.
 
