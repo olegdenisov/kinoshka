@@ -19,6 +19,7 @@ export const Poster = ({ movie, ratio = '2/3', showLabel = true }: PosterProps) 
 
   return (
     <div className={s.poster} style={{ aspectRatio: ratio, background: bg }}>
+      {movie.poster && <img src={movie.poster} alt="" className={s.img} />}
       <div className={s.grain} />
       <div className={s.highlight} />
       <div className={s.glow} style={{ background: glowBg }} />

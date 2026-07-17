@@ -5,8 +5,8 @@ export const TopAnimeRails = () => {
    const series = useTopRatedMovies({ type: ['anime'] })
    return (
      <MovieRailDesktop
-       title="Trending series"
-       subtitle="Binge-worthy"
+       title="Top anime"
+       subtitle="Hand-picked"
        items={series}
      />
    )

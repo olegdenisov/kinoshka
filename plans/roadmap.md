@@ -171,7 +171,7 @@
 - [x] Хук `useTopRatedMovies()` (sortField=rating.kp, sortType=-1).
 - [x] Хук `useNewMovies()` (year=current).
 - [x] Хук `useMoviesByGenre(genre)`.
-- [ ] `HomeDesktop`: rails используют новые хуки, `CATALOG` удалён из импортов на главной.
+- [x] `HomeDesktop`: rails используют новые хуки, `CATALOG` удалён из импортов на главной.
 - [ ] Skeleton при загрузке rails.
 - [ ] Обработка 429 (rate limit бесплатного тарифа Kinopoisk API) + dev-кэш ответов в `sessionStorage`, чтобы не выжигать лимит при разработке.
 

@@ -10,10 +10,6 @@ const fetchMovies = async (params: RequestParams): Promise<Movie[]> => {
       selectFields: ['id', 'name', 'year', 'rating', 'type', 'genres', 'movieLength', 'poster']
     }
   })
-  
-  if (response.status !== 200) {
-    throw new Error(response.statusText)
-  }
 
   if (!('docs' in response.data)) {
     return [];
@@ -27,29 +23,36 @@ const fetchMovies = async (params: RequestParams): Promise<Movie[]> => {
     type: (movie.type || 'movie') as MovieType,
     genre: (movie.genres?.map((genre) => genre.name) || []) as Movie['genre'],
     runtime: String(movie.movieLength ?? 0),
+    poster: movie.poster?.previewUrl || '',
     hue: 0,
   })) ?? [];
 
   return movies;
 }
 
-type CacheEntry = { promise: Promise<Movie[]>; timestamp: number }
+type CacheEntry = { promise: Promise<Movie[]>; timestamp: number; isError: boolean }
 
-const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
-const cache = new Map<string, CacheEntry>()
+ const CACHE_TTL_MS = 5 * 60 * 1000       // без изменений
+ const ERROR_CACHE_TTL_MS = 20 * 1000     // новая константа — cooldown перед повторным запросом
+ const cache = new Map<string, CacheEntry>()
 
 export const getMovies = (params: RequestParams): Promise<Movie[]> => {
   const key = JSON.stringify(params)
   const cached = cache.get(key)
+  const ttl = cached?.isError ? ERROR_CACHE_TTL_MS : CACHE_TTL_MS
   
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) { 
+  if (cached && Date.now() - cached.timestamp < ttl) { 
     return cached.promise
   }
 
-  const promise = fetchMovies(params)
+  const entry:CacheEntry = {
+    promise: fetchMovies(params),
+    timestamp: Date.now(),
+    isError: false
+  }
   
-  promise.catch(() => cache.delete(key))
-  cache.set(key, { promise, timestamp: Date.now() })
+  entry.promise.catch(() => entry.isError = true)
+  cache.set(key, entry)
   
-  return promise
+  return entry.promise
 }
