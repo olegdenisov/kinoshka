@@ -13,9 +13,10 @@
 - **React 19** + **TypeScript 6** + **Vite 8**
 - **React Router 7** — клиентская маршрутизация
 - **React Compiler** — автоматическая мемоизация (`babel-plugin-react-compiler`); ручные `useMemo` / `useCallback` / `memo` не нужны
-- **Vitest** + **Testing Library** — юнит и интеграционные тесты
+- **Vitest** + **Testing Library** + **MSW** — юнит и интеграционные тесты, мокирование API-запросов
 - **Zod** — валидация данных (localStorage, API-границы)
 - **ESLint 10** + `typescript-eslint`
+- **husky** + **lint-staged** + **commitlint** — pre-commit линтинг и conventional commits (`pnpm commit`)
 
 ## Команды
 
@@ -29,6 +30,8 @@ make test-watch   # тесты в watch-режиме
 make coverage     # отчёт покрытия
 make generate-api # регенерировать API-клиент из OpenAPI-спецификации
 make check        # lint + build (полная проверка)
+make hooks        # установить git-хуки husky
+make audit        # pnpm audit (prod-зависимости, high severity)
 make clean        # удалить dist и node_modules
 ```
 
@@ -40,7 +43,7 @@ make clean        # удалить dist и node_modules
 src/
 ├── app/        # провайдеры, роутер, глобальные стили
 ├── pages/      # компоненты уровня роута
-├── widgets/    # крупные переиспользуемые секции UI (хедер, нижняя навигация, рейлы)
+├── widgets/    # крупные переиспользуемые секции UI (header, mobile-chrome, movie-rail, search-sidebar)
 ├── features/   # интерактивные фичи (catalog-filter)
 ├── entities/   # бизнес-объекты (movie — типы, данные, UI)
 └── shared/     # утилиты и примитивы (lib/, ui/)
