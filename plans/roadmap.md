@@ -185,8 +185,8 @@
 - Suspense patterns: https://react.dev/reference/react/Suspense#displaying-a-fallback-while-content-is-loading
 
 ### 1.2 Поиск с debounce
-- [ ] `getSearchMovies(query, page)` — обёртка над `instance.getV14MovieSearch`, маппинг `SearchMovieDtoV14 → Movie` с fallback `name ?? alternativeName ?? enName` и placeholder-постером (у search-эндпоинта нет `notNullFields`/`selectFields` — записи без постера/рейтинга не отсечь на сервере).
-- [ ] Кэш промисов + sessionStorage (переиспользовать паттерн из `getMovies.ts`) — для `use()` это не оптимизация, а условие работоспособности (нестабильный промис = бесконечный цикл fetch); бонусом решает race conditions и дедуплицирует повторный набор.
+- [x] `getSearchMovies({query, page})` — обёртка над `instance.getV14MovieSearch`, маппинг `SearchMovieDtoV14 → Movie` с fallback `name ?? alternativeName ?? enName` и placeholder-постером (у search-эндпоинта нет `notNullFields`/`selectFields` — записи без постера/рейтинга не отсечь на сервере).
+- [x] Кэш промисов + sessionStorage (переиспользовать паттерн из `getMovies.ts`) — для `use()` это не оптимизация, а условие работоспособности (нестабильный промис = бесконечный цикл fetch); бонусом решает race conditions и дедуплицирует повторный набор.
 - [ ] Хук `useSearch(query)` через `use()` + Suspense; debounce 250ms **до** записи в URL.
 - [ ] `useDeferredValue` для рендера: старые результаты остаются видимы с приглушением (`isStale = query !== deferredQuery`), скелетон не мигает на каждую букву.
 - [ ] URL-sync через `useSearchParams()` (`?q=...`), запись с `replace: true` (иначе каждая буква — запись в history); поисковый инпут в `Header` связан с URL (сейчас — локальный `useState`).

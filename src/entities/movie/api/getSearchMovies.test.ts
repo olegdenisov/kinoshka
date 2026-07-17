@@ -65,7 +65,7 @@ describe('getSearchMovies — запрос', () => {
   it('без page — параметр page не отправляется', async () => {
     const getRequest = mockSuccess([doc()])
 
-    await getSearchMovies({query: 'matrix'})
+    await getSearchMovies({query: 'no-page'})
 
     const url = new URL(getRequest()!.url)
     expect(url.searchParams.has('page')).toBe(false)
@@ -74,7 +74,7 @@ describe('getSearchMovies — запрос', () => {
   it('403 — промис реджектится', async () => {
     mockForbidden()
 
-    await expect(getSearchMovies({query: 'matrix'})).rejects.toThrow()
+    await expect(getSearchMovies({query: 'forbidden'})).rejects.toThrow()
   })
 })
 
@@ -82,7 +82,7 @@ describe('getSearchMovies — маппинг SearchMovieDtoV14 → Movie', () =>
   it('полностью заполненный docs-элемент маппится в Movie', async () => {
     mockSuccess([doc()])
 
-    const movies = await getSearchMovies({query: 'matrix'})
+    const movies = await getSearchMovies({query: 'full-map'})
 
     expect(movies).toEqual([expectedMovie])
   })
@@ -90,7 +90,7 @@ describe('getSearchMovies — маппинг SearchMovieDtoV14 → Movie', () =>
   it('пустой docs — возвращает []', async () => {
     mockSuccess([])
 
-    const movies = await getSearchMovies({query: 'matrix'})
+    const movies = await getSearchMovies({query: 'empty-docs'})
 
     expect(movies).toEqual([])
   })
@@ -98,7 +98,7 @@ describe('getSearchMovies — маппинг SearchMovieDtoV14 → Movie', () =>
   it('ответ без поля docs (неожиданная форма) — возвращает []', async () => {
     server.use(http.get(ENDPOINT, () => HttpResponse.json({ unexpected: true })))
 
-    const movies = await getSearchMovies({query: 'matrix'})
+    const movies = await getSearchMovies({query: 'no-docs'})
 
     expect(movies).toEqual([])
   })
@@ -108,7 +108,7 @@ describe('getSearchMovies — fallback названия name ?? alternativeName 
   it('name есть — используется name', async () => {
     mockSuccess([doc({ name: 'Primary', alternativeName: 'Alt', enName: 'En' })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'title-name'})
 
     expect(movie.title).toBe('Primary')
   })
@@ -116,7 +116,7 @@ describe('getSearchMovies — fallback названия name ?? alternativeName 
   it('name отсутствует — используется alternativeName', async () => {
     mockSuccess([doc({ name: null, alternativeName: 'Alt', enName: 'En' })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'title-alt'})
 
     expect(movie.title).toBe('Alt')
   })
@@ -124,7 +124,7 @@ describe('getSearchMovies — fallback названия name ?? alternativeName 
   it('name и alternativeName отсутствуют — используется enName', async () => {
     mockSuccess([doc({ name: null, alternativeName: null, enName: 'En' })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'title-en'})
 
     expect(movie.title).toBe('En')
   })
@@ -132,7 +132,7 @@ describe('getSearchMovies — fallback названия name ?? alternativeName 
   it('name, alternativeName и enName отсутствуют — пустая строка', async () => {
     mockSuccess([doc({ name: null, alternativeName: null, enName: null })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'title-empty'})
 
     expect(movie.title).toBe('')
   })
@@ -144,7 +144,7 @@ describe('getSearchMovies — постер без серверного notNullFi
   it('poster.previewUrl отсутствует — пустая строка (плейсхолдер рисует Poster-компонент)', async () => {
     mockSuccess([doc({ poster: { previewUrl: null, url: 'https://example.com/full.jpg' } })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'poster-preview-null'})
 
     expect(movie.poster).toBe('')
   })
@@ -152,7 +152,7 @@ describe('getSearchMovies — постер без серверного notNullFi
   it('poster целиком отсутствует — пустая строка', async () => {
     mockSuccess([doc({ poster: null })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'poster-null'})
 
     expect(movie.poster).toBe('')
   })
@@ -162,7 +162,7 @@ describe('getSearchMovies — рейтинг и остальные поля бе
   it('rating.kp отсутствует — используется rating.imdb', async () => {
     mockSuccess([doc({ rating: { kp: null, imdb: 6.5 } })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'rating-imdb'})
 
     expect(movie.rating).toBe(6.5)
   })
@@ -170,7 +170,7 @@ describe('getSearchMovies — рейтинг и остальные поля бе
   it('rating целиком отсутствует — 0', async () => {
     mockSuccess([doc({ rating: null })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'rating-null'})
 
     expect(movie.rating).toBe(0)
   })
@@ -178,7 +178,7 @@ describe('getSearchMovies — рейтинг и остальные поля бе
   it('type отсутствует — по умолчанию "movie"', async () => {
     mockSuccess([doc({ type: null })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'type-default'})
 
     expect(movie.type).toBe('movie')
   })
@@ -186,7 +186,7 @@ describe('getSearchMovies — рейтинг и остальные поля бе
   it('genres отсутствует — пустой массив', async () => {
     mockSuccess([doc({ genres: null })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'genres-empty'})
 
     expect(movie.genre).toEqual([])
   })
@@ -194,20 +194,16 @@ describe('getSearchMovies — рейтинг и остальные поля бе
   it('movieLength отсутствует — runtime "0"', async () => {
     mockSuccess([doc({ movieLength: null })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'runtime-zero'})
 
     expect(movie.runtime).toBe('0')
   })
 
-  it('year отсутствует — текущий год (как в getMovies)', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2031-06-15'))
+  it('year отсутствует — undefined (как в getMovies)', async () => {
     mockSuccess([doc({ year: null })])
 
-    const [movie] = await getSearchMovies({query: 'q'})
+    const [movie] = await getSearchMovies({query: 'year-missing'})
 
-    expect(movie.year).toBe(2031)
-
-    vi.useRealTimers()
+    expect(movie.year).toBeUndefined()
   })
 })
