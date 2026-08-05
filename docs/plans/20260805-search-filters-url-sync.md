@@ -197,10 +197,10 @@ SortSelect ────────────────────▶ ?sort
 - Create: `src/pages/search/model/useMovieCatalog.ts`
 - Create: `src/pages/search/model/useMovieCatalog.test.tsx`
 
-- [ ] тесты (MSW + `<AsyncBoundary>`): `query` непустой → search, `filters` игнорируются, `totalPages` из search; `query` пустой → `getMoviesPage(filtersToParams(filters, sort), page)`, `totalPages` из `total`; смена `page`/`sort`/фильтров меняет запрос; возвращает **единый** `{ movies, mode, totalPages }`
-- [ ] реализовать `useMovieCatalog({ query, filters, sort, page })` через `use()`: `query.trim()` ? `getSearchMovies({query, page})` : `getMoviesPage(filtersToParams(filters, sort), page)`; импорт `filtersToParams` из `@features/catalog-filter`, фетчеров из `@entities/movie` (оба — вниз, FSD-легально)
-- [ ] нормализовать оба режима к `{ movies, mode, totalPages }` (обе ветки уже отдают `{movies, totalPages}` — добавить `mode`)
-- [ ] run tests — green перед Task 9
+- [x] тесты (MSW + `<AsyncBoundary>`): `query` непустой → search, `filters` игнорируются, `totalPages` из search; `query` пустой → `getMoviesPage(filtersToParams(filters, sort), page)`, `totalPages` из `total`; смена `page`/`sort`/фильтров меняет запрос; возвращает **единый** `{ movies, mode, totalPages }`
+- [x] реализовать `useMovieCatalog({ query, filters, sort, page })` через `use()`: `query.trim()` ? `getSearchMovies({query, page})` : `getMoviesPage(filtersToParams(filters, sort), page)`; импорт `filtersToParams` из `@features/catalog-filter`, фетчеров из `@entities/movie` (оба — вниз, FSD-легально)
+- [x] нормализовать оба режима к `{ movies, mode, totalPages }` (обе ветки уже отдают `{movies, totalPages}` — добавить `mode`)
+- [x] run tests — green перед Task 9
 
 ### Task 9: Проводка `SearchDesktop` на фасад + два режима + удаление `useSearch`
 
