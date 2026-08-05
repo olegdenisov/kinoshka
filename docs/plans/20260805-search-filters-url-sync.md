@@ -226,10 +226,10 @@ SortSelect ────────────────────▶ ?sort
 - Modify: `src/pages/search/ui/SearchMobile.tsx` (mobile `setSort` → `?sort`)
 - Create/Modify: `src/pages/search/ui/SortSelect/SortSelect.test.tsx`
 
-- [ ] тесты: выбор опции в `SortSelect` пишет `?sort` (`replace:true`); `disabled` при активном `q`; mobile-селектор так же пишет `?sort`; `?sort` читается обратно и подсвечивает активную опцию
-- [ ] `SortSelect`: dropdown с опциями (маппинг лейбл → `sortField/sortType`), запись `?sort`
-- [ ] mobile: `setSort` → `?sort` (вместо локального `useState`), инициализация из URL
-- [ ] run tests — green перед Task 11
+- [x] тесты: выбор опции в `SortSelect` пишет `?sort` (`replace:true`); `disabled` при активном `q`; mobile-селектор так же пишет `?sort`; `?sort` читается обратно и подсвечивает активную опцию
+- [x] `SortSelect`: dropdown с опциями (маппинг лейбл → `sortField/sortType`), запись `?sort`
+- [x] mobile: `setSort` → `?sort` (вместо локального `useState`), инициализация из URL
+- [x] run tests — green перед Task 11
 
 ### Task 11: Пагинация с URL-sync
 

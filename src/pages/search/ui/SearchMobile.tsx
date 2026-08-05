@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { MobileHeader, BottomNav, BottomSheet } from '@widgets/mobile-chrome'
-import { ActiveFilterChips, useFilterState } from '@features/catalog-filter'
+import { ActiveFilterChips, useFilterState, SORT_LABELS } from '@features/catalog-filter'
 import { MobileCard, CATALOG, ALL_GENRES } from '@entities/movie'
 import { FilterIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '../../../shared/ui/Icon'
 
 const TOTAL_RESULTS = 2846
 const PER_PAGE = 16
 const TOTAL_PAGES = Math.ceil(TOTAL_RESULTS / PER_PAGE)
-const SORT_OPTIONS = ['Popular', 'Newest', 'Highest rated', 'Most watched', 'A to Z']
 
 type MobilePaginationProps = {
   page: number
@@ -199,7 +198,7 @@ export const SearchMobile = () => {
 
       <BottomSheet open={sortOpen} onClose={() => setSortOpen(false)} title="Sort by" heightVh={50}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {SORT_OPTIONS.map((o) => (
+          {SORT_LABELS.map((o) => (
             <button key={o} onClick={() => { setSort(o); setSortOpen(false) }} style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               padding: '16px 4px', background: 'transparent', border: 'none', cursor: 'pointer',
