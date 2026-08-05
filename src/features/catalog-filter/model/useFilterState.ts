@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useSearchParams } from 'react-router'
+import { EMPTY_FILTERS, filtersToSearchParams, getFilterFromSearchParams } from '../lib/searchParams'
 
 export type FilterState = {
   type: string | null
@@ -8,22 +9,55 @@ export type FilterState = {
   rating: number | null
 }
 
-const DEFAULT_FILTERS: FilterState = {
-  type: 'movie',
-  genres: ['Drama'],
-  yearFrom: 2020,
-  yearTo: 2025,
-  rating: 7,
-}
-
 export type ActiveChip = {
   label: string
   onRemove: () => void
 }
 
-export function useFilterState() {
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
-  const [sort, setSort] = useState('Popular')
+const FILTER_KEYS = ['type', 'genres', 'yearFrom', 'yearTo', 'rating'] as const
+
+/**
+ * URL — единственный источник истины для фильтров и сортировки (`?type`, `?genres`,
+ * `?yearFrom`, `?yearTo`, `?rating`, `?sort`). Хук не хранит собственный стейт —
+ * каждое чтение выводится из `useSearchParams`, каждая запись идёт через
+ * `setSearchParams(..., { replace: true })`, не задевая посторонние параметры (`?q`, `?page`).
+ */
+export const useFilterState = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const filters = getFilterFromSearchParams(searchParams)
+  const sort = searchParams.get('sort') ?? ''
+
+  const applyFilters = (next: FilterState) => {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        FILTER_KEYS.forEach((key) => params.delete(key))
+        filtersToSearchParams(next).forEach((value, key) => params.set(key, value))
+        return params
+      },
+      { replace: true },
+    )
+  }
+
+  const setFilters = (next: FilterState | ((prev: FilterState) => FilterState)) => {
+    applyFilters(typeof next === 'function' ? next(filters) : next)
+  }
+
+  const setSort = (next: string) => {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next) {
+          params.set('sort', next)
+        } else {
+          params.delete('sort')
+        }
+        return params
+      },
+      { replace: true },
+    )
+  }
 
   const toggleGenre = (g: string) => {
     setFilters((f) => ({
@@ -32,7 +66,7 @@ export function useFilterState() {
     }))
   }
 
-  const resetFilters = () => setFilters({ type: null, genres: [], yearFrom: null, yearTo: null, rating: null })
+  const resetFilters = () => setFilters(EMPTY_FILTERS)
 
   const activeChips: ActiveChip[] = []
   if (filters.type) {

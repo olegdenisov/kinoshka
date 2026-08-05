@@ -117,11 +117,11 @@ SortSelect ────────────────────▶ ?sort
 - Modify: `src/features/catalog-filter/model/useFilterState.ts`
 - Create: `src/features/catalog-filter/model/useFilterState.test.tsx`
 
-- [ ] тесты: чтение фильтров из `useSearchParams` (`MemoryRouter` c `?genres=Drama&yearFrom=2020`), `toggleGenre`/`setFilters`/`resetFilters` пишут в URL (`replace:true`), `activeChips` из URL, edge (пустой URL → пустые фильтры)
-- [ ] переписать `useFilterState` на `useSearchParams` + `getFilterFromSearchParams`/`filtersToSearchParams`
-- [ ] убрать `DEFAULT_FILTERS` (пустые дефолты; `sort` тоже как `?sort`)
-- [ ] сохранить сигнатуру возвращаемого объекта (совместимость `SearchSidebar`/`SearchControls`)
-- [ ] run tests — green перед Task 3
+- [x] тесты: чтение фильтров из `useSearchParams` (`MemoryRouter` c `?genres=Drama&yearFrom=2020`), `toggleGenre`/`setFilters`/`resetFilters` пишут в URL (`replace:true`), `activeChips` из URL, edge (пустой URL → пустые фильтры)
+- [x] переписать `useFilterState` на `useSearchParams` + `getFilterFromSearchParams`/`filtersToSearchParams`
+- [x] убрать `DEFAULT_FILTERS` (пустые дефолты; `sort` тоже как `?sort`)
+- [x] сохранить сигнатуру возвращаемого объекта (совместимость `SearchSidebar`/`SearchControls`)
+- [x] run tests — green перед Task 3
 
 ### Task 3: Debounce-хук + инпут `Header` → `?q`
 
