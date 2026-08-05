@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { MobileHeader, BottomNav, BottomSheet } from '@widgets/mobile-chrome'
 import { ActiveFilterChips, useFilterState, SORT_LABELS } from '@features/catalog-filter'
-import { MobileCard, CATALOG, ALL_GENRES } from '@entities/movie'
-import { FilterIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '../../../shared/ui/Icon'
+import type { FilterState } from '@features/catalog-filter'
+import { MobileCard, ALL_GENRES } from '@entities/movie'
+import { AsyncBoundary, EmptyState, Skeleton, FilterIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '@shared/ui'
+import { useMovieCatalog } from '../model/useMovieCatalog'
 
-const TOTAL_RESULTS = 2846
-const PER_PAGE = 16
-const TOTAL_PAGES = Math.ceil(TOTAL_RESULTS / PER_PAGE)
+/** Demo-тариф: страницы 1–10 (клэмп и на чтении из URL, и на записи через goToPage) — тот же потолок, что в SearchDesktop. */
+const MAX_PAGE = 10
 
 type MobilePaginationProps = {
   page: number
@@ -50,16 +52,111 @@ const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps)
   )
 }
 
+const MobileResultsSkeleton = () => (
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, padding: '0 16px' }}>
+    {Array.from({ length: 6 }, (_, i) => (
+      <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <Skeleton height={220} borderRadius={10} />
+        <Skeleton height={14} width="80%" />
+        <Skeleton height={10} width="50%" />
+      </div>
+    ))}
+  </div>
+)
+
+type MobileSearchResultsProps = {
+  query: string
+  filters: FilterState
+  sort: string
+  page: number
+  onPageChange: (p: number) => void
+}
+
+/**
+ * Отдельный компонент под `use()` внутри `useMovieCatalog` — Suspense должен ловить именно
+ * этот узел, а не всю страницу (шапка/переключатели фильтров/сортировки остаются
+ * интерактивными во время загрузки). Тот же паттерн, что `SearchResults` в `SearchDesktop`.
+ */
+const MobileSearchResults = ({ query, filters, sort, page, onPageChange }: MobileSearchResultsProps) => {
+  const { movies, totalPages } = useMovieCatalog({ query, filters, sort, page })
+
+  if (movies.length === 0) {
+    return (
+      <div style={{ padding: '12px 20px 40px' }}>
+        <EmptyState
+          title="Nothing found"
+          description={query ? `Ничего не найдено по «${query}»` : 'Try adjusting the filters'}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, padding: '0 16px' }}>
+        {movies.map((m) => <MobileCard key={m.id} movie={m} />)}
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: 24, padding: '0 16px' }}>
+        <MobilePagination page={page} totalPages={totalPages} onChange={onPageChange} />
+        <div
+          style={{ marginTop: 14, fontFamily: 'var(--font-mono)', fontSize: 10, color: '#5A5059', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          aria-live="polite"
+        >
+          {movies.length} shown · page {page} of {totalPages}
+        </div>
+      </div>
+    </>
+  )
+}
+
 export const SearchMobile = () => {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } = useFilterState()
-  const [page, setPage] = useState(1)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const query = searchParams.get('q') ?? ''
+  const isSearchMode = query.trim().length > 0
+  const rawPage = Number.parseInt(searchParams.get('page') ?? '1', 10) || 1
+  const page = Math.min(MAX_PAGE, Math.max(1, rawPage))
 
   const goToPage = (p: number) => {
-    setPage(Math.max(1, Math.min(TOTAL_PAGES, p)))
+    const clamped = Math.min(MAX_PAGE, Math.max(1, p))
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        params.set('page', String(clamped))
+        return params
+      },
+      { replace: true },
+    )
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  // Тот же паттерн сброса ?page на 1 при смене q/фильтров, что в SearchDesktop (Task 11) —
+  // держит семантику URL согласованной между десктоп- и мобайл-вариантами страницы.
+  const resetKey = `${query.trim()}|${JSON.stringify(filters)}`
+  const prevResetKeyRef = useRef(resetKey)
+
+  useEffect(() => {
+    if (prevResetKeyRef.current === resetKey) {
+      return
+    }
+    prevResetKeyRef.current = resetKey
+
+    setSearchParams(
+      (prev) => {
+        if ((prev.get('page') ?? '1') === '1') {
+          return prev
+        }
+        const params = new URLSearchParams(prev)
+        params.set('page', '1')
+        return params
+      },
+      { replace: true },
+    )
+  }, [resetKey, setSearchParams])
 
   return (
     <div style={{ background: '#0F0D11', color: '#F2F0EF', minHeight: '100vh', paddingBottom: 80 }}>
@@ -73,13 +170,15 @@ export const SearchMobile = () => {
       }}>
         <button
           onClick={() => setFiltersOpen(true)}
+          disabled={isSearchMode}
           style={{
             flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
             height: 32, padding: '0 12px',
             background: activeChips.length ? 'rgba(209,142,95,0.15)' : 'rgba(24,22,27,0.6)',
             border: `1px solid ${activeChips.length ? 'rgba(209,142,95,0.35)' : 'rgba(184,173,171,0.12)'}`,
             color: activeChips.length ? '#D18E5F' : '#F2F0EF',
-            borderRadius: 999, cursor: 'pointer',
+            borderRadius: 999, cursor: isSearchMode ? 'not-allowed' : 'pointer',
+            opacity: isSearchMode ? 0.4 : 1,
             fontFamily: 'var(--font-body)', fontSize: 12.5, fontWeight: 500,
           }}
         >
@@ -94,16 +193,18 @@ export const SearchMobile = () => {
 
         <button
           onClick={() => setSortOpen(true)}
+          disabled={isSearchMode}
           style={{
             flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
             height: 32, padding: '0 12px',
             background: 'rgba(24,22,27,0.6)', border: '1px solid rgba(184,173,171,0.12)',
-            color: '#F2F0EF', borderRadius: 999, cursor: 'pointer',
+            color: '#F2F0EF', borderRadius: 999, cursor: isSearchMode ? 'not-allowed' : 'pointer',
+            opacity: isSearchMode ? 0.4 : 1,
             fontFamily: 'var(--font-body)', fontSize: 12.5, fontWeight: 500,
           }}
         >
           <span style={{ color: '#92887F', fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Sort</span>
-          {sort}
+          {sort || 'Default'}
           <ChevronDownIcon />
         </button>
 
@@ -111,24 +212,21 @@ export const SearchMobile = () => {
       </div>
 
       <div style={{ padding: '20px 20px 12px' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>2,846 results</div>
-        <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Drama films, 2020+</h1>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, padding: '0 16px' }}>
-        {CATALOG.map((m) => <MobileCard key={m.id} movie={m} />)}
-      </div>
-
-      <div style={{ textAlign: 'center', marginTop: 24, padding: '0 16px' }}>
-        <MobilePagination page={page} totalPages={TOTAL_PAGES} onChange={goToPage} />
-        <div style={{ marginTop: 14, fontFamily: 'var(--font-mono)', fontSize: 10, color: '#5A5059', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-          {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, TOTAL_RESULTS)} of {TOTAL_RESULTS.toLocaleString()}
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>
+          {isSearchMode ? 'Search results' : 'Catalog'}
         </div>
+        <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>
+          {isSearchMode ? `Results for “${query}”` : 'Browse catalog'}
+        </h1>
       </div>
+
+      <AsyncBoundary fallback={<MobileResultsSkeleton />}>
+        <MobileSearchResults query={query} filters={filters} sort={sort} page={page} onPageChange={goToPage} />
+      </AsyncBoundary>
 
       <BottomNav active="search" />
 
-      <BottomSheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filters">
+      <BottomSheet open={filtersOpen && !isSearchMode} onClose={() => setFiltersOpen(false)} title="Filters">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
           <div>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Type</div>
@@ -192,11 +290,11 @@ export const SearchMobile = () => {
         <div style={{ height: 80 }} />
         <div style={{ position: 'sticky', bottom: -20, left: -20, right: -20, margin: '0 -20px -20px', padding: '14px 20px 20px', background: 'linear-gradient(180deg, transparent, #18161B 40%)', display: 'flex', gap: 10 }}>
           <button onClick={resetFilters} style={{ flex: 1, height: 48, borderRadius: 8, background: 'transparent', border: '1px solid rgba(184,173,171,0.2)', color: '#B8ADAB', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 500 }}>Reset</button>
-          <button onClick={() => setFiltersOpen(false)} style={{ flex: 2, height: 48, borderRadius: 8, background: '#D18E5F', color: '#0F0D11', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 600 }}>Show 2,846 results</button>
+          <button onClick={() => setFiltersOpen(false)} style={{ flex: 2, height: 48, borderRadius: 8, background: '#D18E5F', color: '#0F0D11', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 600 }}>Show results</button>
         </div>
       </BottomSheet>
 
-      <BottomSheet open={sortOpen} onClose={() => setSortOpen(false)} title="Sort by" heightVh={50}>
+      <BottomSheet open={sortOpen && !isSearchMode} onClose={() => setSortOpen(false)} title="Sort by" heightVh={50}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {SORT_LABELS.map((o) => (
             <button key={o} onClick={() => { setSort(o); setSortOpen(false) }} style={{
