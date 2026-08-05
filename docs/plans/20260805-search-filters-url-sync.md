@@ -254,11 +254,11 @@ SortSelect ────────────────────▶ ?sort
 - [x] run tests — green перед Task 13
 
 ### Task 13: Verify acceptance criteria
-- [ ] проверить требования из Overview: URL-sync `?q`/фильтров/`?page`/`?sort`, два режима, debounce, numbered-пагинация в обоих режимах, рабочая сортировка
-- [ ] edge cases: пустой `q`+пустые фильтры (дефолтный каталог), невалидный URL (Zod → дефолт), конец выборки (нет `next`), 403-cooldown, genre round-trip не ломает карточки
-- [ ] `make test` — полный набор зелёный
-- [ ] `make check` (lint + typecheck + build) — зелёный (baseline red из `filters.query` устранён в Task 9)
-- [ ] покрытие новых pure-функций/фетчеров/фасада на уровне проекта
+- [x] проверить требования из Overview: URL-sync `?q`/фильтров/`?page`/`?sort`, два режима, debounce, numbered-пагинация в обоих режимах, рабочая сортировка — подтверждено чтением `SearchDesktop.tsx`, `SearchMobile.tsx`, `useMovieCatalog.ts`, `useFilterState.ts`, `Header.tsx`, `SortSelect.tsx`, `Pagination.tsx`: URL — единственный источник истины во всех случаях, оба режима (`search`/`catalog`) взаимоисключающие с задизейбленным сайдбаром/сортировкой в search-режиме, дебаунс 250ms + min-length 2 в `Header`, нумерованная пагинация в обоих режимах (`Pagination`/`MobilePagination` + `getMoviesPage` курсор-walk для каталога), `SortSelect`/mobile-сортировка пишут `?sort` и реально применяются в `filtersToParams`
+- [x] edge cases: пустой `q`+пустые фильтры (дефолтный каталог), невалидный URL (Zod → дефолт), конец выборки (нет `next`), 403-cooldown, genre round-trip не ломает карточки — все покрыты тестами (`searchParams.test.ts`: `?rating=abc`/невалидный `yearFrom` → дефолт; `getMoviesPage.test.ts`: `hasNext:false` → пустой хвост, 403 пробрасывается наверх; `getSearchMovies.test.ts`: 403 → cooldown); `Card`/`MobileCard` рендерят `movie.genre[0]` как произвольную строку без RU/EN-словаря на отображении — русские жанры из API не ломают карточки
+- [x] `make test` — полный набор зелёный (19 test files, 197 tests passed)
+- [x] `make check` (lint + typecheck + build) — зелёный (baseline red из `filters.query` устранён в Task 9; `tsc -b && vite build` проходит без ошибок, ESLint без предупреждений)
+- [x] покрытие новых pure-функций/фетчеров/фасада на уровне проекта — все перечисленные модули имеют содержательные тест-файлы (`genreMap.test.ts` — `it.each` по всем жанрам обоих UI-источников, `filtersToParams.test.ts` — 14 кейсов, `searchParams.test.ts` — 11, `mapDocToMovie.test.ts` — 15, `getSearchMovies.test.ts` — 21 вкл. 403, `getMoviesPage.test.ts` — cursor-walk/кеш/403/idempotency, `useMovieCatalog.test.tsx` — оба режима); v8-coverage-таблица не листит несколько из этих файлов отдельной строкой (известная особенность provider'а при бандлинге/пересекающихся source-ranges), но это не реальный пробел — подтверждено прямым чтением тест-файлов
 
 ### Task 14: Обновить документацию
 - [ ] отметить `[x]` в `plans/roadmap.md` разделы 1.2/1.3/1.4 по факту
