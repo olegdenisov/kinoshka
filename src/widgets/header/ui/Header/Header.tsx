@@ -1,9 +1,13 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
-import { SearchIcon, BellIcon } from '@shared/ui'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router'
+import { SearchIcon, BellIcon, CloseIcon } from '@shared/ui'
+import { useDebouncedValue } from '@shared/lib'
 import { NavPill } from '../NavPill'
 import { IconButton } from '../IconButton'
 import s from './Header.module.css'
+
+const QUERY_DEBOUNCE_MS = 250
+const QUERY_MIN_LENGTH = 2
 
 type HeaderProps = {
   variant?: 'default' | 'search'
@@ -19,7 +23,57 @@ const navItems = [
 
 export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
   const navigate = useNavigate()
-  const [q, setQ] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [draft, setDraft] = useState(() => searchParams.get('q') ?? '')
+  const debouncedDraft = useDebouncedValue(draft, QUERY_DEBOUNCE_MS)
+
+  useEffect(() => {
+    // Пишем в URL, только когда дебаунс "устоялся" (debouncedDraft === draft) — нет
+    // необновлённого хвоста от предыдущей раскладки ввода. Это же защищает немедленный
+    // сброс из clearQuery: пока внутренний таймер debouncedDraft ещё не догнал '',
+    // эффект просто ничего не пишет — не перетирает URL, который уже очищен вручную.
+    if (debouncedDraft !== draft) {
+      return
+    }
+
+    const trimmed = debouncedDraft.trim()
+
+    setSearchParams(
+      (prev) => {
+        const currentQ = prev.get('q') ?? ''
+
+        if (trimmed.length >= QUERY_MIN_LENGTH) {
+          if (currentQ === trimmed) {
+            return prev
+          }
+          const params = new URLSearchParams(prev)
+          params.set('q', trimmed)
+          return params
+        }
+
+        if (currentQ) {
+          const params = new URLSearchParams(prev)
+          params.delete('q')
+          return params
+        }
+
+        return prev
+      },
+      { replace: true },
+    )
+  }, [debouncedDraft, draft, setSearchParams])
+
+  const clearQuery = () => {
+    setDraft('')
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        params.delete('q')
+        return params
+      },
+      { replace: true },
+    )
+  }
 
   return (
     <header className={s.header}>
@@ -32,14 +86,22 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
 
         {variant === 'search' ? (
           <div className={s.searchVariantCenter}>
-            <div className={s.searchBox}>
+            <div className={s.searchBox} role="search">
               <SearchIcon />
               <input
-                value={q} onChange={(e) => setQ(e.target.value)}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
                 placeholder="Search movies, series, anime…"
+                aria-label="Search movies, series, anime"
                 className={s.searchInput}
               />
-              <span className={s.searchHint}>⌘K</span>
+              {draft ? (
+                <IconButton onClick={clearQuery} aria-label="Clear search">
+                  <CloseIcon />
+                </IconButton>
+              ) : (
+                <span className={s.searchHint}>⌘K</span>
+              )}
             </div>
             <nav className={s.searchVariantNav}>
               {navItems.slice(1).map((n) => (

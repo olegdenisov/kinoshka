@@ -133,11 +133,11 @@ SortSelect ────────────────────▶ ?sort
 - Modify: `src/widgets/header/ui/Header/Header.tsx`
 - Create: `src/widgets/header/ui/Header/Header.test.tsx`
 
-- [ ] тесты `useDebouncedValue` (fake timers: обновление через 250ms тишины, схлопывание быстрых изменений, cleanup при размонтировании)
-- [ ] тесты `Header`: ввод → через 250ms `?q` (`replace:true`); min-length (<2 → не пишем/чистим); кнопка `×` при непустом `q` сбрасывает `?q`; `role="search"`
-- [ ] реализовать `useDebouncedValue.ts`
-- [ ] `Header`: локальный `useState` инпута + `useDebouncedValue` → запись `?q` (`useSearchParams`, `replace:true`); инициализация из URL; min-length; `×` (`CloseIcon`); `role="search"`
-- [ ] run tests — green перед Task 4
+- [x] тесты `useDebouncedValue` (fake timers: обновление через 250ms тишины, схлопывание быстрых изменений, cleanup при размонтировании)
+- [x] тесты `Header`: ввод → через 250ms `?q` (`replace:true`); min-length (<2 → не пишем/чистим); кнопка `×` при непустом `q` сбрасывает `?q`; `role="search"`
+- [x] реализовать `useDebouncedValue.ts`
+- [x] `Header`: локальный `useState` инпута + `useDebouncedValue` → запись `?q` (`useSearchParams`, `replace:true`); инициализация из URL; min-length; `×` (`CloseIcon`); `role="search"`
+- [x] run tests — green перед Task 4
 
 ### Task 4: Обобщить `createCachedFetcher<P, R = Movie[]>`
 
