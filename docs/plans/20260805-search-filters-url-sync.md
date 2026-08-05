@@ -147,10 +147,10 @@ SortSelect ────────────────────▶ ?sort
 - Modify: `src/entities/movie/api/createCachedFetcher.ts`
 - Modify/Create: `src/entities/movie/api/createCachedFetcher.test.ts`
 
-- [ ] тесты: фабрика с `R = Movie[]` работает как раньше (TTL, session-persist, isError-cooldown, стабильный промис на ключ); фабрика с произвольным `R` (напр. `{movies, totalPages}`) кеширует/отдаёт тот же промис
-- [ ] обобщить сигнатуру до `<P, R = Movie[]>`: `CacheEntry.promise: Promise<R>`, `createSessionCache<R>`, входной `fetcher: (p: P) => Promise<R>`
-- [ ] убедиться, что `getMovies`/`getSearchMovies` компилируются без правок сигнатур, рельсы (`useNewMovies`/`useTopRatedMovies`) зелены
-- [ ] run tests — green перед Task 5
+- [x] тесты: фабрика с `R = Movie[]` работает как раньше (TTL, session-persist, isError-cooldown, стабильный промис на ключ); фабрика с произвольным `R` (напр. `{movies, totalPages}`) кеширует/отдаёт тот же промис
+- [x] обобщить сигнатуру до `<P, R = Movie[]>`: `CacheEntry.promise: Promise<R>`, `createSessionCache<R>`, входной `fetcher: (p: P) => Promise<R>`
+- [x] убедиться, что `getMovies`/`getSearchMovies` компилируются без правок сигнатур, рельсы (`useNewMovies`/`useTopRatedMovies`) зелены
+- [x] run tests — green перед Task 5
 
 ### Task 5: Общий маппер `mapDocToMovie` (убрать дублирование)
 
