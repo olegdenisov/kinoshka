@@ -8,18 +8,30 @@ type RequestParams = {
   page?: number;
 }
 
-const fetchSearchMovies = async (query: RequestParams): Promise<Movie[]> => {
+export type SearchMoviesResult = {
+  movies: Movie[];
+  totalPages: number;
+}
+
+// demo-тариф: страницы 1–10 — clamp totalPages к потолку
+const MAX_PAGES = 10
+
+const fetchSearchMovies = async (params: RequestParams): Promise<SearchMoviesResult> => {
   const response = await apiClient.getV14MovieSearch({
       query: {
-        ...query
+        ...params,
+        limit: 10,
       }
     })
 
     if (!('docs' in response.data)) {
-      return [];
+      return { movies: [], totalPages: 0 };
     }
 
-    return response.data.docs.map(mapDocToMovie);
+    return {
+      movies: response.data.docs.map(mapDocToMovie),
+      totalPages: Math.min(MAX_PAGES, response.data.pages),
+    };
 }
 
 export const getSearchMovies = createCachedFetcher('search', fetchSearchMovies)

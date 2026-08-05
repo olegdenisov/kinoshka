@@ -174,9 +174,9 @@ SortSelect ────────────────────▶ ?sort
 - Modify: `src/entities/movie/api/getSearchMovies.ts`
 - Create/Modify: `src/entities/movie/api/getSearchMovies.test.ts`
 
-- [ ] тесты (MSW): передаёт `query/page/limit:10`; результат `{ movies, totalPages }`, `totalPages = min(10, pages)` из v1.4-ответа; ответ без `docs` → `{ movies: [], totalPages: 0 }`; 403 → isError-cooldown; стабильный промис на `(query, page)`
-- [ ] добавить `limit:10`, прокинуть `page`; сменить return-тип фетчера на `{ movies, totalPages }` (фабрика с `R = {movies, totalPages}` из Task 4)
-- [ ] run tests — green перед Task 7
+- [x] тесты (MSW): передаёт `query/page/limit:10`; результат `{ movies, totalPages }`, `totalPages = min(10, pages)` из v1.4-ответа; ответ без `docs` → `{ movies: [], totalPages: 0 }`; 403 → isError-cooldown; стабильный промис на `(query, page)`
+- [x] добавить `limit:10`, прокинуть `page`; сменить return-тип фетчера на `{ movies, totalPages }` (фабрика с `R = {movies, totalPages}` из Task 4)
+- [x] run tests — green перед Task 7
 
 ### Task 7: `getMoviesPage` — курсорная эмуляция numbered-page (каталог)
 
