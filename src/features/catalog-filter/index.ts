@@ -1,6 +1,6 @@
 export { ActiveFilterChips } from './ui/ActiveFilterChips'
 export { useFilterState } from './model/useFilterState'
 export type { FilterState, ActiveChip } from './model/useFilterState'
-export { filtersToParams } from './lib/filtersToParams'
+export { filtersToParams, SORT_LABELS } from './lib/filtersToParams'
 export type { CatalogQueryParams } from './lib/filtersToParams'
 export { getFilterFromSearchParams, filtersToSearchParams } from './lib/searchParams'

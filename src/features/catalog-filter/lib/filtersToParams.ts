@@ -23,6 +23,9 @@ const SORT_MAP: Record<string, { field: ApiSortField; type: string }> = {
   'A to Z': { field: 'name', type: '1' },
 }
 
+/** Лейблы сортировки в порядке отображения — единственный источник истины для UI (desktop `SortSelect`, mobile `BottomSheet`). */
+export const SORT_LABELS = Object.keys(SORT_MAP)
+
 const PAGE_LIMIT = 10
 
 /**

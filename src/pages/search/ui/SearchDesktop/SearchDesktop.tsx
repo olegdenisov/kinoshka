@@ -87,7 +87,13 @@ export const SearchDesktop = () => {
             title={isSearchMode ? `Results for “${query}”` : 'Browse catalog'}
             route="/search"
           />
-          <SearchControls chips={activeChips} onClearAll={resetFilters} sort={sort} onSortChange={setSort} />
+          <SearchControls
+            chips={activeChips}
+            onClearAll={resetFilters}
+            sort={sort}
+            onSortChange={setSort}
+            sortDisabled={isSearchMode}
+          />
           <AsyncBoundary fallback={<SearchResultSkeletonGrid />}>
             <SearchResults query={query} filters={filters} sort={sort} page={page} onPageChange={goToPage} />
           </AsyncBoundary>
