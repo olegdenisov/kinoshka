@@ -6,6 +6,8 @@ type SearchSidebarProps = {
   onFiltersChange: (f: FilterState) => void
   onToggleGenre: (g: string) => void
   onReset: () => void
+  /** Variant A: активный текстовый поиск (?q) не сочетается с фильтрами каталога — сайдбар задизейблен. */
+  disabled?: boolean
 }
 
 const ALL_GENRES = [
@@ -28,12 +30,14 @@ type RadioRowProps = {
   label: string
   count: string
   active: boolean
+  disabled?: boolean
   onClick: () => void
 }
 
-const RadioRow = ({ label, count, active, onClick }: RadioRowProps) => (
+const RadioRow = ({ label, count, active, disabled, onClick }: RadioRowProps) => (
   <button
     onClick={onClick}
+    disabled={disabled}
     className={`${s.radioRow} ${active ? s.radioRowActive : ''}`}
   >
     <span className={s.radioRowLeft}>
@@ -49,21 +53,23 @@ const RadioRow = ({ label, count, active, onClick }: RadioRowProps) => (
 type GenreChipProps = {
   label: string
   active: boolean
+  disabled?: boolean
   onClick: () => void
 }
 
-const GenreChip = ({ label, active, onClick }: GenreChipProps) => (
+const GenreChip = ({ label, active, disabled, onClick }: GenreChipProps) => (
   <button
     onClick={onClick}
+    disabled={disabled}
     className={`${s.genreChip} ${active ? s.genreChipActive : ''}`}
   >
     {label}
   </button>
 )
 
-export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset }: SearchSidebarProps) => {
+export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset, disabled }: SearchSidebarProps) => {
   return (
-    <aside className={s.sidebar}>
+    <aside className={`${s.sidebar} ${disabled ? s.sidebarDisabled : ''}`}>
       <FilterGroup title="Type">
         <div className={s.radioList}>
           {[
@@ -74,6 +80,7 @@ export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset
             <RadioRow
               key={t.key} label={t.label} count={t.count}
               active={filters.type === t.key}
+              disabled={disabled}
               onClick={() => onFiltersChange({ ...filters, type: t.key })}
             />
           ))}
@@ -83,7 +90,11 @@ export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset
       <FilterGroup title="Genre">
         <div className={s.genreList}>
           {ALL_GENRES.map((g) => (
-            <GenreChip key={g} label={g} active={filters.genres.includes(g)} onClick={() => onToggleGenre(g)} />
+            <GenreChip
+              key={g} label={g} active={filters.genres.includes(g)}
+              disabled={disabled}
+              onClick={() => onToggleGenre(g)}
+            />
           ))}
         </div>
       </FilterGroup>
@@ -107,6 +118,7 @@ export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset
           {[5, 6, 7, 8, 9].map((r) => (
             <button
               key={r}
+              disabled={disabled}
               onClick={() => onFiltersChange({ ...filters, rating: filters.rating === r ? null : r })}
               className={`${s.ratingBtn} ${filters.rating === r ? s.ratingBtnActive : ''}`}
             >
@@ -117,7 +129,7 @@ export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset
       </FilterGroup>
 
       <div className={s.resetSection}>
-        <button onClick={onReset} className={s.resetBtn}>Reset filters</button>
+        <button onClick={onReset} disabled={disabled} className={s.resetBtn}>Reset filters</button>
       </div>
     </aside>
   )

@@ -10,6 +10,12 @@
   padding: 4px;
 }
 
+/* Variant A: активный текстовый поиск (?q) — фильтры каталога недоступны */
+.sidebarDisabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 /* FilterGroup */
 .filterGroup {
   padding: 16px;
