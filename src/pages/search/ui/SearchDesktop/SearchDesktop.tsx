@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router'
 import { Header } from '@widgets/header'
 import { SearchSidebar } from '@widgets/search-sidebar'
@@ -51,25 +52,55 @@ const SearchResults = ({ query, filters, sort, page, onPageChange }: SearchResul
   )
 }
 
+/** Demo-тариф: страницы 1–10 (клэмп и на чтении из URL, и на записи через goToPage). */
+const MAX_PAGE = 10
+
 export const SearchDesktop = () => {
   const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } = useFilterState()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const query = searchParams.get('q') ?? ''
   const isSearchMode = query.trim().length > 0
-  const page = Math.max(1, Number.parseInt(searchParams.get('page') ?? '1', 10) || 1)
+  const rawPage = Number.parseInt(searchParams.get('page') ?? '1', 10) || 1
+  const page = Math.min(MAX_PAGE, Math.max(1, rawPage))
 
   const goToPage = (p: number) => {
+    const clamped = Math.min(MAX_PAGE, Math.max(1, p))
     setSearchParams(
       (prev) => {
         const params = new URLSearchParams(prev)
-        params.set('page', String(Math.max(1, p)))
+        params.set('page', String(clamped))
         return params
       },
       { replace: true },
     )
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  // Смена запроса или фильтров сбрасывает пагинацию на страницу 1 — старый ?page
+  // из предыдущей выдачи не имеет смысла для новой. Сравнение через ref (не через
+  // отдельный useState) — эффект-подтверждение, не источник истины (им остаётся URL).
+  const resetKey = `${query.trim()}|${JSON.stringify(filters)}`
+  const prevResetKeyRef = useRef(resetKey)
+
+  useEffect(() => {
+    if (prevResetKeyRef.current === resetKey) {
+      return
+    }
+    prevResetKeyRef.current = resetKey
+
+    setSearchParams(
+      (prev) => {
+        if ((prev.get('page') ?? '1') === '1') {
+          return prev
+        }
+        const params = new URLSearchParams(prev)
+        params.set('page', '1')
+        return params
+      },
+      { replace: true },
+    )
+  }, [resetKey, setSearchParams])
 
   return (
     <div className={s.page}>

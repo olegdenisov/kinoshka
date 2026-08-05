@@ -238,9 +238,9 @@ SortSelect ────────────────────▶ ?sort
 - Modify: `src/pages/search/ui/SearchDesktop/SearchDesktop.tsx`
 - Create/Modify: `src/pages/search/ui/Pagination/Pagination.test.tsx`
 
-- [ ] тесты: `page` из `?page`; клик пишет `?page` (clamp `[1,10]`); смена `q`/фильтров сбрасывает `?page` на 1; numbered-UI в обоих режимах (search — нативный, catalog — через `getMoviesPage`)
-- [ ] `Pagination`/`SearchDesktop`: `page` из `useSearchParams`; запись `?page`; clamp к demo (1–10); сброс на 1 при смене запроса/фильтров; сохранить `scrollTo top`
-- [ ] run tests — green перед Task 12
+- [x] тесты: `page` из `?page`; клик пишет `?page` (clamp `[1,10]`); смена `q`/фильтров сбрасывает `?page` на 1; numbered-UI в обоих режимах (search — нативный, catalog — через `getMoviesPage`)
+- [x] `Pagination`/`SearchDesktop`: `page` из `useSearchParams`; запись `?page`; clamp к demo (1–10); сброс на 1 при смене запроса/фильтров; сохранить `scrollTo top`
+- [x] run tests — green перед Task 12
 
 ### Task 12: Проводка `SearchMobile` на тот же фасад
 
