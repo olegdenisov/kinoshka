@@ -162,11 +162,11 @@ SortSelect ────────────────────▶ ?sort
 - Modify: `src/entities/movie/api/getMovies.ts`
 - Modify: `src/entities/movie/api/getSearchMovies.ts`
 
-- [ ] тесты `mapDocToMovie`: полный doc → `Movie`; фолбэки (`name ?? alternativeName ?? enName`, `rating.kp ?? rating.imdb ?? 0`, отсутствие постера/года), нулевые/undefined поля
-- [ ] извлечь `mapDocToMovie(doc): Movie` (общий тип входа, покрывающий v1.4 `SearchMovieDtoV14` и v1.5 doc)
-- [ ] переключить `getMovies`/`getSearchMovies` на общий маппер; `getMovies` по-прежнему `Movie[]`, рельсы зелены
-- [ ] регресс-тест: sort уже прокидывается через `getMovies` (без нового кода) — короткий MSW-тест `sortField/sortType` в query
-- [ ] run tests — green перед Task 6
+- [x] тесты `mapDocToMovie`: полный doc → `Movie`; фолбэки (`name ?? alternativeName ?? enName`, `rating.kp ?? rating.imdb ?? 0`, отсутствие постера/года), нулевые/undefined поля
+- [x] извлечь `mapDocToMovie(doc): Movie` (общий тип входа, покрывающий v1.4 `SearchMovieDtoV14` и v1.5 doc)
+- [x] переключить `getMovies`/`getSearchMovies` на общий маппер; `getMovies` по-прежнему `Movie[]`, рельсы зелены
+- [x] регресс-тест: sort уже прокидывается через `getMovies` (без нового кода) — короткий MSW-тест `sortField/sortType` в query
+- [x] run tests — green перед Task 6
 
 ### Task 6: `getSearchMovies` — page/limit + `{movies, totalPages}`
 
