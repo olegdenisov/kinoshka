@@ -185,11 +185,11 @@ SortSelect ────────────────────▶ ?sort
 - Create: `src/entities/movie/api/getMoviesPage.test.ts`
 - Modify: `src/entities/movie/index.ts` (экспорт при необходимости)
 
-- [ ] тесты (MSW): `page=1` — запрос без курсора, `withCount:true`; `page=3` — обход `next` 1..3, промежуточные шаги-курсоры кешируются фабрикой; отсутствие `next` → пустой хвост; 403 → наверх; повторный `page=3` — из кеша **без новых запросов**; **идентичность page-level промиса** — второй `getMoviesPage(params, 3)` возвращает тот же `Promise`; `totalPages = min(10, ceil(total/10))` из `withCount`-`total`
-- [ ] реализовать `fetchCatalogCursor(params, cursor?) → {movies, next, total}` через общий `mapDocToMovie`, обёрнутый в обобщённую фабрику по ключу `(params, cursor)`
-- [ ] реализовать `getMoviesPage(params, page)`: обход `next` 1..N поверх `fetchCatalogCursor`; мемоизировать page-level `Promise` по ключу `(JSON.stringify(params), page)` (стабильность `use()`); вернуть `{ movies, totalPages }` (`total` с первой страницы)
-- [ ] ⚠️ если `next`/`total` недоступны на demo-ключе — зафиксировать блокер, согласовать фолбэк (Prev/Next для каталога)
-- [ ] run tests — green перед Task 8
+- [x] тесты (MSW): `page=1` — запрос без курсора, `withCount:true`; `page=3` — обход `next` 1..3, промежуточные шаги-курсоры кешируются фабрикой; отсутствие `next` → пустой хвост; 403 → наверх; повторный `page=3` — из кеша **без новых запросов**; **идентичность page-level промиса** — второй `getMoviesPage(params, 3)` возвращает тот же `Promise`; `totalPages = min(10, ceil(total/10))` из `withCount`-`total`
+- [x] реализовать `fetchCatalogCursor(params, cursor?) → {movies, next, total}` через общий `mapDocToMovie`, обёрнутый в обобщённую фабрику по ключу `(params, cursor)`
+- [x] реализовать `getMoviesPage(params, page)`: обход `next` 1..N поверх `fetchCatalogCursor`; мемоизировать page-level `Promise` по ключу `(JSON.stringify(params), page)` (стабильность `use()`); вернуть `{ movies, totalPages }` (`total` с первой страницы)
+- [x] ⚠️ если `next`/`total` недоступны на demo-ключе — зафиксировать блокер, согласовать фолбэк (Prev/Next для каталога) — **live-key верификация недоступна в этом прогоне** (нет demo-ключа); реализация и тесты соответствуют документированной v1.5 форме ответа (`next`/`hasNext`/`total` из `types.gen.ts:339-364`, MSW-мокировано); проверка на реальном ключе отложена в Post-Completion manual verification
+- [x] run tests — green перед Task 8
 
 ### Task 8: Хук-фасад `useMovieCatalog` (page-слой)
 
