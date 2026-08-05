@@ -186,18 +186,22 @@ For UI icons (search, arrow, close, chevrons, play, star, etc.) use the React co
 
 | Import | Exports |
 |--------|---------|
-| `@entities/movie` | `Card`, `MobileCard`, `Poster`, `Movie`, `MovieDetail`, `MovieType`, `CATALOG`, `MOCK_DETAIL`, `ALL_GENRES`, `useNewMovies()`, `useTopRatedMovies()` |
-| `@features/catalog-filter` | `useFilterState()`, `ActiveFilterChips`, `FilterState`, `ActiveChip` |
+| `@entities/movie` | `Card`, `MobileCard`, `Poster`, `Movie`, `MovieDetail`, `MovieType`, `CATALOG`, `MOCK_DETAIL`, `ALL_GENRES`, `useNewMovies()`, `useTopRatedMovies()`, `getMoviesPage()`, `CatalogParams`, `CatalogPageResult`, `getSearchMovies()`, `SearchMoviesResult` |
+| `@features/catalog-filter` | `useFilterState()`, `ActiveFilterChips`, `FilterState`, `ActiveChip`, `filtersToParams()`, `CatalogQueryParams`, `SORT_LABELS`, `getFilterFromSearchParams()`, `filtersToSearchParams()` |
 | `@shared/ui` | `*Icon` components (`StarIcon`, `SearchIcon`, `CloseIcon`, `PlayIcon`, `ChevronLeftIcon`, etc.), `Footer`, `Spinner`, `Skeleton`, `EmptyState`, `ErrorState`, `ErrorBoundary`, `AsyncBoundary` |
-| `@shared/lib` | `useViewport()` → `{ isMobile: boolean }`, `useStorageSlot()`, `createSessionCache()` |
+| `@shared/lib` | `useViewport()` → `{ isMobile: boolean }`, `useStorageSlot()`, `createSessionCache()`, `useDebouncedValue()` |
 | `@shared/config` | `useFeatureFlag()`, `FeatureGate`, `FeatureName` |
 | `@shared/api` | `apiClient` (configured instance, wired into `@entities/movie` data hooks — see [Data state](#data-state)) |
 
 ## Data state
 
 API integration is in progress, not all-or-nothing:
-- **Live via `apiClient`:** the home feed rails consume `useNewMovies()` / `useTopRatedMovies()` (`@entities/movie`), which call `getMovies.ts` → `apiClient.getV15Movie(...)`. `getSearchMovies.ts` (`/v1.4/movie/search`) exists and is tested but is **not yet wired** into the search page.
-- **Still mock data:** the movie-detail page, the search page, and all `*Mobile` page variants render `CATALOG` / `MOCK_DETAIL` / `ALL_GENRES` from `@entities/movie`.
+- **Live via `apiClient`:** the home feed rails consume `useNewMovies()` / `useTopRatedMovies()` (`@entities/movie`), which call `getMovies.ts` → `apiClient.getV15Movie(...)`. The `/search` page is **also live-data**: `SearchDesktop`/`SearchMobile` read `?q`/filters/`?sort`/`?page` from the URL (single source of truth, via `useFilterState()` + native `useSearchParams()`) and render results through `useMovieCatalog()` — a facade hook in the **page slice** (`src/pages/search/model/useMovieCatalog.ts`, not `@entities/movie`, since it legally imports both `@features/catalog-filter` and `@entities/movie` downward). There is no `useSearch` hook (it was removed); `useMovieCatalog` routes by `query.trim()` between two mutually exclusive endpoints:
+  - non-empty query → `getSearchMovies()` (`/v1.4/movie/search`, native `page`), filters/sort sidebar disabled (Variant A — the API can't combine free-text query with filters in one request);
+  - empty query → `getMoviesPage()` (`@entities/movie`), which drives `/v1.5/movie` (cursor-based, no native `page`) and **emulates numbered pagination** by walking the `next` cursor 1..N, memoizing each cursor step and the resulting page-level `Promise` for `use()`/Suspense stability.
+  - UI-side genre filters are English; the API's `genres.name` expects Russian — `src/features/catalog-filter/lib/genreMap.ts` provides a static EN→RU dictionary (`toApiGenre`), with unmapped genres skipped rather than sent. Results from the API return Russian genre names as-is in `Movie.genre` (no reverse RU→EN mapping on display — accepted default, see `SearchDesktop.tsx`).
+  - `createCachedFetcher` (`@entities/movie/api/createCachedFetcher.ts`) was generalized from a fixed `Movie[]` result to `createCachedFetcher<P, R = Movie[]>` so both `getSearchMovies`/`getMoviesPage` (`R = { movies, totalPages }`) and the original `getMovies` rails (default `R = Movie[]`, unchanged call sites) share the same TTL/session-persist/403-cooldown cache.
+- **Still mock data:** the movie-detail page and `HomeMobile`/`MovieMobile` render `CATALOG` / `MOCK_DETAIL` / `ALL_GENRES` from `@entities/movie`.
 
 When adding a new feature, check whether an equivalent live-data hook already exists before reaching for mock data.
 
