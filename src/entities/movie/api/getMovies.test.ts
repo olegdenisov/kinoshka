@@ -81,3 +81,22 @@ describe('getMovies — маппинг полей', () => {
     expect(movie.rating).toBe(0)
   })
 })
+
+describe('getMovies — регресс: sort уже прокидывается без дополнительного кода', () => {
+  it('sortField/sortType уходят в query как есть', async () => {
+    let request: Request | undefined
+    server.use(
+      http.get(ENDPOINT, ({ request: req }) => {
+        request = req
+        return HttpResponse.json({ docs: [doc()], total: 1, page: 1, pages: 1, limit: 10 })
+      }),
+    )
+    const getMovies = await importGetMovies()
+
+    await getMovies({ sortField: ['rating.kp'], sortType: ['-1'] })
+
+    const url = new URL(request!.url)
+    expect(url.searchParams.getAll('sortField')).toEqual(['rating.kp'])
+    expect(url.searchParams.getAll('sortType')).toEqual(['-1'])
+  })
+})
