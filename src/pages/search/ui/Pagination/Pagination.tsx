@@ -8,20 +8,26 @@ type PaginationProps = {
 }
 
 export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
+  // Защита от рассинхрона: ?page из URL может временно выйти за пределы totalPages
+  // (напр. смена фильтров ещё не долетела до фетчера) — клэмпим для рендера/disabled,
+  // не мутируя проп и не решая за вызывающий код, что писать в URL.
+  const safeTotalPages = Math.max(1, totalPages)
+  const safePage = Math.min(Math.max(page, 1), safeTotalPages)
+
   const pages: (number | string)[] = []
   pages.push(1)
-  const left = Math.max(2, page - 1)
-  const right = Math.min(totalPages - 1, page + 1)
+  const left = Math.max(2, safePage - 1)
+  const right = Math.min(safeTotalPages - 1, safePage + 1)
   if (left > 2) pages.push('…L')
   for (let i = left; i <= right; i++) pages.push(i)
-  if (right < totalPages - 1) pages.push('…R')
-  if (totalPages > 1) pages.push(totalPages)
+  if (right < safeTotalPages - 1) pages.push('…R')
+  if (safeTotalPages > 1) pages.push(safeTotalPages)
 
   return (
     <div className={s.container}>
       <button
-        disabled={page === 1}
-        onClick={() => onChange(page - 1)}
+        disabled={safePage <= 1}
+        onClick={() => onChange(Math.max(1, safePage - 1))}
         className={s.btn}
       >
         <ChevronLeftIcon size={11} />
@@ -33,13 +39,13 @@ export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
           <button
             key={p}
             onClick={() => onChange(p)}
-            className={`${s.btn}${p === page ? ` ${s.btnActive}` : ''}`}
+            className={`${s.btn}${p === safePage ? ` ${s.btnActive}` : ''}`}
           >{p}</button>
         )
       )}
       <button
-        disabled={page === totalPages}
-        onClick={() => onChange(page + 1)}
+        disabled={safePage >= safeTotalPages}
+        onClick={() => onChange(Math.min(safeTotalPages, safePage + 1))}
         className={s.btn}
       >
         <ChevronRightIcon size={11} />
