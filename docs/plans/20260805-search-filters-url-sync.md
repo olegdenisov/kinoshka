@@ -248,10 +248,10 @@ SortSelect ────────────────────▶ ?sort
 - Modify: `src/pages/search/ui/SearchMobile.tsx`
 - Create: `src/pages/search/ui/SearchMobile.test.tsx`
 
-- [ ] тесты (smoke + MSW): `?q` → результаты из хука; без `q` → каталог; грид не из `CATALOG`; существующий `BottomSheet` фильтров пишет в URL (или явно оставлен на локальном стейте — зафиксировать)
-- [ ] `SearchMobile`: читать URL, `useMovieCatalog`, рендерить результаты из хука (URL — общий источник истины); подключить существующий `BottomSheet` фильтров к URL-фильтрам (или пометить как отложенное)
-- [ ] полный редизайн мобильного drawer **не** делаем — существующий переиспользуем; расширение — roadmap 3.4
-- [ ] run tests — green перед Task 13
+- [x] тесты (smoke + MSW): `?q` → результаты из хука; без `q` → каталог; грид не из `CATALOG`; существующий `BottomSheet` фильтров пишет в URL (или явно оставлен на локальном стейте — зафиксировать)
+- [x] `SearchMobile`: читать URL, `useMovieCatalog`, рендерить результаты из хука (URL — общий источник истины); подключить существующий `BottomSheet` фильтров к URL-фильтрам (или пометить как отложенное) — подключён через `useFilterState` (тот же URL-sync хук, что desktop); `BottomSheet` фильтров/сортировки пишет в `?type`/`?genres`/`?yearFrom`/`?yearTo`/`?rating`/`?sort` напрямую, без промежуточного локального стейта
+- [x] полный редизайн мобильного drawer **не** делаем — существующий переиспользуем; расширение — roadmap 3.4
+- [x] run tests — green перед Task 13
 
 ### Task 13: Verify acceptance criteria
 - [ ] проверить требования из Overview: URL-sync `?q`/фильтров/`?page`/`?sort`, два режима, debounce, numbered-пагинация в обоих режимах, рабочая сортировка
