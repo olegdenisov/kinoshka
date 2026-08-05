@@ -210,13 +210,13 @@ SortSelect ────────────────────▶ ?sort
 - Delete: `src/entities/movie/hooks/useSearch.ts` (+ убрать из `hooks/index.ts`, `entities/movie/index.ts`)
 - Create: `src/pages/search/ui/SearchDesktop/SearchDesktop.test.tsx`
 
-- [ ] тесты (MSW + `MemoryRouter`): `?q=...` → грид из search, сайдбар `disabled`; без `q` с фильтрами → грид из catalog; пустой результат → `EmptyState` с эхом («Ничего не найдено по „…“»); `aria-live="polite"` на счётчике
-- [ ] `SearchDesktop`: читать `q/filters/sort/page` из URL; `useMovieCatalog`; рендерить `movies` из хука (убрать `CATALOG`); `AsyncBoundary` + скелетон
-- [ ] режим: непустой `q` → `SearchSidebar disabled`
-- [ ] `EmptyState` с эхом; `PER_PAGE=10` (убрать `TOTAL_RESULTS=2846`/`16`)
-- [ ] ⚠️ genre round-trip: карточки покажут русские жанры для API-результатов — принять как есть (дефолт) либо добавить reverse RU→EN только для отображения; зафиксировать выбор в тесте/заметке
-- [ ] удалить `useSearch` (единственный потребитель — этот файл) и подчистить экспорты
-- [ ] run tests — green перед Task 10
+- [x] тесты (MSW + `MemoryRouter`): `?q=...` → грид из search, сайдбар `disabled`; без `q` с фильтрами → грид из catalog; пустой результат → `EmptyState` с эхом («Ничего не найдено по „…“»); `aria-live="polite"` на счётчике
+- [x] `SearchDesktop`: читать `q/filters/sort/page` из URL; `useMovieCatalog`; рендерить `movies` из хука (убрать `CATALOG`); `AsyncBoundary` + скелетон
+- [x] режим: непустой `q` → `SearchSidebar disabled`
+- [x] `EmptyState` с эхом; `PER_PAGE=10` (убрать `TOTAL_RESULTS=2846`/`16`)
+- [x] ⚠️ genre round-trip: карточки покажут русские жанры для API-результатов — принять как есть (дефолт) либо добавить reverse RU→EN только для отображения; зафиксировать выбор в тесте/заметке — принят дефолт (без reverse-map), решение задокументировано комментарием в `SearchResults` (`SearchDesktop.tsx`)
+- [x] удалить `useSearch` (единственный потребитель — этот файл) и подчистить экспорты
+- [x] run tests — green перед Task 10
 
 ### Task 10: Рабочая сортировка (desktop `SortSelect` + mobile `?sort`)
 
