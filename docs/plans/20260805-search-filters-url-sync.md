@@ -102,14 +102,14 @@ SortSelect ────────────────────▶ ?sort
 - Create: `src/features/catalog-filter/lib/searchParams.test.ts`
 - Modify: `src/features/catalog-filter/index.ts`
 
-- [ ] тесты `genreMap`: EN→RU для каждого жанра из **обоих** источников `ALL_GENRES` (catalog.ts + SearchSidebar.tsx), неизвестный (`'Slice of Life'`) → skip
-- [ ] тесты `filtersToParams`: `type/genres/year-диапазон/rating→'rating.kp':'n-10'/sort→sortField+sortType`, пустой фильтр → `{limit:10}`, edge (только год без rating и т.п.)
-- [ ] тесты `searchParams`: `getFilterFromSearchParams` (все ключи, csv-genres, пустой URL → пустой `FilterState`), `filtersToSearchParams` (обратно; пустые не пишем), Zod отбрасывает `?rating=abc`
-- [ ] реализовать `genreMap.ts` (EN→RU словарь + `toApiGenre`; покрыть обе копии `ALL_GENRES` или унифицировать)
-- [ ] реализовать `filtersToParams.ts`
-- [ ] реализовать `searchParams.ts` (+ Zod-схема границы URL)
-- [ ] обновить публичный `index.ts` (`filtersToParams`, `getFilterFromSearchParams`, `filtersToSearchParams`)
-- [ ] run tests — green перед Task 2
+- [x] тесты `genreMap`: EN→RU для каждого жанра из **обоих** источников `ALL_GENRES` (catalog.ts + SearchSidebar.tsx), неизвестный (`'Slice of Life'`) → skip
+- [x] тесты `filtersToParams`: `type/genres/year-диапазон/rating→'rating.kp':'n-10'/sort→sortField+sortType`, пустой фильтр → `{limit:10}`, edge (только год без rating и т.п.)
+- [x] тесты `searchParams`: `getFilterFromSearchParams` (все ключи, csv-genres, пустой URL → пустой `FilterState`), `filtersToSearchParams` (обратно; пустые не пишем), Zod отбрасывает `?rating=abc`
+- [x] реализовать `genreMap.ts` (EN→RU словарь + `toApiGenre`; покрыть обе копии `ALL_GENRES` или унифицировать)
+- [x] реализовать `filtersToParams.ts`
+- [x] реализовать `searchParams.ts` (+ Zod-схема границы URL)
+- [x] обновить публичный `index.ts` (`filtersToParams`, `getFilterFromSearchParams`, `filtersToSearchParams`)
+- [x] run tests — green перед Task 2
 
 ### Task 2: `useFilterState` на URL-sync
 
