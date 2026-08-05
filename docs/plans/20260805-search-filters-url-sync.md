@@ -261,10 +261,10 @@ SortSelect ────────────────────▶ ?sort
 - [x] покрытие новых pure-функций/фетчеров/фасада на уровне проекта — все перечисленные модули имеют содержательные тест-файлы (`genreMap.test.ts` — `it.each` по всем жанрам обоих UI-источников, `filtersToParams.test.ts` — 14 кейсов, `searchParams.test.ts` — 11, `mapDocToMovie.test.ts` — 15, `getSearchMovies.test.ts` — 21 вкл. 403, `getMoviesPage.test.ts` — cursor-walk/кеш/403/idempotency, `useMovieCatalog.test.tsx` — оба режима); v8-coverage-таблица не листит несколько из этих файлов отдельной строкой (известная особенность provider'а при бандлинге/пересекающихся source-ranges), но это не реальный пробел — подтверждено прямым чтением тест-файлов
 
 ### Task 14: Обновить документацию
-- [ ] отметить `[x]` в `plans/roadmap.md` разделы 1.2/1.3/1.4 по факту
-- [ ] обновить `AGENTS.md` «Data state»: `/search` на live-data, `useSearch`→`useMovieCatalog` (page-слой), genre EN→RU map, курсорная эмуляция page, обобщённый `createCachedFetcher`
-- [ ] обновить «Key public APIs»: `@features/catalog-filter` → `filtersToParams`/`getFilterFromSearchParams`; `@shared/lib` → `useDebouncedValue`; убрать `useSearch` из `@entities/movie` (фасад теперь в page-слое, не в публичном API entity)
-- [ ] переместить план в `docs/plans/completed/`
+- [x] отметить `[x]` в `plans/roadmap.md` разделы 1.2/1.3/1.4 по факту — отмечены пункты, реально реализованные этим планом (URL-sync `?q`/фильтров/`?page`/`?sort`, два режима, debounce+min-length, numbered-пагинация в обоих режимах, isError-cooldown, a11y); оставлены `[ ]` пункты вне рамок этого плана (`useDeferredValue`, реальный хоткей ⌘K/`/`, динамическая подгрузка жанров через `getV1MoviePossibleValuesByField`, `limit:10` на главных rails) — с пояснением почему
+- [x] обновить `AGENTS.md` «Data state»: `/search` на live-data, `useSearch`→`useMovieCatalog` (page-слой, `src/pages/search/model/`), genre EN→RU map (`genreMap.ts`), курсорная эмуляция page (`getMoviesPage`), обобщённый `createCachedFetcher<P, R = Movie[]>`
+- [x] обновить «Key public APIs»: `@features/catalog-filter` → `filtersToParams`/`getFilterFromSearchParams`/`filtersToSearchParams`/`CatalogQueryParams`/`SORT_LABELS`; `@shared/lib` → `useDebouncedValue`; `@entities/movie` дополнен фактическими экспортами `getMoviesPage`/`getSearchMovies` (`useSearch` там никогда не был в этой таблице — фасад `useMovieCatalog` в page-слое туда не добавлен, экспорты сверены с `src/entities/movie/index.ts`, `src/features/catalog-filter/index.ts`, `src/shared/lib/index.ts`)
+- [x] переместить план в `docs/plans/completed/` (deferred — orchestrator moves the plan file after all review phases complete)
 
 ## Post-Completion
 *Items requiring manual intervention or external systems — no checkboxes, informational only*
