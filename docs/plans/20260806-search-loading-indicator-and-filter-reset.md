@@ -88,9 +88,9 @@ SearchResults(deferredQuery, deferredFilters, deferredSort, deferredPage)
 - [x] `SearchMobile.test.tsx`: аналогичный тест для мобильной шапки чипов и Sort-кнопки.
 
 ### Task 4 — `Spinner` с настраиваемым размером
-- [ ] `src/shared/ui/Spinner/Spinner.tsx`: добавить опциональный `size?: number`, прокинуть как CSS custom property `--spinner-size`.
-- [ ] `Spinner.module.css`: заменить хардкод `48px` на `var(--spinner-size, 48px)` в `.spinner`, `.spinner::before/::after`.
-- [ ] Тест `Spinner.test.tsx`: `size={14}` → `--spinner-size` custom property; дефолт (без пропа) не ломает существующее использование в `AsyncBoundary`.
+- [x] `src/shared/ui/Spinner/Spinner.tsx`: добавить опциональный `size?: number`, прокинуть как CSS custom property `--spinner-size`.
+- [x] `Spinner.module.css`: заменить хардкод `48px` на `var(--spinner-size, 48px)` в `.spinner`, `.spinner::before/::after`.
+- [x] Тест `Spinner.test.tsx`: `size={14}` → `--spinner-size` custom property; дефолт (без пропа) не ломает существующее использование в `AsyncBoundary`.
 
 ### Task 5 — `useCatalogUpdateStatus` хук
 - [ ] Новый файл `src/pages/search/model/useCatalogUpdateStatus.ts` (page-internal facade, паттерн как у `usePageSync`/`useMovieCatalog`): `useDeferredValue` на `query`/`filters`/`sort`/`page`, сравнение `liveKey`/`deferredKey` (через `JSON.stringify`, аналогично `resetKey` в `usePageSync`) → `isUpdating: boolean`.
