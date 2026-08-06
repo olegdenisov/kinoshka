@@ -2,6 +2,7 @@ import { apiClient, type MovieControllerFindManyByQueryV15Data } from "@shared/a
 import type { Movie } from "../model/types";
 import { createCachedFetcher } from "./createCachedFetcher";
 import { mapDocToMovie } from "./mapDocToMovie";
+import { PER_PAGE, MAX_PAGES } from "./paginationConfig";
 
 export type CatalogParams = MovieControllerFindManyByQueryV15Data['query'];
 
@@ -20,10 +21,6 @@ type CursorStepResult = {
   next: string | null;
   total: number | null;
 };
-
-const PER_PAGE = 10;
-// demo-тариф: страницы 1–10 — clamp totalPages к потолку
-const MAX_PAGES = 10;
 
 const fetchCursorStep = async ({ params, cursor }: CursorStepParams): Promise<CursorStepResult> => {
   const response = await apiClient.getV15Movie({
