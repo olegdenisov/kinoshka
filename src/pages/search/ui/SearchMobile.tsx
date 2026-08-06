@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { MobileHeader, BottomNav, BottomSheet } from '@widgets/mobile-chrome'
 import { ActiveFilterChips, useFilterState, SORT_LABELS } from '@features/catalog-filter'
@@ -6,9 +6,8 @@ import type { FilterState } from '@features/catalog-filter'
 import { MobileCard, ALL_GENRES } from '@entities/movie'
 import { AsyncBoundary, EmptyState, Skeleton, FilterIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '@shared/ui'
 import { useMovieCatalog } from '../model/useMovieCatalog'
-
-/** Demo-тариф: страницы 1–10 (клэмп и на чтении из URL, и на записи через goToPage) — тот же потолок, что в SearchDesktop. */
-const MAX_PAGE = 10
+import { usePageSync } from '../model/usePageSync'
+import { buildPageRange, clampPage } from '../lib/buildPageRange'
 
 type MobilePaginationProps = {
   page: number
@@ -20,16 +19,10 @@ const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps)
   // Та же защита от рассинхрона, что в desktop Pagination.tsx: ?page из URL может временно
   // выйти за пределы totalPages (напр. смена фильтров ещё не долетела до фетчера) — клэмпим
   // для рендера/disabled, не мутируя проп и не решая за вызывающий код, что писать в URL.
+  // Клэмп и построение диапазона — общая pure-функция с desktop Pagination.tsx (lib/buildPageRange).
   const safeTotalPages = Math.max(1, totalPages)
-  const safePage = Math.min(Math.max(page, 1), safeTotalPages)
-
-  const pages: (number | string)[] = [1]
-  const left = Math.max(2, safePage - 1)
-  const right = Math.min(safeTotalPages - 1, safePage + 1)
-  if (left > 2) pages.push('…L')
-  for (let i = left; i <= right; i++) pages.push(i)
-  if (right < safeTotalPages - 1) pages.push('…R')
-  if (safeTotalPages > 1) pages.push(safeTotalPages)
+  const safePage = clampPage(page, totalPages)
+  const pages = buildPageRange(page, totalPages)
 
   const btnStyle = (active: boolean, disabled: boolean) => ({
     minWidth: 34, height: 34, padding: '0 8px', borderRadius: 4,
@@ -130,49 +123,11 @@ export const SearchMobile = () => {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } = useFilterState()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
 
   const query = searchParams.get('q') ?? ''
   const isSearchMode = query.trim().length > 0
-  const rawPage = Number.parseInt(searchParams.get('page') ?? '1', 10) || 1
-  const page = Math.min(MAX_PAGE, Math.max(1, rawPage))
-
-  const goToPage = (p: number) => {
-    const clamped = Math.min(MAX_PAGE, Math.max(1, p))
-    setSearchParams(
-      (prev) => {
-        const params = new URLSearchParams(prev)
-        params.set('page', String(clamped))
-        return params
-      },
-      { replace: true },
-    )
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  // Тот же паттерн сброса ?page на 1 при смене q/фильтров, что в SearchDesktop (Task 11):
-  // ref внутри эффекта (не во время рендера) — эффект-подтверждение, источник истины — URL.
-  const resetKey = `${query.trim()}|${JSON.stringify(filters)}`
-  const prevResetKeyRef = useRef(resetKey)
-
-  useEffect(() => {
-    if (prevResetKeyRef.current === resetKey) {
-      return
-    }
-    prevResetKeyRef.current = resetKey
-
-    setSearchParams(
-      (prev) => {
-        if ((prev.get('page') ?? '1') === '1') {
-          return prev
-        }
-        const params = new URLSearchParams(prev)
-        params.set('page', '1')
-        return params
-      },
-      { replace: true },
-    )
-  }, [resetKey, setSearchParams])
+  const { page, goToPage } = usePageSync({ query, filters })
 
   return (
     <div style={{ background: '#0F0D11', color: '#F2F0EF', minHeight: '100vh', paddingBottom: 80 }}>
