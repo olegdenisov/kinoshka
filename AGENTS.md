@@ -60,6 +60,8 @@ src/
 
 Import direction: `pages → widgets → features → entities → shared`. Never import upward.
 
+**Page-slice `model/` facade.** When a page needs to combine data/logic from more than one downward slice (e.g. both `@features/*` and `@entities/*`), put the composing hook in that page's own `model/` directory (`src/pages/<page>/model/`) rather than in `@entities` or `@features` — a lower slice can't legally import a higher one, but the page slice can import both downward. Example: `src/pages/search/model/useMovieCatalog.ts` composes `filtersToParams` (`@features/catalog-filter`) with `getSearchMovies`/`getMoviesPage` (`@entities/movie`) into the one hook the `/search` UI calls. Not exported through a public `index.ts` — page-internal only.
+
 ## Routing
 
 React Router 7 (`react-router@^7.15.1`). Route config lives in `src/app/router.tsx`; provider setup in `src/app/providers.tsx`.

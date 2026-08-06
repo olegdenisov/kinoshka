@@ -17,13 +17,19 @@ type MobilePaginationProps = {
 }
 
 const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps) => {
+  // Та же защита от рассинхрона, что в desktop Pagination.tsx: ?page из URL может временно
+  // выйти за пределы totalPages (напр. смена фильтров ещё не долетела до фетчера) — клэмпим
+  // для рендера/disabled, не мутируя проп и не решая за вызывающий код, что писать в URL.
+  const safeTotalPages = Math.max(1, totalPages)
+  const safePage = Math.min(Math.max(page, 1), safeTotalPages)
+
   const pages: (number | string)[] = [1]
-  const left = Math.max(2, page - 1)
-  const right = Math.min(totalPages - 1, page + 1)
+  const left = Math.max(2, safePage - 1)
+  const right = Math.min(safeTotalPages - 1, safePage + 1)
   if (left > 2) pages.push('…L')
   for (let i = left; i <= right; i++) pages.push(i)
-  if (right < totalPages - 1) pages.push('…R')
-  if (totalPages > 1) pages.push(totalPages)
+  if (right < safeTotalPages - 1) pages.push('…R')
+  if (safeTotalPages > 1) pages.push(safeTotalPages)
 
   const btnStyle = (active: boolean, disabled: boolean) => ({
     minWidth: 34, height: 34, padding: '0 8px', borderRadius: 4,
@@ -37,15 +43,15 @@ const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps)
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, flexWrap: 'wrap' as const }}>
-      <button style={btnStyle(false, page === 1)} disabled={page === 1} onClick={() => onChange(page - 1)}>
+      <button style={btnStyle(false, safePage <= 1)} disabled={safePage <= 1} onClick={() => onChange(Math.max(1, safePage - 1))}>
         <ChevronLeftIcon size={10} />
       </button>
       {pages.map((p, i) =>
         typeof p === 'string'
           ? <span key={p + i} style={{ ...btnStyle(false, true), border: 'none', color: '#5A5059' }}>…</span>
-          : <button key={p} style={btnStyle(p === page, false)} onClick={() => onChange(p)}>{p}</button>
+          : <button key={p} style={btnStyle(p === safePage, false)} onClick={() => onChange(p)}>{p}</button>
       )}
-      <button style={btnStyle(false, page === totalPages)} disabled={page === totalPages} onClick={() => onChange(page + 1)}>
+      <button style={btnStyle(false, safePage >= safeTotalPages)} disabled={safePage >= safeTotalPages} onClick={() => onChange(Math.min(safeTotalPages, safePage + 1))}>
         <ChevronRightIcon size={10} />
       </button>
     </div>
@@ -87,6 +93,16 @@ const MobileSearchResults = ({ query, filters, sort, page, onPageChange }: Mobil
           title="Nothing found"
           description={query ? `Ничего не найдено по «${query}»` : 'Try adjusting the filters'}
         />
+        {/*
+          Тот же дед-энд, что в SearchDesktop: устаревший/deep-linked ?page может указывать
+          за пределы реальной выдачи — movies пуст, но totalPages всё равно приходит из total.
+          Без MobilePagination тут нет способа вернуться на валидную страницу.
+        */}
+        {totalPages > 0 && (
+          <div style={{ textAlign: 'center', marginTop: 24 }}>
+            <MobilePagination page={page} totalPages={totalPages} onChange={onPageChange} />
+          </div>
+        )}
       </div>
     )
   }
@@ -134,8 +150,8 @@ export const SearchMobile = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Тот же паттерн сброса ?page на 1 при смене q/фильтров, что в SearchDesktop (Task 11) —
-  // держит семантику URL согласованной между десктоп- и мобайл-вариантами страницы.
+  // Тот же паттерн сброса ?page на 1 при смене q/фильтров, что в SearchDesktop (Task 11):
+  // ref внутри эффекта (не во время рендера) — эффект-подтверждение, источник истины — URL.
   const resetKey = `${query.trim()}|${JSON.stringify(filters)}`
   const prevResetKeyRef = useRef(resetKey)
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../../test/setup'
@@ -125,6 +125,134 @@ describe('SearchMobile — пустой результат', () => {
     await renderSearchMobile(['/search?q=nonexistent-movie-xyz'])
 
     expect(screen.getByText(/Ничего не найдено по «nonexistent-movie-xyz»/)).toBeInTheDocument()
+  })
+})
+
+describe('SearchMobile — устаревший/deep-linked ?page вне диапазона', () => {
+  it('показывает MobilePagination рядом с EmptyState, чтобы вернуться на валидную страницу', async () => {
+    // Курсор/страница закончились раньше запрошенной — movies: [], но totalPages всё ещё
+    // приходит из total (см. getMoviesPage.ts / getSearchMovies.ts). EmptyState сам по себе
+    // не даёт способа выбраться — единственный путь назад это MobilePagination.
+    mockSearch([], { pages: 5, total: 50 })
+
+    await renderSearchMobile(['/search?q=matrix&page=8'])
+
+    expect(screen.getByText(/Ничего не найдено по «matrix»/)).toBeInTheDocument()
+
+    const pageOneBtn = screen.getByRole('button', { name: '1' })
+    expect(pageOneBtn).toBeInTheDocument()
+
+    await act(async () => {
+      fireEvent.click(pageOneBtn)
+    })
+
+    expect(lastSearch).toContain('page=1')
+  })
+
+  it('не рендерит MobilePagination, когда результат пуст по-настоящему (totalPages: 0)', async () => {
+    // Отдельный, нигде больше не встречающийся query — иначе in-memory кеш фетчера
+    // (module-level Map в createCachedFetcher, ключ = {query, page}) вернул бы промис,
+    // засвеченный другим тестом с теми же {query: 'nonexistent-movie-xyz', page: 1}.
+    mockSearch([], { pages: 0, total: 0 })
+
+    await renderSearchMobile(['/search?q=totally-empty-result-set-abc'])
+
+    expect(screen.getByText(/Ничего не найдено по «totally-empty-result-set-abc»/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '1' })).not.toBeInTheDocument()
+  })
+})
+
+describe('SearchMobile — MobilePagination и page-URL-sync', () => {
+  it('page читается из ?page и передаётся в MobilePagination (активная кнопка страницы)', async () => {
+    // Search-режим — page нативный (v1.4 `page`), в отличие от catalog-режима, где
+    // страница эмулируется обходом курсора; не тянем сюда всю цепочку курсоров ради
+    // одной проверки, что ?page реально доходит до MobilePagination.
+    mockSearch([searchDoc('Matrix Revolutions', 401)], { pages: 5, total: 50 })
+
+    await renderSearchMobile(['/search?q=matrix&page=3'])
+
+    const activePageBtn = screen.getByRole('button', { name: '3' })
+    expect(activePageBtn).toBeInTheDocument()
+    expect(screen.getByText(/page 3 of 5/i)).toBeInTheDocument()
+  })
+
+  it('клик по номеру страницы пишет ?page в URL', async () => {
+    mockCatalog(
+      Array.from({ length: 10 }, (_, i) => catalogDoc(`Catalog Movie ${i}`, 500 + i)),
+      { total: 100 },
+    )
+
+    await renderSearchMobile(['/search'])
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '2' }))
+    })
+
+    expect(lastSearch).toContain('page=2')
+  })
+
+  it('клик по стрелке "вперёд" увеличивает ?page на 1', async () => {
+    mockCatalog(
+      Array.from({ length: 10 }, (_, i) => catalogDoc(`Catalog Movie ${i}`, 600 + i)),
+      { total: 100 },
+    )
+
+    await renderSearchMobile(['/search?page=1'])
+
+    // BottomSheet-содержимое (Filters/Sort) присутствует в DOM всегда (скрыто только CSS),
+    // поэтому "последняя кнопка в документе" ненадёжна — сужаем поиск до контейнера
+    // MobilePagination через соседний aria-live счётчик: [pagination-div, counter-div].
+    const counter = screen.getByText(/shown · page/)
+    const paginationContainer = counter.parentElement!.firstElementChild as HTMLElement
+    const paginationButtons = within(paginationContainer).getAllByRole('button')
+    const nextBtn = paginationButtons[paginationButtons.length - 1]
+    expect(nextBtn).not.toBeDisabled()
+
+    await act(async () => {
+      fireEvent.click(nextBtn)
+    })
+
+    expect(lastSearch).toContain('page=2')
+  })
+
+  it('смена фильтров сбрасывает ?page на 1', async () => {
+    mockCatalog(
+      Array.from({ length: 10 }, (_, i) => catalogDoc(`Catalog Movie ${i}`, 700 + i)),
+      { total: 100 },
+    )
+
+    await renderSearchMobile(['/search?page=3&type=movie'])
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Series' }))
+    })
+
+    expect(lastSearch).toContain('page=1')
+    expect(lastSearch).not.toContain('page=3')
+  })
+})
+
+describe('SearchMobile — ошибка фетчера (403/квота) достигает AsyncBoundary', () => {
+  it('реджект от catalog-эндпоинта рендерит ErrorState вместо краша страницы', async () => {
+    server.use(
+      http.get(CATALOG_ENDPOINT, () =>
+        HttpResponse.json({ statusCode: 403, message: 'Forbidden', error: 'Forbidden' }, { status: 403 }),
+      ),
+    )
+
+    // rating=9 — параметр фильтра, не встречающийся в других тестах этого файла: fetcher-кеш
+    // (module-level, переживает между тестами в файле) ключуется по параметрам запроса,
+    // и переиспользование дефолтных/уже засвеченных фильтров здесь вернуло бы кешированный
+    // успешный ответ из более раннего теста вместо реального обращения к этому 403-моку.
+    await renderSearchMobile(['/search?rating=9'])
+
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Попробовать снова' })).toBeInTheDocument()
+    // MobileHeader / BottomNav остаются — падает только контент внутри AsyncBoundary.
+    expect(screen.getByRole('button', { name: /Filters/ })).toBeInTheDocument()
   })
 })
 

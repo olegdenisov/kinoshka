@@ -29,6 +29,17 @@ export const SORT_LABELS = Object.keys(SORT_MAP)
 const PAGE_LIMIT = 10
 
 /**
+ * Границы года открытого диапазона, когда задан только `yearFrom` или только `yearTo`
+ * (напр. `?yearFrom=2020` — "2020 и позже"). Значения взяты из документации API v1.5
+ * (`year`: пример `1874, 2050, !2020, 2020-2024`) — 1874/2050 это её собственные примеры
+ * минимального/максимального года, а не произвольная константа. Это держит фактический
+ * API-запрос в согласии с чипом фильтра в `useFilterState` (`"2020+"` / `"–2010"`),
+ * а не сужает его до точного года.
+ */
+const YEAR_RANGE_MIN = 1874
+const YEAR_RANGE_MAX = 2050
+
+/**
  * Чистая функция: FilterState (+опциональный лейбл сортировки) → query-параметры
  * для `getV15Movie` (каталог, без текстового поиска — Variant A).
  * Пустой фильтр без sort даёт минимальный `{ limit: 10 }`.
@@ -49,8 +60,8 @@ export const filtersToParams = (filters: FilterState, sort?: string): CatalogQue
   }
 
   if (filters.yearFrom != null || filters.yearTo != null) {
-    const from = filters.yearFrom ?? filters.yearTo
-    const to = filters.yearTo ?? filters.yearFrom
+    const from = filters.yearFrom ?? YEAR_RANGE_MIN
+    const to = filters.yearTo ?? YEAR_RANGE_MAX
     params.year = [`${from}-${to}`]
   }
 

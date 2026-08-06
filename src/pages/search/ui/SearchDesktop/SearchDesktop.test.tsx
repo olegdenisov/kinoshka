@@ -92,10 +92,26 @@ describe('SearchDesktop — режим search (?q задан)', () => {
     expect(screen.getAllByText('Matrix Revolutions').length).toBeGreaterThan(0)
     expect(screen.queryAllByText('Should Not Appear')).toHaveLength(0)
 
-    // SearchSidebar задизейблена целиком (Variant A: query и фильтры не сочетаются)
+    // SearchSidebar задизейблена целиком (Variant A: query и фильтры не сочетаются) —
+    // проверяем не только Type-радиокнопки, но и остальные интерактивные контролы сайдбара
+    // (Genre-чипы, Rating-кнопки, Reset), чтобы поломка проброса disabled на любую из них
+    // не проходила незамеченной.
     const sidebar = document.querySelector('aside')!
     const typeButtons = within(sidebar).getAllByRole('button', { name: /Movies|Series|Anime/ })
     typeButtons.forEach((btn) => expect(btn).toBeDisabled())
+
+    const genreButtons = within(sidebar).getAllByRole('button', { name: /Action|Drama|Sci-Fi/ })
+    genreButtons.forEach((btn) => expect(btn).toBeDisabled())
+
+    const ratingButtons = within(sidebar).getAllByRole('button', { name: /^\d\+$/ })
+    expect(ratingButtons.length).toBeGreaterThan(0)
+    ratingButtons.forEach((btn) => expect(btn).toBeDisabled())
+
+    expect(within(sidebar).getByRole('button', { name: 'Reset filters' })).toBeDisabled()
+
+    // Сортировка тоже задизейблена в search-режиме (Variant A) — sortDisabled=isSearchMode,
+    // проброшенный SearchDesktop → SearchControls → SortSelect.
+    expect(screen.getByRole('button', { name: /^Sort/ })).toBeDisabled()
   })
 })
 
@@ -112,6 +128,34 @@ describe('SearchDesktop — режим catalog (без ?q, есть фильтр
     const sidebar = document.querySelector('aside')!
     const typeButtons = within(sidebar).getAllByRole('button', { name: /Movies|Series|Anime/ })
     typeButtons.forEach((btn) => expect(btn).not.toBeDisabled())
+
+    const genreButtons = within(sidebar).getAllByRole('button', { name: /Action|Drama|Sci-Fi/ })
+    genreButtons.forEach((btn) => expect(btn).not.toBeDisabled())
+
+    const ratingButtons = within(sidebar).getAllByRole('button', { name: /^\d\+$/ })
+    ratingButtons.forEach((btn) => expect(btn).not.toBeDisabled())
+
+    expect(within(sidebar).getByRole('button', { name: 'Reset filters' })).not.toBeDisabled()
+
+    // Сортировка активна вне search-режима.
+    expect(screen.getByRole('button', { name: /^Sort/ })).not.toBeDisabled()
+  })
+})
+
+describe('SearchDesktop — ошибка фетчера (403/квота) достигает AsyncBoundary', () => {
+  it('реджект от search-эндпоинта рендерит ErrorState вместо краша страницы', async () => {
+    server.use(
+      http.get(SEARCH_ENDPOINT, () =>
+        HttpResponse.json({ statusCode: 403, message: 'Forbidden', error: 'Forbidden' }, { status: 403 }),
+      ),
+    )
+
+    await renderSearchDesktop(['/search?q=quota-exceeded-probe'])
+
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Попробовать снова' })).toBeInTheDocument()
+    // Заголовок/шапка страницы остаются — падает только контент внутри AsyncBoundary.
+    expect(screen.getByPlaceholderText('Search movies, series, anime…')).toBeInTheDocument()
   })
 })
 
@@ -122,6 +166,40 @@ describe('SearchDesktop — пустой результат', () => {
     await renderSearchDesktop(['/search?q=nonexistent-movie-xyz'])
 
     expect(screen.getByText(/Ничего не найдено по «nonexistent-movie-xyz»/)).toBeInTheDocument()
+  })
+})
+
+describe('SearchDesktop — устаревший/deep-linked ?page вне диапазона', () => {
+  it('показывает Pagination рядом с EmptyState, чтобы вернуться на валидную страницу', async () => {
+    // Курсор/страница закончились раньше запрошенной — movies: [], но totalPages всё ещё
+    // приходит из total (см. getMoviesPage.ts / getSearchMovies.ts). EmptyState сам по себе
+    // не даёт способа выбраться — единственный путь назад это Pagination.
+    mockSearch([], { pages: 5, total: 50 })
+
+    await renderSearchDesktop(['/search?q=matrix&page=8'])
+
+    expect(screen.getByText(/Ничего не найдено по «matrix»/)).toBeInTheDocument()
+
+    const pageOneBtn = screen.getByRole('button', { name: '1' })
+    expect(pageOneBtn).toBeInTheDocument()
+
+    await act(async () => {
+      fireEvent.click(pageOneBtn)
+    })
+
+    expect(lastSearch).toContain('page=1')
+  })
+
+  it('не рендерит Pagination, когда результат пуст по-настоящему (totalPages: 0)', async () => {
+    // Отдельный, нигде больше не встречающийся query — иначе in-memory кеш фетчера
+    // (module-level Map в createCachedFetcher, ключ = {query, page}) вернул бы промис,
+    // засвеченный другим тестом с теми же {query: 'nonexistent-movie-xyz', page: 1}.
+    mockSearch([], { pages: 0, total: 0 })
+
+    await renderSearchDesktop(['/search?q=totally-empty-result-set-abc'])
+
+    expect(screen.getByText(/Ничего не найдено по «totally-empty-result-set-abc»/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '1' })).not.toBeInTheDocument()
   })
 })
 

@@ -175,6 +175,52 @@ describe('getMoviesPage — ошибки', () => {
 
     await expect(getMoviesPage({}, 1)).rejects.toThrow()
   })
+
+  it('page-level кеш не залипает на rejected promise навсегда — после истечения нижнего error-cooldown повторный вызов реально идёт в сеть и восстанавливается', async () => {
+    const ERROR_CACHE_TTL_MS = 20 * 1000
+    let now = 1_000_000
+    vi.spyOn(Date, 'now').mockImplementation(() => now)
+
+    let requests = 0
+    server.use(
+      http.get(ENDPOINT, () => {
+        requests += 1
+        return HttpResponse.json({ statusCode: 403, message: 'Forbidden', error: 'Forbidden' }, { status: 403 })
+      }),
+    )
+    const getMoviesPage = await importGetMoviesPage()
+
+    await expect(getMoviesPage({}, 1)).rejects.toThrow()
+    expect(requests).toBe(1)
+
+    // Нижний слой (cachedCursorStep) ещё в своём 20s error-cooldown — второй вызов не
+    // обязан бить сеть заново прямо сейчас, но критично, что pageCache сам по себе больше
+    // не держит мёртвой хваткой один и тот же rejected promise навсегда (баг до фикса —
+    // см. следующий шаг после истечения cooldown).
+    await expect(getMoviesPage({}, 1)).rejects.toThrow()
+
+    server.use(
+      http.get(ENDPOINT, () => {
+        requests += 1
+        return HttpResponse.json({
+          docs: [doc({ name: 'Recovered' })],
+          limit: 10,
+          next: null,
+          hasNext: false,
+          hasPrev: false,
+          total: 5,
+        })
+      }),
+    )
+
+    now += ERROR_CACHE_TTL_MS + 1
+
+    // Без фикса (pageCache без TTL/eviction) это по-прежнему вернуло бы исходный
+    // rejected promise и тест бы упал здесь.
+    const result = await getMoviesPage({}, 1)
+    expect(result.movies).toEqual([movieNamed('Recovered')])
+    expect(requests).toBe(2)
+  })
 })
 
 describe('getMoviesPage — page-level промис-мемо', () => {

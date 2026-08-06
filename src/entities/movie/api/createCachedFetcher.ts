@@ -20,6 +20,48 @@ const clearUnfreshCache = <R>(cache: Map<string, CacheEntry<R>>) => {
   })
 }
 
+/**
+ * Единая пара onSuccess/onError, навешиваемая на `entry.promise` в обеих ветках (replay
+ * из sessionStorage и живой fetcher-вызов) — раньше исход промиса разбирался в трёх
+ * разных местах (replay-catch, sessionStorage-persist .then, entry-bookkeeping .catch).
+ * `persistToSession: false` в replay-ветке — данные уже пришли из sessionStorage,
+ * перезаписывать их тем же значением незачем; local-bookkeeping (entry.isError/timestamp)
+ * всё равно нужен, плюс сам `.then(...)` обязателен, чтобы rejection не всплыл как
+ * unhandled promise rejection.
+ */
+const attachOutcomeHandlers = <R>(
+  entry: CacheEntry<R>,
+  sessionCache: ReturnType<typeof createSessionCache<R>>,
+  key: string,
+  persistToSession: boolean,
+) => {
+  entry.promise.then(
+    (data) => {
+      if (persistToSession) {
+        sessionCache.set(key, { data, timestamp: entry.timestamp, isError: false })
+      }
+    },
+    (error: unknown) => {
+      entry.isError = true
+
+      // timestamp двигаем только когда персистим (живой fetch-вызов) — реплей из
+      // sessionStorage не должен продлевать cooldown сверх исходного error-снапшота
+      // (иначе повторные in-memory промахи по свежему snapshot незаметно откатывали бы
+      // ERROR_CACHE_TTL_MS назад при каждом обращении).
+      if (persistToSession) {
+        entry.timestamp = Date.now()
+        sessionCache.set(key, {
+          // data не читается при isError:true (см. ветку replay выше) — значение не имеет значения для R любого вида.
+          data: undefined as unknown as R,
+          timestamp: entry.timestamp,
+          isError: true,
+          message: error instanceof Error ? error.message : String(error),
+        })
+      }
+    },
+  )
+}
+
 // R по умолчанию — Movie[] (совместимость getMovies/getSearchMovies без правок сигнатур);
 // произвольный R (напр. {movies, totalPages}) — для search/cursor-фетчеров.
 export const createCachedFetcher = <P, R = Movie[]>(
@@ -50,8 +92,7 @@ export const createCachedFetcher = <P, R = Movie[]>(
         isError: snapshot.isError,
       }
 
-      entry.promise.catch(() => entry.isError = true
-      )
+      attachOutcomeHandlers(entry, sessionCache, key, false)
       cache.set(key, entry)
 
       return entry.promise
@@ -63,20 +104,7 @@ export const createCachedFetcher = <P, R = Movie[]>(
       isError: false
     }
 
-    entry.promise.then(
-      (data) => sessionCache.set(key, { data, timestamp: entry.timestamp, isError: false }),
-      (error) => sessionCache.set(key, {
-        // data не читается при isError:true (см. ветку replay выше) — значение не имеет значения для R любого вида.
-        data: undefined as unknown as R,
-        timestamp: Date.now(),
-        isError: true,
-        message: error instanceof Error ? error.message : String(error),
-      }),
-    )
-    entry.promise.catch(() => {
-      entry.timestamp = Date.now()
-      entry.isError = true
-    })
+    attachOutcomeHandlers(entry, sessionCache, key, true)
     cache.set(key, entry)
 
     return entry.promise
