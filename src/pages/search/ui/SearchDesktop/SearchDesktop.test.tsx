@@ -230,6 +230,57 @@ describe('SearchDesktop — индикатор загрузки (Task 6)', () =>
   })
 })
 
+describe('SearchDesktop — переходное состояние индикатора при незавершённом запросе (Task 8)', () => {
+  it('пока ответ на пагинацию не пришёл — старые данные остаются в DOM (не skeleton) и busy-индикатор виден; после резолва — новые данные, индикатор пропадает', async () => {
+    mockSearch([searchDoc('Matrix Revolutions', 501)], { pages: 5, total: 50 })
+
+    await renderSearchDesktop(['/search?q=transient-indicator-desktop'])
+
+    expect(screen.getAllByText('Matrix Revolutions').length).toBeGreaterThan(0)
+
+    // Начальный fetch (page 1) уже осел в кеше createCachedFetcher — переопределяем хендлер
+    // на управляемый вручную промис, чтобы поймать состояние "запрос ушёл, ответа ещё нет"
+    // для следующего (page 2) запроса, у которого другой cache-key.
+    let resolvePending: (response: Response) => void = () => {}
+    const pending = new Promise<Response>((resolve) => {
+      resolvePending = resolve
+    })
+    server.use(http.get(SEARCH_ENDPOINT, () => pending))
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '2' }))
+    })
+
+    // In-flight: useDeferredValue держит закоммиченным старый (page 1) рендер — use() внутри
+    // useMovieCatalog берёт cache-hit на старых deferred-параметрах, а не саспенднутый новый
+    // промис, поэтому старые данные видны как есть, а не Suspense-fallback/skeleton.
+    expect(screen.getAllByText('Matrix Revolutions').length).toBeGreaterThan(0)
+    expect(screen.queryByText(/Loading/i)).not.toBeInTheDocument()
+
+    const busyNodeDuring = document.querySelector('[aria-busy]')!
+    expect(busyNodeDuring).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByText('Updating…')).toBeInTheDocument()
+
+    resolvePending(
+      HttpResponse.json({
+        docs: [searchDoc('Interstellar Redux', 502)],
+        total: 50,
+        page: 2,
+        pages: 5,
+        limit: 10,
+      }),
+    )
+
+    expect((await screen.findAllByText('Interstellar Redux')).length).toBeGreaterThan(0)
+    expect(screen.queryAllByText('Matrix Revolutions')).toHaveLength(0)
+
+    const busyNodeAfter = document.querySelector('[aria-busy]')!
+    expect(busyNodeAfter).toHaveAttribute('aria-busy', 'false')
+    expect(screen.queryByText('Updating…')).not.toBeInTheDocument()
+    expect(screen.getByText(/page 2 of 5/i)).toBeInTheDocument()
+  })
+})
+
 describe('SearchDesktop — a11y счётчика результатов', () => {
   it('счётчик результатов помечен aria-live="polite"', async () => {
     mockCatalog([catalogDoc('Oppenheimer', 301)])
