@@ -1,5 +1,10 @@
 import type { FilterState } from '../model/useFilterState'
-import { EMPTY_FILTERS, filtersToSearchParams, getFilterFromSearchParams } from './searchParams'
+import {
+  EMPTY_FILTERS,
+  filtersToSearchParams,
+  getFilterFromSearchParams,
+  stripFilterAndSortParams,
+} from './searchParams'
 
 describe('getFilterFromSearchParams', () => {
   it('пустой URL → пустой FilterState', () => {
@@ -83,5 +88,35 @@ describe('filtersToSearchParams', () => {
     const filters: FilterState = { type: 'anime', genres: ['Fantasy'], yearFrom: 2018, yearTo: 2022, rating: 5 }
     const roundTripped = getFilterFromSearchParams(filtersToSearchParams(filters))
     expect(roundTripped).toEqual(filters)
+  })
+})
+
+describe('stripFilterAndSortParams', () => {
+  it('удаляет все 6 ключей (5 фильтров + sort), не трогая q/page', () => {
+    const sp = new URLSearchParams(
+      'q=inception&page=3&type=movie&genres=Drama,Action&yearFrom=2020&yearTo=2025&rating=7&sort=Newest',
+    )
+    const result = stripFilterAndSortParams(sp)
+
+    expect(result.has('type')).toBe(false)
+    expect(result.has('genres')).toBe(false)
+    expect(result.has('yearFrom')).toBe(false)
+    expect(result.has('yearTo')).toBe(false)
+    expect(result.has('rating')).toBe(false)
+    expect(result.has('sort')).toBe(false)
+    expect(result.get('q')).toBe('inception')
+    expect(result.get('page')).toBe('3')
+  })
+
+  it('no-op на пустых params', () => {
+    const result = stripFilterAndSortParams(new URLSearchParams())
+    expect(result.toString()).toBe('')
+  })
+
+  it('не мутирует переданный params', () => {
+    const sp = new URLSearchParams('genres=Drama&sort=Newest')
+    stripFilterAndSortParams(sp)
+    expect(sp.has('genres')).toBe(true)
+    expect(sp.has('sort')).toBe(true)
   })
 })

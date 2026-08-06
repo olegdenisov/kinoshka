@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router'
-import { EMPTY_FILTERS, filtersToSearchParams, getFilterFromSearchParams } from '../lib/searchParams'
+import { EMPTY_FILTERS, FILTER_URL_KEYS, filtersToSearchParams, getFilterFromSearchParams } from '../lib/searchParams'
 
 export type FilterState = {
   type: string | null
@@ -13,8 +13,6 @@ export type ActiveChip = {
   label: string
   onRemove: () => void
 }
-
-const FILTER_KEYS = ['type', 'genres', 'yearFrom', 'yearTo', 'rating'] as const
 
 /**
  * URL — единственный источник истины для фильтров и сортировки (`?type`, `?genres`,
@@ -32,7 +30,7 @@ export const useFilterState = () => {
     setSearchParams(
       (prev) => {
         const params = new URLSearchParams(prev)
-        FILTER_KEYS.forEach((key) => params.delete(key))
+        FILTER_URL_KEYS.forEach((key) => params.delete(key))
         filtersToSearchParams(next).forEach((value, key) => params.set(key, value))
         return params
       },
