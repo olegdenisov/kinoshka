@@ -2,6 +2,7 @@ import { apiClient } from "@shared/api";
 import type { Movie } from "../model/types";
 import { createCachedFetcher } from "./createCachedFetcher";
 import { mapDocToMovie } from "./mapDocToMovie";
+import { PER_PAGE, MAX_PAGES } from "./paginationConfig";
 
 type RequestParams = {
   query: string;
@@ -13,14 +14,11 @@ export type SearchMoviesResult = {
   totalPages: number;
 }
 
-// demo-тариф: страницы 1–10 — clamp totalPages к потолку
-const MAX_PAGES = 10
-
 const fetchSearchMovies = async (params: RequestParams): Promise<SearchMoviesResult> => {
   const response = await apiClient.getV14MovieSearch({
       query: {
         ...params,
-        limit: 10,
+        limit: PER_PAGE,
       }
     })
 
