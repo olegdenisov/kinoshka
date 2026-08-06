@@ -104,11 +104,13 @@ SearchResults(deferredQuery, deferredFilters, deferredSort, deferredPage)
 - [x] Та же логика через `useCatalogUpdateStatus`; т.к. файл без CSS-модуля (inline styles — существующая конвенция файла), обернуть текущий `<AsyncBoundary>` в `position: relative`-div, toggle `opacity` инлайново, инлайновый бейдж с `<Spinner size={12} />` в цветах существующих микро-лейблов файла (`#92887F`).
 
 ### Task 8 — Интеграционные тесты индикатора загрузки
-- [ ] `SearchDesktop.test.tsx` / `SearchMobile.test.tsx`: через MSW задержать ответ (delay/контролируемый промис), кликнуть по пагинации или сменить фильтр, assert — прошлые данные всё ещё в DOM (не skeleton), `aria-busy="true"`/спиннер видны; после резолва — новые данные, индикатор пропадает.
+- [x] `SearchDesktop.test.tsx` / `SearchMobile.test.tsx`: через MSW задержать ответ (delay/контролируемый промис), кликнуть по пагинации или сменить фильтр, assert — прошлые данные всё ещё в DOM (не skeleton), `aria-busy="true"`/спиннер видны; после резолва — новые данные, индикатор пропадает.
+  - Реализация через управляемый вручную промис (`server.use(http.get(..., () => pending))` + `resolvePending`), как описано в задаче — паттерн `delay()`/готового MSW-хелпера в репозитории ранее не было.
+  - По ходу написания теста обнаружился реальный баг в Task 5/6/7: `setSearchParams` react-router оборачивает апдейт в `startTransition`, из-за чего `useDeferredValue`, навешенный прямо на `query`/`filters`/`sort`/`page`, никогда не давал промежуточного stale-состояния (React отдавал новое значение сразу — `includesOnlyNonUrgentLanes`), `isUpdating` не становился `true` ни разу. Исправлено в `useCatalogUpdateStatus.ts`: live-значения зеркалятся в `useState`, апдейт зеркала — через `flushSync` в `useEffect` (не `queueMicrotask`: гонка с `waitFor` в существующих Task 5 unit-тестах), что даёт апдейт в urgent lane, на котором `useDeferredValue` реально стадирует значение.
 
 ## Verification (ручная, после всех задач)
-- [ ] `make typecheck && make lint && make test` — всё зелёное.
-- [ ] `make dev`, вручную на `/search`:
-  - [ ] Ввести текст в поиск при активных фильтрах → фильтры/chips реально очищаются (не просто задизейблены).
-  - [ ] Быстро кликнуть по нескольким страницам пагинации / переключить фильтр на каталоге (пустой `q`) → появляется лёгкий индикатор поверх текущего списка, список некликабелен до его исчезновения.
-  - [ ] Проверить Desktop и Mobile варианты отдельно.
+- [x] `make typecheck && make lint && make test` — всё зелёное.
+- [x] manual test (skipped - not automatable) `make dev`, вручную на `/search`:
+  - [x] manual test (skipped - not automatable) Ввести текст в поиск при активных фильтрах → фильтры/chips реально очищаются (не просто задизейблены).
+  - [x] manual test (skipped - not automatable) Быстро кликнуть по нескольким страницам пагинации / переключить фильтр на каталоге (пустой `q`) → появляется лёгкий индикатор поверх текущего списка, список некликабелен до его исчезновения.
+  - [x] manual test (skipped - not automatable) Проверить Desktop и Mobile варианты отдельно.
