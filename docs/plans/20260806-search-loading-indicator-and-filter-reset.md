@@ -96,9 +96,9 @@ SearchResults(deferredQuery, deferredFilters, deferredSort, deferredPage)
 - [x] Новый файл `src/pages/search/model/useCatalogUpdateStatus.ts` (page-internal facade, паттерн как у `usePageSync`/`useMovieCatalog`): `useDeferredValue` на `query`/`filters`/`sort`/`page`, сравнение `liveKey`/`deferredKey` (через `JSON.stringify`, аналогично `resetKey` в `usePageSync`) → `isUpdating: boolean`.
 
 ### Task 6 — Индикатор загрузки в `SearchDesktop`
-- [ ] Вызвать `useCatalogUpdateStatus`, передать `deferred*` значения в `<SearchResults>` вместо live (live-значения оставить для `Pagination`/`SearchHeader`/`ActiveFilterChips`, чтобы клик/ввод отражались мгновенно).
-- [ ] Обернуть блок результатов в `<div className={... isUpdating ? s.updating : ''} aria-busy={isUpdating}>` с бейджем `<Spinner size={14} /> Updating…` при `isUpdating`.
-- [ ] `SearchDesktop.module.css`: `.resultsWrapper { position: relative }`, `.updating { opacity: 0.5; pointer-events: none; transition: opacity 150ms ease }`, `.updatingBadge` (моно-uppercase, в стиле существующего `.countText`).
+- [x] Вызвать `useCatalogUpdateStatus`, передать `deferred*` значения в `<SearchResults>` вместо live (live-значения оставить для `Pagination`/`SearchHeader`/`ActiveFilterChips`, чтобы клик/ввод отражались мгновенно).
+- [x] Обернуть блок результатов в `<div className={... isUpdating ? s.updating : ''} aria-busy={isUpdating}>` с бейджем `<Spinner size={14} /> Updating…` при `isUpdating`.
+- [x] `SearchDesktop.module.css`: `.resultsWrapper { position: relative }`, `.updating { opacity: 0.5; pointer-events: none; transition: opacity 150ms ease }`, `.updatingBadge` (моно-uppercase, в стиле существующего `.countText`).
 
 ### Task 7 — Индикатор загрузки в `SearchMobile`
 - [ ] Та же логика через `useCatalogUpdateStatus`; т.к. файл без CSS-модуля (inline styles — существующая конвенция файла), обернуть текущий `<AsyncBoundary>` в `position: relative`-div, toggle `opacity` инлайново, инлайновый бейдж с `<Spinner size={12} />` в цветах существующих микро-лейблов файла (`#92887F`).
