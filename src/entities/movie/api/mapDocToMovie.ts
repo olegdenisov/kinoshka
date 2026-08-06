@@ -19,13 +19,13 @@ export type MovieDocLike = {
 }
 
 export const mapDocToMovie = (doc: MovieDocLike): Movie => ({
-  id: doc.id || 0,
+  id: doc.id ?? 0,
   title: doc.name ?? doc.alternativeName ?? doc.enName ?? '',
   year: doc.year ?? undefined,
   rating: doc.rating?.kp ?? doc.rating?.imdb ?? 0,
-  type: (doc.type || 'movie') as MovieType,
-  genre: (doc.genres?.map((genre) => genre.name) || []) as Movie['genre'],
+  type: (doc.type ?? 'movie') as MovieType,
+  genre: (doc.genres?.map((genre) => genre.name) ?? []) as Movie['genre'],
   runtime: String(doc.movieLength ?? 0),
-  poster: doc.poster?.previewUrl || '',
+  poster: doc.poster?.previewUrl ?? '',
   hue: 0,
 })

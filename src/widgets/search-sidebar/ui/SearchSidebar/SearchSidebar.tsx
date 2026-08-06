@@ -1,4 +1,5 @@
 import type { FilterState } from '@features/catalog-filter'
+import { ALL_GENRES } from '@entities/movie'
 import s from './SearchSidebar.module.css'
 
 type SearchSidebarProps = {
@@ -9,11 +10,6 @@ type SearchSidebarProps = {
   /** Variant A: активный текстовый поиск (?q) не сочетается с фильтрами каталога — сайдбар задизейблен. */
   disabled?: boolean
 }
-
-const ALL_GENRES = [
-  'Action', 'Drama', 'Sci-Fi', 'Thriller', 'Romance', 'Horror',
-  'Mystery', 'Documentary', 'Historical', 'Adventure', 'Family', 'Slice of Life', 'Fantasy',
-]
 
 type FilterGroupProps = React.PropsWithChildren<{
   title: string
