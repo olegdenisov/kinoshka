@@ -265,12 +265,18 @@ describe('SearchDesktop — пагинация: сброс ?page на 1 при �
     expect(lastSearch).not.toContain('page=3')
   })
 
-  it('появление ?q (ввод в Header) сбрасывает ?page на 1', async () => {
+  it('появление ?q (ввод в Header) сбрасывает ?page на 1 и зачищает фильтры/sort', async () => {
     mockCatalog([catalogDoc('Dune Part Two', 201)], { total: 50 })
     mockSearch([searchDoc('Matrix Revolutions', 101)])
 
-    await renderSearchDesktop(['/search?genres=Drama&page=3'])
+    await renderSearchDesktop(['/search?genres=Drama&sort=Newest&page=3'])
     expect(lastSearch).toContain('page=3')
+
+    // Chips/SortSelect живут внутри <main>, жанр-кнопки того же лейбла — в <aside> (сайдбар),
+    // поэтому scoping через `main` не путает chip 'Drama' с одноимённой кнопкой в сайдбаре.
+    const main = document.querySelector('main')!
+    expect(within(main).getByText('Drama')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Sort/ })).toHaveTextContent('Newest')
 
     vi.useFakeTimers()
     try {
@@ -287,8 +293,16 @@ describe('SearchDesktop — пагинация: сброс ?page на 1 при �
       expect(lastSearch).toContain('q=matrix')
       expect(lastSearch).not.toContain('page=3')
       expect(lastSearch).toContain('page=1')
+      // Баг 2: фильтры/сортировка реально стёрты из URL, а не просто задизейблены поверх
+      // старых значений (Variant A — query и фильтры не сочетаются в API).
+      expect(lastSearch).not.toContain('genres=')
+      expect(lastSearch).not.toContain('sort=')
     } finally {
       vi.useRealTimers()
     }
+
+    expect(within(main).queryByText('Drama')).not.toBeInTheDocument()
+    expect(within(main).queryByText('Clear all')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Sort/ })).toHaveTextContent('Default')
   })
 })

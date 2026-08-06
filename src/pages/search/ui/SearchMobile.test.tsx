@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
-import { MemoryRouter, useLocation } from 'react-router'
+import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../../test/setup'
 import { SearchMobile } from './SearchMobile'
@@ -232,6 +232,74 @@ describe('SearchMobile — MobilePagination и page-URL-sync', () => {
 
     expect(lastSearch).toContain('page=1')
     expect(lastSearch).not.toContain('page=3')
+  })
+})
+
+describe('SearchMobile — появление ?q сбрасывает фильтры/sort (баг 2, мобильная шапка чипов и Sort-кнопка)', () => {
+  // SearchMobile сам по себе не рендерит текстовый инпут поиска — на /search `MobileHeader`
+  // показывает только кнопку-триггер "Search…", которая при уже открытом /search — no-op
+  // навигация (см. Header.tsx: реальный debounce-инпут есть только в desktop-варианте
+  // Header). Баг 2 живёт в usePageSync/useFilterState — они реагируют на *URL-переход* `?q`,
+  // независимо от того, кто его записал. Этот хелпер пишет `?q`, не трогая остальные ключи,
+  // — ровно так же, как это делает debounce-эффект в Header.tsx — чтобы воспроизвести
+  // предпосылку бага без завязки на десктопный виджет.
+  const HeaderQuerySetter = () => {
+    const [, setSearchParams] = useSearchParams()
+    return (
+      <button
+        type="button"
+        onClick={() =>
+          setSearchParams(
+            (prev) => {
+              const params = new URLSearchParams(prev)
+              params.set('q', 'matrix')
+              return params
+            },
+            { replace: true },
+          )
+        }
+      >
+        simulate header q write
+      </button>
+    )
+  }
+
+  it('чипы и Sort-кнопка сбрасываются в дефолт, ?page сбрасывается на 1', async () => {
+    mockCatalog([catalogDoc('Dune Part Two', 201)], { total: 50 })
+    mockSearch([searchDoc('Matrix Revolutions', 101)])
+
+    lastSearch = ''
+    await act(async () => {
+      render(
+        <MemoryRouter initialEntries={['/search?genres=Drama&sort=Newest&page=3']}>
+          <SearchMobile />
+          <HeaderQuerySetter />
+          <LocationProbe />
+        </MemoryRouter>,
+      )
+    })
+
+    expect(lastSearch).toContain('page=3')
+
+    // Chips/Sort живут в стики-баре над результатами; тот же жанр-лейбл 'Drama' также
+    // присутствует в BottomSheet-фильтрах (в DOM всегда, скрыт только CSS) — scoping через
+    // родителя Sort-кнопки (сам стики-бар) исключает ложные совпадения с BottomSheet.
+    const stickyBar = screen.getByRole('button', { name: /Sort/ }).parentElement!
+    expect(within(stickyBar).getByText('Drama')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Sort/ })).toHaveTextContent('Newest')
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'simulate header q write' }))
+    })
+
+    expect(lastSearch).toContain('q=matrix')
+    expect(lastSearch).not.toContain('page=3')
+    expect(lastSearch).toContain('page=1')
+    expect(lastSearch).not.toContain('genres=')
+    expect(lastSearch).not.toContain('sort=')
+
+    expect(within(stickyBar).queryByText('Drama')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Sort/ })).toHaveTextContent('Default')
   })
 })
 
