@@ -1,6 +1,12 @@
 import { z } from 'zod'
 import type { FilterState } from '../model/useFilterState'
 
+/** URL-ключи фильтров (без сортировки) — используются и для чтения/записи, и для удаления. */
+export const FILTER_URL_KEYS = ['type', 'genres', 'yearFrom', 'yearTo', 'rating'] as const
+
+/** Фильтры + сортировка — полный набор ключей, которые нужно зачищать при входе в текстовый поиск. */
+export const FILTER_AND_SORT_URL_KEYS = [...FILTER_URL_KEYS, 'sort'] as const
+
 /** Пустой FilterState — дефолт как для пустого URL, так и для мусорных значений в нём. */
 export const EMPTY_FILTERS: FilterState = {
   type: null,
@@ -65,4 +71,15 @@ export const filtersToSearchParams = (filters: FilterState): URLSearchParams => 
   }
 
   return params
+}
+
+/**
+ * Возвращает новый URLSearchParams без ключей фильтров и сортировки (`?q`/`?page` не трогает).
+ * Не мутирует переданный `params` — используется при атомарной сборке апдейта в одном
+ * `setSearchParams` (см. `usePageSync`).
+ */
+export const stripFilterAndSortParams = (params: URLSearchParams): URLSearchParams => {
+  const next = new URLSearchParams(params)
+  FILTER_AND_SORT_URL_KEYS.forEach((key) => next.delete(key))
+  return next
 }
