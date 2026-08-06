@@ -101,7 +101,7 @@ SearchResults(deferredQuery, deferredFilters, deferredSort, deferredPage)
 - [x] `SearchDesktop.module.css`: `.resultsWrapper { position: relative }`, `.updating { opacity: 0.5; pointer-events: none; transition: opacity 150ms ease }`, `.updatingBadge` (моно-uppercase, в стиле существующего `.countText`).
 
 ### Task 7 — Индикатор загрузки в `SearchMobile`
-- [ ] Та же логика через `useCatalogUpdateStatus`; т.к. файл без CSS-модуля (inline styles — существующая конвенция файла), обернуть текущий `<AsyncBoundary>` в `position: relative`-div, toggle `opacity` инлайново, инлайновый бейдж с `<Spinner size={12} />` в цветах существующих микро-лейблов файла (`#92887F`).
+- [x] Та же логика через `useCatalogUpdateStatus`; т.к. файл без CSS-модуля (inline styles — существующая конвенция файла), обернуть текущий `<AsyncBoundary>` в `position: relative`-div, toggle `opacity` инлайново, инлайновый бейдж с `<Spinner size={12} />` в цветах существующих микро-лейблов файла (`#92887F`).
 
 ### Task 8 — Интеграционные тесты индикатора загрузки
 - [ ] `SearchDesktop.test.tsx` / `SearchMobile.test.tsx`: через MSW задержать ответ (delay/контролируемый промис), кликнуть по пагинации или сменить фильтр, assert — прошлые данные всё ещё в DOM (не skeleton), `aria-busy="true"`/спиннер видны; после резолва — новые данные, индикатор пропадает.

@@ -324,6 +324,36 @@ describe('SearchMobile — ошибка фетчера (403/квота) дост
   })
 })
 
+describe('SearchMobile — индикатор загрузки (Task 7)', () => {
+  it('в состоянии покоя обёртка результатов не помечена как busy и бейдж "Updating…" не рендерится', async () => {
+    mockCatalog([catalogDoc('Oppenheimer', 301)])
+
+    await renderSearchMobile(['/search?genres=Action'])
+
+    const busyNode = document.querySelector('[aria-busy]')!
+    expect(busyNode).toHaveAttribute('aria-busy', 'false')
+    expect(screen.queryByText('Updating…')).not.toBeInTheDocument()
+  })
+
+  it('после клика по пагинации индикатор в итоге пропадает, а данные новой страницы отображаются', async () => {
+    // Уникальный query, не встречающийся в других тестах файла: fetcher-кеш (module-level Map
+    // в createCachedFetcher, ключ = {query, page, ...}) иначе вернул бы cache-hit по {query:
+    // 'matrix', page: 1}, засвеченному другим тестом с другим числом pages/total.
+    mockSearch([searchDoc('Matrix Revolutions', 999)], { pages: 5, total: 50 })
+
+    await renderSearchMobile(['/search?q=mobile-loading-indicator-test'])
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '2' }))
+    })
+
+    const busyNode = document.querySelector('[aria-busy]')!
+    expect(busyNode).toHaveAttribute('aria-busy', 'false')
+    expect(screen.queryByText('Updating…')).not.toBeInTheDocument()
+    expect(screen.getByText(/page 2 of 5/i)).toBeInTheDocument()
+  })
+})
+
 describe('SearchMobile — существующий BottomSheet фильтров пишет в URL', () => {
   it('выбор типа в BottomSheet фильтров пишет ?type в URL (replace)', async () => {
     mockCatalog([catalogDoc('Oppenheimer', 301)])
