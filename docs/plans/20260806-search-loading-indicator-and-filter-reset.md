@@ -93,7 +93,7 @@ SearchResults(deferredQuery, deferredFilters, deferredSort, deferredPage)
 - [x] Тест `Spinner.test.tsx`: `size={14}` → `--spinner-size` custom property; дефолт (без пропа) не ломает существующее использование в `AsyncBoundary`.
 
 ### Task 5 — `useCatalogUpdateStatus` хук
-- [ ] Новый файл `src/pages/search/model/useCatalogUpdateStatus.ts` (page-internal facade, паттерн как у `usePageSync`/`useMovieCatalog`): `useDeferredValue` на `query`/`filters`/`sort`/`page`, сравнение `liveKey`/`deferredKey` (через `JSON.stringify`, аналогично `resetKey` в `usePageSync`) → `isUpdating: boolean`.
+- [x] Новый файл `src/pages/search/model/useCatalogUpdateStatus.ts` (page-internal facade, паттерн как у `usePageSync`/`useMovieCatalog`): `useDeferredValue` на `query`/`filters`/`sort`/`page`, сравнение `liveKey`/`deferredKey` (через `JSON.stringify`, аналогично `resetKey` в `usePageSync`) → `isUpdating: boolean`.
 
 ### Task 6 — Индикатор загрузки в `SearchDesktop`
 - [ ] Вызвать `useCatalogUpdateStatus`, передать `deferred*` значения в `<SearchResults>` вместо live (live-значения оставить для `Pagination`/`SearchHeader`/`ActiveFilterChips`, чтобы клик/ввод отражались мгновенно).
