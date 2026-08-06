@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
+import { useEffect } from 'react'
 import { act, renderHook } from '@testing-library/react'
-import { MemoryRouter } from 'react-router'
+import { MemoryRouter, useLocation } from 'react-router'
 import type { FilterState } from '@features/catalog-filter'
 import { usePageSync } from './usePageSync'
 
@@ -24,15 +25,29 @@ vi.mock('react-router', async () => {
   }
 })
 
+/** Читает текущую строку query из роутера — способ проверить итоговый результат записи в URL. */
+let lastSearch = ''
+const LocationProbe = () => {
+  const { search } = useLocation()
+  useEffect(() => {
+    lastSearch = search
+  }, [search])
+  return null
+}
+
 const wrapper = (initialEntries: string[]) => {
   const Wrapper = ({ children }: { children: ReactNode }) => (
-    <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
+      <LocationProbe />
+      {children}
+    </MemoryRouter>
   )
   return Wrapper
 }
 
 beforeEach(() => {
   setSearchParamsCalls = []
+  lastSearch = ''
   vi.stubGlobal('scrollTo', vi.fn())
 })
 
@@ -118,5 +133,58 @@ describe('usePageSync', () => {
     rerender({ query: 'dune' })
 
     expect(result.current.page).toBe(1)
+  })
+
+  it("'' → непустой query: один атомарный setSearchParams — фильтры/sort зачищены, page=1", () => {
+    const { result, rerender } = renderHook(
+      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      {
+        wrapper: wrapper(['/search?genres=Drama&sort=Newest&page=3']),
+        initialProps: { query: '' },
+      },
+    )
+    expect(result.current.page).toBe(3)
+
+    act(() => rerender({ query: 'inception' }))
+
+    expect(setSearchParamsCalls.length).toBe(1)
+    expect(lastSearch).not.toContain('genres=')
+    expect(lastSearch).not.toContain('sort=')
+    expect(result.current.page).toBe(1)
+  })
+
+  it('непустой → непустой query: повторной зачистки фильтров/sort не происходит', () => {
+    const { result, rerender } = renderHook(
+      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      {
+        wrapper: wrapper(['/search?q=inception&sort=Newest&page=5']),
+        initialProps: { query: 'inception' },
+      },
+    )
+    expect(result.current.page).toBe(5)
+    expect(lastSearch).toContain('sort=Newest')
+
+    act(() => rerender({ query: 'inception2' }))
+
+    expect(lastSearch).toContain('sort=Newest')
+    expect(result.current.page).toBe(1)
+  })
+
+  it('смена filters при пустом query: page сбрасывается, зачистки фильтров/sort не происходит', () => {
+    const { result, rerender } = renderHook(
+      ({ filters }: { filters: FilterState }) => usePageSync({ query: '', filters }),
+      {
+        wrapper: wrapper(['/search?sort=Newest&page=5']),
+        initialProps: { filters: EMPTY_FILTERS },
+      },
+    )
+    expect(result.current.page).toBe(5)
+
+    act(() => rerender({ filters: { ...EMPTY_FILTERS, genres: ['Drama'] } }))
+
+    expect(result.current.page).toBe(1)
+    // sort — не связан с изменившимся filters-пропом и не должен зачищаться (query всё ещё пустой,
+    // стрип фильтров/sort происходит только на переходе '' → непустой query).
+    expect(lastSearch).toContain('sort=Newest')
   })
 })
