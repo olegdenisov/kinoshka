@@ -1,15 +1,15 @@
 .spinner {
-  width: 48px;
-  height: 48px;
+  width: var(--spinner-size, 48px);
+  height: var(--spinner-size, 48px);
   display: inline-block;
   position: relative;
 }
 .spinner::after,
 .spinner::before {
-  content: '';  
+  content: '';
   box-sizing: border-box;
-  width: 48px;
-  height: 48px;
+  width: var(--spinner-size, 48px);
+  height: var(--spinner-size, 48px);
   border-radius: 50%;
   border: 2px solid var(--text-primary);
   position: absolute;
