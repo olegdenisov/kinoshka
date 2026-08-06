@@ -76,12 +76,12 @@ SearchResults(deferredQuery, deferredFilters, deferredSort, deferredPage)
 - [x] Тест `searchParams.test.ts`: `stripFilterAndSortParams` удаляет все 6 ключей, не трогает `q`/`page`, no-op на пустых params.
 
 ### Task 2 — Атомарный сброс фильтров/sort в `usePageSync`
-- [ ] В `src/pages/search/model/usePageSync.ts` добавить `wasSearchingRef` и расширить существующий reset-эффект: при переходе `'' → непустой query` зачищать фильтры/sort через `stripFilterAndSortParams` в том же вызове `setSearchParams`, которым сбрасывается `?page`.
-- [ ] Обновить докблок хука — зафиксировать, почему это один эффект, а не два (race через render-снэпшот `searchParams`, см. Context).
-- [ ] Тесты в `usePageSync.test.tsx` (расширить существующий файл, переиспользовать `setSearchParamsCalls` spy):
-  - [ ] `'' → 'inception'` с `?genres=Drama&sort=Newest&page=3` в URL → ровно один вызов `setSearchParams`, итоговые params без `genres`/`sort`, `page=1`.
-  - [ ] `'inception' → 'inception2'` (непустой → непустой) при уже пустых фильтрах — повторной зачистки не происходит.
-  - [ ] Смена `filters` при пустом `query` — поведение не меняется (page сбрасывается, зачистки нет).
+- [x] В `src/pages/search/model/usePageSync.ts` добавить `wasSearchingRef` и расширить существующий reset-эффект: при переходе `'' → непустой query` зачищать фильтры/sort через `stripFilterAndSortParams` в том же вызове `setSearchParams`, которым сбрасывается `?page`.
+- [x] Обновить докблок хука — зафиксировать, почему это один эффект, а не два (race через render-снэпшот `searchParams`, см. Context).
+- [x] Тесты в `usePageSync.test.tsx` (расширить существующий файл, переиспользовать `setSearchParamsCalls` spy):
+  - [x] `'' → 'inception'` с `?genres=Drama&sort=Newest&page=3` в URL → ровно один вызов `setSearchParams`, итоговые params без `genres`/`sort`, `page=1`.
+  - [x] `'inception' → 'inception2'` (непустой → непустой) при уже пустых фильтрах — повторной зачистки не происходит.
+  - [x] Смена `filters` при пустом `query` — поведение не меняется (page сбрасывается, зачистки нет).
 
 ### Task 3 — Регрессионные тесты бага 2 на уровне страницы
 - [ ] `SearchDesktop.test.tsx`: расширить существующий тест "?q сбрасывает ?page" — assert, что `lastSearch` не содержит `genres=`/`sort=`, `ActiveFilterChips`/`SortSelect` рендерятся пустыми/дефолтными после ввода в `Header`.
