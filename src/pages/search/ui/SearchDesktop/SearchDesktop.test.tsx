@@ -203,6 +203,33 @@ describe('SearchDesktop — устаревший/deep-linked ?page вне диа
   })
 })
 
+describe('SearchDesktop — индикатор загрузки (Task 6)', () => {
+  it('в состоянии покоя обёртка результатов не помечена как busy и бейдж "Updating…" не рендерится', async () => {
+    mockCatalog([catalogDoc('Oppenheimer', 301)])
+
+    await renderSearchDesktop(['/search?genres=Action'])
+
+    const busyNode = document.querySelector('[aria-busy]')!
+    expect(busyNode).toHaveAttribute('aria-busy', 'false')
+    expect(screen.queryByText('Updating…')).not.toBeInTheDocument()
+  })
+
+  it('после клика по пагинации индикатор в итоге пропадает, а данные новой страницы отображаются', async () => {
+    mockSearch([searchDoc('Matrix Revolutions', 101)], { pages: 5, total: 50 })
+
+    await renderSearchDesktop(['/search?q=matrix'])
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '2' }))
+    })
+
+    const busyNode = document.querySelector('[aria-busy]')!
+    expect(busyNode).toHaveAttribute('aria-busy', 'false')
+    expect(screen.queryByText('Updating…')).not.toBeInTheDocument()
+    expect(screen.getByText(/page 2 of 5/i)).toBeInTheDocument()
+  })
+})
+
 describe('SearchDesktop — a11y счётчика результатов', () => {
   it('счётчик результатов помечен aria-live="polite"', async () => {
     mockCatalog([catalogDoc('Oppenheimer', 301)])
