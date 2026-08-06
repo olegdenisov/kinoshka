@@ -54,15 +54,15 @@ describe('filtersToParams', () => {
     expect(params.year).toEqual(['2020-2025'])
   })
 
-  it('edge: только yearFrom (без yearTo и rating) — year использует yearFrom для обеих границ', () => {
+  it('edge: только yearFrom (без yearTo и rating) — открытый диапазон до YEAR_RANGE_MAX (2050), не точный год', () => {
     const params = filtersToParams({ ...EMPTY_FILTERS, yearFrom: 2020 })
-    expect(params.year).toEqual(['2020-2020'])
+    expect(params.year).toEqual(['2020-2050'])
     expect(params['rating.kp']).toBeUndefined()
   })
 
-  it('edge: только yearTo — year использует yearTo для обеих границ', () => {
+  it('edge: только yearTo — открытый диапазон от YEAR_RANGE_MIN (1874), не точный год', () => {
     const params = filtersToParams({ ...EMPTY_FILTERS, yearTo: 2025 })
-    expect(params.year).toEqual(['2025-2025'])
+    expect(params.year).toEqual(['1874-2025'])
   })
 
   it('rating → "rating.kp": ["n-10"]', () => {

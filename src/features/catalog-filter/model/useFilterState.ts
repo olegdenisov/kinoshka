@@ -76,9 +76,17 @@ export const useFilterState = () => {
   filters.genres.forEach((g) =>
     activeChips.push({ label: g, onRemove: () => toggleGenre(g) })
   )
-  if (filters.yearFrom) {
+  if (filters.yearFrom || filters.yearTo) {
+    // yearFrom/yearTo — независимые nullable-поля (валидный FilterState допускает только
+    // один из них заданным), поэтому не склеиваем "2020–null"/"null–2025" вслепую.
+    const label =
+      filters.yearFrom && filters.yearTo
+        ? `${filters.yearFrom}–${filters.yearTo}`
+        : filters.yearFrom
+          ? `${filters.yearFrom}+`
+          : `–${filters.yearTo}`
     activeChips.push({
-      label: `${filters.yearFrom}–${filters.yearTo}`,
+      label,
       onRemove: () => setFilters((f) => ({ ...f, yearFrom: null, yearTo: null })),
     })
   }

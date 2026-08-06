@@ -92,21 +92,48 @@ const walkToPage = async (params: CatalogParams, page: number): Promise<CatalogP
   return { movies: step.movies, totalPages: toTotalPages(total) };
 }
 
+type PageCacheEntry = { promise: Promise<CatalogPageResult>; timestamp: number; isError: boolean }
+
 // page-level промис-мемо: обход next 1..N выполняется один раз на (params, page);
-// повторный вызов возвращает тот же Promise (важно для стабильности use()/Suspense).
-// In-memory, не переживает reload — см. план (Post-Completion).
-const pageCache = new Map<string, Promise<CatalogPageResult>>()
+// повторный вызов возвращает тот же Promise (важно для стабильности use()/Suspense —
+// React должен видеть один и тот же promise reference на каждый render, пока он ждёт
+// его разрешения). In-memory, не переживает reload — см. план (Post-Completion).
+const pageCache = new Map<string, PageCacheEntry>()
+
+// Тот же cooldown, что ERROR_CACHE_TTL_MS в createCachedFetcher — после него один и тот
+// же (params, page) реально повторяет запрос вместо того, чтобы навечно отдавать
+// rejected promise (баг до фикса — CRITICAL finding). Важно: мы НЕ удаляем/подменяем
+// запись сразу в .catch — если бы промис менялся синхронно с исходом, компонент,
+// всё ещё зовущий use() на старом (уже rejected) промисе в том же React-цикле
+// suspend→retry→ErrorBoundary, получал бы каждый раз новый pending promise и уходил
+// в бесконечный цикл ре-саспенда (проверено вручную: React ругается "suspended by an
+// uncached promise" в цикле). TTL даёт стабильность reference на время cooldown, но
+// не кеширует ошибку навсегда.
+const ERROR_CACHE_TTL_MS = 20 * 1000
+
+const isFreshEntry = (entry: PageCacheEntry) =>
+  !entry.isError || Date.now() - entry.timestamp < ERROR_CACHE_TTL_MS
 
 export const getMoviesPage = (params: CatalogParams, page: number): Promise<CatalogPageResult> => {
   const key = JSON.stringify({ params, page })
   const cached = pageCache.get(key)
 
-  if (cached) {
-    return cached
+  if (cached && isFreshEntry(cached)) {
+    return cached.promise
   }
 
-  const promise = walkToPage(params, page)
-  pageCache.set(key, promise)
+  const entry: PageCacheEntry = {
+    promise: walkToPage(params, page),
+    timestamp: Date.now(),
+    isError: false,
+  }
 
-  return promise
+  entry.promise.catch(() => {
+    entry.isError = true
+    entry.timestamp = Date.now()
+  })
+
+  pageCache.set(key, entry)
+
+  return entry.promise
 }

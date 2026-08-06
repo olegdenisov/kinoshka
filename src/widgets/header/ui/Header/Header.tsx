@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { SearchIcon, BellIcon, CloseIcon } from '@shared/ui'
 import { useDebouncedValue } from '@shared/lib'
@@ -26,6 +26,23 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [draft, setDraft] = useState(() => searchParams.get('q') ?? '')
   const debouncedDraft = useDebouncedValue(draft, QUERY_DEBOUNCE_MS)
+  const urlQuery = searchParams.get('q') ?? ''
+  // Отслеживает последнее значение ?q, которое сам компонент записал в URL (или увидел на
+  // старте). Нужен, чтобы отличить "мы сами только что записали ?q" (после debounce/×) от
+  // "URL поменялся снаружи" (back/forward в пределах /search — без ремаунта компонента).
+  const lastSyncedQueryRef = useRef(urlQuery)
+
+  // Внешние изменения ?q (browser back/forward, deep-link смена без ремаунта) должны
+  // перечитаться в draft — иначе инпут продолжает показывать устаревший текст.
+  // Срабатывает только когда URL разошёлся с тем, что записали мы сами (ref), поэтому
+  // не гоняется наперегонки с эффектом записи ниже и не портит debounce-гейт.
+  useEffect(() => {
+    if (urlQuery === lastSyncedQueryRef.current) {
+      return
+    }
+    lastSyncedQueryRef.current = urlQuery
+    setDraft(urlQuery)
+  }, [urlQuery])
 
   useEffect(() => {
     // Пишем в URL, только когда дебаунс "устоялся" (debouncedDraft === draft) — нет
@@ -61,10 +78,16 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
       },
       { replace: true },
     )
+
+    // Ref обновляем и когда write ничего не поменял (currentQ уже совпадает с trimmed) —
+    // синхронизация с тем, что реально окажется в URL после этого эффекта, не даёт
+    // resync-эффекту выше принять наш собственный write за внешнее изменение.
+    lastSyncedQueryRef.current = trimmed.length >= QUERY_MIN_LENGTH ? trimmed : ''
   }, [debouncedDraft, draft, setSearchParams])
 
   const clearQuery = () => {
     setDraft('')
+    lastSyncedQueryRef.current = ''
     setSearchParams(
       (prev) => {
         const params = new URLSearchParams(prev)

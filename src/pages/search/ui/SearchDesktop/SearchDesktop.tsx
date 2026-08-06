@@ -29,10 +29,19 @@ const SearchResults = ({ query, filters, sort, page, onPageChange }: SearchResul
 
   if (movies.length === 0) {
     return (
-      <EmptyState
-        title="Nothing found"
-        description={query ? `Ничего не найдено по «${query}»` : 'Try adjusting the filters'}
-      />
+      <>
+        <EmptyState
+          title="Nothing found"
+          description={query ? `Ничего не найдено по «${query}»` : 'Try adjusting the filters'}
+        />
+        {/*
+          Deep-linked/устаревший ?page может указывать за пределы реальной выдачи (курсор
+          закончился раньше целевой страницы — см. getMoviesPage.ts) — movies пуст, но
+          totalPages всё равно приходит из total. Без Pagination тут это тупик: EmptyState
+          не даёт способа вернуться на валидную страницу.
+        */}
+        {totalPages > 0 && <Pagination page={page} totalPages={totalPages} onChange={onPageChange} />}
+      </>
     )
   }
 

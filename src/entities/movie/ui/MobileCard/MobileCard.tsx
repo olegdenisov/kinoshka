@@ -20,7 +20,7 @@ export const MobileCard = ({ movie }: MobileCardProps) => {
       </div>
       <div className={s.title}>{movie.title}</div>
       <div className={s.meta}>
-        <span>{movie.year}</span>
+        <span>{movie.year ? movie.year : 'Unknown'}</span>
         <span className={s.metaDot}>·</span>
         <span>{movie.genre[0]}</span>
       </div>

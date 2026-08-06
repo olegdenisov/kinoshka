@@ -71,6 +71,71 @@ describe('useFilterState', () => {
     expect(labels).toEqual(['Movies', 'Drama', 'Action', '2020–2025', 'Rating 7+'])
   })
 
+  it('activeChips: только yearFrom задан (без yearTo) — лейбл не содержит "null"', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search?yearFrom=2020']),
+    })
+
+    const yearChip = result.current.activeChips.find((c) => c.label.includes('2020'))
+    expect(yearChip?.label).toBe('2020+')
+    expect(yearChip?.label).not.toContain('null')
+  })
+
+  it('activeChips: только yearTo задан (без yearFrom) — лейбл не содержит "null"', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search?yearTo=2010']),
+    })
+
+    const yearChip = result.current.activeChips.find((c) => c.label.includes('2010'))
+    expect(yearChip?.label).toBe('–2010')
+    expect(yearChip?.label).not.toContain('null')
+  })
+
+  it('activeChips onRemove: type-чип сбрасывает только type, оставляя остальные фильтры', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search?type=movie&genres=Drama']),
+    })
+
+    const typeChip = result.current.activeChips.find((c) => c.label === 'Movies')!
+    act(() => typeChip.onRemove())
+
+    expect(result.current.filters).toEqual({ ...EMPTY_FILTERS, genres: ['Drama'] })
+  })
+
+  it('activeChips onRemove: genre-чип убирает конкретный жанр (toggleGenre)', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search?genres=Drama,Action']),
+    })
+
+    const dramaChip = result.current.activeChips.find((c) => c.label === 'Drama')!
+    act(() => dramaChip.onRemove())
+
+    expect(result.current.filters.genres).toEqual(['Action'])
+  })
+
+  it('activeChips onRemove: year-чип сбрасывает и yearFrom, и yearTo разом', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search?yearFrom=2020&yearTo=2025']),
+    })
+
+    const yearChip = result.current.activeChips.find((c) => c.label === '2020–2025')!
+    act(() => yearChip.onRemove())
+
+    expect(result.current.filters.yearFrom).toBeNull()
+    expect(result.current.filters.yearTo).toBeNull()
+  })
+
+  it('activeChips onRemove: rating-чип сбрасывает rating', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search?rating=7']),
+    })
+
+    const ratingChip = result.current.activeChips.find((c) => c.label === 'Rating 7+')!
+    act(() => ratingChip.onRemove())
+
+    expect(result.current.filters.rating).toBeNull()
+  })
+
   it('toggleGenre добавляет жанр в ?genres с replace:true', () => {
     const { result } = renderHook(() => useFilterState(), { wrapper: wrapper(['/search']) })
 
