@@ -84,8 +84,8 @@ SearchResults(deferredQuery, deferredFilters, deferredSort, deferredPage)
   - [x] Смена `filters` при пустом `query` — поведение не меняется (page сбрасывается, зачистки нет).
 
 ### Task 3 — Регрессионные тесты бага 2 на уровне страницы
-- [ ] `SearchDesktop.test.tsx`: расширить существующий тест "?q сбрасывает ?page" — assert, что `lastSearch` не содержит `genres=`/`sort=`, `ActiveFilterChips`/`SortSelect` рендерятся пустыми/дефолтными после ввода в `Header`.
-- [ ] `SearchMobile.test.tsx`: аналогичный тест для мобильной шапки чипов и Sort-кнопки.
+- [x] `SearchDesktop.test.tsx`: расширить существующий тест "?q сбрасывает ?page" — assert, что `lastSearch` не содержит `genres=`/`sort=`, `ActiveFilterChips`/`SortSelect` рендерятся пустыми/дефолтными после ввода в `Header`.
+- [x] `SearchMobile.test.tsx`: аналогичный тест для мобильной шапки чипов и Sort-кнопки.
 
 ### Task 4 — `Spinner` с настраиваемым размером
 - [ ] `src/shared/ui/Spinner/Spinner.tsx`: добавить опциональный `size?: number`, прокинуть как CSS custom property `--spinner-size`.
