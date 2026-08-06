@@ -4,9 +4,10 @@ import { MobileHeader, BottomNav, BottomSheet } from '@widgets/mobile-chrome'
 import { ActiveFilterChips, useFilterState, SORT_LABELS } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
 import { MobileCard, ALL_GENRES } from '@entities/movie'
-import { AsyncBoundary, EmptyState, Skeleton, FilterIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '@shared/ui'
+import { AsyncBoundary, EmptyState, Skeleton, Spinner, FilterIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '@shared/ui'
 import { useMovieCatalog } from '../model/useMovieCatalog'
 import { usePageSync } from '../model/usePageSync'
+import { useCatalogUpdateStatus } from '../model/useCatalogUpdateStatus'
 import { buildPageRange, clampPage } from '../lib/buildPageRange'
 
 type MobilePaginationProps = {
@@ -68,6 +69,7 @@ type MobileSearchResultsProps = {
   filters: FilterState
   sort: string
   page: number
+  displayPage: number
   onPageChange: (p: number) => void
 }
 
@@ -75,8 +77,14 @@ type MobileSearchResultsProps = {
  * Отдельный компонент под `use()` внутри `useMovieCatalog` — Suspense должен ловить именно
  * этот узел, а не всю страницу (шапка/переключатели фильтров/сортировки остаются
  * интерактивными во время загрузки). Тот же паттерн, что `SearchResults` в `SearchDesktop`.
+ *
+ * `query`/`filters`/`sort`/`page` — deferred-значения из `useCatalogUpdateStatus` (Task 7,
+ * зеркало Task 6 в SearchDesktop): пока React их не догнал, `use()` внутри `useMovieCatalog`
+ * берёт cache-hit на старых параметрах вместо повторного саспенда уже смонтированного дерева.
+ * `displayPage` — live-значение, отдельно от `page`, чтобы клик по номеру страницы в
+ * `MobilePagination` подсвечивался мгновенно.
  */
-const MobileSearchResults = ({ query, filters, sort, page, onPageChange }: MobileSearchResultsProps) => {
+const MobileSearchResults = ({ query, filters, sort, page, displayPage, onPageChange }: MobileSearchResultsProps) => {
   const { movies, totalPages } = useMovieCatalog({ query, filters, sort, page })
 
   if (movies.length === 0) {
@@ -93,7 +101,7 @@ const MobileSearchResults = ({ query, filters, sort, page, onPageChange }: Mobil
         */}
         {totalPages > 0 && (
           <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <MobilePagination page={page} totalPages={totalPages} onChange={onPageChange} />
+            <MobilePagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />
           </div>
         )}
       </div>
@@ -107,12 +115,12 @@ const MobileSearchResults = ({ query, filters, sort, page, onPageChange }: Mobil
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 24, padding: '0 16px' }}>
-        <MobilePagination page={page} totalPages={totalPages} onChange={onPageChange} />
+        <MobilePagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />
         <div
           style={{ marginTop: 14, fontFamily: 'var(--font-mono)', fontSize: 10, color: '#5A5059', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           aria-live="polite"
         >
-          {movies.length} shown · page {page} of {totalPages}
+          {movies.length} shown · page {displayPage} of {totalPages}
         </div>
       </div>
     </>
@@ -128,6 +136,12 @@ export const SearchMobile = () => {
   const query = searchParams.get('q') ?? ''
   const isSearchMode = query.trim().length > 0
   const { page, goToPage } = usePageSync({ query, filters })
+  const { deferredQuery, deferredFilters, deferredSort, deferredPage, isUpdating } = useCatalogUpdateStatus({
+    query,
+    filters,
+    sort,
+    page,
+  })
 
   return (
     <div style={{ background: '#0F0D11', color: '#F2F0EF', minHeight: '100vh', paddingBottom: 80 }}>
@@ -191,9 +205,29 @@ export const SearchMobile = () => {
         </h1>
       </div>
 
-      <AsyncBoundary fallback={<MobileResultsSkeleton />}>
-        <MobileSearchResults query={query} filters={filters} sort={sort} page={page} onPageChange={goToPage} />
-      </AsyncBoundary>
+      <div style={{ position: 'relative', opacity: isUpdating ? 0.5 : 1, pointerEvents: isUpdating ? 'none' : 'auto', transition: 'opacity 150ms ease' }} aria-busy={isUpdating}>
+        <AsyncBoundary fallback={<MobileResultsSkeleton />}>
+          <MobileSearchResults
+            query={deferredQuery}
+            filters={deferredFilters}
+            sort={deferredSort}
+            page={deferredPage}
+            displayPage={page}
+            onPageChange={goToPage}
+          />
+        </AsyncBoundary>
+        {isUpdating && (
+          <div style={{
+            position: 'absolute', top: 0, right: 16,
+            display: 'flex', alignItems: 'center', gap: 6,
+            fontFamily: 'var(--font-mono)', fontSize: 9.5, color: '#92887F',
+            letterSpacing: '0.1em', textTransform: 'uppercase',
+          }}>
+            <Spinner size={12} />
+            Updating…
+          </div>
+        )}
+      </div>
 
       <BottomNav active="search" />
 
