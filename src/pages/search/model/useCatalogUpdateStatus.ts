@@ -1,5 +1,4 @@
 import { useDeferredValue, useEffect, useState } from 'react'
-import { flushSync } from 'react-dom'
 import type { FilterState } from '@features/catalog-filter'
 
 export type CatalogUpdateStatusParams = {
@@ -20,38 +19,48 @@ export type CatalogUpdateStatusResult = {
 /**
  * Page-internal facade (Task 5, план `docs/plans/20260806-search-loading-indicator-and-filter-reset.md`)
  * для "stale content while fetching" паттерна на `/search`: вместо `useTransition`/`useNavigation`
- * (не работают — роуты без `loader`, см. Context в плане) применяем `useDeferredValue` к каждому
- * параметру запроса. React коммитит рендер со старыми (deferred) значениями сразу, затем в фоне
- * пересчитывает с новыми — поэтому `SearchResults` должен рендериться от `deferred*`, а не от live
+ * (не работают — роуты без `loader`, см. Context в плане) применяем `useDeferredValue` к параметрам
+ * запроса. React коммитит рендер со старыми (deferred) значениями сразу, затем в фоне пересчитывает
+ * с новыми — поэтому `SearchResults` должен рендериться от `deferred*`, а не от live
  * `query`/`filters`/`sort`/`page` (см. Task 6/7), чтобы `use()` внутри `useMovieCatalog` не саспенднул
  * дерево заново на уже смонтированном Suspense-поддереве.
  *
- * `isUpdating` — сравнение `liveKey`/`deferredKey` через `JSON.stringify` (аналогично `resetKey` в
- * `usePageSync`): пока они расходятся, где-то в дереве идёт незавершённый deferred-рендер — самый
- * дешёвый способ понять "мы ещё не догнали live-параметры", не подписываясь на состояние Suspense
- * напрямую.
+ * **Одно зеркало на все 4 параметра, не четыре (ревью-фаза, исправлено после первой реализации).**
+ * `query`/`filters`/`sort`/`page` приходят из `useSearchParams()`, чей апдейтер `setSearchParams`
+ * react-router сам оборачивает в `React.startTransition` (см. Context в плане; подтверждено чтением
+ * `node_modules/react-router/dist/development/dom-export.js`). Если навесить `useDeferredValue` прямо
+ * на эти значения, рендер, в котором они меняются, уже идёт в неурочном (transition) lane — React
+ * видит это через внутренний `includesOnlyNonUrgentLanes` и отдаёт НОВОЕ значение немедленно, без
+ * промежуточной stale-стадии: `deferredPage` и `page` меняются в один и тот же коммит, `isUpdating`
+ * ни разу не становится `true`, индикатор не загорается никогда (баг, найденный интеграционным
+ * тестом Task 8). Чтобы `useDeferredValue` реально стадировал значение, live-параметры зеркалятся в
+ * локальный `useState` — апдейт зеркала происходит в `useEffect` (эффекты запускаются после коммита,
+ * вне транзишн-области react-router, поэтому это уже urgent-апдейт) — именно на этом зеркале
+ * `useDeferredValue` временно расходится с live-значением на время фетча.
  *
- * **Зеркало через `useState`/`useEffect` (найдено интеграционным тестом Task 8, а не заложено в
- * исходном дизайне Task 5).** `query`/`filters`/`sort`/`page` приходят из `useSearchParams()`, чей
- * апдейтер `setSearchParams` react-router сам оборачивает в `React.startTransition` (см. Context в
- * плане; подтверждено чтением `node_modules/react-router/dist/development/dom-export.js`). Если
- * навесить `useDeferredValue` прямо на эти значения, рендер, в котором они меняются, уже идёт в
- * неурочном (transition) lane — React видит это через внутренний `includesOnlyNonUrgentLanes` и
- * отдаёт НОВОЕ значение немедленно, без промежуточной stale-стадии: `deferredPage` и `page`
- * меняются в один и тот же коммит, `isUpdating` ни разу не становится `true`, индикатор не
- * загорается никогда — баг, невидимый в прежних smoke-тестах Task 6/7 (они проверяли только
- * итоговое состояние после клика, а не сам момент "запрос ушёл, ответа ещё нет"). Зеркалим
- * live-значения в локальный `useState`, но апдейтер зовём не прямо в теле эффекта (это поймал бы
- * `react-hooks/set-state-in-effect` как классический анти-паттерн "derive state from props в
- * эффекте", и линтер прав — это была бы лишняя каскадная перерисовка, если бы не была нужна сама
- * смена lane), а через `flushSync` внутри эффекта: `flushSync` форсирует синхронный коммит вне
- * текущей транзишн-области react-router, поэтому апдейт идёт в urgent lane — именно на этом
- * зеркале `useDeferredValue` отрабатывает по назначению и по-настоящему временно расходится с
- * live-значением на время фетча. (Пробовали `queueMicrotask` вместо `flushSync` — избегает того
- * же lint-правила, но гоняет пере-рендер мирового значения через отдельный микротаск, что даёт
- * гонку с `waitFor` в тестах: синхронная первая проверка успевает случайно попасть между "эффект
- * ещё не отработал" и "апдейт уже применился, но deferred ещё не догнал" — `flushSync` убирает
- * этот промежуточный асинхронный шаг, апдейт зеркала происходит синхронно в момент эффекта.)
+ * Одно зеркало над `{query, filters, sort, page}` целиком, а не четыре независимых
+ * `useState`/`useEffect` на каждое поле по отдельности: при атомарном изменении нескольких URL-
+ * параметров одним `setSearchParams` (напр. Task 2 — вход в поиск разом стрипает фильтры/сортировку
+ * и сбрасывает `?page`) четыре отдельных эффекта фиксировали бы четыре последовательных
+ * зеркальных коммита вместо одного, с промежуточными состояниями, где часть полей уже новая,
+ * а часть ещё старая — комбинации, которых как реального URL-состояния никогда не существовало.
+ * Один `useState` на объект + один `useEffect` коммитят зеркало атомарно за один рендер.
+ *
+ * Апдейтер зовётся прямо в теле эффекта — обычно это ловит `react-hooks/set-state-in-effect` как
+ * анти-паттерн "derive state from props в эффекте", и линтер в целом прав (лишняя каскадная
+ * перерисовка) — но здесь каскад нужен: это единственный способ вывести апдейт из transition-lane
+ * react-router в urgent lane, на котором `useDeferredValue` ниже способен отработать по назначению.
+ * (Ранее здесь стоял `flushSync` вместо обычного `setState` — думали, что синхронный коммит
+ * обязателен, чтобы "выйти" из транзишн-области; на деле `flushSync` внутри эффекта форсирует
+ * коммит прямо во время рендер-фазы другого коммита, из-за чего React предупреждает в консоли
+ * "flushSync was called from inside a lifecycle method" на каждый маунт/апдейт — реальный runtime-
+ * warning без какой-либо выгоды: обычный `setState` из эффекта уже происходит вне текущего рендера
+ * и не наследует его lane, этого достаточно.)
+ *
+ * `isUpdating` — сравнение зеркала (`live`) с `useDeferredValue(live)` по ссылке: `live` — новый
+ * объект на каждый апдейт зеркала, `useDeferredValue` его не клонирует, так что пока deferred
+ * держит предыдущую ссылку, идёт незавершённый deferred-рендер. Дешевле и точнее, чем сравнение
+ * через `JSON.stringify` (объект либо тот же самый, либо явно другой — сериализовывать нечего).
  *
  * Подключён в `SearchDesktop`/`SearchMobile` (Task 6/7).
  */
@@ -61,37 +70,25 @@ export const useCatalogUpdateStatus = ({
   sort,
   page,
 }: CatalogUpdateStatusParams): CatalogUpdateStatusResult => {
-  const [liveQuery, setLiveQuery] = useState(query)
-  const [liveFilters, setLiveFilters] = useState(filters)
-  const [liveSort, setLiveSort] = useState(sort)
-  const [livePage, setLivePage] = useState(page)
+  const [live, setLive] = useState<CatalogUpdateStatusParams>({ query, filters, sort, page })
 
   useEffect(() => {
-    flushSync(() => setLiveQuery(query))
-  }, [query])
-  useEffect(() => {
-    flushSync(() => setLiveFilters(filters))
-  }, [filters])
-  useEffect(() => {
-    flushSync(() => setLiveSort(sort))
-  }, [sort])
-  useEffect(() => {
-    flushSync(() => setLivePage(page))
-  }, [page])
+    // Зеркалим live URL-derived значения в локальный useState НАМЕРЕННО, а не по недосмотру:
+    // react-router оборачивает setSearchParams в startTransition, поэтому useDeferredValue,
+    // навешенный прямо на эти значения, никогда не видит промежуточную stale-стадию (см.
+    // докблок выше). Апдейт зеркала из эффекта — единственный способ перевести его в urgent
+    // lane, на котором useDeferredValue отрабатывает по назначению.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLive({ query, filters, sort, page })
+  }, [query, filters, sort, page])
 
-  const deferredQuery = useDeferredValue(liveQuery)
-  const deferredFilters = useDeferredValue(liveFilters)
-  const deferredSort = useDeferredValue(liveSort)
-  const deferredPage = useDeferredValue(livePage)
-
-  const liveKey = `${liveQuery}|${JSON.stringify(liveFilters)}|${liveSort}|${livePage}`
-  const deferredKey = `${deferredQuery}|${JSON.stringify(deferredFilters)}|${deferredSort}|${deferredPage}`
+  const deferred = useDeferredValue(live)
 
   return {
-    deferredQuery,
-    deferredFilters,
-    deferredSort,
-    deferredPage,
-    isUpdating: liveKey !== deferredKey,
+    deferredQuery: deferred.query,
+    deferredFilters: deferred.filters,
+    deferredSort: deferred.sort,
+    deferredPage: deferred.page,
+    isUpdating: live !== deferred,
   }
 }

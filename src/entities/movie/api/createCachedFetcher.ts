@@ -62,6 +62,30 @@ const attachOutcomeHandlers = <R>(
   )
 }
 
+/**
+ * Регистр всех in-memory кэшей, когда-либо созданных `createCachedFetcher` (включая singleton-
+ * фетчеры вроде `getMovies`/`getSearchMovies`/`getMoviesPage`, живущие на уровне модуля). Нужен
+ * только для `resetAllCachedFetchers` ниже — тестовой утилиты, сбрасывающей их между тестами
+ * (см. `src/test/setup.ts`). Продовое поведение не меняет: сами кэши как были module-level
+ * Map'ами, так и остаются, регистр просто держит на них ссылки.
+ */
+const allCaches: Map<string, CacheEntry<unknown>>[] = []
+
+/**
+ * Тестовая утилита (см. `src/test/setup.ts`, вызывается в глобальном `afterEach`): очищает
+ * in-memory кэш КАЖДОГО фетчера, созданного через `createCachedFetcher`, включая module-level
+ * singleton'ы `getMovies`/`getSearchMovies`/`getMoviesPage`. Без этого тесты в разных файлах
+ * (или разные `it` в одном файле), обращающиеся к одному и тому же namespace с одинаковыми
+ * параметрами запроса, получали бы кэш-хит с промисом/данными из более раннего теста —
+ * до этой правки конвенция избегания коллизий держалась только на том, что каждый тест
+ * вручную придумывает уникальный query/набор фильтров (см. комментарии в SearchDesktop.test.tsx
+ * / SearchMobile.test.tsx). sessionStorage-персист (см. `createSessionCache`) здесь не трогаем —
+ * `beforeEach(() => sessionStorage.clear())` в тестовых файлах уже делает эту часть.
+ */
+export const resetAllCachedFetchers = (): void => {
+  allCaches.forEach((cache) => cache.clear())
+}
+
 // R по умолчанию — Movie[] (совместимость getMovies/getSearchMovies без правок сигнатур);
 // произвольный R (напр. {movies, totalPages}) — для search/cursor-фетчеров.
 export const createCachedFetcher = <P, R = Movie[]>(
@@ -69,6 +93,7 @@ export const createCachedFetcher = <P, R = Movie[]>(
   fetcher: (params: P) => Promise<R>,
 ) => {
   const cache = new Map<string, CacheEntry<R>>()
+  allCaches.push(cache as Map<string, CacheEntry<unknown>>)
   const sessionCache = createSessionCache<R>(namespace)
 
   return (params: P): Promise<R> => {

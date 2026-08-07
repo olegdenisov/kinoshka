@@ -281,6 +281,80 @@ describe('SearchDesktop — переходное состояние индика
   })
 })
 
+describe('SearchDesktop — displayPage держит подсветку Pagination во время isUpdating (Task 6, ревью-фаза)', () => {
+  it('пока идёт деферренный фетч новой страницы, активной подсвечена только что кликнутая (live) кнопка, а не старая', async () => {
+    mockSearch([searchDoc('Matrix Revolutions', 601)], { pages: 5, total: 50 })
+
+    await renderSearchDesktop(['/search?q=display-page-highlight-desktop'])
+
+    let resolvePending: (response: Response) => void = () => {}
+    const pending = new Promise<Response>((resolve) => {
+      resolvePending = resolve
+    })
+    server.use(http.get(SEARCH_ENDPOINT, () => pending))
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '2' }))
+    })
+
+    // In-flight: SearchResults ещё рендерится от deferred (старых, page 1) параметров —
+    // но Pagination обязан получать live `displayPage`, а не deferredPage, иначе клик
+    // по "2" не подсвечивался бы, пока не придёт ответ (задокументированная причина,
+    // почему displayPage вообще существует отдельно от page — см. SearchDesktop.tsx:29-33).
+    const busyNode = document.querySelector('[aria-busy]')!
+    expect(busyNode).toHaveAttribute('aria-busy', 'true')
+
+    const activeBtn = screen.getByRole('button', { name: '2' })
+    expect(activeBtn.className).toMatch(/btnActive/)
+
+    resolvePending(
+      HttpResponse.json({
+        docs: [searchDoc('Interstellar Redux', 602)],
+        total: 50,
+        page: 2,
+        pages: 5,
+        limit: 10,
+      }),
+    )
+
+    expect(await screen.findByText(/page 2 of 5/i)).toBeInTheDocument()
+  })
+})
+
+describe('SearchDesktop — ошибка во время апдейта, не при монтировании (Task 8, ревью-фаза)', () => {
+  it('фетч, зафейлившийся во время пагинации (isUpdating=true), не оставляет индикатор зависшим — рендерится ErrorState, aria-busy сбрасывается в false', async () => {
+    mockSearch([searchDoc('Matrix Revolutions', 701)], { pages: 5, total: 50 })
+
+    await renderSearchDesktop(['/search?q=error-during-update-desktop'])
+
+    let resolvePending: (response: Response) => void = () => {}
+    const pending = new Promise<Response>((resolve) => {
+      resolvePending = resolve
+    })
+    server.use(http.get(SEARCH_ENDPOINT, () => pending))
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '2' }))
+    })
+
+    const busyNodeDuring = document.querySelector('[aria-busy]')!
+    expect(busyNodeDuring).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByText('Updating…')).toBeInTheDocument()
+
+    await act(async () => {
+      resolvePending(
+        HttpResponse.json({ statusCode: 403, message: 'Forbidden', error: 'Forbidden' }, { status: 403 }),
+      )
+    })
+
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
+
+    const busyNodeAfter = document.querySelector('[aria-busy]')!
+    expect(busyNodeAfter).toHaveAttribute('aria-busy', 'false')
+    expect(screen.queryByText('Updating…')).not.toBeInTheDocument()
+  })
+})
+
 describe('SearchDesktop — a11y счётчика результатов', () => {
   it('счётчик результатов помечен aria-live="polite"', async () => {
     mockCatalog([catalogDoc('Oppenheimer', 301)])

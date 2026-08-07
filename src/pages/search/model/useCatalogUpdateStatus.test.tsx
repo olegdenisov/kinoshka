@@ -73,4 +73,62 @@ describe('useCatalogUpdateStatus', () => {
     // иначе deferred-значение обновилось бы синхронно и индикатор был бы бесполезен.
     expect(seenUpdatingStates).toContain(true)
   })
+
+  it('одновременное изменение query+filters+sort+page в одном рендере (напр. вход в поиск, Task 2) переводит isUpdating в true и в итоге догоняет ВСЕ 4 поля разом', async () => {
+    const filtersA: FilterState = EMPTY_FILTERS
+    const filtersB: FilterState = { ...EMPTY_FILTERS, genres: ['Drama'] }
+
+    const { result, rerender } = renderHook(
+      (props: { query: string; filters: FilterState; sort: string; page: number }) =>
+        useCatalogUpdateStatus(props),
+      { initialProps: { query: 'a', filters: filtersA, sort: '', page: 1 } },
+    )
+
+    expect(result.current.isUpdating).toBe(false)
+
+    rerender({ query: 'ab', filters: filtersB, sort: 'Newest', page: 2 })
+
+    await waitFor(() => {
+      expect(result.current.isUpdating).toBe(false)
+    })
+
+    expect(result.current.deferredQuery).toBe('ab')
+    expect(result.current.deferredFilters).toBe(filtersB)
+    expect(result.current.deferredSort).toBe('Newest')
+    expect(result.current.deferredPage).toBe(2)
+  })
+
+  it('одновременное изменение всех 4 полей не даёт "смешанного" промежуточного состояния — deferred* либо все старые, либо все новые, никогда часть-старая-часть-новая', async () => {
+    const filtersA: FilterState = EMPTY_FILTERS
+    const filtersB: FilterState = { ...EMPTY_FILTERS, genres: ['Drama'] }
+    const seen: Array<{ q: string; f: FilterState; s: string; p: number }> = []
+
+    const { rerender } = renderHook(
+      (props: { query: string; filters: FilterState; sort: string; page: number }) => {
+        const status = useCatalogUpdateStatus(props)
+        seen.push({
+          q: status.deferredQuery,
+          f: status.deferredFilters,
+          s: status.deferredSort,
+          p: status.deferredPage,
+        })
+        return status
+      },
+      { initialProps: { query: 'a', filters: filtersA, sort: '', page: 1 } },
+    )
+
+    rerender({ query: 'ab', filters: filtersB, sort: 'Newest', page: 2 })
+
+    await waitFor(() => {
+      const last = seen[seen.length - 1]
+      expect(last).toEqual({ q: 'ab', f: filtersB, s: 'Newest', p: 2 })
+    })
+
+    seen.forEach((snapshot) => {
+      const isAllOld = snapshot.q === 'a' && snapshot.f === filtersA && snapshot.s === '' && snapshot.p === 1
+      const isAllNew =
+        snapshot.q === 'ab' && snapshot.f === filtersB && snapshot.s === 'Newest' && snapshot.p === 2
+      expect(isAllOld || isAllNew).toBe(true)
+    })
+  })
 })
