@@ -15,6 +15,16 @@ export type PageSyncResult = {
   goToPage: (p: number) => void
 }
 
+/** `?page` → `1`, если ещё не `1` — иначе возвращает `params` без изменений (no-op). */
+const resetPageToOne = (params: URLSearchParams): URLSearchParams => {
+  if ((params.get('page') ?? '1') === '1') {
+    return params
+  }
+  const next = new URLSearchParams(params)
+  next.set('page', '1')
+  return next
+}
+
 /**
  * Общая для `SearchDesktop`/`SearchMobile` логика чтения/записи `?page` (Task 11/12;
  * вынесена ревью-фазой 2 — ранее была продублирована почти дословно между обоими компонентами
@@ -75,18 +85,7 @@ export const usePageSync = ({ query, filters }: PageSyncParams): PageSyncResult 
       return
     }
 
-    setSearchParams(
-      (prev) => {
-        const base = stripFilterAndSortParams(prev)
-        if ((base.get('page') ?? '1') === '1') {
-          return base
-        }
-        const params = new URLSearchParams(base)
-        params.set('page', '1')
-        return params
-      },
-      { replace: true },
-    )
+    setSearchParams((prev) => resetPageToOne(stripFilterAndSortParams(prev)), { replace: true })
     // Пустой массив зависимостей — намеренно: эффект должен запуститься строго один раз при
     // монтировании (deep-link guard, см. докблок выше); обычные смены query/filters уже
     // покрыты отдельным reset-эффектом ниже через resetKey, повторный прогон здесь не нужен
@@ -108,15 +107,7 @@ export const usePageSync = ({ query, filters }: PageSyncParams): PageSyncResult 
     wasSearchingRef.current = isSearching
 
     setSearchParams(
-      (prev) => {
-        const base = enteringSearch ? stripFilterAndSortParams(prev) : prev
-        if ((base.get('page') ?? '1') === '1') {
-          return base
-        }
-        const params = new URLSearchParams(base)
-        params.set('page', '1')
-        return params
-      },
+      (prev) => resetPageToOne(enteringSearch ? stripFilterAndSortParams(prev) : prev),
       { replace: true },
     )
   }, [resetKey, setSearchParams, isSearching])
