@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll } from 'vitest'
-import { resetAllCachedFetchers } from '@entities/movie/api/createCachedFetcher'
+import { resetAllCachedFetchers } from '@entities/movie'
 
 export const server = setupServer()
 

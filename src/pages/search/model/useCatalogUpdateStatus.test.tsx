@@ -98,6 +98,36 @@ describe('useCatalogUpdateStatus', () => {
     expect(result.current.deferredPage).toBe(2)
   })
 
+  it('isUpdating не мигает в true на маунте и на пересборке с value-равными, но по-другому сослающимися параметрами (ревью-фаза 2 регрессия)', async () => {
+    // getFilterFromSearchParams пересоздаёт FilterState заново на каждый рендер — новая ссылка,
+    // те же значения. Раньше эффект-зеркало в useCatalogUpdateStatus безусловно вызывал setLive
+    // с новым объектом на каждый свой прогон (включая самый первый, сразу после mount), заводя
+    // `live` на новую ссылку при неизменных значениях — deferred на миг отставал, isUpdating
+    // кратко становился true без единого реального изменения query/filters/sort/page.
+    const makeFilters = (): FilterState => ({ ...EMPTY_FILTERS })
+    const seenUpdatingStates: boolean[] = []
+
+    const { rerender } = renderHook(
+      ({ filters }: { filters: FilterState }) => {
+        const status = useCatalogUpdateStatus({ query: 'inception', filters, sort: '', page: 1 })
+        seenUpdatingStates.push(status.isUpdating)
+        return status
+      },
+      { initialProps: { filters: makeFilters() } },
+    )
+
+    // Пересборка с новым по ссылке, но идентичным по значениям filters — имитирует то, как
+    // getFilterFromSearchParams отдаёт свежий объект на каждый рендер без реальной смены URL.
+    rerender({ filters: makeFilters() })
+    rerender({ filters: makeFilters() })
+
+    await waitFor(() => {
+      expect(seenUpdatingStates.length).toBeGreaterThan(0)
+    })
+
+    expect(seenUpdatingStates.every((state) => state === false)).toBe(true)
+  })
+
   it('одновременное изменение всех 4 полей не даёт "смешанного" промежуточного состояния — deferred* либо все старые, либо все новые, никогда часть-старая-часть-новая', async () => {
     const filtersA: FilterState = EMPTY_FILTERS
     const filtersB: FilterState = { ...EMPTY_FILTERS, genres: ['Drama'] }

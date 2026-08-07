@@ -1,6 +1,14 @@
 import { useDeferredValue, useEffect, useState } from 'react'
 import type { FilterState } from '@features/catalog-filter'
 
+const areFiltersEqual = (a: FilterState, b: FilterState): boolean =>
+  a.type === b.type &&
+  a.yearFrom === b.yearFrom &&
+  a.yearTo === b.yearTo &&
+  a.rating === b.rating &&
+  a.genres.length === b.genres.length &&
+  a.genres.every((genre, index) => genre === b.genres[index])
+
 export type CatalogUpdateStatusParams = {
   query: string
   filters: FilterState
@@ -78,8 +86,26 @@ export const useCatalogUpdateStatus = ({
     // навешенный прямо на эти значения, никогда не видит промежуточную stale-стадию (см.
     // докблок выше). Апдейт зеркала из эффекта — единственный способ перевести его в urgent
     // lane, на котором useDeferredValue отрабатывает по назначению.
+    //
+    // Пропускаем setLive, если входящие значения по факту совпадают с текущим зеркалом
+    // (ревью-фаза 2, исправлено после первой реализации): `filters` — новый объект на каждый
+    // рендер (пересчитывается заново в `getFilterFromSearchParams`), поэтому сравнение по
+    // ссылке всегда даёт "изменилось" даже когда содержимое то же самое — включая самый первый
+    // прогон эффекта сразу после mount, когда query/filters/sort/page ещё не менялись вовсе.
+    // Без этой проверки `setLive` вызывался безусловно на каждый прогон эффекта, заводя
+    // зеркало на новую ссылку с теми же значениями — `deferred` на миг отставал от `live`,
+    // и `isUpdating` кратко становился `true` даже без единого реального изменения параметров
+    // (лишний "Updating…"-флэш на каждом свежем маунте `/search`).
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLive({ query, filters, sort, page })
+    setLive((prevLive) => {
+      const unchanged =
+        prevLive.query === query &&
+        prevLive.sort === sort &&
+        prevLive.page === page &&
+        areFiltersEqual(prevLive.filters, filters)
+
+      return unchanged ? prevLive : { query, filters, sort, page }
+    })
   }, [query, filters, sort, page])
 
   const deferred = useDeferredValue(live)
