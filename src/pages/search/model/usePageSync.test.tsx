@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
 import { act, renderHook } from '@testing-library/react'
-import { MemoryRouter, useLocation } from 'react-router'
+import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
 import type { FilterState } from '@features/catalog-filter'
 import { usePageSync } from './usePageSync'
 
@@ -153,20 +153,95 @@ describe('usePageSync', () => {
     expect(result.current.page).toBe(1)
   })
 
-  it('непустой → непустой query: повторной зачистки фильтров/sort не происходит', () => {
+  it('deep link прямо в search-режим с фильтрами/sort в URL: mount стрипает их один раз, page сбрасывается на 1', () => {
+    // Тот же симптом бага 2, что и '' → непустой query переход, только с другим входом:
+    // прямой заход по ссылке / refresh уже в search-режиме (см. докблок usePageSync —
+    // "Deep-link guard"). Основной reset-эффект (по resetKey) на mount не срабатывает —
+    // отдельный mount-only эффект обязан стрипнуть фильтры/sort здесь сам.
+    const { result } = renderHook(
+      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      {
+        wrapper: wrapper(['/search?q=foo&genres=Drama&sort=Newest&page=5']),
+        initialProps: { query: 'foo' },
+      },
+    )
+
+    expect(lastSearch).toContain('q=foo')
+    expect(lastSearch).not.toContain('genres=')
+    expect(lastSearch).not.toContain('sort=')
+    expect(result.current.page).toBe(1)
+  })
+
+  it('deep link в search-режим БЕЗ фильтров/sort: mount не трогает ?page (легитимный deep-link на произвольную страницу)', () => {
+    const { result } = renderHook(
+      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      {
+        wrapper: wrapper(['/search?q=foo&page=7']),
+        initialProps: { query: 'foo' },
+      },
+    )
+
+    // Нечего стрипать — mount-эффект обязан быть no-op'ом и оставить ?page как есть.
+    expect(lastSearch).toContain('q=foo')
+    expect(lastSearch).toContain('page=7')
+    expect(result.current.page).toBe(7)
+  })
+
+  it('непустой → непустой query на уже смонтированной странице: повторной зачистки фильтров/sort не происходит', () => {
     const { result, rerender } = renderHook(
       ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
       {
-        wrapper: wrapper(['/search?q=inception&sort=Newest&page=5']),
+        wrapper: wrapper(['/search?q=inception&page=5']),
         initialProps: { query: 'inception' },
       },
     )
     expect(result.current.page).toBe(5)
+    expect(lastSearch).not.toContain('sort=')
+
+    act(() => rerender({ query: 'inception2' }))
+
+    expect(lastSearch).not.toContain('sort=')
+    expect(result.current.page).toBe(1)
+  })
+
+  it('непустой → пустой → непустой query (round-trip): возврат в поиск снова стрипает фильтры/sort, накопленные в catalog-режиме между поисками', () => {
+    // Экерсайзит wasSearchingRef.current = isSearching (сброс на '' → false, usePageSync.ts:
+    // ~64-66), а не только однократный переход '' → непустой из предыдущих тестов: пользователь
+    // выходит из поиска (query становится '' — sort снова доступен через сайдбар), затем
+    // возвращается к поиску — фильтры/sort, накопленные за время catalog-режима, снова должны
+    // быть стёрты (Variant A), а не "пережить" повторный вход.
+    const { result, rerender } = renderHook(
+      ({ query }: { query: string }) => {
+        const [, setSearchParams] = useSearchParams()
+        return { ...usePageSync({ query, filters: EMPTY_FILTERS }), setSearchParams }
+      },
+      {
+        wrapper: wrapper(['/search?q=inception&page=5']),
+        initialProps: { query: 'inception' },
+      },
+    )
+    expect(result.current.page).toBe(5)
+
+    act(() => rerender({ query: '' }))
+    expect(result.current.page).toBe(1)
+
+    // Пока query пустой, пользователь выставляет сортировку через сайдбар (в реальном
+    // приложении — SortSelect/BottomSheet; здесь эмулируем прямой записью в URL, как это
+    // делают эти виджеты).
+    act(() => {
+      result.current.setSearchParams((prev) => {
+        const params = new URLSearchParams(prev)
+        params.set('sort', 'Newest')
+        return params
+      })
+    })
     expect(lastSearch).toContain('sort=Newest')
 
     act(() => rerender({ query: 'inception2' }))
 
-    expect(lastSearch).toContain('sort=Newest')
+    // usePageSync сам не пишет `?q` (это делает Header/URL до вызова хука) — здесь важно,
+    // что sort, накопленный за время catalog-режима, не пережил повторный вход в поиск.
+    expect(lastSearch).not.toContain('sort=')
     expect(result.current.page).toBe(1)
   })
 
