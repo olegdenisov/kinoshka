@@ -111,12 +111,12 @@ export class ApiError extends Error {
 - Modify: `src/shared/api/client.ts`
 - Modify: `src/shared/api/index.ts`
 
-- [ ] добавить `export class ApiError extends Error { status?: number }` в `client.ts`
-- [ ] в interceptor'е `Promise.reject(new Error(message))` → `Promise.reject(new ApiError(message, error.response?.status))`
-- [ ] экспортировать `ApiError` из `src/shared/api/index.ts`
-- [ ] прогнать существующие `getSearchMovies.test.ts`/`getMoviesPage.test.ts` (403-cooldown кейсы) — должны остаться зелёными без изменений
-- [ ] написать тест: мокнутый 404/403-ответ через MSW → `ApiError.status` выставлен корректно
-- [ ] запустить тесты — должны пройти перед задачей 2
+- [x] добавить `export class ApiError extends Error { status?: number }` в `client.ts`
+- [x] в interceptor'е `Promise.reject(new Error(message))` → `Promise.reject(new ApiError(message, error.response?.status))`
+- [x] экспортировать `ApiError` из `src/shared/api/index.ts`
+- [x] прогнать существующие `getSearchMovies.test.ts`/`getMoviesPage.test.ts` (403-cooldown кейсы) — должны остаться зелёными без изменений
+- [x] написать тест: мокнутый 404/403-ответ через MSW → `ApiError.status` выставлен корректно
+- [x] запустить тесты — должны пройти перед задачей 2
 
 ### Task 2: Домен-типы `MovieDetail`/`CastMember`/`CrewMember` + маппер
 
