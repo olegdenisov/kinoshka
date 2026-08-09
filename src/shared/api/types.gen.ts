@@ -99,8 +99,24 @@ export type VideoTypes = {
     trailers?: Array<Video> | null;
 };
 
-export type ItemName = {
+export type GenreItem = {
     name?: string;
+    /**
+     * Id жанра в справочнике жанров
+     */
+    id?: number | null;
+    /**
+     * Slug жанра в справочнике жанров
+     */
+    slug?: string | null;
+};
+
+export type CountryItem = {
+    name?: string;
+    /**
+     * Id страны в справочнике стран
+     */
+    id?: number | null;
 };
 
 export type PersonInMovie = {
@@ -114,6 +130,10 @@ export type PersonInMovie = {
     description?: string | null;
     profession?: string | null;
     enProfession?: string | null;
+    /**
+     * Id профессии в справочнике `GET /v1.5/dictionary/professions`
+     */
+    professionId?: number | null;
 };
 
 export type ReviewInfo = {
@@ -272,8 +292,8 @@ export type MovieDtoV14 = {
     poster?: ShortImage;
     backdrop?: ShortImage;
     videos?: VideoTypes;
-    genres?: Array<ItemName>;
-    countries?: Array<ItemName>;
+    genres?: Array<GenreItem>;
+    countries?: Array<CountryItem>;
     persons?: Array<PersonInMovie>;
     reviewInfo?: ReviewInfo;
     seasonsInfo?: Array<SeasonInfo>;
@@ -401,8 +421,8 @@ export type SearchMovieDtoV14 = {
     backdrop?: ShortImage | null;
     rating?: Rating | null;
     votes?: Votes | null;
-    genres?: Array<ItemName> | null;
-    countries?: Array<ItemName> | null;
+    genres?: Array<GenreItem> | null;
+    countries?: Array<CountryItem> | null;
     releaseYears?: Array<YearRange> | null;
     isSeries?: boolean | null;
     ticketsOnSale?: boolean | null;
@@ -439,11 +459,31 @@ export type SearchMovieResponseDtoV14 = {
 export type NominationAward = {
     title?: string | null;
     year?: number | null;
+    /**
+     * Slug премии/церемонии (например `oscar`), ссылается на коллекцию наград
+     */
+    slug?: string | null;
 };
 
 export type Nomination = {
-    award?: NominationAward | null;
-    title?: string | null;
+    /**
+     * ID номинации — уникальный идентификатор (nominationId)
+     */
+    nominationId: number;
+    /**
+     * Slug премии, к которой относится номинация (например `oscar`)
+     */
+    award?: string | null;
+    /**
+     * Название номинации (например `Лучший фильм`)
+     */
+    name?: string | null;
+    /**
+     * Годы, в которых вручалась номинация
+     */
+    years?: Array<number> | null;
+    updatedAt: string;
+    createdAt: string;
 };
 
 export type MovieAward = {
@@ -452,6 +492,34 @@ export type MovieAward = {
     updatedAt?: string | null;
     createdAt?: string | null;
     movieId?: number | null;
+};
+
+export type MovieAwardCursorDocsResponseDtoV15 = {
+    docs: Array<MovieAward>;
+    /**
+     * Количество результатов на странице
+     */
+    limit: number;
+    /**
+     * Значение курсора для получения следующей страницы. Чтобы получить следующую страницу, передайте это значение в query-параметр `next`. Если значение `null`, значит вы достигли конца списка.
+     */
+    next?: string | null;
+    /**
+     * Значение курсора для получения предыдущей страницы. Чтобы получить предыдущую страницу, передайте это значение в query-параметр `prev`. Если значение `null`, значит вы на первой странице.
+     */
+    prev?: string | null;
+    /**
+     * Флаг наличия следующей страницы. Если `true` — передайте значение поля `next` в query-параметр `next` для получения следующей страницы.
+     */
+    hasNext: boolean;
+    /**
+     * Флаг наличия предыдущей страницы. Если `true` — передайте значение поля `prev` в query-параметр `prev` для получения предыдущей страницы.
+     */
+    hasPrev: boolean;
+    /**
+     * Общее количество документов по запросу. Возвращается только при `withCount=true`. Внимание: подсчёт может значительно замедлить запрос на больших коллекциях с фильтрами.
+     */
+    total?: number | null;
 };
 
 export type MovieAwardDocsResponseDto = {
@@ -647,6 +715,10 @@ export type Spouses = {
 
 export type Profession = {
     value?: string;
+    /**
+     * Id профессии в справочнике `GET /v1.5/dictionary/professions`
+     */
+    professionId?: number | null;
 };
 
 export type FactInPerson = {
@@ -661,6 +733,10 @@ export type MovieInPerson = {
     general?: boolean | null;
     description?: string | null;
     enProfession?: string | null;
+    /**
+     * Id профессии в справочнике `GET /v1.5/dictionary/professions`
+     */
+    professionId?: number | null;
 };
 
 export type Person = {
@@ -780,6 +856,34 @@ export type PersonAward = {
     createdAt?: string | null;
     personId: number;
     movie?: Movie | null;
+};
+
+export type PersonAwardCursorDocsResponseDtoV15 = {
+    docs: Array<PersonAward>;
+    /**
+     * Количество результатов на странице
+     */
+    limit: number;
+    /**
+     * Значение курсора для получения следующей страницы. Чтобы получить следующую страницу, передайте это значение в query-параметр `next`. Если значение `null`, значит вы достигли конца списка.
+     */
+    next?: string | null;
+    /**
+     * Значение курсора для получения предыдущей страницы. Чтобы получить предыдущую страницу, передайте это значение в query-параметр `prev`. Если значение `null`, значит вы на первой странице.
+     */
+    prev?: string | null;
+    /**
+     * Флаг наличия следующей страницы. Если `true` — передайте значение поля `next` в query-параметр `next` для получения следующей страницы.
+     */
+    hasNext: boolean;
+    /**
+     * Флаг наличия предыдущей страницы. Если `true` — передайте значение поля `prev` в query-параметр `prev` для получения предыдущей страницы.
+     */
+    hasPrev: boolean;
+    /**
+     * Общее количество документов по запросу. Возвращается только при `withCount=true`. Внимание: подсчёт может значительно замедлить запрос на больших коллекциях с фильтрами.
+     */
+    total?: number | null;
 };
 
 export type PersonAwardDocsResponseDto = {
@@ -922,6 +1026,130 @@ export type KeywordDocsResponseDtoV14 = {
      * Сколько страниц всего
      */
     pages: number;
+};
+
+export type AwardLogo = {
+    url?: string | null;
+    previewUrl?: string | null;
+};
+
+export type AwardYears = {
+    start?: number | null;
+    end?: number | null;
+};
+
+export type Award = {
+    /**
+     * Slug премии — уникальный идентификатор (например `oscar`)
+     */
+    slug: string;
+    /**
+     * Числовой id премии (1–24), альтернатива slug
+     */
+    id?: number | null;
+    name?: string | null;
+    alternativeName?: string | null;
+    /**
+     * Тип: `award` (премия) или `festival` (фестиваль)
+     */
+    type?: 'award' | 'festival';
+    /**
+     * Интересные факты о премии
+     */
+    facts?: Array<string> | null;
+    location?: string | null;
+    siteUrl?: string | null;
+    logo?: AwardLogo;
+    /**
+     * Диапазон лет проведения
+     */
+    years?: AwardYears;
+    updatedAt: string;
+    createdAt: string;
+};
+
+export type AwardCursorDocsResponseDtoV15 = {
+    docs: Array<Award>;
+    /**
+     * Количество результатов на странице
+     */
+    limit: number;
+    /**
+     * Значение курсора для получения следующей страницы. Чтобы получить следующую страницу, передайте это значение в query-параметр `next`. Если значение `null`, значит вы достигли конца списка.
+     */
+    next?: string | null;
+    /**
+     * Значение курсора для получения предыдущей страницы. Чтобы получить предыдущую страницу, передайте это значение в query-параметр `prev`. Если значение `null`, значит вы на первой странице.
+     */
+    prev?: string | null;
+    /**
+     * Флаг наличия следующей страницы. Если `true` — передайте значение поля `next` в query-параметр `next` для получения следующей страницы.
+     */
+    hasNext: boolean;
+    /**
+     * Флаг наличия предыдущей страницы. Если `true` — передайте значение поля `prev` в query-параметр `prev` для получения предыдущей страницы.
+     */
+    hasPrev: boolean;
+    /**
+     * Общее количество документов по запросу. Возвращается только при `withCount=true`. Внимание: подсчёт может значительно замедлить запрос на больших коллекциях с фильтрами.
+     */
+    total?: number | null;
+};
+
+export type NominationCursorDocsResponseDtoV15 = {
+    docs: Array<Nomination>;
+    /**
+     * Количество результатов на странице
+     */
+    limit: number;
+    /**
+     * Значение курсора для получения следующей страницы. Чтобы получить следующую страницу, передайте это значение в query-параметр `next`. Если значение `null`, значит вы достигли конца списка.
+     */
+    next?: string | null;
+    /**
+     * Значение курсора для получения предыдущей страницы. Чтобы получить предыдущую страницу, передайте это значение в query-параметр `prev`. Если значение `null`, значит вы на первой странице.
+     */
+    prev?: string | null;
+    /**
+     * Флаг наличия следующей страницы. Если `true` — передайте значение поля `next` в query-параметр `next` для получения следующей страницы.
+     */
+    hasNext: boolean;
+    /**
+     * Флаг наличия предыдущей страницы. Если `true` — передайте значение поля `prev` в query-параметр `prev` для получения предыдущей страницы.
+     */
+    hasPrev: boolean;
+    /**
+     * Общее количество документов по запросу. Возвращается только при `withCount=true`. Внимание: подсчёт может значительно замедлить запрос на больших коллекциях с фильтрами.
+     */
+    total?: number | null;
+};
+
+export type DictionaryItemDto = {
+    /**
+     * Числовой id значения. У статусов id нет — придёт `null`.
+     */
+    id?: number | null;
+    /**
+     * Значение, которое подставляется в фильтр по имени
+     */
+    name: string;
+    /**
+     * Slug значения. У стран и статусов его нет — придёт `null`.
+     */
+    slug?: string | null;
+    /**
+     * Англоязычное имя. Есть только у профессий.
+     */
+    enName?: string | null;
+};
+
+export type DictionaryDto = {
+    type: 'genres' | 'countries' | 'professions' | 'types' | 'statuses';
+    /**
+     * Количество значений в справочнике
+     */
+    total: number;
+    items: Array<DictionaryItemDto>;
 };
 
 export type Image = {
@@ -1443,6 +1671,22 @@ export type MovieControllerFindManyByQueryV15Data = {
          */
         createdAt?: Array<string> | null;
         /**
+         * Поиск по id жанров из справочника `/v1.5/dictionary/genres` (пример: `6, !7, +10`)
+         */
+        'genres.id'?: Array<string> | null;
+        /**
+         * Поиск по slug жанров из справочника `/v1.5/dictionary/genres` (пример: `"comedy", "!drama", "+horror"`)
+         */
+        'genres.slug'?: Array<string> | null;
+        /**
+         * Поиск по id стран из справочника `/v1.5/dictionary/countries` (пример: `1, !2, +3`)
+         */
+        'countries.id'?: Array<string> | null;
+        /**
+         * Поиск по id профессий персон из справочника `/v1.5/dictionary/professions` (пример: `1, !2`)
+         */
+        'persons.professionId'?: Array<string> | null;
+        /**
          * Количество элементов на странице
          */
         limit?: number;
@@ -1959,6 +2203,376 @@ export type MovieControllerGetRandomMovieV14Responses = {
 
 export type MovieControllerGetRandomMovieV14Response = MovieControllerGetRandomMovieV14Responses[keyof MovieControllerGetRandomMovieV14Responses];
 
+export type MovieControllerFindOneV15Data = {
+    body?: never;
+    path?: {
+        /**
+         * ID
+         */
+        id?: number | null;
+    };
+    query?: never;
+    url: '/v1.5/movie/{id}';
+};
+
+export type MovieControllerFindOneV15Errors = {
+    /**
+     * Невалидный запрос — проверьте правильность query-параметров. Например: неверный формат числа, невалидный курсор, или недопустимое значение enum.
+     */
+    400: BadRequestErrorResponseDto;
+    /**
+     * Токен не передан или указан неверно. Укажите ваш API-ключ в заголовке `X-API-KEY` или в query-параметре `token`.
+     */
+    401: UnauthorizedErrorResponseDto;
+    /**
+     * Превышен суточный лимит запросов или лимит пагинации demo-тарифа. Для demo/free и пользователей без активной подписки доступны только страницы 1-10 и limit не больше 10.
+     */
+    403: ForbiddenErrorResponseDto;
+    /**
+     * Фильм с таким id не найден в базе.
+     */
+    404: ForbiddenErrorResponseDto;
+};
+
+export type MovieControllerFindOneV15Error = MovieControllerFindOneV15Errors[keyof MovieControllerFindOneV15Errors];
+
+export type MovieControllerFindOneV15Responses = {
+    200: MovieDtoV14;
+};
+
+export type MovieControllerFindOneV15Response = MovieControllerFindOneV15Responses[keyof MovieControllerFindOneV15Responses];
+
+export type MovieControllerSearchMovieV15Data = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Страница выборки
+         */
+        page?: number;
+        /**
+         * Количество элементов на странице
+         */
+        limit?: number;
+        /**
+         * Поисковый запрос
+         */
+        query: string;
+    };
+    url: '/v1.5/movie/search';
+};
+
+export type MovieControllerSearchMovieV15Responses = {
+    200: SearchMovieResponseDtoV14;
+};
+
+export type MovieControllerSearchMovieV15Response = MovieControllerSearchMovieV15Responses[keyof MovieControllerSearchMovieV15Responses];
+
+export type MovieControllerGetRandomMovieV15Data = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Список полей которые не должны быть null или пусты
+         */
+        notNullFields?: Array<'id' | 'externalId.imdb' | 'externalId.tmdb' | 'externalId.kpHD' | 'name' | 'enName' | 'alternativeName' | 'names.name' | 'description' | 'shortDescription' | 'slogan' | 'type' | 'typeNumber' | 'isSeries' | 'status' | 'year' | 'releaseYears.start' | 'releaseYears.end' | 'rating.kp' | 'rating.imdb' | 'rating.tmdb' | 'rating.filmCritics' | 'rating.russianFilmCritics' | 'rating.await' | 'ratingMpaa' | 'ageRating' | 'votes.kp' | 'votes.imdb' | 'votes.tmdb' | 'votes.filmCritics' | 'votes.russianFilmCritics' | 'votes.await' | 'budget.value' | 'budget.currency' | 'audience.count' | 'audience.country' | 'movieLength' | 'seriesLength' | 'totalSeriesLength' | 'genres.name' | 'countries.name' | 'poster.url' | 'backdrop.url' | 'logo.url' | 'ticketsOnSale' | 'videos.trailers.url' | 'videos.trailers.site' | 'videos.trailers.name' | 'networks.items.name' | 'networks.items.logo.url' | 'persons.id' | 'persons.name' | 'persons.enName' | 'persons.photo' | 'persons.description' | 'persons.profession' | 'persons.enProfession' | 'facts.type' | 'facts.value' | 'facts.spoiler' | 'fees.world.value' | 'fees.usa.value' | 'fees.russia.value' | 'premiere.world' | 'premiere.usa' | 'premiere.russia' | 'premiere.digital' | 'premiere.dvd' | 'premiere.bluRay' | 'premiere.cinema' | 'premiere.country' | 'similarMovies.id' | 'similarMovies.name' | 'similarMovies.enName' | 'similarMovies.alternativeName' | 'similarMovies.poster.url' | 'similarMovies.rating.kp' | 'similarMovies.rating.imdb' | 'similarMovies.rating.tmdb' | 'similarMovies.year' | 'sequelsAndPrequels.id' | 'sequelsAndPrequels.name' | 'sequelsAndPrequels.enName' | 'sequelsAndPrequels.alternativeName' | 'sequelsAndPrequels.poster.url' | 'sequelsAndPrequels.rating.kp' | 'sequelsAndPrequels.rating.imdb' | 'sequelsAndPrequels.rating.tmdb' | 'sequelsAndPrequels.year' | 'watchability.items.name' | 'watchability.items.url' | 'watchability.items.logo.url' | 'lists' | 'top10' | 'top250' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Поиск по ID KinoPoisk (пример: `"666", "555", "!666"`)
+         */
+        id?: Array<string> | null;
+        /**
+         * Поиск по IMDB ID (пример: `"tt666", "tt555", "!tt666"`)
+         */
+        'externalId.imdb'?: Array<string> | null;
+        /**
+         * Поиск по TMDB ID (пример: `666, 555, !666`)
+         */
+        'externalId.tmdb'?: Array<number> | null;
+        /**
+         * Поиск по id KinoPoisk HD (пример: `"48e8d0acb0f62d8585101798eaeceec5", "!48e8d0acb0f62d8585101798eaeceec5"`)
+         */
+        'externalId.kpHD'?: Array<string> | null;
+        /**
+         * Поиск по типу фильма (пример: `"movie", "tv-series", "!anime"`)
+         */
+        type?: Array<'movie' | 'tv-series' | 'cartoon' | 'animated-series' | 'anime'> | null;
+        /**
+         * Поиск по номеру типа фильма (пример: `1, 2, !3`). Список типов: 1 (movie), 2 (tv-series), 3 (cartoon), 4 (anime), 5 (animated-series).
+         */
+        typeNumber?: Array<string> | null;
+        /**
+         * Поиск по индикатору сериала (пример: `true, false`)
+         */
+        isSeries?: Array<string> | null;
+        /**
+         * Поиск по статусу фильма (пример: `"announced", "completed", "!filming"`)
+         */
+        status?: Array<'announced' | 'completed' | 'filming' | 'post-production' | 'pre-production'> | null;
+        /**
+         * Поиск по году (пример: `1874, 2050, !2020, 2020-2024`)
+         */
+        year?: Array<string> | null;
+        /**
+         * Поиск по года начала релиза (пример: `1874, 2050, !2020, 2020-2024`)
+         */
+        'releaseYears.start'?: Array<string> | null;
+        /**
+         * Поиск по года окончания релиза (пример: `1874, 2050, !2020, 2020-2024`)
+         */
+        'releaseYears.end'?: Array<string> | null;
+        /**
+         * Поиск по рейтингу ПоискКино (пример: `7, 10, 7.2-10`)
+         */
+        'rating.kp'?: Array<string> | null;
+        /**
+         * Поиск по рейтингу IMDB (пример: `7, 10, 7.2-10`)
+         */
+        'rating.imdb'?: Array<string> | null;
+        /**
+         * Поиск по рейтингу TMDB (пример: `7, 10, 7.2-10`)
+         */
+        'rating.tmdb'?: Array<string> | null;
+        /**
+         * Поиск по рейтингу MPAA (пример: `"G", "NC-17", "!R"`)
+         */
+        ratingMpaa?: Array<string> | null;
+        /**
+         * Поиск по возрастному рейтингу (пример: `12, !18, 12-18`)
+         */
+        ageRating?: Array<string> | null;
+        /**
+         * Поиск по количеству голосов на KP (пример: `1000-6666666`)
+         */
+        'votes.kp'?: Array<string> | null;
+        /**
+         * Поиск по количеству голосов на IMDB (пример: `1000-6666666`)
+         */
+        'votes.imdb'?: Array<string> | null;
+        /**
+         * Поиск по количеству голосов на TMDB (пример: `1000-6666666`)
+         */
+        'votes.tmdb'?: Array<string> | null;
+        /**
+         * Поиск по количеству голосов кинокритиков (пример: `1000-6666666`)
+         */
+        'votes.filmCritics'?: Array<string> | null;
+        /**
+         * Поиск по количеству голосов кинокритиков из России (пример: `1000-6666666`)
+         */
+        'votes.russianFilmCritics'?: Array<string> | null;
+        /**
+         * Поиск по количеству голосов ожидания (пример: `1000-6666666`)
+         */
+        'votes.await'?: Array<string> | null;
+        /**
+         * Поиск по бюджету фильма (пример: `1000-6666666`)
+         */
+        'budget.value'?: Array<string> | null;
+        /**
+         * Поиск по количеству аудитории (пример: `1000-6666666`)
+         */
+        'audience.count'?: Array<string> | null;
+        /**
+         * Поиск по продолжительности фильма (пример: `100-120`)
+         */
+        movieLength?: Array<string> | null;
+        /**
+         * Поиск по всей продолжительности одной серии (пример: `20-60`)
+         */
+        seriesLength?: Array<string> | null;
+        /**
+         * Поиск по всей продолжительности сериала (пример: `100-120`)
+         */
+        totalSeriesLength?: Array<string> | null;
+        /**
+         * Поиск по жанрам (пример: `"драма", "комедия", "!мелодрама", "+ужасы"`)
+         */
+        'genres.name'?: Array<string> | null;
+        /**
+         * Поиск по странам (пример: `"США", "Россия", "!Франция" , "+Великобритания"`)
+         */
+        'countries.name'?: Array<string> | null;
+        /**
+         * Поиск по наличию билетов в продаже (пример: `true, false`)
+         */
+        ticketsOnSale?: Array<string> | null;
+        /**
+         * Поиск по сетям производства фильма (пример: `"HBO", "Netflix", "!Amazon"`)
+         */
+        'networks.items.name'?: Array<string> | null;
+        /**
+         * Поиск по ID персон (пример: `666, 555, !666`)
+         */
+        'persons.id'?: Array<string> | null;
+        /**
+         * Поиск по профессиям персон (пример: `"актер", "режиссер", "!сценарист"`)
+         */
+        'persons.profession'?: Array<string> | null;
+        /**
+         * Поиск по английским профессиям персон (пример: `"actor", "director", "!writer"`)
+         */
+        'persons.enProfession'?: Array<string> | null;
+        /**
+         * Поиск по сборам в мире (пример: `1000-6666666`)
+         */
+        'fees.world.value'?: Array<string> | null;
+        /**
+         * Поиск по сборам в США (пример: `1000-6666666`)
+         */
+        'fees.usa.value'?: Array<string> | null;
+        /**
+         * Поиск по сборам в России (пример: `1000-6666666`)
+         */
+        'fees.russia.value'?: Array<string> | null;
+        /**
+         * Поиск по дате премьеры в мире (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        'premiere.world'?: Array<string> | null;
+        /**
+         * Поиск по дате премьеры в США (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        'premiere.usa'?: Array<string> | null;
+        /**
+         * Поиск по дате премьеры в России (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        'premiere.russia'?: Array<string> | null;
+        /**
+         * Поиск по дате премьеры в стриминговых сервисах (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        'premiere.digital'?: Array<string> | null;
+        /**
+         * Поиск по дате премьеры в кинотеатрах (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        'premiere.cinema'?: Array<string> | null;
+        /**
+         * Поиск по стране премьеры (пример: `"США", "Россия", "!Франция" , "+Великобритания"`)
+         */
+        'premiere.country'?: Array<string> | null;
+        /**
+         * Поиск по ID KinoPoisk из списка похожих фильмов (пример: `666, 555, !666`)
+         */
+        'similarMovies.id'?: Array<string> | null;
+        /**
+         * Поиск по ID KinoPoisk из списка сиквелов и преквелов (пример: `666, 555, !666`)
+         */
+        'sequelsAndPrequels.id'?: Array<string> | null;
+        /**
+         * Поиск по доуступным платформам для просмотра (пример: `"ivi", "okko", "!megogo"`)
+         */
+        'watchability.items.name'?: Array<string> | null;
+        /**
+         * Поиск по коллекциям из KinoPoisk (пример: `"top250", "top-100-indian-movies", "!top-100-movies"`)
+         */
+        lists?: Array<string> | null;
+    };
+    url: '/v1.5/movie/random';
+};
+
+export type MovieControllerGetRandomMovieV15Responses = {
+    200: MovieDtoV14;
+};
+
+export type MovieControllerGetRandomMovieV15Response = MovieControllerGetRandomMovieV15Responses[keyof MovieControllerGetRandomMovieV15Responses];
+
+export type MovieControllerFindManyAwardsV15Data = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Количество элементов на странице
+         */
+        limit?: number;
+        /**
+         * Курсор для получения следующей страницы. Берётся из поля `next` в ответе предыдущего запроса. При первом запросе не передавайте этот параметр.
+         */
+        next?: string;
+        /**
+         * Курсор для получения предыдущей страницы. Берётся из поля `prev` в ответе предыдущего запроса.
+         */
+        prev?: string;
+        /**
+         * Поле для сортировки
+         */
+        sortField?: Array<'movieId' | 'winning' | 'nomination.id' | 'nomination.title' | 'nomination.award.title' | 'nomination.award.year' | 'nomination.award.slug' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Тип сортировки (пример: `"1", "-1"`)
+         */
+        sortType?: Array<string>;
+        /**
+         * Включить подсчёт общего количества документов. Внимание: может значительно замедлить запрос на больших коллекциях с фильтрами.
+         */
+        withCount?: boolean;
+        /**
+         * Список полей требуемых в ответе из модели
+         */
+        selectFields?: Array<'movieId' | 'winning' | 'nomination' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Список полей которые не должны быть null или пусты
+         */
+        notNullFields?: Array<'movieId' | 'winning' | 'nomination.id' | 'nomination.title' | 'nomination.award.title' | 'nomination.award.year' | 'nomination.award.slug' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Поиск по ID фильма (пример: `"666", "555", "!666"`)
+         */
+        movieId?: Array<string> | null;
+        /**
+         * Поиск по ID номинации (nomination.id) (пример: `"1839", "!1839"`)
+         */
+        'nomination.id'?: Array<string> | null;
+        /**
+         * Поиск по slug премии (nomination.award.slug) (пример: `"oscar", "cannes"`)
+         */
+        'nomination.award.slug'?: Array<string> | null;
+        /**
+         * Поиск по названию номинации (пример: `"Лучший фильм", "Лучший актер"`)
+         */
+        'nomination.title'?: Array<string> | null;
+        /**
+         * Поиск по названию премии (пример: `"Оскар", "Золотой глобус"`)
+         */
+        'nomination.award.title'?: Array<string> | null;
+        /**
+         * Поиск по году премии (пример: `"2019", "2020"`)
+         */
+        'nomination.award.year'?: Array<string> | null;
+        /**
+         * Поиск по победам (пример: `"true", "false"`)
+         */
+        winning?: string | null;
+        /**
+         * Поиск по дате обновления в базе (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        updatedAt?: Array<string> | null;
+        /**
+         * Поиск по дате добавления в базу (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        createdAt?: Array<string> | null;
+    };
+    url: '/v1.5/movie/awards';
+};
+
+export type MovieControllerFindManyAwardsV15Errors = {
+    /**
+     * Невалидный запрос — проверьте правильность query-параметров. Например: неверный формат числа, невалидный курсор, или недопустимое значение enum.
+     */
+    400: BadRequestErrorResponseDto;
+    /**
+     * Токен не передан или указан неверно. Укажите ваш API-ключ в заголовке `X-API-KEY` или в query-параметре `token`.
+     */
+    401: UnauthorizedErrorResponseDto;
+    /**
+     * Превышен суточный лимит запросов или лимит пагинации demo-тарифа. Для demo/free и пользователей без активной подписки доступны только страницы 1-10 и limit не больше 10.
+     */
+    403: ForbiddenErrorResponseDto;
+};
+
+export type MovieControllerFindManyAwardsV15Error = MovieControllerFindManyAwardsV15Errors[keyof MovieControllerFindManyAwardsV15Errors];
+
+export type MovieControllerFindManyAwardsV15Responses = {
+    200: MovieAwardCursorDocsResponseDtoV15;
+};
+
+export type MovieControllerFindManyAwardsV15Response = MovieControllerFindManyAwardsV15Responses[keyof MovieControllerFindManyAwardsV15Responses];
+
 export type MovieControllerFindManyAwardsV14Data = {
     body?: never;
     path?: never;
@@ -2453,6 +3067,14 @@ export type PersonControllerFindManyV15Data = {
          */
         createdAt?: Array<string> | null;
         /**
+         * Поиск по id профессии из справочника `/v1.5/dictionary/professions` (пример: `1, !2`)
+         */
+        'profession.professionId'?: Array<string> | null;
+        /**
+         * Поиск по id профессии в фильмах из справочника `/v1.5/dictionary/professions` (пример: `1, !2`)
+         */
+        'movies.professionId'?: Array<string> | null;
+        /**
          * Количество элементов на странице
          */
         limit?: number;
@@ -2677,6 +3299,174 @@ export type PersonControllerSearchPersonV14Responses = {
 };
 
 export type PersonControllerSearchPersonV14Response = PersonControllerSearchPersonV14Responses[keyof PersonControllerSearchPersonV14Responses];
+
+export type PersonControllerFindOneV15Data = {
+    body?: never;
+    path: {
+        /**
+         * ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/v1.5/person/{id}';
+};
+
+export type PersonControllerFindOneV15Errors = {
+    /**
+     * Невалидный запрос — проверьте правильность query-параметров. Например: неверный формат числа, невалидный курсор, или недопустимое значение enum.
+     */
+    400: BadRequestErrorResponseDto;
+    /**
+     * Токен не передан или указан неверно. Укажите ваш API-ключ в заголовке `X-API-KEY` или в query-параметре `token`.
+     */
+    401: UnauthorizedErrorResponseDto;
+    /**
+     * Превышен суточный лимит запросов или лимит пагинации demo-тарифа. Для demo/free и пользователей без активной подписки доступны только страницы 1-10 и limit не больше 10.
+     */
+    403: ForbiddenErrorResponseDto;
+    /**
+     * Персона с таким id не найдена в базе.
+     */
+    404: ForbiddenErrorResponseDto;
+};
+
+export type PersonControllerFindOneV15Error = PersonControllerFindOneV15Errors[keyof PersonControllerFindOneV15Errors];
+
+export type PersonControllerFindOneV15Responses = {
+    200: Person;
+};
+
+export type PersonControllerFindOneV15Response = PersonControllerFindOneV15Responses[keyof PersonControllerFindOneV15Responses];
+
+export type PersonControllerSearchPersonV15Data = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Страница выборки
+         */
+        page?: number;
+        /**
+         * Количество элементов на странице
+         */
+        limit?: number;
+        /**
+         * Поисковый запрос
+         */
+        query: string;
+    };
+    url: '/v1.5/person/search';
+};
+
+export type PersonControllerSearchPersonV15Responses = {
+    200: SearchPersonResponseDtoV14;
+};
+
+export type PersonControllerSearchPersonV15Response = PersonControllerSearchPersonV15Responses[keyof PersonControllerSearchPersonV15Responses];
+
+export type PersonControllerFindManyAwardsV15Data = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Количество элементов на странице
+         */
+        limit?: number;
+        /**
+         * Курсор для получения следующей страницы. Берётся из поля `next` в ответе предыдущего запроса. При первом запросе не передавайте этот параметр.
+         */
+        next?: string;
+        /**
+         * Курсор для получения предыдущей страницы. Берётся из поля `prev` в ответе предыдущего запроса.
+         */
+        prev?: string;
+        /**
+         * Поле для сортировки
+         */
+        sortField?: Array<'personId' | 'winning' | 'nomination.id' | 'nomination.title' | 'nomination.award.title' | 'nomination.award.year' | 'nomination.award.slug' | 'movie.id' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Тип сортировки (пример: `"1", "-1"`)
+         */
+        sortType?: Array<string>;
+        /**
+         * Включить подсчёт общего количества документов. Внимание: может значительно замедлить запрос на больших коллекциях с фильтрами.
+         */
+        withCount?: boolean;
+        /**
+         * Список полей требуемых в ответе из модели
+         */
+        selectFields?: Array<'personId' | 'winning' | 'nomination' | 'movie' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Список полей которые не должны быть null или пусты
+         */
+        notNullFields?: Array<'personId' | 'winning' | 'nomination.id' | 'nomination.title' | 'nomination.award.title' | 'nomination.award.year' | 'nomination.award.slug' | 'movie.id' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Поиск по ID персоны (пример: `"666", "555", "!666"`)
+         */
+        personId?: Array<string> | null;
+        /**
+         * Поиск по ID номинации (nomination.id) (пример: `"1839", "!1839"`)
+         */
+        'nomination.id'?: Array<string> | null;
+        /**
+         * Поиск по slug премии (nomination.award.slug) (пример: `"oscar", "cannes"`)
+         */
+        'nomination.award.slug'?: Array<string> | null;
+        /**
+         * Поиск по названию номинации (пример: `"Лучший фильм", "Лучший актер"`)
+         */
+        'nomination.title'?: Array<string> | null;
+        /**
+         * Поиск по названию премии (пример: `"Оскар", "Золотой глобус"`)
+         */
+        'nomination.award.title'?: Array<string> | null;
+        /**
+         * Поиск по году премии (пример: `"2019", "2020"`)
+         */
+        'nomination.award.year'?: Array<string> | null;
+        /**
+         * Поиск по ID фильма за который вручена награда (пример: `"666", "!666"`)
+         */
+        'movie.id'?: Array<string> | null;
+        /**
+         * Поиск по победам (пример: `"true", "false"`)
+         */
+        winning?: string | null;
+        /**
+         * Поиск по дате обновления в базе (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        updatedAt?: Array<string> | null;
+        /**
+         * Поиск по дате добавления в базу (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        createdAt?: Array<string> | null;
+    };
+    url: '/v1.5/person/awards';
+};
+
+export type PersonControllerFindManyAwardsV15Errors = {
+    /**
+     * Невалидный запрос — проверьте правильность query-параметров. Например: неверный формат числа, невалидный курсор, или недопустимое значение enum.
+     */
+    400: BadRequestErrorResponseDto;
+    /**
+     * Токен не передан или указан неверно. Укажите ваш API-ключ в заголовке `X-API-KEY` или в query-параметре `token`.
+     */
+    401: UnauthorizedErrorResponseDto;
+    /**
+     * Превышен суточный лимит запросов или лимит пагинации demo-тарифа. Для demo/free и пользователей без активной подписки доступны только страницы 1-10 и limit не больше 10.
+     */
+    403: ForbiddenErrorResponseDto;
+};
+
+export type PersonControllerFindManyAwardsV15Error = PersonControllerFindManyAwardsV15Errors[keyof PersonControllerFindManyAwardsV15Errors];
+
+export type PersonControllerFindManyAwardsV15Responses = {
+    200: PersonAwardCursorDocsResponseDtoV15;
+};
+
+export type PersonControllerFindManyAwardsV15Response = PersonControllerFindManyAwardsV15Responses[keyof PersonControllerFindManyAwardsV15Responses];
 
 export type PersonControllerFindManyAwardsV14Data = {
     body?: never;
@@ -3041,6 +3831,296 @@ export type KeywordControllerFindManyV14Responses = {
 };
 
 export type KeywordControllerFindManyV14Response = KeywordControllerFindManyV14Responses[keyof KeywordControllerFindManyV14Responses];
+
+export type AwardControllerFindManyV15Data = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Список полей требуемых в ответе из модели
+         */
+        selectFields?: Array<'id' | 'slug' | 'name' | 'alternativeName' | 'type' | 'facts' | 'location' | 'siteUrl' | 'logo' | 'years' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Список полей которые не должны быть null или пусты
+         */
+        notNullFields?: Array<'id' | 'slug' | 'name' | 'alternativeName' | 'type' | 'years.start' | 'years.end' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Поиск премии по числовому id (пример: `1, !15`)
+         */
+        id?: Array<string>;
+        /**
+         * Поиск премии по slug (пример: `"oscar", "!oscar"`)
+         */
+        slug?: Array<string>;
+        /**
+         * Поиск премии по названию (пример: `"Оскар", "Золотой глобус"`)
+         */
+        name?: Array<string>;
+        /**
+         * Поиск премии по альтернативному названию (пример: `"Academy Awards"`)
+         */
+        alternativeName?: Array<string>;
+        /**
+         * Поиск по типу премии (пример: `"award", "festival"`)
+         */
+        type?: Array<'award' | 'festival'>;
+        /**
+         * Поиск по году начала проведения (пример: `"1929", "1900-2000"`)
+         */
+        'years.start'?: Array<string>;
+        /**
+         * Поиск по году окончания проведения (пример: `"2026", "2000-2026"`)
+         */
+        'years.end'?: Array<string>;
+        /**
+         * Поиск по дате обновления в базе (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        updatedAt?: Array<string> | null;
+        /**
+         * Поиск по дате добавления в базу (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        createdAt?: Array<string> | null;
+        /**
+         * Количество элементов на странице
+         */
+        limit?: number;
+        /**
+         * Курсор для получения следующей страницы. Берётся из поля `next` в ответе предыдущего запроса. При первом запросе не передавайте этот параметр.
+         */
+        next?: string;
+        /**
+         * Курсор для получения предыдущей страницы. Берётся из поля `prev` в ответе предыдущего запроса.
+         */
+        prev?: string;
+        /**
+         * Поле для сортировки
+         */
+        sortField?: Array<'id' | 'slug' | 'name' | 'alternativeName' | 'type' | 'years.start' | 'years.end' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Тип сортировки (пример: `"1", "-1"`)
+         */
+        sortType?: Array<string>;
+        /**
+         * Включить подсчёт общего количества документов. Внимание: может значительно замедлить запрос при использовании фильтров на больших коллекциях.
+         */
+        withCount?: boolean;
+    };
+    url: '/v1.5/award';
+};
+
+export type AwardControllerFindManyV15Errors = {
+    /**
+     * Невалидный запрос — проверьте правильность query-параметров. Например: неверный формат числа, невалидный курсор, или недопустимое значение enum.
+     */
+    400: BadRequestErrorResponseDto;
+    /**
+     * Токен не передан или указан неверно. Укажите ваш API-ключ в заголовке `X-API-KEY` или в query-параметре `token`.
+     */
+    401: UnauthorizedErrorResponseDto;
+    /**
+     * Превышен суточный лимит запросов или лимит пагинации demo-тарифа. Для demo/free и пользователей без активной подписки доступны только страницы 1-10 и limit не больше 10.
+     */
+    403: ForbiddenErrorResponseDto;
+};
+
+export type AwardControllerFindManyV15Error = AwardControllerFindManyV15Errors[keyof AwardControllerFindManyV15Errors];
+
+export type AwardControllerFindManyV15Responses = {
+    200: AwardCursorDocsResponseDtoV15;
+};
+
+export type AwardControllerFindManyV15Response = AwardControllerFindManyV15Responses[keyof AwardControllerFindManyV15Responses];
+
+export type AwardControllerFindOneBySlugV15Data = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/v1.5/award/{slug}';
+};
+
+export type AwardControllerFindOneBySlugV15Errors = {
+    /**
+     * Невалидный запрос — проверьте правильность query-параметров. Например: неверный формат числа, невалидный курсор, или недопустимое значение enum.
+     */
+    400: BadRequestErrorResponseDto;
+    /**
+     * Токен не передан или указан неверно. Укажите ваш API-ключ в заголовке `X-API-KEY` или в query-параметре `token`.
+     */
+    401: UnauthorizedErrorResponseDto;
+    /**
+     * Превышен суточный лимит запросов или лимит пагинации demo-тарифа. Для demo/free и пользователей без активной подписки доступны только страницы 1-10 и limit не больше 10.
+     */
+    403: ForbiddenErrorResponseDto;
+    /**
+     * Премия с таким slug не найдена в базе.
+     */
+    404: ForbiddenErrorResponseDto;
+};
+
+export type AwardControllerFindOneBySlugV15Error = AwardControllerFindOneBySlugV15Errors[keyof AwardControllerFindOneBySlugV15Errors];
+
+export type AwardControllerFindOneBySlugV15Responses = {
+    200: Award;
+};
+
+export type AwardControllerFindOneBySlugV15Response = AwardControllerFindOneBySlugV15Responses[keyof AwardControllerFindOneBySlugV15Responses];
+
+export type NominationControllerFindManyV15Data = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Список полей требуемых в ответе из модели
+         */
+        selectFields?: Array<'nominationId' | 'award' | 'name' | 'years' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Список полей которые не должны быть null или пусты
+         */
+        notNullFields?: Array<'nominationId' | 'award' | 'name' | 'years' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Поиск номинации по id (nominationId) (пример: `"1839", "!1839"`)
+         */
+        nominationId?: Array<string>;
+        /**
+         * Поиск номинаций по slug премии (пример: `"oscar", "cannes"`)
+         */
+        award?: Array<string>;
+        /**
+         * Поиск номинации по названию (пример: `"Лучший фильм", "Лучшая женская роль"`)
+         */
+        name?: Array<string>;
+        /**
+         * Поиск по году вручения номинации (пример: `"2020"` или диапазон `"2010-2020"`). Совпадает, если год входит в массив `years`.
+         */
+        years?: Array<string>;
+        /**
+         * Поиск по дате обновления в базе (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        updatedAt?: Array<string> | null;
+        /**
+         * Поиск по дате добавления в базу (пример: `01.01.2020, 01.01.2020-31.12.2020`)
+         */
+        createdAt?: Array<string> | null;
+        /**
+         * Количество элементов на странице
+         */
+        limit?: number;
+        /**
+         * Курсор для получения следующей страницы. Берётся из поля `next` в ответе предыдущего запроса. При первом запросе не передавайте этот параметр.
+         */
+        next?: string;
+        /**
+         * Курсор для получения предыдущей страницы. Берётся из поля `prev` в ответе предыдущего запроса.
+         */
+        prev?: string;
+        /**
+         * Поле для сортировки
+         */
+        sortField?: Array<'nominationId' | 'award' | 'name' | 'years' | 'updatedAt' | 'createdAt'>;
+        /**
+         * Тип сортировки (пример: `"1", "-1"`)
+         */
+        sortType?: Array<string>;
+        /**
+         * Включить подсчёт общего количества документов. Внимание: может значительно замедлить запрос при использовании фильтров на больших коллекциях.
+         */
+        withCount?: boolean;
+    };
+    url: '/v1.5/nomination';
+};
+
+export type NominationControllerFindManyV15Errors = {
+    /**
+     * Невалидный запрос — проверьте правильность query-параметров. Например: неверный формат числа, невалидный курсор, или недопустимое значение enum.
+     */
+    400: BadRequestErrorResponseDto;
+    /**
+     * Токен не передан или указан неверно. Укажите ваш API-ключ в заголовке `X-API-KEY` или в query-параметре `token`.
+     */
+    401: UnauthorizedErrorResponseDto;
+    /**
+     * Превышен суточный лимит запросов или лимит пагинации demo-тарифа. Для demo/free и пользователей без активной подписки доступны только страницы 1-10 и limit не больше 10.
+     */
+    403: ForbiddenErrorResponseDto;
+};
+
+export type NominationControllerFindManyV15Error = NominationControllerFindManyV15Errors[keyof NominationControllerFindManyV15Errors];
+
+export type NominationControllerFindManyV15Responses = {
+    200: NominationCursorDocsResponseDtoV15;
+};
+
+export type NominationControllerFindManyV15Response = NominationControllerFindManyV15Responses[keyof NominationControllerFindManyV15Responses];
+
+export type NominationControllerFindOneByIdV15Data = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/v1.5/nomination/{id}';
+};
+
+export type NominationControllerFindOneByIdV15Errors = {
+    /**
+     * Невалидный запрос — проверьте правильность query-параметров. Например: неверный формат числа, невалидный курсор, или недопустимое значение enum.
+     */
+    400: BadRequestErrorResponseDto;
+    /**
+     * Токен не передан или указан неверно. Укажите ваш API-ключ в заголовке `X-API-KEY` или в query-параметре `token`.
+     */
+    401: UnauthorizedErrorResponseDto;
+    /**
+     * Превышен суточный лимит запросов или лимит пагинации demo-тарифа. Для demo/free и пользователей без активной подписки доступны только страницы 1-10 и limit не больше 10.
+     */
+    403: ForbiddenErrorResponseDto;
+    /**
+     * Номинация с таким id не найдена в базе.
+     */
+    404: ForbiddenErrorResponseDto;
+};
+
+export type NominationControllerFindOneByIdV15Error = NominationControllerFindOneByIdV15Errors[keyof NominationControllerFindOneByIdV15Errors];
+
+export type NominationControllerFindOneByIdV15Responses = {
+    200: Nomination;
+};
+
+export type NominationControllerFindOneByIdV15Response = NominationControllerFindOneByIdV15Responses[keyof NominationControllerFindOneByIdV15Responses];
+
+export type DictionaryControllerGetOneV15Data = {
+    body?: never;
+    path: {
+        type: 'genres' | 'countries' | 'professions' | 'types' | 'statuses';
+    };
+    query?: never;
+    url: '/v1.5/dictionary/{type}';
+};
+
+export type DictionaryControllerGetOneV15Errors = {
+    /**
+     * Невалидный запрос — проверьте правильность query-параметров. Например: неверный формат числа, невалидный курсор, или недопустимое значение enum.
+     */
+    400: BadRequestErrorResponseDto;
+    /**
+     * Токен не передан или указан неверно. Укажите ваш API-ключ в заголовке `X-API-KEY` или в query-параметре `token`.
+     */
+    401: UnauthorizedErrorResponseDto;
+    /**
+     * Превышен суточный лимит запросов или лимит пагинации demo-тарифа. Для demo/free и пользователей без активной подписки доступны только страницы 1-10 и limit не больше 10.
+     */
+    403: ForbiddenErrorResponseDto;
+};
+
+export type DictionaryControllerGetOneV15Error = DictionaryControllerGetOneV15Errors[keyof DictionaryControllerGetOneV15Errors];
+
+export type DictionaryControllerGetOneV15Responses = {
+    200: DictionaryDto;
+};
+
+export type DictionaryControllerGetOneV15Response = DictionaryControllerGetOneV15Responses[keyof DictionaryControllerGetOneV15Responses];
 
 export type ImageControllerFindManyV15Data = {
     body?: never;

@@ -15,7 +15,7 @@ const LocationProbe = () => {
   return null
 }
 
-const SEARCH_ENDPOINT = '*/v1.4/movie/search'
+const SEARCH_ENDPOINT = '*/v1.5/movie/search'
 const CATALOG_ENDPOINT = '*/v1.5/movie'
 
 const searchDoc = (name: string, id: number) => ({

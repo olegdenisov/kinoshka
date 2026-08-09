@@ -24,7 +24,7 @@ export type MovieCatalogResult = {
  * скрывающая двухэндпоинтную реальность API (Variant A — query и фильтры не сочетаются
  * в одном запросе).
  *
- * `query.trim()` непустой → текстовый поиск `/v1.4/movie/search` (`getSearchMovies`),
+ * `query.trim()` непустой → текстовый поиск `/v1.5/movie/search` (`getSearchMovies`),
  * `filters`/`sort` игнорируются. `query.trim()` пустой → каталог по фильтрам `/v1.5/movie`
  * (`getMoviesPage(filtersToParams(filters, sort), page)`, курсорная эмуляция numbered-page).
  *

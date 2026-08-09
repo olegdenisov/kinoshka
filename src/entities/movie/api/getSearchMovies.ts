@@ -15,7 +15,7 @@ export type SearchMoviesResult = {
 }
 
 const fetchSearchMovies = async (params: RequestParams): Promise<SearchMoviesResult> => {
-  const response = await apiClient.getV14MovieSearch({
+  const response = await apiClient.getV15MovieSearch({
       query: {
         ...params,
         limit: PER_PAGE,

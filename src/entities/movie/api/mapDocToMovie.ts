@@ -1,7 +1,7 @@
 import type { Movie, MovieType } from "../model/types";
 
-// Общая форма doc-элемента, покрывающая и v1.5 (`MovieDtoV14`, docs `getV15Movie`),
-// и v1.4 (`SearchMovieDtoV14`, docs `getV14MovieSearch`) — структурно совместимое подмножество полей.
+// Общая форма doc-элемента, покрывающая и `getV15Movie` (`MovieDtoV14`),
+// и `getV15MovieSearch` (`SearchMovieDtoV14`) — структурно совместимое подмножество полей.
 export type MovieDocLike = {
   id?: number | null;
   name?: string | null;

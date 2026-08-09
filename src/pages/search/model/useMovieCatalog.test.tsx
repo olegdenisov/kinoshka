@@ -16,7 +16,7 @@ const importUseMovieCatalog = async () => {
 
 const EMPTY_FILTERS: FilterState = { type: null, genres: [], yearFrom: null, yearTo: null, rating: null }
 
-const SEARCH_ENDPOINT = '*/v1.4/movie/search'
+const SEARCH_ENDPOINT = '*/v1.5/movie/search'
 const CATALOG_ENDPOINT = '*/v1.5/movie'
 
 const searchDoc = (name: string) => ({

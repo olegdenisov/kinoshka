@@ -12,40 +12,37 @@ export type Movie = {
   poster?: string
 }
 
-export type CastMember = {
-  name: string
-  actor: string
-  hue: number
+type CastMember = { 
+  id: number; 
+  name: string; 
+  role: string; 
+  photo?: string 
+}
+
+type CrewMember = { 
+  id: number; 
+  name: string; 
+  profession: string 
 }
 
 export type MovieDetail = Movie & {
   tagline: string
-  synopsis: string
+  description: string
+  shortDescription?: string
+  backdrop?: string
+  trailerUrl?: string
   cast: CastMember[]
-  crew: {
-    director: string
-    writer: string
-    composer: string
-    studio: string
-  }
-  signals: {
-    criticalConsensus: string
-    audience: string
-    pacing: string
-    mood: string
-    violence: string
-    tearRisk: string
-  }
-  details: {
-    releaseDate: string
-    country: string
-    language: string
-    aspectRatio: string
-    soundMix: string
-    budget: string
-    boxOffice: string
-  }
-  criticScore: string
-  criticReviews: number
-  userVotes: string
+  crew: CrewMember[]
+  countries: string[]
+  ratingKp?: number
+  ratingImdb?: number
+  votesKp?: string
+  criticScore?: number         // rating.filmCritics
+  criticReviewCount?: number   // votes.filmCritics
+  ageRating?: number
+  ratingMpaa?: string
+  budget?: { value: number; currency: string }
+  feesWorld?: { value: number; currency: string }
+  premiereWorld?: string
+  similarMovies: Movie[]
 }
