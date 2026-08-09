@@ -19,16 +19,16 @@ type CastMember = {
   photo?: string 
 }
 
-type CrewMember = { 
-  id: number; 
-  name: string; 
-  profession: string 
+type CrewMember = {
+  id: number;
+  name: string;
+  profession: string
 }
 
 export type MovieDetail = Movie & {
   tagline: string
-  description: string
-  shortDescription?: string
+  synopsis: string
+  shortSynopsis?: string
   backdrop?: string
   trailerUrl?: string
   cast: CastMember[]

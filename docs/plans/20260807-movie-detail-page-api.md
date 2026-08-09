@@ -125,13 +125,13 @@ export class ApiError extends Error {
 - Create: `src/entities/movie/api/mapDtoToMovieDetail.ts`
 - Create: `src/entities/movie/api/mapDtoToMovieDetail.test.ts`
 
-- [ ] переписать `MovieDetail` в `types.ts` по схеме из раздела Technical Details (убрать `signals`, старую форму `cast`/`details`)
-- [ ] `CastMember = { id, name, role, photo? }` (`name` — реальное имя актёра, `role` — персонаж/`description`, местами наоборот относительно старого мока), `CrewMember = { id, name, profession }`
-- [ ] написать `mapDtoToMovieDetail(dto: MovieDtoV14): MovieDetail` — с fallback-цепочками (`title`, `synopsis`) и пустыми массивами при отсутствии `persons`/`genres`/`countries`
-- [ ] выделить `isCast`/`isCrew` (фильтр по `enProfession`) как отдельно тестируемые функции
-- [ ] написать тесты маппера: полный DTO → полный `MovieDetail`; отсутствующие опциональные поля → корректные fallback'и; персона с неизвестным `enProfession` → не попадает ни в cast, ни в crew
-- [ ] запустить `make typecheck` — ожидаемо покажет fallout по старым потребителям `MOCK_DETAIL`/старого типа `MovieDetail` (список пригодится для Task 4/8/9)
-- [ ] запустить тесты — должны пройти перед задачей 3
+- [x] переписать `MovieDetail` в `types.ts` по схеме из раздела Technical Details (убрать `signals`, старую форму `cast`/`details`)
+- [x] `CastMember = { id, name, role, photo? }` (`name` — реальное имя актёра, `role` — персонаж/`description`, местами наоборот относительно старого мока), `CrewMember = { id, name, profession }`
+- [x] написать `mapDtoToMovieDetail(dto: MovieDtoV14): MovieDetail` — с fallback-цепочками (`title`, `synopsis`) и пустыми массивами при отсутствии `persons`/`genres`/`countries`
+- [x] выделить `isCast`/`isCrew` (фильтр по `enProfession`) как отдельно тестируемые функции
+- [x] написать тесты маппера: полный DTO → полный `MovieDetail`; отсутствующие опциональные поля → корректные fallback'и; персона с неизвестным `enProfession` → не попадает ни в cast, ни в crew
+- [x] запустить `make typecheck` — ожидаемо покажет fallout по старым потребителям `MOCK_DETAIL`/старого типа `MovieDetail` (список пригодится для Task 4/8/9)
+- [x] запустить тесты — должны пройти перед задачей 3
 
 ### Task 3: Фетчеры `getMovieDetail`/`getMovieImages`
 
@@ -142,12 +142,12 @@ export class ApiError extends Error {
 - Create: `src/entities/movie/api/getMovieImages.test.ts`
 
 - [x] `getMovieDetail = createCachedFetcher<number, MovieDetail>('movie-detail', fetchMovieDetail)`, `fetchMovieDetail` вызывает `apiClient.getV15MovieById({ path: { id } })` и прогоняет `response.data` через `mapDtoToMovieDetail`
-- [ ] `getMovieImages = createCachedFetcher<number, MovieImage[]>('movie-images', fetchMovieImages)`, вызывает `apiClient.getV15Image({ query: { movieId: [String(id)], type: ['frame','screenshot'], limit: 8, selectFields: ['url','previewUrl'] } })`
-- [ ] `MovieImage = { url: string; previewUrl?: string }`, отфильтровать записи с пустым `url`
-- [ ] написать тесты через MSW (по образцу `getSearchMovies.test.ts`): success-path для обоих фетчеров
-- [ ] написать тест 404-path для `getMovieDetail` — проверить `error instanceof ApiError && error.status === 404`
-- [ ] написать тест 403-cooldown path (регресс на `createCachedFetcher`) и пустой `docs` → `[]` для картинок
-- [ ] запустить тесты — должны пройти перед задачей 4
+- [x] `getMovieImages = createCachedFetcher<number, MovieImage[]>('movie-images', fetchMovieImages)`, вызывает `apiClient.getV15Image({ query: { movieId: [String(id)], type: ['frame','screenshot'], limit: 8, selectFields: ['url','previewUrl'] } })`
+- [x] `MovieImage = { url: string; previewUrl?: string }`, отфильтровать записи с пустым `url`
+- [x] написать тесты через MSW (по образцу `getSearchMovies.test.ts`): success-path для обоих фетчеров
+- [x] написать тест 404-path для `getMovieDetail` — проверить `error instanceof ApiError && error.status === 404`
+- [x] написать тест 403-cooldown path (регресс на `createCachedFetcher`) и пустой `docs` → `[]` для картинок
+- [x] запустить тесты — должны пройти перед задачей 4
 
 ### Task 4: Композиция `useMovieDetail` + чистка публичного API
 
