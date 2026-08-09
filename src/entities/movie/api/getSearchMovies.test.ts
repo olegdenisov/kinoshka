@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { server } from '../../../test/setup'
 import { getSearchMovies } from './getSearchMovies'
 
-const ENDPOINT = '*/v1.4/movie/search'
+const ENDPOINT = '*/v1.5/movie/search'
 
 const doc = (overrides: Record<string, unknown> = {}) => ({
   id: 1,
@@ -52,7 +52,7 @@ const mockForbidden = () => {
 }
 
 describe('getSearchMovies — запрос', () => {
-  it('уходит на /v1.4/movie/search с query, page и limit:10', async () => {
+  it('уходит на /v1.5/movie/search с query, page и limit:10', async () => {
     const getRequest = mockSuccess([doc()])
 
     await getSearchMovies({query: 'matrix', page: 2})

@@ -15,7 +15,7 @@ const LocationProbe = () => {
   return null
 }
 
-const SEARCH_ENDPOINT = '*/v1.4/movie/search'
+const SEARCH_ENDPOINT = '*/v1.5/movie/search'
 const CATALOG_ENDPOINT = '*/v1.5/movie'
 
 const searchDoc = (name: string, id: number) => ({
@@ -164,7 +164,7 @@ describe('SearchMobile — устаревший/deep-linked ?page вне диа�
 
 describe('SearchMobile — MobilePagination и page-URL-sync', () => {
   it('page читается из ?page и передаётся в MobilePagination (активная кнопка страницы)', async () => {
-    // Search-режим — page нативный (v1.4 `page`), в отличие от catalog-режима, где
+    // Search-режим — page нативный (v1.5 `page`), в отличие от catalog-режима, где
     // страница эмулируется обходом курсора; не тянем сюда всю цепочку курсоров ради
     // одной проверки, что ?page реально доходит до MobilePagination.
     mockSearch([searchDoc('Matrix Revolutions', 401)], { pages: 5, total: 50 })

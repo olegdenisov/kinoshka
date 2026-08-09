@@ -4,9 +4,9 @@
 
 Страница `/movie/:id` (`src/pages/movie/`) сейчас работает на 100% моке: `id` ищется в `CATALOG` (массив-заглушка из `@entities/movie`), а при промахе молча подставляется `CATALOG[0]` — состояния «не найдено» в приложении не существует вообще (в коде нет ни одного `404`/`NotFound`). Все четыре таба (Overview/Cast/Details/Media) и `MovieHero` читают единственный статичный объект `MOCK_DETAIL`, включая полностью выдуманные поля (`signals.criticalConsensus/audience/pacing/mood/violence/tearRisk`, зашитый текст рекомендации про обсерваторию — не зависящий от того, какой фильм на самом деле открыт).
 
-Пункт 1.5 из `plans/roadmap.md` требует: подключить `instance.getV14MovieById(...)`, убрать `MOCK_DETAIL`, оставить те же 4 таба, но на реальных данных, сделать параллельные запросы через `Promise.allSettled`, добавить skeleton и 404-обработку. Критерий приёмки из раздела Verification того же файла: `/movie/666` → `ErrorState` с retry.
+Пункт 1.5 из `plans/roadmap.md` требует: подключить `instance.getV15MovieById(...)`, убрать `MOCK_DETAIL`, оставить те же 4 таба, но на реальных данных, сделать параллельные запросы через `Promise.allSettled`, добавить skeleton и 404-обработку. Критерий приёмки из раздела Verification того же файла: `/movie/666` → `ErrorState` с retry.
 
-Изучение сгенерированных типов (`src/shared/api/types.gen.ts`) показало, что реальный API не совпадает с формулировкой roadmap «movie + images + similar параллельно»: `similarMovies`/`sequelsAndPrequels` — это поля на самом `MovieDtoV14`, а не отдельный endpoint, как и `persons` (единый источник и для cast, и для crew, различаются по `enProfession`). Отдельный вызов есть только для картинок (`getV14Image`). Поэтому реальная пара для `Promise.allSettled` — `(getMovieDetail, getMovieImages)`; это осознанное отклонение от буквальной формулировки roadmap, а не совпадение с ней, и должно быть явно отражено в финальном чек-листе.
+Изучение сгенерированных типов (`src/shared/api/types.gen.ts`) показало, что реальный API не совпадает с формулировкой roadmap «movie + images + similar параллельно»: `similarMovies`/`sequelsAndPrequels` — это поля на самом `MovieDtoV14`, а не отдельный endpoint, как и `persons` (единый источник и для cast, и для crew, различаются по `enProfession`). Отдельный вызов есть только для картинок (`getV15Image`). Поэтому реальная пара для `Promise.allSettled` — `(getMovieDetail, getMovieImages)`; это осознанное отклонение от буквальной формулировки roadmap, а не совпадение с ней, и должно быть явно отражено в финальном чек-листе.
 
 Также обнаружено: `src/shared/api/client.ts` сейчас **отбрасывает HTTP-статус** в interceptor'е (`Promise.reject(new Error(message))`) — без правки туда невозможно надёжно отличить 404 от прочих ошибок.
 
@@ -14,7 +14,7 @@
 
 - **Файлы/компоненты:** `src/pages/movie/MoviePage.tsx`, `ui/MovieDesktop/`, `ui/MovieMobile.tsx`, `ui/MovieHero/`, `ui/tabs/{OverviewTab,CastTab,DetailsTab,MediaTab}/`, `ui/RelatedMovies/`; `src/entities/movie/model/{types.ts,catalog.ts}`, `src/entities/movie/api/`, `src/entities/movie/hooks/`; `src/shared/api/client.ts`; `src/shared/ui/AsyncBoundary/`.
 - **Паттерны, найденные в коде:** живой пример миграции с мока на API уже есть для главной/поиска — `getMovies.ts`, `getSearchMovies.ts`, `getMoviesPage.ts`, все обёрнуты в `createCachedFetcher<P, R>` (TTL 5 мин / error-cooldown 20с / sessionStorage-персист, единый примитив, менять не нужно). Suspense-обвязка: `use()`-вызов должен жить в компоненте-ребёнке `AsyncBoundary`, не в том же компоненте, что рендерит саму границу (см. `SearchDesktop.tsx`/`SearchResults`).
-- **Зависимости:** `apiClient.getV14MovieById({ path: { id } })` (без `query`/`selectFields` — всегда полный `MovieDtoV14`, `response.data` напрямую, без `docs`-обёртки); `apiClient.getV14Image({ query: { movieId, type, limit, selectFields } })` для картинок Media-таба; никакого отдельного эндпоинта для cast/crew/similar-movies не существует — все они уже внутри `MovieDtoV14` (`persons`, `similarMovies`, `sequelsAndPrequels`).
+- **Зависимости:** `apiClient.getV15MovieById({ path: { id } })` (без `query`/`selectFields` — всегда полный `MovieDtoV14`, `response.data` напрямую, без `docs`-обёртки); `apiClient.getV15Image({ query: { movieId, type, limit, selectFields } })` для картинок Media-таба — v1.5 image-эндпоинт курсорный (`next`/`prev`/`hasNext`/`hasPrev` вместо `page`/`pages`), но для одноразового `limit: 8` без листания это не имеет значения, используется только `docs`; никакого отдельного эндпоинта для cast/crew/similar-movies не существует — все они уже внутри `MovieDtoV14` (`persons`, `similarMovies`, `sequelsAndPrequels`).
 
 ## Development Approach
 
@@ -141,8 +141,8 @@ export class ApiError extends Error {
 - Create: `src/entities/movie/api/getMovieImages.ts`
 - Create: `src/entities/movie/api/getMovieImages.test.ts`
 
-- [ ] `getMovieDetail = createCachedFetcher<number, MovieDetail>('movie-detail', fetchMovieDetail)`, `fetchMovieDetail` вызывает `apiClient.getV14MovieById({ path: { id } })` и прогоняет `response.data` через `mapDtoToMovieDetail`
-- [ ] `getMovieImages = createCachedFetcher<number, MovieImage[]>('movie-images', fetchMovieImages)`, вызывает `apiClient.getV14Image({ query: { movieId: [String(id)], type: ['frame','screenshot'], limit: 8, selectFields: ['url','previewUrl'] } })`
+- [x] `getMovieDetail = createCachedFetcher<number, MovieDetail>('movie-detail', fetchMovieDetail)`, `fetchMovieDetail` вызывает `apiClient.getV15MovieById({ path: { id } })` и прогоняет `response.data` через `mapDtoToMovieDetail`
+- [ ] `getMovieImages = createCachedFetcher<number, MovieImage[]>('movie-images', fetchMovieImages)`, вызывает `apiClient.getV15Image({ query: { movieId: [String(id)], type: ['frame','screenshot'], limit: 8, selectFields: ['url','previewUrl'] } })`
 - [ ] `MovieImage = { url: string; previewUrl?: string }`, отфильтровать записи с пустым `url`
 - [ ] написать тесты через MSW (по образцу `getSearchMovies.test.ts`): success-path для обоих фетчеров
 - [ ] написать тест 404-path для `getMovieDetail` — проверить `error instanceof ApiError && error.status === 404`
@@ -251,7 +251,7 @@ export class ApiError extends Error {
 
 ### Task 11: Проверка acceptance criteria
 
-- [ ] проверить, что все требования из Overview реализованы (`getV14MovieById` подключён, `MOCK_DETAIL` удалён, 4 таба на реальных данных, `Promise.allSettled` для movie+images, skeleton, 404-обработка)
+- [ ] проверить, что все требования из Overview реализованы (`getV15MovieById` подключён, `MOCK_DETAIL` удалён, 4 таба на реальных данных, `Promise.allSettled` для movie+images, skeleton, 404-обработка)
 - [ ] проверить edge cases: нечисловой id, отказ только images, отказ movie (404), отказ movie (500/network)
 - [ ] запустить полный набор тестов: `make test`
 - [ ] запустить `make lint && make typecheck && make build`

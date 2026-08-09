@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw'
 import { server } from '../../test/setup'
 
 
-const ENDPOINT = '*/v1.4/movie/1'
+const ENDPOINT = '*/v1.5/movie/1'
 const NOT_FOUND = {
   status: 404, 
   message: 'Not found movie with id 1', 
@@ -23,7 +23,7 @@ describe('apiClient', () => {
       }),
     )
 
-    await expect(apiClient.getV14MovieById({ path: { id: 1 }}))
+    await expect(apiClient.getV15MovieById({ path: { id: 1 }}))
       .rejects
       .toMatchObject({ status: NOT_FOUND.status, message: NOT_FOUND.message })
   })
@@ -35,7 +35,7 @@ describe('apiClient', () => {
       }),
     )
 
-    await expect(apiClient.getV14MovieById({ path: { id: 1 }}))
+    await expect(apiClient.getV15MovieById({ path: { id: 1 }}))
       .rejects
       .toMatchObject({ status: FORBIDDEN.status, message: FORBIDDEN.message })
   })

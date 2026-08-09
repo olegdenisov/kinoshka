@@ -3,7 +3,7 @@
 
 import type { FetchesRequestParams, ApicraftFetchesResponse } from "@siberiacancode/apicraft";
 
-import type { MovieControllerFindOneV14Data, MovieControllerFindOneV14Response, MovieControllerFindOneV14Error, MovieControllerFindManyByQueryV15Data, MovieControllerFindManyByQueryV15Response, MovieControllerFindManyByQueryV15Error, MovieControllerFindManyByQueryV14Data, MovieControllerFindManyByQueryV14Response, MovieControllerSearchMovieV14Data, MovieControllerSearchMovieV14Response, MovieControllerGetRandomMovieV14Data, MovieControllerGetRandomMovieV14Response, MovieControllerFindManyAwardsV14Data, MovieControllerFindManyAwardsV14Response, MovieControllerGetPossibleValuesByFieldNameData, MovieControllerGetPossibleValuesByFieldNameResponse, MovieControllerGetPossibleValuesByFieldNameError, SeasonControllerFindManyV15Data, SeasonControllerFindManyV15Response, SeasonControllerFindManyV15Error, SeasonControllerFindManyV14Data, SeasonControllerFindManyV14Response, ReviewControllerFindManyV15Data, ReviewControllerFindManyV15Response, ReviewControllerFindManyV15Error, ReviewControllerFindManyV14Data, ReviewControllerFindManyV14Response, PersonControllerFindManyV15Data, PersonControllerFindManyV15Response, PersonControllerFindManyV15Error, PersonControllerFindOneV14Data, PersonControllerFindOneV14Response, PersonControllerFindOneV14Error, PersonControllerFindManyV14Data, PersonControllerFindManyV14Response, PersonControllerSearchPersonV14Data, PersonControllerSearchPersonV14Response, PersonControllerFindManyAwardsV14Data, PersonControllerFindManyAwardsV14Response, StudioControllerFindManyV15Data, StudioControllerFindManyV15Response, StudioControllerFindManyV15Error, StudioControllerFindManyV14Data, StudioControllerFindManyV14Response, KeywordControllerFindManyV15Data, KeywordControllerFindManyV15Response, KeywordControllerFindManyV15Error, KeywordControllerFindManyV14Data, KeywordControllerFindManyV14Response, ImageControllerFindManyV15Data, ImageControllerFindManyV15Response, ImageControllerFindManyV15Error, ImageControllerFindManyV14Data, ImageControllerFindManyV14Response, AuthControllerGetTokenInfoData, AuthControllerGetTokenInfoResponse, AuthControllerGetTokenInfoError, ListControllerFindManyV15Data, ListControllerFindManyV15Response, ListControllerFindManyV15Error, ListControllerFindManyV14Data, ListControllerFindManyV14Response, ListControllerFindOneV14Data, ListControllerFindOneV14Response, ListControllerFindOneV15Data, ListControllerFindOneV15Response, ListControllerFindOneV15Error } from "./types.gen";
+import type { MovieControllerFindOneV14Data, MovieControllerFindOneV14Response, MovieControllerFindOneV14Error, MovieControllerFindManyByQueryV15Data, MovieControllerFindManyByQueryV15Response, MovieControllerFindManyByQueryV15Error, MovieControllerFindManyByQueryV14Data, MovieControllerFindManyByQueryV14Response, MovieControllerSearchMovieV14Data, MovieControllerSearchMovieV14Response, MovieControllerGetRandomMovieV14Data, MovieControllerGetRandomMovieV14Response, MovieControllerFindOneV15Data, MovieControllerFindOneV15Response, MovieControllerFindOneV15Error, MovieControllerSearchMovieV15Data, MovieControllerSearchMovieV15Response, MovieControllerGetRandomMovieV15Data, MovieControllerGetRandomMovieV15Response, MovieControllerFindManyAwardsV15Data, MovieControllerFindManyAwardsV15Response, MovieControllerFindManyAwardsV15Error, MovieControllerFindManyAwardsV14Data, MovieControllerFindManyAwardsV14Response, MovieControllerGetPossibleValuesByFieldNameData, MovieControllerGetPossibleValuesByFieldNameResponse, MovieControllerGetPossibleValuesByFieldNameError, SeasonControllerFindManyV15Data, SeasonControllerFindManyV15Response, SeasonControllerFindManyV15Error, SeasonControllerFindManyV14Data, SeasonControllerFindManyV14Response, ReviewControllerFindManyV15Data, ReviewControllerFindManyV15Response, ReviewControllerFindManyV15Error, ReviewControllerFindManyV14Data, ReviewControllerFindManyV14Response, PersonControllerFindManyV15Data, PersonControllerFindManyV15Response, PersonControllerFindManyV15Error, PersonControllerFindOneV14Data, PersonControllerFindOneV14Response, PersonControllerFindOneV14Error, PersonControllerFindManyV14Data, PersonControllerFindManyV14Response, PersonControllerSearchPersonV14Data, PersonControllerSearchPersonV14Response, PersonControllerFindOneV15Data, PersonControllerFindOneV15Response, PersonControllerFindOneV15Error, PersonControllerSearchPersonV15Data, PersonControllerSearchPersonV15Response, PersonControllerFindManyAwardsV15Data, PersonControllerFindManyAwardsV15Response, PersonControllerFindManyAwardsV15Error, PersonControllerFindManyAwardsV14Data, PersonControllerFindManyAwardsV14Response, StudioControllerFindManyV15Data, StudioControllerFindManyV15Response, StudioControllerFindManyV15Error, StudioControllerFindManyV14Data, StudioControllerFindManyV14Response, KeywordControllerFindManyV15Data, KeywordControllerFindManyV15Response, KeywordControllerFindManyV15Error, KeywordControllerFindManyV14Data, KeywordControllerFindManyV14Response, AwardControllerFindManyV15Data, AwardControllerFindManyV15Response, AwardControllerFindManyV15Error, AwardControllerFindOneBySlugV15Data, AwardControllerFindOneBySlugV15Response, AwardControllerFindOneBySlugV15Error, NominationControllerFindManyV15Data, NominationControllerFindManyV15Response, NominationControllerFindManyV15Error, NominationControllerFindOneByIdV15Data, NominationControllerFindOneByIdV15Response, NominationControllerFindOneByIdV15Error, DictionaryControllerGetOneV15Data, DictionaryControllerGetOneV15Response, DictionaryControllerGetOneV15Error, ImageControllerFindManyV15Data, ImageControllerFindManyV15Response, ImageControllerFindManyV15Error, ImageControllerFindManyV14Data, ImageControllerFindManyV14Response, AuthControllerGetTokenInfoData, AuthControllerGetTokenInfoResponse, AuthControllerGetTokenInfoError, ListControllerFindManyV15Data, ListControllerFindManyV15Response, ListControllerFindManyV15Error, ListControllerFindManyV14Data, ListControllerFindManyV14Response, ListControllerFindOneV14Data, ListControllerFindOneV14Response, ListControllerFindOneV15Data, ListControllerFindOneV15Response, ListControllerFindOneV15Error } from "./types.gen";
 
 import type { FetchesInstance, FetchesParams } from "@siberiacancode/fetches";
 
@@ -18,6 +18,14 @@ export type GetV14MovieRequestParams = FetchesRequestParams<MovieControllerFindM
 export type GetV14MovieSearchRequestParams = FetchesRequestParams<MovieControllerSearchMovieV14Data>;
 
 export type GetV14MovieRandomRequestParams = FetchesRequestParams<MovieControllerGetRandomMovieV14Data> | void;
+
+export type GetV15MovieByIdRequestParams = FetchesRequestParams<MovieControllerFindOneV15Data> | void;
+
+export type GetV15MovieSearchRequestParams = FetchesRequestParams<MovieControllerSearchMovieV15Data>;
+
+export type GetV15MovieRandomRequestParams = FetchesRequestParams<MovieControllerGetRandomMovieV15Data> | void;
+
+export type GetV15MovieAwardsRequestParams = FetchesRequestParams<MovieControllerFindManyAwardsV15Data> | void;
 
 export type GetV14MovieAwardsRequestParams = FetchesRequestParams<MovieControllerFindManyAwardsV14Data> | void;
 
@@ -39,6 +47,12 @@ export type GetV14PersonRequestParams = FetchesRequestParams<PersonControllerFin
 
 export type GetV14PersonSearchRequestParams = FetchesRequestParams<PersonControllerSearchPersonV14Data>;
 
+export type GetV15PersonByIdRequestParams = FetchesRequestParams<PersonControllerFindOneV15Data>;
+
+export type GetV15PersonSearchRequestParams = FetchesRequestParams<PersonControllerSearchPersonV15Data>;
+
+export type GetV15PersonAwardsRequestParams = FetchesRequestParams<PersonControllerFindManyAwardsV15Data> | void;
+
 export type GetV14PersonAwardsRequestParams = FetchesRequestParams<PersonControllerFindManyAwardsV14Data> | void;
 
 export type GetV15StudioRequestParams = FetchesRequestParams<StudioControllerFindManyV15Data> | void;
@@ -48,6 +62,16 @@ export type GetV14StudioRequestParams = FetchesRequestParams<StudioControllerFin
 export type GetV15KeywordRequestParams = FetchesRequestParams<KeywordControllerFindManyV15Data> | void;
 
 export type GetV14KeywordRequestParams = FetchesRequestParams<KeywordControllerFindManyV14Data> | void;
+
+export type GetV15AwardRequestParams = FetchesRequestParams<AwardControllerFindManyV15Data> | void;
+
+export type GetV15AwardBySlugRequestParams = FetchesRequestParams<AwardControllerFindOneBySlugV15Data>;
+
+export type GetV15NominationRequestParams = FetchesRequestParams<NominationControllerFindManyV15Data> | void;
+
+export type GetV15NominationByIdRequestParams = FetchesRequestParams<NominationControllerFindOneByIdV15Data>;
+
+export type GetV15DictionaryByTypeRequestParams = FetchesRequestParams<DictionaryControllerGetOneV15Data>;
 
 export type GetV15ImageRequestParams = FetchesRequestParams<ImageControllerFindManyV15Data> | void;
 
@@ -93,6 +117,29 @@ export class ApiInstance {
     }
     getV14MovieRandom({ config, query }: GetV14MovieRandomRequestParams = {}): Promise<ApicraftFetchesResponse<MovieControllerGetRandomMovieV14Response>> {
         return this.instance.call("GET", "/v1.4/movie/random", {
+            query,
+            ...config
+        });
+    }
+    getV15MovieById({ config, path }: GetV15MovieByIdRequestParams = {}): Promise<ApicraftFetchesResponse<MovieControllerFindOneV15Response, MovieControllerFindOneV15Error>> {
+        return this.instance.call("GET", `/v1.5/movie/${path.id}`, {
+            ...config
+        });
+    }
+    getV15MovieSearch({ config, query }: GetV15MovieSearchRequestParams): Promise<ApicraftFetchesResponse<MovieControllerSearchMovieV15Response>> {
+        return this.instance.call("GET", "/v1.5/movie/search", {
+            query,
+            ...config
+        });
+    }
+    getV15MovieRandom({ config, query }: GetV15MovieRandomRequestParams = {}): Promise<ApicraftFetchesResponse<MovieControllerGetRandomMovieV15Response>> {
+        return this.instance.call("GET", "/v1.5/movie/random", {
+            query,
+            ...config
+        });
+    }
+    getV15MovieAwards({ config, query }: GetV15MovieAwardsRequestParams = {}): Promise<ApicraftFetchesResponse<MovieControllerFindManyAwardsV15Response, MovieControllerFindManyAwardsV15Error>> {
+        return this.instance.call("GET", "/v1.5/movie/awards", {
             query,
             ...config
         });
@@ -156,6 +203,23 @@ export class ApiInstance {
             ...config
         });
     }
+    getV15PersonById({ config, path }: GetV15PersonByIdRequestParams): Promise<ApicraftFetchesResponse<PersonControllerFindOneV15Response, PersonControllerFindOneV15Error>> {
+        return this.instance.call("GET", `/v1.5/person/${path.id}`, {
+            ...config
+        });
+    }
+    getV15PersonSearch({ config, query }: GetV15PersonSearchRequestParams): Promise<ApicraftFetchesResponse<PersonControllerSearchPersonV15Response>> {
+        return this.instance.call("GET", "/v1.5/person/search", {
+            query,
+            ...config
+        });
+    }
+    getV15PersonAwards({ config, query }: GetV15PersonAwardsRequestParams = {}): Promise<ApicraftFetchesResponse<PersonControllerFindManyAwardsV15Response, PersonControllerFindManyAwardsV15Error>> {
+        return this.instance.call("GET", "/v1.5/person/awards", {
+            query,
+            ...config
+        });
+    }
     getV14PersonAwards({ config, query }: GetV14PersonAwardsRequestParams = {}): Promise<ApicraftFetchesResponse<PersonControllerFindManyAwardsV14Response>> {
         return this.instance.call("GET", "/v1.4/person/awards", {
             query,
@@ -183,6 +247,33 @@ export class ApiInstance {
     getV14Keyword({ config, query }: GetV14KeywordRequestParams = {}): Promise<ApicraftFetchesResponse<KeywordControllerFindManyV14Response>> {
         return this.instance.call("GET", "/v1.4/keyword", {
             query,
+            ...config
+        });
+    }
+    getV15Award({ config, query }: GetV15AwardRequestParams = {}): Promise<ApicraftFetchesResponse<AwardControllerFindManyV15Response, AwardControllerFindManyV15Error>> {
+        return this.instance.call("GET", "/v1.5/award", {
+            query,
+            ...config
+        });
+    }
+    getV15AwardBySlug({ config, path }: GetV15AwardBySlugRequestParams): Promise<ApicraftFetchesResponse<AwardControllerFindOneBySlugV15Response, AwardControllerFindOneBySlugV15Error>> {
+        return this.instance.call("GET", `/v1.5/award/${path.slug}`, {
+            ...config
+        });
+    }
+    getV15Nomination({ config, query }: GetV15NominationRequestParams = {}): Promise<ApicraftFetchesResponse<NominationControllerFindManyV15Response, NominationControllerFindManyV15Error>> {
+        return this.instance.call("GET", "/v1.5/nomination", {
+            query,
+            ...config
+        });
+    }
+    getV15NominationById({ config, path }: GetV15NominationByIdRequestParams): Promise<ApicraftFetchesResponse<NominationControllerFindOneByIdV15Response, NominationControllerFindOneByIdV15Error>> {
+        return this.instance.call("GET", `/v1.5/nomination/${path.id}`, {
+            ...config
+        });
+    }
+    getV15DictionaryByType({ config, path }: GetV15DictionaryByTypeRequestParams): Promise<ApicraftFetchesResponse<DictionaryControllerGetOneV15Response, DictionaryControllerGetOneV15Error>> {
+        return this.instance.call("GET", `/v1.5/dictionary/${path.type}`, {
             ...config
         });
     }
