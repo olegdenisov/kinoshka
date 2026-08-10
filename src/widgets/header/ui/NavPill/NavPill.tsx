@@ -9,6 +9,7 @@ type NavPillProps = {
 export const NavPill = ({ label, active, onClick }: NavPillProps) => {
   return (
     <button
+      type='button'
       onClick={onClick}
       className={`${s.navPill} ${active ? s.navPillActive : ''}`}
     >

@@ -31,6 +31,7 @@ export const BottomNav = ({ active }: BottomNavProps) => {
           const isActive = active === it.key
           return (
             <button
+              type='button'
               key={it.key}
               onClick={() => it.path && navigate(it.path)}
               className={`${s.navItem} ${isActive ? s.navItemActive : ''} ${!it.path ? s.navItemDisabled : ''}`}

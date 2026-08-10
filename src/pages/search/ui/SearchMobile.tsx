@@ -71,6 +71,7 @@ const MobilePagination = ({
       }}
     >
       <button
+        type='button'
         style={btnStyle(false, safePage <= 1)}
         disabled={safePage <= 1}
         onClick={() => onChange(Math.max(1, safePage - 1))}
@@ -91,6 +92,7 @@ const MobilePagination = ({
           </span>
         ) : (
           <button
+            type='button'
             key={p}
             style={btnStyle(p === safePage, false)}
             onClick={() => onChange(p)}
@@ -100,6 +102,7 @@ const MobilePagination = ({
         ),
       )}
       <button
+        type='button'
         style={btnStyle(false, safePage >= safeTotalPages)}
         disabled={safePage >= safeTotalPages}
         onClick={() => onChange(Math.min(safeTotalPages, safePage + 1))}
@@ -285,6 +288,7 @@ export const SearchMobile = () => {
         }}
       >
         <button
+          type='button'
           onClick={() => setFiltersOpen(true)}
           disabled={isSearchMode}
           style={{
@@ -331,6 +335,7 @@ export const SearchMobile = () => {
         </button>
 
         <button
+          type='button'
           onClick={() => setSortOpen(true)}
           disabled={isSearchMode}
           style={{
@@ -470,6 +475,7 @@ export const SearchMobile = () => {
                 { key: 'anime', label: 'Anime' },
               ].map(t => (
                 <button
+                  type='button'
                   key={t.key}
                   onClick={() => setFilters({ ...filters, type: t.key })}
                   style={{
@@ -509,6 +515,7 @@ export const SearchMobile = () => {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {ALL_GENRES.map(g => (
                 <button
+                  type='button'
                   key={g}
                   onClick={() => toggleGenre(g)}
                   style={{
@@ -625,6 +632,7 @@ export const SearchMobile = () => {
             <div style={{ display: 'flex', gap: 6 }}>
               {[5, 6, 7, 8, 9].map(r => (
                 <button
+                  type='button'
                   key={r}
                   onClick={() =>
                     setFilters({
@@ -670,6 +678,7 @@ export const SearchMobile = () => {
           }}
         >
           <button
+            type='button'
             onClick={resetFilters}
             style={{
               flex: 1,
@@ -687,6 +696,7 @@ export const SearchMobile = () => {
             Reset
           </button>
           <button
+            type='button'
             onClick={() => setFiltersOpen(false)}
             style={{
               flex: 2,
@@ -715,6 +725,7 @@ export const SearchMobile = () => {
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {SORT_LABELS.map(o => (
             <button
+              type='button'
               key={o}
               onClick={() => {
                 setSort(o)

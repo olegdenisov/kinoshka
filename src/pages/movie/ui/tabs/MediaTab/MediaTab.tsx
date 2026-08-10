@@ -31,7 +31,7 @@ export const MediaTab = ({ m, images }: MediaTabProps) => {
               <PlayIcon size={22} />
             </a>
           ) : (
-            <button className={s.trailerPlay} disabled>
+            <button type='button' className={s.trailerPlay} disabled>
               <PlayIcon size={22} />
             </button>
           )}

@@ -19,7 +19,11 @@ export const ActiveFilterChips = ({
         {chips.slice(0, 6).map((c, i) => (
           <span key={i} className={s.chipCompact}>
             {c.label}
-            <button onClick={c.onRemove} className={s.chipCompactRemove}>
+            <button
+              type='button'
+              onClick={c.onRemove}
+              className={s.chipCompactRemove}
+            >
               <CloseIcon size={8} />
             </button>
           </span>
@@ -33,13 +37,13 @@ export const ActiveFilterChips = ({
       {chips.map((c, i) => (
         <span key={i} className={s.chip}>
           {c.label}
-          <button onClick={c.onRemove} className={s.chipRemove}>
+          <button type='button' onClick={c.onRemove} className={s.chipRemove}>
             <CloseIcon size={10} />
           </button>
         </span>
       ))}
       {chips.length > 0 && onClearAll && (
-        <button onClick={onClearAll} className={s.clearAll}>
+        <button type='button' onClick={onClearAll} className={s.clearAll}>
           Clear all
         </button>
       )}

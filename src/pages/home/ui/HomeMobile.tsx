@@ -167,6 +167,7 @@ export const HomeMobile = () => {
           >
             {chips.map(c => (
               <button
+                type='button'
                 key={c.key}
                 onClick={() => setActiveFilter(c.key)}
                 style={{

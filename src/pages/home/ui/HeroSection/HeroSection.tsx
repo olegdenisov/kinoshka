@@ -17,6 +17,7 @@ type ChipProps = React.PropsWithChildren<{
 
 const Chip = ({ children, active, onClick }: ChipProps) => (
   <button
+    type='button'
     onClick={onClick}
     className={`${s.chip}${active ? ` ${s.chipActive}` : ''}`}
   >
@@ -76,7 +77,11 @@ export const HeroSection = () => {
             }}
             placeholder='Try "films from 2024 rated 8+" or a title…'
           />
-          <button className={s.searchBtn} onClick={() => navigate('/search')}>
+          <button
+            type='button'
+            className={s.searchBtn}
+            onClick={() => navigate('/search')}
+          >
             Search
           </button>
         </div>

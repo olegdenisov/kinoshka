@@ -97,6 +97,7 @@ const MobileActionBtn = ({
 }: MobileActionBtnProps) => {
   return (
     <button
+      type='button'
       onClick={onClick}
       style={{
         height: 44,
@@ -151,6 +152,7 @@ export const MovieMobile = ({ movie, images }: MovieMobileProps) => {
         showSearch={false}
         rightAction={
           <button
+            type='button'
             style={{
               width: 36,
               height: 36,
@@ -290,6 +292,7 @@ export const MovieMobile = ({ movie, images }: MovieMobileProps) => {
 
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
             <button
+              type='button'
               onClick={() => setLiked(l => ({ ...l, rate: !l.rate }))}
               style={{
                 flex: 1,
@@ -312,6 +315,7 @@ export const MovieMobile = ({ movie, images }: MovieMobileProps) => {
               Rate
             </button>
             <button
+              type='button'
               style={{
                 width: 48,
                 height: 48,
@@ -374,6 +378,7 @@ export const MovieMobile = ({ movie, images }: MovieMobileProps) => {
       >
         {tabs.map(t => (
           <button
+            type='button'
             key={t}
             onClick={() => setTab(t)}
             style={{
@@ -783,6 +788,7 @@ const MobileMedia = ({ m, images }: MobileMediaProps) => {
           </a>
         ) : (
           <button
+            type='button'
             disabled
             style={{
               width: 56,

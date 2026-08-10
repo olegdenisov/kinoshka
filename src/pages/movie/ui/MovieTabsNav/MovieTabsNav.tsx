@@ -8,6 +8,7 @@ type TabBtnProps = {
 
 const TabBtn = ({ label, active, onClick }: TabBtnProps) => (
   <button
+    type='button'
     onClick={onClick}
     className={`${s.tabBtn}${active ? ` ${s.tabBtnActive}` : ''}`}
   >
