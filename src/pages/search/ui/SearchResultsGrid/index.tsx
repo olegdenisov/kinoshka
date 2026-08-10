@@ -1,2 +1,2 @@
-export { SearchResultsGrid } from './SearchResultsGrid'
-export { SearchResultSkeletonGrid } from './SearchResultSkeletonGrid'
+export { SearchResultsGrid } from "./SearchResultsGrid"
+export { SearchResultSkeletonGrid } from "./SearchResultSkeletonGrid"

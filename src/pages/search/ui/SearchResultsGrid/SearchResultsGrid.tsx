@@ -1,6 +1,6 @@
-import { Card } from '@entities/movie'
-import type { Movie } from '@entities/movie'
-import s from './SearchResultsGrid.module.css'
+import { Card } from "@entities/movie"
+import type { Movie } from "@entities/movie"
+import s from "./SearchResultsGrid.module.css"
 
 type SearchResultsGridProps = {
   movies: Movie[]

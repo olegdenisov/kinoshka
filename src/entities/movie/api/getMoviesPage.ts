@@ -1,10 +1,13 @@
-import { apiClient, type MovieControllerFindManyByQueryV15Data } from '@shared/api'
-import type { Movie } from '../model/types'
-import { createCachedFetcher } from './createCachedFetcher'
-import { mapDocToMovie } from './mapDocToMovie'
-import { PER_PAGE, MAX_PAGES } from './paginationConfig'
+import {
+  apiClient,
+  type MovieControllerFindManyByQueryV15Data,
+} from "@shared/api"
+import type { Movie } from "../model/types"
+import { createCachedFetcher } from "./createCachedFetcher"
+import { mapDocToMovie } from "./mapDocToMovie"
+import { PER_PAGE, MAX_PAGES } from "./paginationConfig"
 
-export type CatalogParams = MovieControllerFindManyByQueryV15Data['query']
+export type CatalogParams = MovieControllerFindManyByQueryV15Data["query"]
 
 export type CatalogPageResult = {
   movies: Movie[]
@@ -22,7 +25,10 @@ type CursorStepResult = {
   total: number | null
 }
 
-const fetchCursorStep = async ({ params, cursor }: CursorStepParams): Promise<CursorStepResult> => {
+const fetchCursorStep = async ({
+  params,
+  cursor,
+}: CursorStepParams): Promise<CursorStepResult> => {
   const response = await apiClient.getV15Movie({
     query: {
       ...params,
@@ -30,12 +36,21 @@ const fetchCursorStep = async ({ params, cursor }: CursorStepParams): Promise<Cu
       next: cursor,
       // total нужен только с первого шага курсора (страница не меняется от шага к шагу)
       withCount: cursor === undefined,
-      notNullFields: ['poster.url', 'rating.kp', 'rating.imdb'],
-      selectFields: ['id', 'name', 'year', 'rating', 'type', 'genres', 'movieLength', 'poster'],
+      notNullFields: ["poster.url", "rating.kp", "rating.imdb"],
+      selectFields: [
+        "id",
+        "name",
+        "year",
+        "rating",
+        "type",
+        "genres",
+        "movieLength",
+        "poster",
+      ],
     },
   })
 
-  if (!('docs' in response.data)) {
+  if (!("docs" in response.data)) {
     return { movies: [], next: null, total: null }
   }
 
@@ -48,7 +63,7 @@ const fetchCursorStep = async ({ params, cursor }: CursorStepParams): Promise<Cu
 
 // Кеш шагов-курсоров по ключу (params, cursor) — обобщённая фабрика Task 4
 // даёт 403-cooldown и session-persist бесплатно.
-const cachedCursorStep = createCachedFetcher('catalog-cursor', fetchCursorStep)
+const cachedCursorStep = createCachedFetcher("catalog-cursor", fetchCursorStep)
 
 export const fetchCatalogCursor = (
   params: CatalogParams,
@@ -64,7 +79,10 @@ const toTotalPages = (total: number | null): number => {
   return Math.min(MAX_PAGES, Math.ceil(total / PER_PAGE))
 }
 
-const walkToPage = async (params: CatalogParams, page: number): Promise<CatalogPageResult> => {
+const walkToPage = async (
+  params: CatalogParams,
+  page: number,
+): Promise<CatalogPageResult> => {
   let cursor: string | undefined
   let total: number | null = null
   let step: CursorStepResult = { movies: [], next: null, total: null }
@@ -91,7 +109,11 @@ const walkToPage = async (params: CatalogParams, page: number): Promise<CatalogP
   return { movies: step.movies, totalPages: toTotalPages(total) }
 }
 
-type PageCacheEntry = { promise: Promise<CatalogPageResult>; timestamp: number; isError: boolean }
+type PageCacheEntry = {
+  promise: Promise<CatalogPageResult>
+  timestamp: number
+  isError: boolean
+}
 
 // page-level промис-мемо: обход next 1..N выполняется один раз на (params, page);
 // повторный вызов возвращает тот же Promise (важно для стабильности use()/Suspense —
@@ -113,7 +135,10 @@ const ERROR_CACHE_TTL_MS = 20 * 1000
 const isFreshEntry = (entry: PageCacheEntry) =>
   !entry.isError || Date.now() - entry.timestamp < ERROR_CACHE_TTL_MS
 
-export const getMoviesPage = (params: CatalogParams, page: number): Promise<CatalogPageResult> => {
+export const getMoviesPage = (
+  params: CatalogParams,
+  page: number,
+): Promise<CatalogPageResult> => {
   const key = JSON.stringify({ params, page })
   const cached = pageCache.get(key)
 

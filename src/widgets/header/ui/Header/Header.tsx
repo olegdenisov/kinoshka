@@ -1,32 +1,32 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
-import { SearchIcon, BellIcon, CloseIcon } from '@shared/ui'
-import { useDebouncedValue } from '@shared/lib'
-import { NavPill } from '../NavPill'
-import { IconButton } from '../IconButton'
-import s from './Header.module.css'
+import { useEffect, useRef, useState } from "react"
+import { Link, useNavigate, useSearchParams } from "react-router"
+import { SearchIcon, BellIcon, CloseIcon } from "@shared/ui"
+import { useDebouncedValue } from "@shared/lib"
+import { NavPill } from "../NavPill"
+import { IconButton } from "../IconButton"
+import s from "./Header.module.css"
 
 const QUERY_DEBOUNCE_MS = 250
 const QUERY_MIN_LENGTH = 2
 
 type HeaderProps = {
-  variant?: 'default' | 'search'
+  variant?: "default" | "search"
   activeNav?: string
 }
 
 const navItems = [
-  { key: 'home', label: 'Home', path: '/' },
-  { key: 'movies', label: 'Movies', path: '/search' },
-  { key: 'series', label: 'Series', path: '/search' },
-  { key: 'anime', label: 'Anime', path: '/search' },
+  { key: "home", label: "Home", path: "/" },
+  { key: "movies", label: "Movies", path: "/search" },
+  { key: "series", label: "Series", path: "/search" },
+  { key: "anime", label: "Anime", path: "/search" },
 ]
 
-export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
+export const Header = ({ variant = "default", activeNav }: HeaderProps) => {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [draft, setDraft] = useState(() => searchParams.get('q') ?? '')
+  const [draft, setDraft] = useState(() => searchParams.get("q") ?? "")
   const debouncedDraft = useDebouncedValue(draft, QUERY_DEBOUNCE_MS)
-  const urlQuery = searchParams.get('q') ?? ''
+  const urlQuery = searchParams.get("q") ?? ""
   // Отслеживает последнее значение ?q, которое сам компонент записал в URL (или увидел на
   // старте). Нужен, чтобы отличить "мы сами только что записали ?q" (после debounce/×) от
   // "URL поменялся снаружи" (back/forward в пределах /search — без ремаунта компонента).
@@ -57,20 +57,20 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
 
     setSearchParams(
       (prev) => {
-        const currentQ = prev.get('q') ?? ''
+        const currentQ = prev.get("q") ?? ""
 
         if (trimmed.length >= QUERY_MIN_LENGTH) {
           if (currentQ === trimmed) {
             return prev
           }
           const params = new URLSearchParams(prev)
-          params.set('q', trimmed)
+          params.set("q", trimmed)
           return params
         }
 
         if (currentQ) {
           const params = new URLSearchParams(prev)
-          params.delete('q')
+          params.delete("q")
           return params
         }
 
@@ -82,16 +82,17 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
     // Ref обновляем и когда write ничего не поменял (currentQ уже совпадает с trimmed) —
     // синхронизация с тем, что реально окажется в URL после этого эффекта, не даёт
     // resync-эффекту выше принять наш собственный write за внешнее изменение.
-    lastSyncedQueryRef.current = trimmed.length >= QUERY_MIN_LENGTH ? trimmed : ''
+    lastSyncedQueryRef.current =
+      trimmed.length >= QUERY_MIN_LENGTH ? trimmed : ""
   }, [debouncedDraft, draft, setSearchParams])
 
   const clearQuery = () => {
-    setDraft('')
-    lastSyncedQueryRef.current = ''
+    setDraft("")
+    lastSyncedQueryRef.current = ""
     setSearchParams(
       (prev) => {
         const params = new URLSearchParams(prev)
-        params.delete('q')
+        params.delete("q")
         return params
       },
       { replace: true },
@@ -107,7 +108,7 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
           <span className={s.logoMain}>shka</span>
         </Link>
 
-        {variant === 'search' ? (
+        {variant === "search" ? (
           <div className={s.searchVariantCenter}>
             <div className={s.searchBox} role="search">
               <SearchIcon />
@@ -132,7 +133,7 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
                   key={n.key}
                   label={n.label}
                   active={activeNav === n.key}
-                  onClick={() => navigate('/search')}
+                  onClick={() => navigate("/search")}
                 />
               ))}
             </nav>
@@ -151,8 +152,8 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
         )}
 
         <div className={s.actions}>
-          {variant !== 'search' && (
-            <IconButton onClick={() => navigate('/search')}>
+          {variant !== "search" && (
+            <IconButton onClick={() => navigate("/search")}>
               <SearchIcon />
             </IconButton>
           )}

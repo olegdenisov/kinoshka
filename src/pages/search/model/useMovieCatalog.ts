@@ -1,10 +1,10 @@
-import { use } from 'react'
-import { filtersToParams } from '@features/catalog-filter'
-import type { FilterState } from '@features/catalog-filter'
-import { getMoviesPage, getSearchMovies } from '@entities/movie'
-import type { Movie } from '@entities/movie'
+import { use } from "react"
+import { filtersToParams } from "@features/catalog-filter"
+import type { FilterState } from "@features/catalog-filter"
+import { getMoviesPage, getSearchMovies } from "@entities/movie"
+import type { Movie } from "@entities/movie"
 
-export type CatalogMode = 'search' | 'catalog'
+export type CatalogMode = "search" | "catalog"
 
 export type MovieCatalogParams = {
   query: string
@@ -41,7 +41,7 @@ export const useMovieCatalog = ({
   page,
 }: MovieCatalogParams): MovieCatalogResult => {
   const trimmedQuery = query.trim()
-  const mode: CatalogMode = trimmedQuery ? 'search' : 'catalog'
+  const mode: CatalogMode = trimmedQuery ? "search" : "catalog"
 
   const result = trimmedQuery
     ? use(getSearchMovies({ query: trimmedQuery, page }))

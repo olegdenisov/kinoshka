@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
-import { CloseIcon } from '@shared/ui'
-import s from './BottomSheet.module.css'
+import { useEffect } from "react"
+import { CloseIcon } from "@shared/ui"
+import s from "./BottomSheet.module.css"
 
 type BottomSheetProps = React.PropsWithChildren<{
   open: boolean
@@ -17,9 +17,9 @@ export const BottomSheet = ({
   heightVh = 82,
 }: BottomSheetProps) => {
   useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : ''
+    document.body.style.overflow = open ? "hidden" : ""
     return () => {
-      document.body.style.overflow = ''
+      document.body.style.overflow = ""
     }
   }, [open])
 
@@ -29,9 +29,12 @@ export const BottomSheet = ({
         type="button"
         aria-label="Close"
         onClick={onClose}
-        className={`${s.backdrop} ${open ? s.backdropOpen : ''}`}
+        className={`${s.backdrop} ${open ? s.backdropOpen : ""}`}
       />
-      <div className={`${s.sheet} ${open ? s.sheetOpen : ''}`} style={{ height: `${heightVh}vh` }}>
+      <div
+        className={`${s.sheet} ${open ? s.sheetOpen : ""}`}
+        style={{ height: `${heightVh}vh` }}
+      >
         <div className={s.handle}>
           <div className={s.handleBar} />
         </div>

@@ -1,14 +1,16 @@
-import { Link } from 'react-router'
-import type { MovieDetail } from '@entities/movie'
-import { Poster } from '@entities/movie'
-import { StarIcon, PlayIcon } from '@shared/ui'
-import type { LikedState } from '../MovieDesktop/types'
-import { MovieActions } from '../MovieActions'
-import s from './MovieHero.module.css'
+import { Link } from "react-router"
+import type { MovieDetail } from "@entities/movie"
+import { Poster } from "@entities/movie"
+import { StarIcon, PlayIcon } from "@shared/ui"
+import type { LikedState } from "../MovieDesktop/types"
+import { MovieActions } from "../MovieActions"
+import s from "./MovieHero.module.css"
 
 type TagPillProps = React.PropsWithChildren
 
-const TagPill = ({ children }: TagPillProps) => <span className={s.tagPill}>{children}</span>
+const TagPill = ({ children }: TagPillProps) => (
+  <span className={s.tagPill}>{children}</span>
+)
 
 type RatingBlockProps = {
   label: string
@@ -18,7 +20,13 @@ type RatingBlockProps = {
   icon?: React.ReactNode
 }
 
-const RatingBlock = ({ label, value, sub, accentClass, icon }: RatingBlockProps) => (
+const RatingBlock = ({
+  label,
+  value,
+  sub,
+  accentClass,
+  icon,
+}: RatingBlockProps) => (
   <div className={s.ratingBlock}>
     <div className={s.ratingLabel}>{label}</div>
     <div className={`${s.ratingValue} ${accentClass}`}>
@@ -40,7 +48,10 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
     <section className={s.hero}>
       <div className={s.backdrop}>
         {movie.backdrop ? (
-          <div className={s.backdropImage} style={{ backgroundImage: `url(${movie.backdrop})` }} />
+          <div
+            className={s.backdropImage}
+            style={{ backgroundImage: `url(${movie.backdrop})` }}
+          />
         ) : (
           <div
             className={s.backdropGradient}
@@ -70,7 +81,12 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
           <div className={s.poster}>
             <Poster movie={movie} showLabel={false} />
             {movie.trailerUrl && (
-              <a className={s.trailerBtn} href={movie.trailerUrl} target="_blank" rel="noreferrer">
+              <a
+                className={s.trailerBtn}
+                href={movie.trailerUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
                 <PlayIcon size={10} />
                 Trailer
               </a>
@@ -92,14 +108,18 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
               <RatingBlock
                 label="Users"
                 value={movie.rating.toFixed(1)}
-                sub={`${movie.votesKp ?? '—'} votes`}
+                sub={`${movie.votesKp ?? "—"} votes`}
                 accentClass={s.accentGold}
                 icon={<StarIcon size={12} />}
               />
               <RatingBlock
                 label="Critics"
-                value={movie.criticScore != null ? `${movie.criticScore.toFixed(0)}%` : '—'}
-                sub={`${movie.criticReviewCount ?? '—'} reviews`}
+                value={
+                  movie.criticScore != null
+                    ? `${movie.criticScore.toFixed(0)}%`
+                    : "—"
+                }
+                sub={`${movie.criticReviewCount ?? "—"} reviews`}
                 accentClass={s.accentBlue}
               />
               <RatingBlock
@@ -112,7 +132,9 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
 
             <MovieActions liked={liked} onChange={onLikedChange} />
 
-            <p className={s.synopsis}>{movie.shortSynopsis ?? movie.synopsis}</p>
+            <p className={s.synopsis}>
+              {movie.shortSynopsis ?? movie.synopsis}
+            </p>
           </div>
         </div>
       </div>

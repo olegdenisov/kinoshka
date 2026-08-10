@@ -1,1 +1,1 @@
-export { PopularMoviesRail } from './PopularMoviesRail'
+export { PopularMoviesRail } from "./PopularMoviesRail"

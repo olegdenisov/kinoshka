@@ -1,1 +1,1 @@
-export { TrandingSeriesRail } from './TrandingSeriesRail'
+export { TrandingSeriesRail } from "./TrandingSeriesRail"

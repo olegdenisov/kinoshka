@@ -1,6 +1,6 @@
-import { useNavigate } from 'react-router'
-import { SearchIcon, ChevronLeftIcon } from '@shared/ui'
-import s from './MobileHeader.module.css'
+import { useNavigate } from "react-router"
+import { SearchIcon, ChevronLeftIcon } from "@shared/ui"
+import s from "./MobileHeader.module.css"
 
 type MobileHeaderProps = {
   title?: string | null
@@ -18,7 +18,7 @@ export const MobileHeader = ({
   rightAction,
 }: MobileHeaderProps) => {
   const navigate = useNavigate()
-  const handleSearchFocus = onSearchFocus ?? (() => navigate('/search'))
+  const handleSearchFocus = onSearchFocus ?? (() => navigate("/search"))
 
   return (
     <header className={s.header}>
@@ -38,7 +38,11 @@ export const MobileHeader = ({
         {title && <div className={s.title}>{title}</div>}
 
         {showSearch && !title && (
-          <button type="button" onClick={handleSearchFocus} className={s.searchTrigger}>
+          <button
+            type="button"
+            onClick={handleSearchFocus}
+            className={s.searchTrigger}
+          >
             <SearchIcon size={14} />
             <span>Search…</span>
           </button>

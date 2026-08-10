@@ -1,1 +1,1 @@
-export { MediaTab } from './MediaTab'
+export { MediaTab } from "./MediaTab"

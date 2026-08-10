@@ -1,1 +1,1 @@
-export { SearchDesktop } from './SearchDesktop'
+export { SearchDesktop } from "./SearchDesktop"

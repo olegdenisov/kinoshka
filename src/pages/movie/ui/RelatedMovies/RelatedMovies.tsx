@@ -1,6 +1,6 @@
-import type { Movie } from '@entities/movie'
-import { Card } from '@entities/movie'
-import s from './RelatedMovies.module.css'
+import type { Movie } from "@entities/movie"
+import { Card } from "@entities/movie"
+import s from "./RelatedMovies.module.css"
 
 type RelatedMoviesProps = {
   movies: Movie[]

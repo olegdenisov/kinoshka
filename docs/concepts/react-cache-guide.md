@@ -83,7 +83,7 @@ cachedSearch({ page: 1 })
 
 ```tsx
 const getMovies = cache(async () => {
-  const response = await fetch('/movies')
+  const response = await fetch("/movies")
   return response.json()
 })
 

@@ -1,125 +1,130 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
-import type { MovieDetail, MovieImage } from '@entities/movie'
-import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../testFixtures'
-import { MovieMobile } from './MovieMobile'
+import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { MemoryRouter } from "react-router"
+import type { MovieDetail, MovieImage } from "@entities/movie"
+import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from "../testFixtures"
+import { MovieMobile } from "./MovieMobile"
 
-const renderMovieMobile = (movie: MovieDetail = MOVIE, images: MovieImage[] = IMAGES) =>
+const renderMovieMobile = (
+  movie: MovieDetail = MOVIE,
+  images: MovieImage[] = IMAGES,
+) =>
   render(
     <MemoryRouter>
       <MovieMobile movie={movie} images={images} />
     </MemoryRouter>,
   )
 
-describe('MovieMobile — hero', () => {
-  it('показывает tagline и рейтинги из movie', () => {
+describe("MovieMobile — hero", () => {
+  it("показывает tagline и рейтинги из movie", () => {
     renderMovieMobile()
 
     expect(screen.getByText(MOVIE.tagline)).toBeInTheDocument()
-    expect(screen.getByText('85%')).toBeInTheDocument()
+    expect(screen.getByText("85%")).toBeInTheDocument()
   })
 })
 
-describe('MovieMobile — Overview (дефолтный таб)', () => {
-  it('показывает синопсис, crew, страны и рейтинги', () => {
+describe("MovieMobile — Overview (дефолтный таб)", () => {
+  it("показывает синопсис, crew, страны и рейтинги", () => {
     renderMovieMobile()
 
     expect(screen.getByText(MOVIE.synopsis)).toBeInTheDocument()
-    expect(screen.getByText('Hanna Vesper')).toBeInTheDocument()
-    expect(screen.getByText('director')).toBeInTheDocument()
-    expect(screen.getByText('Finland · Portugal')).toBeInTheDocument()
-    expect(screen.getByText('R')).toBeInTheDocument()
+    expect(screen.getByText("Hanna Vesper")).toBeInTheDocument()
+    expect(screen.getByText("director")).toBeInTheDocument()
+    expect(screen.getByText("Finland · Portugal")).toBeInTheDocument()
+    expect(screen.getByText("R")).toBeInTheDocument()
   })
 })
 
-describe('MovieMobile — Cast', () => {
-  it('показывает имя/роль каждого cast-члена', async () => {
+describe("MovieMobile — Cast", () => {
+  it("показывает имя/роль каждого cast-члена", async () => {
     const user = userEvent.setup()
     renderMovieMobile()
 
-    await user.click(screen.getByRole('button', { name: 'Cast' }))
+    await user.click(screen.getByRole("button", { name: "Cast" }))
 
-    expect(screen.getByText('Liv Korhonen')).toBeInTheDocument()
-    expect(screen.getByText('as Ines Varga')).toBeInTheDocument()
-    expect(screen.getByText('Matteo Pereira')).toBeInTheDocument()
+    expect(screen.getByText("Liv Korhonen")).toBeInTheDocument()
+    expect(screen.getByText("as Ines Varga")).toBeInTheDocument()
+    expect(screen.getByText("Matteo Pereira")).toBeInTheDocument()
   })
 })
 
-describe('MovieMobile — Media', () => {
-  it('показывает скриншот из images, когда он есть', async () => {
+describe("MovieMobile — Media", () => {
+  it("показывает скриншот из images, когда он есть", async () => {
     const user = userEvent.setup()
     const { container } = renderMovieMobile()
 
-    await user.click(screen.getByRole('button', { name: 'Media' }))
+    await user.click(screen.getByRole("button", { name: "Media" }))
 
-    expect(container.querySelector(`img[src="${IMAGES[0].previewUrl}"]`)).toBeInTheDocument()
+    expect(
+      container.querySelector(`img[src="${IMAGES[0].previewUrl}"]`),
+    ).toBeInTheDocument()
   })
 })
 
-describe('MovieMobile — Details', () => {
-  it('показывает дату премьеры, возрастной рейтинг и бюджет через formatCurrency', async () => {
+describe("MovieMobile — Details", () => {
+  it("показывает дату премьеры, возрастной рейтинг и бюджет через formatCurrency", async () => {
     const user = userEvent.setup()
     renderMovieMobile()
 
-    await user.click(screen.getByRole('button', { name: 'Details' }))
+    await user.click(screen.getByRole("button", { name: "Details" }))
 
-    expect(screen.getByText('2024-03-14')).toBeInTheDocument()
-    expect(screen.getByText('16+')).toBeInTheDocument()
-    expect(screen.getByText('4,800,000 $')).toBeInTheDocument()
-    expect(screen.getByText('12,300,000 $')).toBeInTheDocument()
+    expect(screen.getByText("2024-03-14")).toBeInTheDocument()
+    expect(screen.getByText("16+")).toBeInTheDocument()
+    expect(screen.getByText("4,800,000 $")).toBeInTheDocument()
+    expect(screen.getByText("12,300,000 $")).toBeInTheDocument()
   })
 })
 
-describe('MovieMobile — Similar titles', () => {
-  it('рендерит похожие фильмы из movie.similarMovies', () => {
+describe("MovieMobile — Similar titles", () => {
+  it("рендерит похожие фильмы из movie.similarMovies", () => {
     renderMovieMobile()
 
-    expect(screen.getAllByText('The Quiet Archive').length).toBeGreaterThan(0)
+    expect(screen.getAllByText("The Quiet Archive").length).toBeGreaterThan(0)
   })
 
-  it('скрывает секцию, когда similarMovies пуст', () => {
+  it("скрывает секцию, когда similarMovies пуст", () => {
     renderMovieMobile({ ...MOVIE, similarMovies: [] })
 
-    expect(screen.queryByText('Similar titles')).not.toBeInTheDocument()
+    expect(screen.queryByText("Similar titles")).not.toBeInTheDocument()
   })
 })
 
-describe('MovieMobile — fallback-ветки при отсутствующих опциональных полях', () => {
+describe("MovieMobile — fallback-ветки при отсутствующих опциональных полях", () => {
   it('hero: criticScore отсутствует — рейтинг "—"', () => {
     renderMovieMobile(MOVIE_NO_OPTIONALS, [])
 
     // Critics-блок (criticScore undefined) добавляет второе "—" рядом с всегда-"—" Yours.
-    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(2)
   })
 
   it('Overview: countries/ratingKp/ratingImdb/ratingMpaa отсутствуют — рендерит "—" вместо значений', async () => {
     const user = userEvent.setup()
     renderMovieMobile(MOVIE_NO_OPTIONALS, [])
 
-    await user.click(screen.getByRole('button', { name: 'Overview' }))
+    await user.click(screen.getByRole("button", { name: "Overview" }))
 
     // Countries + Kinopoisk + IMDb + MPAA — 4 отдельных "—"
-    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(4)
+    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(4)
   })
 
   it('Details: premiereWorld/countries/ratingMpaa/ageRating/budget/feesWorld отсутствуют — все "—"', async () => {
     const user = userEvent.setup()
     renderMovieMobile(MOVIE_NO_OPTIONALS, [])
 
-    await user.click(screen.getByRole('button', { name: 'Details' }))
+    await user.click(screen.getByRole("button", { name: "Details" }))
 
     // Release date, Country, MPAA rating, Age rating, Budget, Box office — 6 отдельных "—"
-    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(6)
+    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(6)
   })
 
-  it('Media: images пуст — рендерит градиентный fallback вместо <img>, кнопка трейлера задизейблена', async () => {
+  it("Media: images пуст — рендерит градиентный fallback вместо <img>, кнопка трейлера задизейблена", async () => {
     const user = userEvent.setup()
     const { container } = renderMovieMobile(MOVIE_NO_OPTIONALS, [])
 
-    await user.click(screen.getByRole('button', { name: 'Media' }))
+    await user.click(screen.getByRole("button", { name: "Media" }))
 
-    expect(container.querySelectorAll('img').length).toBe(0)
-    expect(container.querySelector('button:disabled')).toBeInTheDocument()
+    expect(container.querySelectorAll("img").length).toBe(0)
+    expect(container.querySelector("button:disabled")).toBeInTheDocument()
   })
 })

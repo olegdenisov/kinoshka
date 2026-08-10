@@ -128,11 +128,11 @@ src/widgets/header/
 
 ```ts
 // ✓ correct
-import { Header } from '@widgets/header'
-import { useFilterState } from '@features/catalog-filter'
+import { Header } from "@widgets/header"
+import { useFilterState } from "@features/catalog-filter"
 
 // ✗ wrong — reaches into internals
-import { Header } from '@widgets/header/ui/Header'
+import { Header } from "@widgets/header/ui/Header"
 ```
 
 ## Styles

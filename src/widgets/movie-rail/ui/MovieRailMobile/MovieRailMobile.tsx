@@ -1,7 +1,7 @@
-import { Link } from 'react-router'
-import type { Movie } from '@entities/movie'
-import { MobileCard } from '@entities/movie'
-import s from './MovieRailMobile.module.css'
+import { Link } from "react-router"
+import type { Movie } from "@entities/movie"
+import { MobileCard } from "@entities/movie"
+import s from "./MovieRailMobile.module.css"
 
 type MovieRailMobileProps = {
   title: string
@@ -9,7 +9,11 @@ type MovieRailMobileProps = {
   items: Movie[]
 }
 
-export const MovieRailMobile = ({ title, subtitle, items }: MovieRailMobileProps) => {
+export const MovieRailMobile = ({
+  title,
+  subtitle,
+  items,
+}: MovieRailMobileProps) => {
   return (
     <section className={s.section}>
       <div className={s.header}>

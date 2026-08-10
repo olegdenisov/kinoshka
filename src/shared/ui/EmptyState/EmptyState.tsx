@@ -1,4 +1,4 @@
-import s from './EmptyState.module.css'
+import s from "./EmptyState.module.css"
 
 type Props = {
   title: string

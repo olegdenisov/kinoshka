@@ -1,2 +1,2 @@
-export { createStorageSlot } from './storage'
-export { useStorageSlot } from './useStorageSlot'
+export { createStorageSlot } from "./storage"
+export { useStorageSlot } from "./useStorageSlot"

@@ -1,5 +1,5 @@
-import type { PropsWithChildren } from 'react'
-import { useFeatureFlag, type FeatureName } from './useFeatureFlag'
+import type { PropsWithChildren } from "react"
+import { useFeatureFlag, type FeatureName } from "./useFeatureFlag"
 
 type Props = PropsWithChildren<{
   featureName: FeatureName

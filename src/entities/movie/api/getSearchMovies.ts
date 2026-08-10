@@ -1,8 +1,8 @@
-import { apiClient } from '@shared/api'
-import type { Movie } from '../model/types'
-import { createCachedFetcher } from './createCachedFetcher'
-import { mapDocToMovie } from './mapDocToMovie'
-import { PER_PAGE, MAX_PAGES } from './paginationConfig'
+import { apiClient } from "@shared/api"
+import type { Movie } from "../model/types"
+import { createCachedFetcher } from "./createCachedFetcher"
+import { mapDocToMovie } from "./mapDocToMovie"
+import { PER_PAGE, MAX_PAGES } from "./paginationConfig"
 
 type RequestParams = {
   query: string
@@ -14,7 +14,9 @@ export type SearchMoviesResult = {
   totalPages: number
 }
 
-const fetchSearchMovies = async (params: RequestParams): Promise<SearchMoviesResult> => {
+const fetchSearchMovies = async (
+  params: RequestParams,
+): Promise<SearchMoviesResult> => {
   const response = await apiClient.getV15MovieSearch({
     query: {
       ...params,
@@ -22,7 +24,7 @@ const fetchSearchMovies = async (params: RequestParams): Promise<SearchMoviesRes
     },
   })
 
-  if (!('docs' in response.data)) {
+  if (!("docs" in response.data)) {
     return { movies: [], totalPages: 0 }
   }
 
@@ -32,4 +34,4 @@ const fetchSearchMovies = async (params: RequestParams): Promise<SearchMoviesRes
   }
 }
 
-export const getSearchMovies = createCachedFetcher('search', fetchSearchMovies)
+export const getSearchMovies = createCachedFetcher("search", fetchSearchMovies)
