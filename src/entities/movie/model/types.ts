@@ -37,8 +37,8 @@ export type MovieDetail = Movie & {
   ratingKp?: number
   ratingImdb?: number
   votesKp?: string
-  criticScore?: number         // rating.filmCritics
-  criticReviewCount?: number   // votes.filmCritics
+  criticScore?: number // rating.filmCritics
+  criticReviewCount?: number // votes.filmCritics
   ageRating?: number
   ratingMpaa?: string
   budget?: { value: number; currency: string }

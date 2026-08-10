@@ -9,7 +9,10 @@ type PrimaryActionProps = {
 }
 
 const PrimaryAction = ({ icon, label, onClick }: PrimaryActionProps) => (
-  <button onClick={onClick} className={s.primaryBtn}>{icon}{label}</button>
+  <button onClick={onClick} className={s.primaryBtn}>
+    {icon}
+    {label}
+  </button>
 )
 
 type SecondaryActionProps = {
@@ -20,7 +23,13 @@ type SecondaryActionProps = {
 }
 
 const SecondaryAction = ({ icon, label, active, onClick }: SecondaryActionProps) => (
-  <button onClick={onClick} className={`${s.secondaryBtn}${active ? ` ${s.secondaryBtnActive}` : ''}`}>{icon}{label}</button>
+  <button
+    onClick={onClick}
+    className={`${s.secondaryBtn}${active ? ` ${s.secondaryBtnActive}` : ''}`}
+  >
+    {icon}
+    {label}
+  </button>
 )
 
 type MovieActionsProps = {
@@ -31,10 +40,29 @@ type MovieActionsProps = {
 export const MovieActions = ({ liked, onChange }: MovieActionsProps) => {
   return (
     <div className={s.actions}>
-      <PrimaryAction icon={<StarIcon filled={liked.rate} size={14} />} label="Rate" onClick={() => onChange({ ...liked, rate: !liked.rate })} />
-      <SecondaryAction icon={<PlusIcon />} label="Add to list" active={liked.list} onClick={() => onChange({ ...liked, list: !liked.list })} />
-      <SecondaryAction icon={<EyeIcon />} label="Watched" active={liked.watched} onClick={() => onChange({ ...liked, watched: !liked.watched })} />
-      <SecondaryAction icon={<HeartIcon filled={liked.fav} />} label="Favorite" active={liked.fav} onClick={() => onChange({ ...liked, fav: !liked.fav })} />
+      <PrimaryAction
+        icon={<StarIcon filled={liked.rate} size={14} />}
+        label="Rate"
+        onClick={() => onChange({ ...liked, rate: !liked.rate })}
+      />
+      <SecondaryAction
+        icon={<PlusIcon />}
+        label="Add to list"
+        active={liked.list}
+        onClick={() => onChange({ ...liked, list: !liked.list })}
+      />
+      <SecondaryAction
+        icon={<EyeIcon />}
+        label="Watched"
+        active={liked.watched}
+        onClick={() => onChange({ ...liked, watched: !liked.watched })}
+      />
+      <SecondaryAction
+        icon={<HeartIcon filled={liked.fav} />}
+        label="Favorite"
+        active={liked.fav}
+        onClick={() => onChange({ ...liked, fav: !liked.fav })}
+      />
       <SecondaryAction icon={<ShareIcon />} label="Share" />
     </div>
   )

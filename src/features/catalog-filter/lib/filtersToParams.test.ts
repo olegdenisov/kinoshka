@@ -89,7 +89,13 @@ describe('filtersToParams', () => {
   })
 
   it('комбинация всех фильтров + sort собирается в один объект', () => {
-    const filters: FilterState = { type: 'movie', genres: ['Drama'], yearFrom: 2020, yearTo: 2024, rating: 6 }
+    const filters: FilterState = {
+      type: 'movie',
+      genres: ['Drama'],
+      yearFrom: 2020,
+      yearTo: 2024,
+      rating: 6,
+    }
     const params = filtersToParams(filters, 'Highest rated')
 
     expect(params).toEqual({

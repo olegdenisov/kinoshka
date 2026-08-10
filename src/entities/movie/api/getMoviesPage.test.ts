@@ -168,7 +168,10 @@ describe('getMoviesPage — ошибки', () => {
   it('403 — промис реджектится (пробрасывается наверх, без перехвата)', async () => {
     server.use(
       http.get(ENDPOINT, () =>
-        HttpResponse.json({ statusCode: 403, message: 'Forbidden', error: 'Forbidden' }, { status: 403 }),
+        HttpResponse.json(
+          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+          { status: 403 },
+        ),
       ),
     )
     const getMoviesPage = await importGetMoviesPage()
@@ -185,7 +188,10 @@ describe('getMoviesPage — ошибки', () => {
     server.use(
       http.get(ENDPOINT, () => {
         requests += 1
-        return HttpResponse.json({ statusCode: 403, message: 'Forbidden', error: 'Forbidden' }, { status: 403 })
+        return HttpResponse.json(
+          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+          { status: 403 },
+        )
       }),
     )
     const getMoviesPage = await importGetMoviesPage()

@@ -5,13 +5,12 @@ import type { MovieDetail, MovieImage } from '@entities/movie'
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
 import { MovieDesktop } from './MovieDesktop'
 
-const renderMovieDesktop = (movie: MovieDetail = MOVIE, images: MovieImage[] = IMAGES) => (
+const renderMovieDesktop = (movie: MovieDetail = MOVIE, images: MovieImage[] = IMAGES) =>
   render(
     <MemoryRouter>
       <MovieDesktop movie={movie} images={images} />
     </MemoryRouter>,
   )
-)
 
 describe('MovieDesktop — Overview (дефолтный таб)', () => {
   it('показывает tagline, синопсис-тизер, рейтинги и жанры из movie', () => {

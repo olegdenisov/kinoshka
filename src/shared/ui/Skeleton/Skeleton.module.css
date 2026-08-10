@@ -2,11 +2,11 @@
   position: relative;
   overflow: hidden;
   background: linear-gradient(
-     90deg,
-     var(--bg-elevated) 25%,
-     var(--bg-hover) 50%,
-     var(--bg-elevated) 75%
-   );
-   background-size: 200% 100%;
-   animation: shimmer 1.5s infinite;
+    90deg,
+    var(--bg-elevated) 25%,
+    var(--bg-hover) 50%,
+    var(--bg-elevated) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }

@@ -47,6 +47,7 @@
 ## Technical Details
 
 **Новый `MovieDetail` (`src/entities/movie/model/types.ts`):**
+
 ```ts
 type CastMember = { id: number; name: string; role: string; photo?: string }
 type CrewMember = { id: number; name: string; profession: string }
@@ -63,8 +64,8 @@ type MovieDetail = Movie & {
   ratingKp?: number
   ratingImdb?: number
   votesKp?: string
-  criticScore?: number         // rating.filmCritics
-  criticReviewCount?: number   // votes.filmCritics
+  criticScore?: number // rating.filmCritics
+  criticReviewCount?: number // votes.filmCritics
   ageRating?: number
   ratingMpaa?: string
   budget?: { value: number; currency: string }
@@ -75,11 +76,13 @@ type MovieDetail = Movie & {
 ```
 
 **Новые файлы `src/entities/movie/api/`:**
+
 - `mapDtoToMovieDetail.ts` — чистая функция `MovieDtoV14 → MovieDetail` (по образцу `mapDocToMovie.ts`), с fallback-цепочками полей и выделенными `isCast`/`isCrew`.
 - `getMovieDetail.ts` — `createCachedFetcher<number, MovieDetail>('movie-detail', fetchMovieDetail)`.
 - `getMovieImages.ts` — `createCachedFetcher<number, MovieImage[]>('movie-images', fetchMovieImages)`, `MovieImage = { url: string; previewUrl?: string }`, запрос с `limit: 8` (демо-тариф: `limit ≤ 10`).
 
 **`src/entities/movie/hooks/useMovieDetail.ts`:**
+
 ```ts
 const useMovieDetail = (id: number): { detail: MovieDetail; images: MovieImage[] } => {
   // Promise.allSettled([getMovieDetail(id), getMovieImages(id)])
@@ -90,10 +93,15 @@ const useMovieDetail = (id: number): { detail: MovieDetail; images: MovieImage[]
 ```
 
 **`client.ts`:**
+
 ```ts
 export class ApiError extends Error {
   status?: number
-  constructor(message: string, status?: number) { super(message); this.name = 'ApiError'; this.status = status }
+  constructor(message: string, status?: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
 }
 // interceptor: Promise.reject(new ApiError(message, error.response?.status))
 ```
@@ -108,6 +116,7 @@ export class ApiError extends Error {
 ### Task 1: `ApiError` и сохранение HTTP-статуса
 
 **Files:**
+
 - Modify: `src/shared/api/client.ts`
 - Modify: `src/shared/api/index.ts`
 
@@ -121,6 +130,7 @@ export class ApiError extends Error {
 ### Task 2: Домен-типы `MovieDetail`/`CastMember`/`CrewMember` + маппер
 
 **Files:**
+
 - Modify: `src/entities/movie/model/types.ts`
 - Create: `src/entities/movie/api/mapDtoToMovieDetail.ts`
 - Create: `src/entities/movie/api/mapDtoToMovieDetail.test.ts`
@@ -136,6 +146,7 @@ export class ApiError extends Error {
 ### Task 3: Фетчеры `getMovieDetail`/`getMovieImages`
 
 **Files:**
+
 - Create: `src/entities/movie/api/getMovieDetail.ts`
 - Create: `src/entities/movie/api/getMovieDetail.test.ts`
 - Create: `src/entities/movie/api/getMovieImages.ts`
@@ -152,6 +163,7 @@ export class ApiError extends Error {
 ### Task 4: Композиция `useMovieDetail` + чистка публичного API
 
 **Files:**
+
 - Create: `src/entities/movie/hooks/useMovieDetail.ts`
 - Create: `src/entities/movie/hooks/useMovieDetail.test.tsx`
 - Modify: `src/entities/movie/hooks/index.ts`
@@ -168,6 +180,7 @@ export class ApiError extends Error {
 ### Task 5: `AsyncBoundary.errorFallback`
 
 **Files:**
+
 - Modify: `src/shared/ui/AsyncBoundary/AsyncBoundary.tsx`
 - Create: `src/shared/ui/AsyncBoundary/AsyncBoundary.test.tsx` (если такого теста ещё нет)
 
@@ -179,6 +192,7 @@ export class ApiError extends Error {
 ### Task 6: Переписать `MoviePage.tsx`
 
 **Files:**
+
 - Modify: `src/pages/movie/MoviePage.tsx`
 
 - [x] убрать `CATALOG.find(...) ?? CATALOG[0]` полностью
@@ -192,6 +206,7 @@ export class ApiError extends Error {
 ### Task 7: `MovieDetailSkeleton`
 
 **Files:**
+
 - Create: `src/pages/movie/ui/MovieDetailSkeleton/MovieDetailSkeleton.tsx`
 - Create: `src/pages/movie/ui/MovieDetailSkeleton/MovieDetailSkeleton.module.css`
 - Create: `src/pages/movie/ui/MovieDetailSkeleton/index.tsx`
@@ -205,6 +220,7 @@ export class ApiError extends Error {
 ### Task 8: Перевести desktop-компоненты на реальные данные
 
 **Files:**
+
 - Modify: `src/pages/movie/ui/MovieDesktop/MovieDesktop.tsx`
 - Modify: `src/pages/movie/ui/MovieHero/MovieHero.tsx`
 - Modify: `src/pages/movie/ui/tabs/OverviewTab/OverviewTab.tsx`
@@ -216,7 +232,7 @@ export class ApiError extends Error {
 - Create: `src/pages/movie/ui/MovieDesktop/MovieDesktop.test.tsx`
 
 - [x] `MovieDesktop`/все табы: проп `movie: Movie` → `movie: MovieDetail`; убрать `import { MOCK_DETAIL }`; `MediaTab` дополнительно получает `images: MovieImage[]`
-- [x] `MovieHero`: `tagline`/`synopsis` — из `movie`; блок рейтингов — `votesKp ?? '—'`, `criticScore != null ? \`${criticScore.toFixed(0)}%\` : '—'`; кнопка трейлера видима/активна только если `movie.trailerUrl` задан — ➕ synopsis-тизер в Hero берёт `movie.shortSynopsis ?? movie.synopsis` (эквивалент старого `.split('\n')[0]`, но через специально предназначенное для этого поле типа вместо магии на строке); кнопка трейлера — теперь `<a href target="_blank" rel="noreferrer">`, а не голый `<button>`
+- [x] `MovieHero`: `tagline`/`synopsis` — из `movie`; блок рейтингов — `votesKp ?? '—'`, `criticScore != null ? \`${criticScore.toFixed(0)}%\` : '—'`; кнопка трейлера видима/активна только если `movie.trailerUrl`задан — ➕ synopsis-тизер в Hero берёт`movie.shortSynopsis ?? movie.synopsis`(эквивалент старого`.split('\n')[0]`, но через специально предназначенное для этого поле типа вместо магии на строке); кнопка трейлера — теперь `<a href target="_blank" rel="noreferrer">`, а не голый `<button>`
 - [x] `OverviewTab`: `crew` — маппинг переменной длины (`movie.crew.map(c => <MetaRow label={c.profession} value={c.name} />)`); блок `signals` и «Why it's for you» удалить целиком; заменить на блок «Страны»/«Рейтинги» (`countries.join(' · ')`, KP/IMDb/MPAA)
 - [x] `CastTab`: принимает `cast: CastMember[]`; `c.role`/`c.name` вместо старых `name`/`actor`; если `c.photo` есть — рендерить `<img>`, иначе оставить hue-градиент как fallback — ⚠️ отклонение: `CastMember` (в отличие от старого мок-cast) не несёт `hue`, взят фиксированный `FALLBACK_HUE = 220` по прецеденту статичного фолбэка в `Poster.tsx` (`movie.hue ?? 20`), не id-хэш
 - [x] `DetailsTab`: `Release date` ← `premiereWorld`, `Country` ← `countries.join(' · ')`, убрать `Language`/`Aspect ratio`/`Sound mix`, добавить `MPAA rating` (`ratingMpaa`) и `Age rating` (`ageRating`, формат `"16+"`), `Budget`/`Box office` — через новый `formatCurrency`, `'—'` при отсутствии поля
@@ -228,6 +244,7 @@ export class ApiError extends Error {
 ### Task 9: Перевести `MovieMobile.tsx` на реальные данные
 
 **Files:**
+
 - Modify: `src/pages/movie/ui/MovieMobile.tsx`
 - Create: `src/pages/movie/ui/MovieMobile.test.tsx`
 
@@ -240,6 +257,7 @@ export class ApiError extends Error {
 ### Task 10: Интеграционные тесты `MoviePage`
 
 **Files:**
+
 - Create: `src/pages/movie/MoviePage.test.tsx`
 
 - [x] `/movie/1` happy path: сперва skeleton, затем реальные данные после резолва MSW (заголовок, cast, переключение табов) — ⚠️ отклонение: разбито на 2 отдельных теста вместо одного (`показывает MovieDetailSkeleton, а не реальные данные` / `показывает реальные данные после резолва MSW, табы переключаются`), а не единый сценарий "skeleton → data" внутри одного `it`. Причина — экспериментально найденный React 19 act()-гоча: рендер, начатый вне `await act(async () => ...)`, а затем резолвнутый вне того же act-скоупа, оставляет обновление незафлашенным в jsdom (React выводит предупреждение "A suspended resource finished loading inside a test, but the event was not wrapped in act(...)" и DOM реально не обновляется, зависая на fallback бесконечно — воспроизведено через временный debug-тест). Рабочий паттерн, уже принятый в репо (`useMovieDetail.test.tsx`): весь цикл рендер+резолв — внутри одного `await act(async () => { render(...) })`. Поэтому skeleton-состояние проверяется отдельным тестом с намеренно бесконечно pending MSW-хендлером (`() => new Promise(() => {})`), а resolved-состояние — через `renderMoviePage()` (единый `await act(async () => ...)`, по образцу `useMovieDetail.test.tsx`)
@@ -267,6 +285,7 @@ export class ApiError extends Error {
 ## Post-Completion
 
 **Ручная проверка** (после Task 12):
+
 - в браузере: `/` → карточка → переход на `/movie/:id` показывает реальные постер/название/рейтинг/синопсис/каст/детали, без обращений к `MOCK_DETAIL`/`CATALOG` (`grep -r MOCK_DETAIL src` — должно быть пусто)
 - `/movie/666` (несуществующий id) → `ErrorState` с текстом «не найдено» и работающей кнопкой Retry
 - `/movie/abc` → тот же not-found-путь, но без единого сетевого запроса (проверяется в DevTools Network)

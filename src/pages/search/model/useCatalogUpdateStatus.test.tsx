@@ -2,7 +2,13 @@ import { renderHook, waitFor } from '@testing-library/react'
 import type { FilterState } from '@features/catalog-filter'
 import { useCatalogUpdateStatus } from './useCatalogUpdateStatus'
 
-const EMPTY_FILTERS: FilterState = { type: null, genres: [], yearFrom: null, yearTo: null, rating: null }
+const EMPTY_FILTERS: FilterState = {
+  type: null,
+  genres: [],
+  yearFrom: null,
+  yearTo: null,
+  rating: null,
+}
 
 describe('useCatalogUpdateStatus', () => {
   it('isUpdating=false, пока параметры не меняются между рендерами', () => {
@@ -155,9 +161,13 @@ describe('useCatalogUpdateStatus', () => {
     })
 
     seen.forEach((snapshot) => {
-      const isAllOld = snapshot.q === 'a' && snapshot.f === filtersA && snapshot.s === '' && snapshot.p === 1
+      const isAllOld =
+        snapshot.q === 'a' && snapshot.f === filtersA && snapshot.s === '' && snapshot.p === 1
       const isAllNew =
-        snapshot.q === 'ab' && snapshot.f === filtersB && snapshot.s === 'Newest' && snapshot.p === 2
+        snapshot.q === 'ab' &&
+        snapshot.f === filtersB &&
+        snapshot.s === 'Newest' &&
+        snapshot.p === 2
       expect(isAllOld || isAllNew).toBe(true)
     })
   })

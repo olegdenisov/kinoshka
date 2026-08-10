@@ -9,7 +9,11 @@ export type StorageSlot<T> = {
 
 const emitter = new EventTarget()
 
-export const createStorageSlot = <T>(key: string, schema: z.ZodType<T>, fallback: T): StorageSlot<T> => {
+export const createStorageSlot = <T>(
+  key: string,
+  schema: z.ZodType<T>,
+  fallback: T,
+): StorageSlot<T> => {
   return {
     get() {
       try {
@@ -33,15 +37,17 @@ export const createStorageSlot = <T>(key: string, schema: z.ZodType<T>, fallback
     },
     subscribe(callback) {
       const localHandler = () => callback()
-      const storageHandler = (e: StorageEvent) => { if (e.key === key) callback() }
-      
+      const storageHandler = (e: StorageEvent) => {
+        if (e.key === key) callback()
+      }
+
       window.addEventListener('storage', storageHandler)
       emitter.addEventListener('change', localHandler)
-      
+
       return () => {
         window.removeEventListener('storage', storageHandler)
         emitter.removeEventListener('change', localHandler)
       }
-    }
+    },
   }
 }

@@ -22,7 +22,12 @@ type MovieDesktopProps = {
 
 export const MovieDesktop = ({ movie, images }: MovieDesktopProps) => {
   const [tab, setTab] = useState('Overview')
-  const [liked, setLiked] = useState<LikedState>({ rate: false, list: false, watched: true, fav: false })
+  const [liked, setLiked] = useState<LikedState>({
+    rate: false,
+    list: false,
+    watched: true,
+    fav: false,
+  })
   const related = movie.similarMovies.slice(0, 6)
 
   return (

@@ -7,10 +7,7 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    babel({ presets: [reactCompilerPreset()] })
-  ],
+  plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
   resolve: {
     alias: {
       '@app': path.resolve(__dirname, 'src/app'),
@@ -21,9 +18,9 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, 'src/shared'),
     },
   },
-  test: { 
-    environment: 'jsdom', 
+  test: {
+    environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    globals: true 
+    globals: true,
   },
 })

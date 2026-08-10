@@ -146,7 +146,10 @@ describe('SearchDesktop — ошибка фетчера (403/квота) дос�
   it('реджект от search-эндпоинта рендерит ErrorState вместо краша страницы', async () => {
     server.use(
       http.get(SEARCH_ENDPOINT, () =>
-        HttpResponse.json({ statusCode: 403, message: 'Forbidden', error: 'Forbidden' }, { status: 403 }),
+        HttpResponse.json(
+          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+          { status: 403 },
+        ),
       ),
     )
 
@@ -198,7 +201,9 @@ describe('SearchDesktop — устаревший/deep-linked ?page вне диа
 
     await renderSearchDesktop(['/search?q=totally-empty-result-set-abc'])
 
-    expect(screen.getByText(/Ничего не найдено по «totally-empty-result-set-abc»/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Ничего не найдено по «totally-empty-result-set-abc»/),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '1' })).not.toBeInTheDocument()
   })
 })
@@ -343,7 +348,10 @@ describe('SearchDesktop — ошибка во время апдейта, не п
 
     await act(async () => {
       resolvePending(
-        HttpResponse.json({ statusCode: 403, message: 'Forbidden', error: 'Forbidden' }, { status: 403 }),
+        HttpResponse.json(
+          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+          { status: 403 },
+        ),
       )
     })
 

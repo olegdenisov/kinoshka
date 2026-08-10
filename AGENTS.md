@@ -73,6 +73,7 @@ Routes: `/` (home feed), `/search` (search + filters), `/movie/:id` (detail — 
 The API client is auto-generated from the Kinopoisk OpenAPI spec using `@siberiacancode/apicraft`.
 
 **Generated files** — never edit manually, regenerate instead:
+
 - `src/shared/api/instance.gen.ts` — `ApiInstance` class built on `@siberiacancode/fetches`. `make generate-api` prepends `// @ts-nocheck` to this file after generation, so it isn't type-checked.
 - `src/shared/api/types.gen.ts` — all request/response types
 
@@ -81,6 +82,7 @@ The API client is auto-generated from the Kinopoisk OpenAPI spec using `@siberia
 **Config:** `apicraft.config.ts` reads `APP_API_URL` from `.env.local` as the OpenAPI spec source.
 
 **Environment:** create `.env.local` at the project root before running `make generate-api`:
+
 ```
 APP_API_URL=<Kinopoisk OpenAPI spec URL>
 VITE_API_KEY=<your API key>
@@ -186,18 +188,19 @@ For UI icons (search, arrow, close, chevrons, play, star, etc.) use the React co
 
 ## Key public APIs
 
-| Import | Exports |
-|--------|---------|
-| `@entities/movie` | `Card`, `MobileCard`, `Poster`, `Movie`, `MovieDetail`, `MovieType`, `CastMember`, `CrewMember`, `CATALOG`, `ALL_GENRES`, `useNewMovies()`, `useTopRatedMovies()`, `useMovieDetail()`, `MovieDetailBundle`, `getMoviesPage()`, `CatalogParams`, `CatalogPageResult`, `getSearchMovies()`, `SearchMoviesResult`, `MovieImage`, `formatCurrency()`, `resetAllCachedFetchers()` |
-| `@features/catalog-filter` | `useFilterState()`, `ActiveFilterChips`, `FilterState`, `ActiveChip`, `filtersToParams()`, `CatalogQueryParams`, `SORT_LABELS`, `getFilterFromSearchParams()`, `filtersToSearchParams()` |
-| `@shared/ui` | `*Icon` components (`StarIcon`, `SearchIcon`, `CloseIcon`, `PlayIcon`, `ChevronLeftIcon`, etc.), `Footer`, `Spinner`, `Skeleton`, `EmptyState`, `ErrorState`, `ErrorBoundary`, `AsyncBoundary` |
-| `@shared/lib` | `useViewport()` → `{ isMobile: boolean }`, `useStorageSlot()`, `createSessionCache()`, `useDebouncedValue()` |
-| `@shared/config` | `useFeatureFlag()`, `FeatureGate`, `FeatureName` |
-| `@shared/api` | `apiClient` (configured instance, wired into `@entities/movie` data hooks — see [Data state](#data-state)), `ApiError` (subclass of `Error` carrying the HTTP `status`, thrown by the response interceptor in `client.ts` — see [Data state](#data-state) for the 404-handling pattern built on it) |
+| Import                     | Exports                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@entities/movie`          | `Card`, `MobileCard`, `Poster`, `Movie`, `MovieDetail`, `MovieType`, `CastMember`, `CrewMember`, `CATALOG`, `ALL_GENRES`, `useNewMovies()`, `useTopRatedMovies()`, `useMovieDetail()`, `MovieDetailBundle`, `getMoviesPage()`, `CatalogParams`, `CatalogPageResult`, `getSearchMovies()`, `SearchMoviesResult`, `MovieImage`, `formatCurrency()`, `resetAllCachedFetchers()` |
+| `@features/catalog-filter` | `useFilterState()`, `ActiveFilterChips`, `FilterState`, `ActiveChip`, `filtersToParams()`, `CatalogQueryParams`, `SORT_LABELS`, `getFilterFromSearchParams()`, `filtersToSearchParams()`                                                                                                                                                                                     |
+| `@shared/ui`               | `*Icon` components (`StarIcon`, `SearchIcon`, `CloseIcon`, `PlayIcon`, `ChevronLeftIcon`, etc.), `Footer`, `Spinner`, `Skeleton`, `EmptyState`, `ErrorState`, `ErrorBoundary`, `AsyncBoundary`                                                                                                                                                                               |
+| `@shared/lib`              | `useViewport()` → `{ isMobile: boolean }`, `useStorageSlot()`, `createSessionCache()`, `useDebouncedValue()`                                                                                                                                                                                                                                                                 |
+| `@shared/config`           | `useFeatureFlag()`, `FeatureGate`, `FeatureName`                                                                                                                                                                                                                                                                                                                             |
+| `@shared/api`              | `apiClient` (configured instance, wired into `@entities/movie` data hooks — see [Data state](#data-state)), `ApiError` (subclass of `Error` carrying the HTTP `status`, thrown by the response interceptor in `client.ts` — see [Data state](#data-state) for the 404-handling pattern built on it)                                                                          |
 
 ## Data state
 
 API integration is in progress, not all-or-nothing:
+
 - **Live via `apiClient`:** the home feed rails consume `useNewMovies()` / `useTopRatedMovies()` (`@entities/movie`), which call `getMovies.ts` → `apiClient.getV15Movie(...)`. The `/search` page is **also live-data**: `SearchDesktop`/`SearchMobile` read `?q`/filters/`?sort`/`?page` from the URL (single source of truth, via `useFilterState()` + native `useSearchParams()`) and render results through `useMovieCatalog()` — a facade hook in the **page slice** (`src/pages/search/model/useMovieCatalog.ts`, not `@entities/movie`, since it legally imports both `@features/catalog-filter` and `@entities/movie` downward). There is no `useSearch` hook (it was removed); `useMovieCatalog` routes by `query.trim()` between two mutually exclusive endpoints:
   - non-empty query → `getSearchMovies()` (`/v1.5/movie/search`, native `page`), filters/sort sidebar disabled (Variant A — the API can't combine free-text query with filters in one request). Disabling the sidebar is only cosmetic guard rail — the actual fix lives in `usePageSync` (`src/pages/search/model/usePageSync.ts`), which atomically strips `type`/`genres`/`yearFrom`/`yearTo`/`rating`/`sort` from the URL via `stripFilterAndSortParams` whenever text search becomes active (both on the `'' → non-empty query` transition, and on a deep link/refresh landing directly on `/search?q=...` with stale filter/sort params already in the URL — a mount-only effect handles the latter, since the transition-based effect only fires on a change between renders and never on first mount);
   - empty query → `getMoviesPage()` (`@entities/movie`), which drives `/v1.5/movie` (cursor-based, no native `page`) and **emulates numbered pagination** by walking the `next` cursor 1..N, memoizing each cursor step and the resulting page-level `Promise` for `use()`/Suspense stability.

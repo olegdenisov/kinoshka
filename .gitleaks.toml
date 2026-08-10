@@ -4,6 +4,4 @@ title = "kinoshka gitleaks config"
 useDefault = true
 
 [allowlist]
-paths = [
-  '''\.env\.example$''',
-]
+paths = ['''\.env\.example$''']

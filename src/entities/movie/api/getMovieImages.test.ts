@@ -20,7 +20,14 @@ const mockSuccess = (docs: Record<string, unknown>[]) => {
   server.use(
     http.get(ENDPOINT, ({ request: req }) => {
       request = req
-      return HttpResponse.json({ docs, limit: 8, next: null, prev: null, hasNext: false, hasPrev: false })
+      return HttpResponse.json({
+        docs,
+        limit: 8,
+        next: null,
+        prev: null,
+        hasNext: false,
+        hasPrev: false,
+      })
     }),
   )
 
@@ -30,7 +37,10 @@ const mockSuccess = (docs: Record<string, unknown>[]) => {
 const mockForbidden = () => {
   server.use(
     http.get(ENDPOINT, () =>
-      HttpResponse.json({ statusCode: 403, message: 'Forbidden', error: 'Forbidden' }, { status: 403 }),
+      HttpResponse.json(
+        { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+        { status: 403 },
+      ),
     ),
   )
 }
@@ -67,11 +77,15 @@ describe('getMovieImages — запрос', () => {
 
 describe('getMovieImages — форма результата MovieImage[]', () => {
   it('docs маппятся в { url, previewUrl }', async () => {
-    mockSuccess([image({ url: 'https://example.com/a.jpg', previewUrl: 'https://example.com/a-preview.jpg' })])
+    mockSuccess([
+      image({ url: 'https://example.com/a.jpg', previewUrl: 'https://example.com/a-preview.jpg' }),
+    ])
 
     const images = await getMovieImages(4)
 
-    expect(images).toEqual([{ url: 'https://example.com/a.jpg', previewUrl: 'https://example.com/a-preview.jpg' }])
+    expect(images).toEqual([
+      { url: 'https://example.com/a.jpg', previewUrl: 'https://example.com/a-preview.jpg' },
+    ])
   })
 
   it('previewUrl отсутствует — previewUrl undefined', async () => {
@@ -87,7 +101,9 @@ describe('getMovieImages — форма результата MovieImage[]', () =
 
     const images = await getMovieImages(6)
 
-    expect(images).toEqual([{ url: 'https://example.com/b.jpg', previewUrl: 'https://example.com/frame-preview.jpg' }])
+    expect(images).toEqual([
+      { url: 'https://example.com/b.jpg', previewUrl: 'https://example.com/frame-preview.jpg' },
+    ])
   })
 
   it('пустой docs — пустой массив', async () => {

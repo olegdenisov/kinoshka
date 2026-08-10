@@ -8,9 +8,7 @@ import s from './MovieHero.module.css'
 
 type TagPillProps = React.PropsWithChildren
 
-const TagPill = ({ children }: TagPillProps) => (
-  <span className={s.tagPill}>{children}</span>
-)
+const TagPill = ({ children }: TagPillProps) => <span className={s.tagPill}>{children}</span>
 
 type RatingBlockProps = {
   label: string
@@ -23,7 +21,10 @@ type RatingBlockProps = {
 const RatingBlock = ({ label, value, sub, accentClass, icon }: RatingBlockProps) => (
   <div className={s.ratingBlock}>
     <div className={s.ratingLabel}>{label}</div>
-    <div className={`${s.ratingValue} ${accentClass}`}>{icon}{value}</div>
+    <div className={`${s.ratingValue} ${accentClass}`}>
+      {icon}
+      {value}
+    </div>
     <div className={s.ratingSub}>{sub}</div>
   </div>
 )
@@ -43,7 +44,9 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
         ) : (
           <div
             className={s.backdropGradient}
-            style={{ background: `radial-gradient(ellipse 50% 60% at 30% 30%, oklch(0.32 0.1 ${movie.hue} / 0.6), transparent 70%), radial-gradient(ellipse 40% 50% at 75% 40%, oklch(0.28 0.08 ${movie.hue + 30} / 0.4), transparent 70%), var(--bg-primary)` }}
+            style={{
+              background: `radial-gradient(ellipse 50% 60% at 30% 30%, oklch(0.32 0.1 ${movie.hue} / 0.6), transparent 70%), radial-gradient(ellipse 40% 50% at 75% 40%, oklch(0.28 0.08 ${movie.hue + 30} / 0.4), transparent 70%), var(--bg-primary)`,
+            }}
           />
         )}
         <div className={s.backdropOverlay} />
@@ -52,9 +55,13 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
 
       <div className={s.inner}>
         <nav className={s.breadcrumbs}>
-          <Link to="/" className={s.breadcrumbLink}>Home</Link>
+          <Link to="/" className={s.breadcrumbLink}>
+            Home
+          </Link>
           <span className={s.breadcrumbSep}>/</span>
-          <Link to="/search" className={s.breadcrumbLink}>Catalog</Link>
+          <Link to="/search" className={s.breadcrumbLink}>
+            Catalog
+          </Link>
           <span className={s.breadcrumbSep}>/</span>
           <span className={s.breadcrumbCurrent}>{movie.title}</span>
         </nav>
@@ -82,9 +89,25 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
             <div className={s.tagline}>{movie.tagline}</div>
 
             <div className={s.ratings}>
-              <RatingBlock label="Users" value={movie.rating.toFixed(1)} sub={`${movie.votesKp ?? '—'} votes`} accentClass={s.accentGold} icon={<StarIcon size={12} />} />
-              <RatingBlock label="Critics" value={movie.criticScore != null ? `${movie.criticScore.toFixed(0)}%` : '—'} sub={`${movie.criticReviewCount ?? '—'} reviews`} accentClass={s.accentBlue} />
-              <RatingBlock label="Your rating" value="—" sub="Not rated" accentClass={s.accentMuted} />
+              <RatingBlock
+                label="Users"
+                value={movie.rating.toFixed(1)}
+                sub={`${movie.votesKp ?? '—'} votes`}
+                accentClass={s.accentGold}
+                icon={<StarIcon size={12} />}
+              />
+              <RatingBlock
+                label="Critics"
+                value={movie.criticScore != null ? `${movie.criticScore.toFixed(0)}%` : '—'}
+                sub={`${movie.criticReviewCount ?? '—'} reviews`}
+                accentClass={s.accentBlue}
+              />
+              <RatingBlock
+                label="Your rating"
+                value="—"
+                sub="Not rated"
+                accentClass={s.accentMuted}
+              />
             </div>
 
             <MovieActions liked={liked} onChange={onLikedChange} />

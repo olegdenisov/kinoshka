@@ -4,25 +4,25 @@
   --font-serif: 'Instrument Serif', Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --bg-primary: #0F0D11;
-  --bg-secondary: #18161B;
-  --bg-elevated: #211E24;
-  --bg-hover: #2A262F;
+  --bg-primary: #0f0d11;
+  --bg-secondary: #18161b;
+  --bg-elevated: #211e24;
+  --bg-hover: #2a262f;
   --bg-chip: rgba(184, 173, 171, 0.06);
 
-  --text-primary: #F2F0EF;
-  --text-secondary: #B8ADAB;
-  --text-muted: #92887F;
-  --text-faint: #5A5059;
-  --text-disabled: #3A3639;
+  --text-primary: #f2f0ef;
+  --text-secondary: #b8adab;
+  --text-muted: #92887f;
+  --text-faint: #5a5059;
+  --text-disabled: #3a3639;
 
-  --accent-warm: #D18E5F;
-  --accent-warm-hover: #B97A4F;
+  --accent-warm: #d18e5f;
+  --accent-warm-hover: #b97a4f;
   --accent-warm-tint: rgba(209, 142, 95, 0.12);
   --accent-warm-soft: rgba(209, 142, 95, 0.15);
   --accent-warm-border: rgba(209, 142, 95, 0.35);
-  --accent-cool: #D7EEF3;
-  --accent-rating: #E6B86A;
+  --accent-cool: #d7eef3;
+  --accent-rating: #e6b86a;
 
   --border-faint: rgba(184, 173, 171, 0.08);
   --border-soft: rgba(184, 173, 171, 0.15);
@@ -95,16 +95,33 @@ input::placeholder {
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.3; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1); }
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

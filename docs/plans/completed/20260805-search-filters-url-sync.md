@@ -1,9 +1,11 @@
 # /search: живой поиск + фильтры + пагинация через URL-sync
 
 ## Overview
+
 Перевести страницу `/search` с мока (`CATALOG`) на реальные данные. Сейчас поиск/фильтры/пагинация — нефункциональный shell: инпут в `Header` держит локальный `useState`, `useFilterState` — локальный `useState` с захардкоженными дефолтами, `page` локальный, а грид всегда рендерит `CATALOG`. `useSearch` подключён, но сломан (`SearchDesktop.tsx:22` вызывает `useSearch({query: filters.query, ...})`, но поля `filters.query` в `FilterState` нет, а сигнатура хука — `{query, page}`).
 
 Реализуем (roadmap 1.2 + 1.3 + 1.4):
+
 - **URL — single source of truth** для `?q`, фильтров, `?page`, `?sort`. Shareable links, работающие back/forward.
 - **Один хук-фасад `useMovieCatalog`** в page-слое, который маршрутизирует по `query.trim()` между двумя взаимоисключающими эндпоинтами: `/v1.4/movie/search` (текстовый поиск, только `query/page/limit`) и `/v1.5/movie` (`getMovies`, фильтры+сортировка, курсорный, без текста).
 - **Два режима (Variant A)**: есть `q` → текстовый поиск, сайдбар фильтров и сортировка задизейблены; нет `q` → каталог по фильтрам.
@@ -13,6 +15,7 @@
 **Benefits:** страница реально работает; архитектурно чистый фасад скрывает двухэндпоинтную реальность API от UI; состояние переживает reload и шарится ссылкой.
 
 ## Context (from discovery)
+
 - **Страница/виджеты:** `src/pages/search/ui/SearchDesktop/SearchDesktop.tsx` (десктоп, рендерит `CATALOG`), `src/pages/search/ui/SearchMobile.tsx` (мобайл — уже с функциональным `BottomSheet` фильтров и сортировки на моке), `src/widgets/search-sidebar/ui/SearchSidebar` (фильтры), `src/widgets/header/ui/Header/Header.tsx:22` (инпут на локальном `useState`).
 - **Фильтры:** `src/features/catalog-filter/model/useFilterState.ts` — локальный `useState`, `DEFAULT_FILTERS` захардкожены (`genres: ['Drama']`, `yearFrom: 2020`…), `activeChips` из стейта. Публичный API — `src/features/catalog-filter/index.ts`.
 - **Данные:** `src/entities/movie/api/getMovies.ts` (→ `getV15Movie`), `getSearchMovies.ts` (→ `getV14MovieSearch`), обёрнуты в `createCachedFetcher.ts` (TTL-кэш `Promise<Movie[]>` + sessionStorage, isError-cooldown). Хуки: `useSearch.ts` (сломан, единственный потребитель — `SearchDesktop`), `useNewMovies`, `useTopRatedMovies` (делают `use(getMovies(...))`, ждут `Movie[]`). Публичный API — `src/entities/movie/index.ts`.
@@ -22,6 +25,7 @@
 - **Ограничения demo-тарифа:** 200 req/сутки; `limit ≤ 10`; страницы 1–10 (макс. 100 элементов); 403 при превышении (interceptor нормализует).
 
 ### Обнаруженные несоответствия (учтены в задачах)
+
 1. **Жанры EN vs RU.** UI-жанры английские (два источника `ALL_GENRES`: `entities/movie/model/catalog.ts` экспортируемый + локальная копия в `SearchSidebar.tsx`), а API `genres.name` ждёт русские. Нужен маппинг EN→RU (Task 1). `'Slice of Life'` не имеет стандартного KP-жанра → покрывается фолбэком «unknown → skip».
 2. **v1.5 курсорный.** `getV15Movie` принимает `limit/next/prev/sortField/sortType`, но **не** `page`. Нумерованная пагинация каталога — через обход `next` в отдельном фетчере (Task 7).
 3. **`getSearchMovies` без sort.** Search-эндпоинт не принимает сортировку → в режиме поиска `SortSelect` неактивен.
@@ -29,6 +33,7 @@
 5. **Genre round-trip.** Результаты API отдают русские `genres.name` в `Movie.genre` → карточки покажут русские жанры (мок — английские). Учтено в Task 9 (⚠️, дефолт — принять русские, опциональный reverse-map).
 
 ## Development Approach
+
 - **testing approach: TDD (тесты сначала)** — сперва failing-тест, затем реализация до green. Особенно для pure-функций маппинга URL↔фильтры↔API.
 - одна задача = один логический юнит; закончить полностью перед следующей.
 - **CRITICAL: каждая задача включает новые/обновлённые тесты** (success + error/edge), отдельными пунктами чеклиста.
@@ -39,15 +44,18 @@
 - **FSD: только импорты вниз** (`pages → widgets → features → entities → shared`). Фасад живёт в page-слое именно поэтому.
 
 ## Testing Strategy
+
 - **unit (обязательно в каждой задаче):** pure-функции (`filtersToParams`/`getFilterFromSearchParams`/`genreMap`/debounce) — прямые тесты; фетчеры (cursor-walk, search) — MSW, success + 403-cooldown; фасад — рендер через `@testing-library/react` + `<AsyncBoundary>` + MSW.
 - **компоненты:** smoke + a11y через `user-event` (тестировать поведение: ввод → дебаунс → URL → результаты, не моки UI).
 - **e2e:** Playwright-проекта пока нет (roadmap 6.x/9.x) — сценарии в Post-Completion как ручная проверка, задачи не блокируют.
 - **CRITICAL: все тесты зелёные перед следующей задачей.**
 
 ## Progress Tracking
+
 - `[x]` сразу по факту; ➕ новые задачи; ⚠️ блокеры; держать план в синхроне.
 
 ## Solution Overview
+
 ```
 Header input ──debounce 250ms──▶ ?q  ┐
 SearchSidebar ─────────────────▶ фильтр-параметры ├─▶ URL (single source of truth)
@@ -65,6 +73,7 @@ SortSelect ────────────────────▶ ?sort
 ```
 
 **Ключевые решения:**
+
 - **Фасад в page-слое** (`src/pages/search/model/useMovieCatalog.ts`) — легально импортирует и `@features/catalog-filter` (`filtersToParams`), и `@entities/movie` (фетчеры) вниз. Эргономика «UI дёргает один хук» сохранена; FSD не нарушен (в entities фасад нельзя — это импорт вверх к features).
 - **Один фасад, раздельные фетчеры** — `getMovies`/`getSearchMovies` не сливаем.
 - **Variant A** — при активном `?q` фильтры/сортировка задизейблены (API не умеет query+фильтры одним запросом).
@@ -74,6 +83,7 @@ SortSelect ────────────────────▶ ?sort
 - **Единый результат фасада** `{ movies, mode, totalPages }` — оба режима нормализованы к одной форме.
 
 ## Technical Details
+
 - **`FilterState`** без изменений формы: `{ type, genres, yearFrom, yearTo, rating }`. `query` не добавляем — отдельный `?q`.
 - **URL-параметры:** `?q`, `?type`, `?genres` (csv), `?yearFrom`, `?yearTo`, `?rating`, `?sort`, `?page`. Пустые не пишем.
 - **`filtersToParams(filters, sort)` → `MovieControllerFindManyByQueryV15Data['query']`:** `type→type[]`, `genres→['genres.name'][]` (EN→RU), `yearFrom/yearTo→year:['{from}-{to}']`, `rating→['rating.kp']:['{n}-10']`, `sort→sortField/sortType`, `limit:10`.
@@ -86,6 +96,7 @@ SortSelect ────────────────────▶ ?sort
 - **Baseline red:** `SearchDesktop.tsx:22` (`filters.query`) — текущая ошибка типов; per-task гейт — «тесты green», typecheck (`make check`) останется red до **Task 9** (там устраняется `filters.query`). Явный `make check`-гейт — в **Task 13**.
 
 ## What Goes Where
+
 - **Implementation Steps** (`[ ]`): lib-функции, URL-sync хуков/инпута, фетчеры, cursor-walk, фасад, проводка Desktop/Mobile, sort UI, пагинация, тесты, обновление roadmap/AGENTS.
 - **Post-Completion** (без чекбоксов): ручная проверка на реальном ключе (квота/403, реальность курсорной пагинации), e2e до Playwright-проекта, перенос ключа на BFF (Phase 5).
 
@@ -94,6 +105,7 @@ SortSelect ────────────────────▶ ?sort
 ### Task 1: Pure-lib маппинга URL ↔ FilterState ↔ API-параметры
 
 **Files:**
+
 - Create: `src/features/catalog-filter/lib/genreMap.ts`
 - Create: `src/features/catalog-filter/lib/filtersToParams.ts`
 - Create: `src/features/catalog-filter/lib/searchParams.ts`
@@ -114,6 +126,7 @@ SortSelect ────────────────────▶ ?sort
 ### Task 2: `useFilterState` на URL-sync
 
 **Files:**
+
 - Modify: `src/features/catalog-filter/model/useFilterState.ts`
 - Create: `src/features/catalog-filter/model/useFilterState.test.tsx`
 
@@ -126,6 +139,7 @@ SortSelect ────────────────────▶ ?sort
 ### Task 3: Debounce-хук + инпут `Header` → `?q`
 
 **Files:**
+
 - Create: `src/shared/lib/debounce/useDebouncedValue.ts`
 - Create: `src/shared/lib/debounce/index.ts`
 - Create: `src/shared/lib/debounce/useDebouncedValue.test.ts`
@@ -144,6 +158,7 @@ SortSelect ────────────────────▶ ?sort
 **Обоснование:** обоим режимам нужен `totalPages`, который `Movie[]` не несёт. Дефолтный `R = Movie[]` оставляет `getMovies` и его тип без изменений → рельсы не трогаем; `getSearchMovies`/курсор-шаги каталога получают `R = {movies, totalPages}`/`{movies, next, total}` c тем же 403-cooldown и session-persist.
 
 **Files:**
+
 - Modify: `src/entities/movie/api/createCachedFetcher.ts`
 - Modify/Create: `src/entities/movie/api/createCachedFetcher.test.ts`
 
@@ -157,6 +172,7 @@ SortSelect ────────────────────▶ ?sort
 **Обоснование:** маппинг `doc → Movie` уже скопирован в `getMovies.ts:20-30` и `getSearchMovies.ts:21-31`; `getMoviesPage` стал бы 3-й копией (риск дрейфа `rating.kp ?? rating.imdb`, poster-поля). Сортировка **отдельной задачей не нужна**: `RequestParams` уже включает `sortField/sortType` (types.gen.ts:1460/1464), `fetchMovies` спредит `...params` → sort прокидывается без изменений кода.
 
 **Files:**
+
 - Create: `src/entities/movie/api/mapDocToMovie.ts`
 - Create: `src/entities/movie/api/mapDocToMovie.test.ts`
 - Modify: `src/entities/movie/api/getMovies.ts`
@@ -171,6 +187,7 @@ SortSelect ────────────────────▶ ?sort
 ### Task 6: `getSearchMovies` — page/limit + `{movies, totalPages}`
 
 **Files:**
+
 - Modify: `src/entities/movie/api/getSearchMovies.ts`
 - Create/Modify: `src/entities/movie/api/getSearchMovies.test.ts`
 
@@ -181,6 +198,7 @@ SortSelect ────────────────────▶ ?sort
 ### Task 7: `getMoviesPage` — курсорная эмуляция numbered-page (каталог)
 
 **Files:**
+
 - Create: `src/entities/movie/api/getMoviesPage.ts`
 - Create: `src/entities/movie/api/getMoviesPage.test.ts`
 - Modify: `src/entities/movie/index.ts` (экспорт при необходимости)
@@ -194,6 +212,7 @@ SortSelect ────────────────────▶ ?sort
 ### Task 8: Хук-фасад `useMovieCatalog` (page-слой)
 
 **Files:**
+
 - Create: `src/pages/search/model/useMovieCatalog.ts`
 - Create: `src/pages/search/model/useMovieCatalog.test.tsx`
 
@@ -205,6 +224,7 @@ SortSelect ────────────────────▶ ?sort
 ### Task 9: Проводка `SearchDesktop` на фасад + два режима + удаление `useSearch`
 
 **Files:**
+
 - Modify: `src/pages/search/ui/SearchDesktop/SearchDesktop.tsx`
 - Modify: `src/widgets/search-sidebar/ui/SearchSidebar/SearchSidebar.tsx` (проп `disabled`)
 - Delete: `src/entities/movie/hooks/useSearch.ts` (+ убрать из `hooks/index.ts`, `entities/movie/index.ts`)
@@ -221,6 +241,7 @@ SortSelect ────────────────────▶ ?sort
 ### Task 10: Рабочая сортировка (desktop `SortSelect` + mobile `?sort`)
 
 **Files:**
+
 - Modify: `src/pages/search/ui/SortSelect/SortSelect.tsx` (сделать интерактивным)
 - Modify: `src/pages/search/ui/SearchControls/SearchControls.tsx` (проброс, если нужно)
 - Modify: `src/pages/search/ui/SearchMobile.tsx` (mobile `setSort` → `?sort`)
@@ -234,6 +255,7 @@ SortSelect ────────────────────▶ ?sort
 ### Task 11: Пагинация с URL-sync
 
 **Files:**
+
 - Modify: `src/pages/search/ui/Pagination/Pagination.tsx`
 - Modify: `src/pages/search/ui/SearchDesktop/SearchDesktop.tsx`
 - Create/Modify: `src/pages/search/ui/Pagination/Pagination.test.tsx`
@@ -245,6 +267,7 @@ SortSelect ────────────────────▶ ?sort
 ### Task 12: Проводка `SearchMobile` на тот же фасад
 
 **Files:**
+
 - Modify: `src/pages/search/ui/SearchMobile.tsx`
 - Create: `src/pages/search/ui/SearchMobile.test.tsx`
 
@@ -254,6 +277,7 @@ SortSelect ────────────────────▶ ?sort
 - [x] run tests — green перед Task 13
 
 ### Task 13: Verify acceptance criteria
+
 - [x] проверить требования из Overview: URL-sync `?q`/фильтров/`?page`/`?sort`, два режима, debounce, numbered-пагинация в обоих режимах, рабочая сортировка — подтверждено чтением `SearchDesktop.tsx`, `SearchMobile.tsx`, `useMovieCatalog.ts`, `useFilterState.ts`, `Header.tsx`, `SortSelect.tsx`, `Pagination.tsx`: URL — единственный источник истины во всех случаях, оба режима (`search`/`catalog`) взаимоисключающие с задизейбленным сайдбаром/сортировкой в search-режиме, дебаунс 250ms + min-length 2 в `Header`, нумерованная пагинация в обоих режимах (`Pagination`/`MobilePagination` + `getMoviesPage` курсор-walk для каталога), `SortSelect`/mobile-сортировка пишут `?sort` и реально применяются в `filtersToParams`
 - [x] edge cases: пустой `q`+пустые фильтры (дефолтный каталог), невалидный URL (Zod → дефолт), конец выборки (нет `next`), 403-cooldown, genre round-trip не ломает карточки — все покрыты тестами (`searchParams.test.ts`: `?rating=abc`/невалидный `yearFrom` → дефолт; `getMoviesPage.test.ts`: `hasNext:false` → пустой хвост, 403 пробрасывается наверх; `getSearchMovies.test.ts`: 403 → cooldown); `Card`/`MobileCard` рендерят `movie.genre[0]` как произвольную строку без RU/EN-словаря на отображении — русские жанры из API не ломают карточки
 - [x] `make test` — полный набор зелёный (19 test files, 197 tests passed)
@@ -261,20 +285,24 @@ SortSelect ────────────────────▶ ?sort
 - [x] покрытие новых pure-функций/фетчеров/фасада на уровне проекта — все перечисленные модули имеют содержательные тест-файлы (`genreMap.test.ts` — `it.each` по всем жанрам обоих UI-источников, `filtersToParams.test.ts` — 14 кейсов, `searchParams.test.ts` — 11, `mapDocToMovie.test.ts` — 15, `getSearchMovies.test.ts` — 21 вкл. 403, `getMoviesPage.test.ts` — cursor-walk/кеш/403/idempotency, `useMovieCatalog.test.tsx` — оба режима); v8-coverage-таблица не листит несколько из этих файлов отдельной строкой (известная особенность provider'а при бандлинге/пересекающихся source-ranges), но это не реальный пробел — подтверждено прямым чтением тест-файлов
 
 ### Task 14: Обновить документацию
+
 - [x] отметить `[x]` в `plans/roadmap.md` разделы 1.2/1.3/1.4 по факту — отмечены пункты, реально реализованные этим планом (URL-sync `?q`/фильтров/`?page`/`?sort`, два режима, debounce+min-length, numbered-пагинация в обоих режимах, isError-cooldown, a11y); оставлены `[ ]` пункты вне рамок этого плана (`useDeferredValue`, реальный хоткей ⌘K/`/`, динамическая подгрузка жанров через `getV1MoviePossibleValuesByField`, `limit:10` на главных rails) — с пояснением почему
 - [x] обновить `AGENTS.md` «Data state»: `/search` на live-data, `useSearch`→`useMovieCatalog` (page-слой, `src/pages/search/model/`), genre EN→RU map (`genreMap.ts`), курсорная эмуляция page (`getMoviesPage`), обобщённый `createCachedFetcher<P, R = Movie[]>`
 - [x] обновить «Key public APIs»: `@features/catalog-filter` → `filtersToParams`/`getFilterFromSearchParams`/`filtersToSearchParams`/`CatalogQueryParams`/`SORT_LABELS`; `@shared/lib` → `useDebouncedValue`; `@entities/movie` дополнен фактическими экспортами `getMoviesPage`/`getSearchMovies` (`useSearch` там никогда не был в этой таблице — фасад `useMovieCatalog` в page-слое туда не добавлен, экспорты сверены с `src/entities/movie/index.ts`, `src/features/catalog-filter/index.ts`, `src/shared/lib/index.ts`)
 - [x] переместить план в `docs/plans/completed/` (deferred — orchestrator moves the plan file after all review phases complete)
 
 ## Post-Completion
-*Items requiring manual intervention or external systems — no checkboxes, informational only*
+
+_Items requiring manual intervention or external systems — no checkboxes, informational only_
 
 **Manual verification:**
+
 - Реальный ключ (`VITE_API_KEY`): `/search?q=Inception` — выдача; `/search?genres=драма&yearFrom=2020` после reload — состояние сохранено; поведение при исчерпании квоты (403 → EmptyState/error, cooldown не долбит API).
 - Проверить, что курсорная эмуляция реально отдаёт страницы 2–10 на demo-ключе. Если `next` недоступен — фолбэк Prev/Next для каталога (⚠️ Task 7).
 - a11y: `role="search"`, `aria-live` на счётчике, фокус/клавиатура на `×` и пагинации/сортировке.
 
 **External / deferred:**
+
 - E2E (Playwright) — проекта нет (roadmap 6.x/9.x): сценарии `/search?q=…`, `/search?genres=…&reload`, mobile smoke — при его появлении.
 - Шаги-курсоры каталога session-персистятся через обобщённую фабрику; page-level промис-мемо — in-memory (чистится на reload). Полный session-персист собранных страниц — при необходимости.
 - Полноценный мобильный drawer-фильтров — roadmap 3.4.

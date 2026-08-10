@@ -45,7 +45,9 @@ export const OverviewTab = ({ m }: OverviewTabProps) => {
         <SectionHead>Genres</SectionHead>
         <div className={s.genres}>
           {m.genre.map((g) => (
-            <span key={g} className={s.genreBadge}>{g}</span>
+            <span key={g} className={s.genreBadge}>
+              {g}
+            </span>
           ))}
         </div>
 
@@ -61,7 +63,9 @@ export const OverviewTab = ({ m }: OverviewTabProps) => {
       <aside className={s.sidebar}>
         <div className={s.signalsBox}>
           <SectionHead>Countries</SectionHead>
-          <p className={s.countriesText}>{m.countries.length > 0 ? m.countries.join(' · ') : '—'}</p>
+          <p className={s.countriesText}>
+            {m.countries.length > 0 ? m.countries.join(' · ') : '—'}
+          </p>
         </div>
 
         <div className={s.signalsBox}>

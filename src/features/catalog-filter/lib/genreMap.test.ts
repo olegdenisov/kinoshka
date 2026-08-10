@@ -5,8 +5,19 @@ import { toApiGenre } from './genreMap'
 // features не может импортировать widgets (FSD: импорты только вниз),
 // поэтому список продублирован здесь для покрытия обоих источников.
 const SEARCH_SIDEBAR_GENRES = [
-  'Action', 'Drama', 'Sci-Fi', 'Thriller', 'Romance', 'Horror',
-  'Mystery', 'Documentary', 'Historical', 'Adventure', 'Family', 'Slice of Life', 'Fantasy',
+  'Action',
+  'Drama',
+  'Sci-Fi',
+  'Thriller',
+  'Romance',
+  'Horror',
+  'Mystery',
+  'Documentary',
+  'Historical',
+  'Adventure',
+  'Family',
+  'Slice of Life',
+  'Fantasy',
 ]
 
 const UNKNOWN_GENRES = ['Slice of Life']

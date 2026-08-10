@@ -49,7 +49,10 @@ describe('createSessionCache', () => {
   })
 
   it('DEV=false — get() возвращает undefined, даже если значение реально есть в sessionStorage', () => {
-    sessionStorage.setItem('kinoshka:test:key', JSON.stringify({ data: [1], timestamp: 1, isError: false }))
+    sessionStorage.setItem(
+      'kinoshka:test:key',
+      JSON.stringify({ data: [1], timestamp: 1, isError: false }),
+    )
     vi.stubEnv('DEV', false)
     const cache = createSessionCache<number[]>('test')
 

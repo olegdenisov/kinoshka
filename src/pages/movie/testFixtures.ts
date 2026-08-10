@@ -36,7 +36,16 @@ export const MOVIE: MovieDetail = {
   feesWorld: { value: 12300000, currency: '$' },
   premiereWorld: '2024-03-14',
   similarMovies: [
-    { id: 2, title: 'The Quiet Archive', year: 2023, rating: 7.9, type: 'movie', genre: ['Drama'], runtime: '1h 52m', hue: 210 },
+    {
+      id: 2,
+      title: 'The Quiet Archive',
+      year: 2023,
+      rating: 7.9,
+      type: 'movie',
+      genre: ['Drama'],
+      runtime: '1h 52m',
+      hue: 210,
+    },
   ],
 }
 

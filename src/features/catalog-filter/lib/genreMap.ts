@@ -8,18 +8,18 @@
  * вызывающий код должен такие жанры отбрасывать (skip), а не падать.
  */
 export const GENRE_MAP: Record<string, string> = {
-  'Action': 'боевик',
-  'Drama': 'драма',
+  Action: 'боевик',
+  Drama: 'драма',
   'Sci-Fi': 'фантастика',
-  'Thriller': 'триллер',
-  'Romance': 'мелодрама',
-  'Horror': 'ужасы',
-  'Mystery': 'детектив',
-  'Documentary': 'документальный',
-  'Historical': 'история',
-  'Adventure': 'приключения',
-  'Family': 'семейный',
-  'Fantasy': 'фэнтези',
+  Thriller: 'триллер',
+  Romance: 'мелодрама',
+  Horror: 'ужасы',
+  Mystery: 'детектив',
+  Documentary: 'документальный',
+  Historical: 'история',
+  Adventure: 'приключения',
+  Family: 'семейный',
+  Fantasy: 'фэнтези',
 }
 
 export const toApiGenre = (genre: string): string | undefined => GENRE_MAP[genre]

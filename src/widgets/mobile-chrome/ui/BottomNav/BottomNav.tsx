@@ -31,7 +31,9 @@ export const BottomNav = ({ active }: BottomNavProps) => {
               className={`${s.navItem} ${isActive ? s.navItemActive : ''} ${!it.path ? s.navItemDisabled : ''}`}
             >
               <Icon size={20} filled={isActive} />
-              <span className={`${s.navLabel} ${isActive ? s.navLabelActive : ''}`}>{it.label}</span>
+              <span className={`${s.navLabel} ${isActive ? s.navLabelActive : ''}`}>
+                {it.label}
+              </span>
             </button>
           )
         })}

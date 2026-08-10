@@ -16,8 +16,8 @@ const TYPE_MAP: Record<string, ApiMovieType> = {
 
 /** Лейблы сортировки (см. SearchMobile SORT_OPTIONS) → sortField/sortType API v1.5. */
 const SORT_MAP: Record<string, { field: ApiSortField; type: string }> = {
-  'Popular': { field: 'votes.kp', type: '-1' },
-  'Newest': { field: 'year', type: '-1' },
+  Popular: { field: 'votes.kp', type: '-1' },
+  Newest: { field: 'year', type: '-1' },
   'Highest rated': { field: 'rating.kp', type: '-1' },
   'Most watched': { field: 'votes.imdb', type: '-1' },
   'A to Z': { field: 'name', type: '1' },

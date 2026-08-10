@@ -15,22 +15,24 @@
 ## Подход 1 — `cache: pnpm` в `actions/setup-node` (используется в проекте)
 
 ```yaml
-- uses: pnpm/action-setup@v4   # должен быть РАНЬШЕ setup-node
+- uses: pnpm/action-setup@v4 # должен быть РАНЬШЕ setup-node
   with:
     version: '10'
 
 - uses: actions/setup-node@v4
   with:
     node-version: 22
-    cache: pnpm                 # включает кэш pnpm store
+    cache: pnpm # включает кэш pnpm store
 ```
 
 `cache: pnpm` заставляет `setup-node` сделать три вещи:
+
 1. Запустить `pnpm store path` → получить путь к стору
 2. Восстановить кэш по ключу, основанному на хэше `pnpm-lock.yaml`
 3. После job'а сохранить стор в кэш (если ключ новый)
 
 **Ключ кэша** выглядит примерно так:
+
 ```
 Linux-node-22.x-<hash of pnpm-lock.yaml>
 ```
@@ -70,6 +72,7 @@ Linux-node-22.x-<hash of pnpm-lock.yaml>
 `cache: pnpm` — это `actions/cache` под капотом, просто без шаблонного кода. Подходит для большинства проектов.
 
 `actions/cache` вручную нужен только если:
+
 - хочется `restore-keys` при частых изменениях зависимостей
 - нестандартный путь к стору
 - нужен полный контроль над ключом кэша

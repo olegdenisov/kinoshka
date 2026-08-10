@@ -5,13 +5,12 @@ import type { MovieDetail, MovieImage } from '@entities/movie'
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../testFixtures'
 import { MovieMobile } from './MovieMobile'
 
-const renderMovieMobile = (movie: MovieDetail = MOVIE, images: MovieImage[] = IMAGES) => (
+const renderMovieMobile = (movie: MovieDetail = MOVIE, images: MovieImage[] = IMAGES) =>
   render(
     <MemoryRouter>
       <MovieMobile movie={movie} images={images} />
     </MemoryRouter>,
   )
-)
 
 describe('MovieMobile — hero', () => {
   it('показывает tagline и рейтинги из movie', () => {

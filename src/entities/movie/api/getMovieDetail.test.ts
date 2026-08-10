@@ -22,15 +22,11 @@ const doc = (id: number, overrides: Record<string, unknown> = {}) => ({
 })
 
 const mockSuccess = (id: number, overrides: Record<string, unknown> = {}) => {
-  server.use(
-    http.get(`*/v1.5/movie/${id}`, () => HttpResponse.json(doc(id, overrides))),
-  )
+  server.use(http.get(`*/v1.5/movie/${id}`, () => HttpResponse.json(doc(id, overrides))))
 }
 
 const mockError = (id: number, status: number, body: Record<string, unknown>) => {
-  server.use(
-    http.get(`*/v1.5/movie/${id}`, () => HttpResponse.json(body, { status })),
-  )
+  server.use(http.get(`*/v1.5/movie/${id}`, () => HttpResponse.json(body, { status })))
 }
 
 describe('getMovieDetail — success', () => {
@@ -58,7 +54,11 @@ describe('getMovieDetail — success', () => {
 
 describe('getMovieDetail — 404', () => {
   it('фильм не найден — реджект с ApiError.status === 404', async () => {
-    mockError(666, 404, { statusCode: 404, message: 'Not found movie with id 666', error: 'Not Found' })
+    mockError(666, 404, {
+      statusCode: 404,
+      message: 'Not found movie with id 666',
+      error: 'Not Found',
+    })
 
     const error = await getMovieDetail(666).catch((e: unknown) => e)
 

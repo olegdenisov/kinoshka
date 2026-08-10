@@ -128,14 +128,24 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
             </div>
             <nav className={s.searchVariantNav}>
               {navItems.slice(1).map((n) => (
-                <NavPill key={n.key} label={n.label} active={activeNav === n.key} onClick={() => navigate('/search')} />
+                <NavPill
+                  key={n.key}
+                  label={n.label}
+                  active={activeNav === n.key}
+                  onClick={() => navigate('/search')}
+                />
               ))}
             </nav>
           </div>
         ) : (
           <nav className={s.nav}>
             {navItems.map((n) => (
-              <NavPill key={n.key} label={n.label} active={activeNav === n.key} onClick={() => navigate(n.path)} />
+              <NavPill
+                key={n.key}
+                label={n.label}
+                active={activeNav === n.key}
+                onClick={() => navigate(n.path)}
+              />
             ))}
           </nav>
         )}

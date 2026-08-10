@@ -27,14 +27,18 @@ export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
       </button>
       {pages.map((p, i) =>
         typeof p === 'string' ? (
-          <span key={p + i} className={s.ellipsis}>…</span>
+          <span key={p + i} className={s.ellipsis}>
+            …
+          </span>
         ) : (
           <button
             key={p}
             onClick={() => onChange(p)}
             className={`${s.btn}${p === safePage ? ` ${s.btnActive}` : ''}`}
-          >{p}</button>
-        )
+          >
+            {p}
+          </button>
+        ),
       )}
       <button
         disabled={safePage >= safeTotalPages}

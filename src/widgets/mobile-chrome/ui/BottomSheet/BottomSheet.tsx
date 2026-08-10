@@ -9,10 +9,18 @@ type BottomSheetProps = React.PropsWithChildren<{
   heightVh?: number
 }>
 
-export const BottomSheet = ({ open, onClose, title, children, heightVh = 82 }: BottomSheetProps) => {
+export const BottomSheet = ({
+  open,
+  onClose,
+  title,
+  children,
+  heightVh = 82,
+}: BottomSheetProps) => {
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [open])
 
   return (
@@ -23,10 +31,7 @@ export const BottomSheet = ({ open, onClose, title, children, heightVh = 82 }: B
         onClick={onClose}
         className={`${s.backdrop} ${open ? s.backdropOpen : ''}`}
       />
-      <div
-        className={`${s.sheet} ${open ? s.sheetOpen : ''}`}
-        style={{ height: `${heightVh}vh` }}
-      >
+      <div className={`${s.sheet} ${open ? s.sheetOpen : ''}`} style={{ height: `${heightVh}vh` }}>
         <div className={s.handle}>
           <div className={s.handleBar} />
         </div>

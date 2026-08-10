@@ -11,5 +11,5 @@ export const Spinner = ({ size }: SpinnerProps) => {
       className={s.spinner}
       style={size !== undefined ? ({ '--spinner-size': `${size}px` } as CSSProperties) : undefined}
     ></span>
-  );
-};
+  )
+}

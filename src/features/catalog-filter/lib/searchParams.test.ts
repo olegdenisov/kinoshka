@@ -13,7 +13,9 @@ describe('getFilterFromSearchParams', () => {
   })
 
   it('читает все ключи FilterState из URL', () => {
-    const sp = new URLSearchParams('type=movie&genres=Drama,Action&yearFrom=2020&yearTo=2025&rating=7')
+    const sp = new URLSearchParams(
+      'type=movie&genres=Drama,Action&yearFrom=2020&yearTo=2025&rating=7',
+    )
     const result = getFilterFromSearchParams(sp)
 
     expect(result).toEqual<FilterState>({
@@ -63,7 +65,13 @@ describe('filtersToSearchParams', () => {
   })
 
   it('заполненный FilterState → соответствующие ключи в URL', () => {
-    const filters: FilterState = { type: 'movie', genres: ['Drama', 'Action'], yearFrom: 2020, yearTo: 2025, rating: 7 }
+    const filters: FilterState = {
+      type: 'movie',
+      genres: ['Drama', 'Action'],
+      yearFrom: 2020,
+      yearTo: 2025,
+      rating: 7,
+    }
     const params = filtersToSearchParams(filters)
 
     expect(params.get('type')).toBe('movie')
@@ -74,7 +82,13 @@ describe('filtersToSearchParams', () => {
   })
 
   it('null/пустые поля не пишутся в URL', () => {
-    const filters: FilterState = { type: null, genres: [], yearFrom: null, yearTo: 2025, rating: null }
+    const filters: FilterState = {
+      type: null,
+      genres: [],
+      yearFrom: null,
+      yearTo: 2025,
+      rating: null,
+    }
     const params = filtersToSearchParams(filters)
 
     expect(params.has('type')).toBe(false)
@@ -85,7 +99,13 @@ describe('filtersToSearchParams', () => {
   })
 
   it('round-trip: getFilterFromSearchParams(filtersToSearchParams(f)) === f', () => {
-    const filters: FilterState = { type: 'anime', genres: ['Fantasy'], yearFrom: 2018, yearTo: 2022, rating: 5 }
+    const filters: FilterState = {
+      type: 'anime',
+      genres: ['Fantasy'],
+      yearFrom: 2018,
+      yearTo: 2022,
+      rating: 5,
+    }
     const roundTripped = getFilterFromSearchParams(filtersToSearchParams(filters))
     expect(roundTripped).toEqual(filters)
   })

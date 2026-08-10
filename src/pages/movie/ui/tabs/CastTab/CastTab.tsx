@@ -23,7 +23,9 @@ export const CastTab = ({ cast }: CastTabProps) => {
             ) : (
               <div
                 className={s.avatar}
-                style={{ background: `linear-gradient(145deg, oklch(0.35 0.06 ${FALLBACK_HUE}), oklch(0.15 0.03 ${FALLBACK_HUE + 20}))` }}
+                style={{
+                  background: `linear-gradient(145deg, oklch(0.35 0.06 ${FALLBACK_HUE}), oklch(0.15 0.03 ${FALLBACK_HUE + 20}))`,
+                }}
               />
             )}
             <div>

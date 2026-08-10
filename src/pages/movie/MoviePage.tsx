@@ -18,7 +18,11 @@ type MovieDetailContentProps = {
 const MovieDetailContent = ({ id, isMobile }: MovieDetailContentProps) => {
   const { detail, images } = useMovieDetail(id)
 
-  return isMobile ? <MovieMobile movie={detail} images={images} /> : <MovieDesktop movie={detail} images={images} />
+  return isMobile ? (
+    <MovieMobile movie={detail} images={images} />
+  ) : (
+    <MovieDesktop movie={detail} images={images} />
+  )
 }
 
 const movieErrorFallback = ({ error, reset }: ErrorFallbackParams) => {

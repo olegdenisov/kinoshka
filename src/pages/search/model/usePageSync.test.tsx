@@ -5,7 +5,13 @@ import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
 import type { FilterState } from '@features/catalog-filter'
 import { usePageSync } from './usePageSync'
 
-const EMPTY_FILTERS: FilterState = { type: null, genres: [], yearFrom: null, yearTo: null, rating: null }
+const EMPTY_FILTERS: FilterState = {
+  type: null,
+  genres: [],
+  yearFrom: null,
+  yearTo: null,
+  rating: null,
+}
 
 /** Перехватывает опции (`replace: true`), с которыми хук вызывает `setSearchParams`. */
 let setSearchParamsCalls: Array<[unknown, unknown]> = []

@@ -1,9 +1,9 @@
-import { apiClient } from "@shared/api";
-import { createCachedFetcher } from "./createCachedFetcher";
+import { apiClient } from '@shared/api'
+import { createCachedFetcher } from './createCachedFetcher'
 
 export type MovieImage = {
-  url: string;
-  previewUrl?: string;
+  url: string
+  previewUrl?: string
 }
 
 const fetchMovieImages = async (id: number): Promise<MovieImage[]> => {
@@ -16,8 +16,9 @@ const fetchMovieImages = async (id: number): Promise<MovieImage[]> => {
     },
   })
 
-  if (!('docs' in response.data)) { // нужно чтобы сузить тип
-    return [];
+  if (!('docs' in response.data)) {
+    // нужно чтобы сузить тип
+    return []
   }
 
   return response.data.docs
@@ -25,4 +26,7 @@ const fetchMovieImages = async (id: number): Promise<MovieImage[]> => {
     .map((image) => ({ url: image.url, previewUrl: image.previewUrl ?? undefined }))
 }
 
-export const getMovieImages = createCachedFetcher<number, MovieImage[]>('movie-images', fetchMovieImages)
+export const getMovieImages = createCachedFetcher<number, MovieImage[]>(
+  'movie-images',
+  fetchMovieImages,
+)

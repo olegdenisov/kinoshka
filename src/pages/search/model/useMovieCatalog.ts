@@ -34,7 +34,12 @@ export type MovieCatalogResult = {
  * Обе ветки уже отдают `{ movies, totalPages }` — здесь только нормализуем к единой форме,
  * добавляя `mode`.
  */
-export const useMovieCatalog = ({ query, filters, sort, page }: MovieCatalogParams): MovieCatalogResult => {
+export const useMovieCatalog = ({
+  query,
+  filters,
+  sort,
+  page,
+}: MovieCatalogParams): MovieCatalogResult => {
   const trimmedQuery = query.trim()
   const mode: CatalogMode = trimmedQuery ? 'search' : 'catalog'
 
