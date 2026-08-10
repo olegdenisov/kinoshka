@@ -157,7 +157,9 @@ describe('SearchMobile — устаревший/deep-linked ?page вне диа�
 
     await renderSearchMobile(['/search?q=totally-empty-result-set-abc'])
 
-    expect(screen.getByText(/Ничего не найдено по «totally-empty-result-set-abc»/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Ничего не найдено по «totally-empty-result-set-abc»/),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '1' })).not.toBeInTheDocument()
   })
 })
@@ -307,7 +309,10 @@ describe('SearchMobile — ошибка фетчера (403/квота) дост
   it('реджект от catalog-эндпоинта рендерит ErrorState вместо краша страницы', async () => {
     server.use(
       http.get(CATALOG_ENDPOINT, () =>
-        HttpResponse.json({ statusCode: 403, message: 'Forbidden', error: 'Forbidden' }, { status: 403 }),
+        HttpResponse.json(
+          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+          { status: 403 },
+        ),
       ),
     )
 
@@ -466,7 +471,10 @@ describe('SearchMobile — ошибка во время апдейта, не п�
 
     await act(async () => {
       resolvePending(
-        HttpResponse.json({ statusCode: 403, message: 'Forbidden', error: 'Forbidden' }, { status: 403 }),
+        HttpResponse.json(
+          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+          { status: 403 },
+        ),
       )
     })
 

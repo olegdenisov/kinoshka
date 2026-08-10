@@ -1,10 +1,10 @@
-import { createSessionCache } from "@shared/lib";
-import type { Movie } from "../model/types";
+import { createSessionCache } from '@shared/lib'
+import type { Movie } from '../model/types'
 
 type CacheEntry<R> = { promise: Promise<R>; timestamp: number; isError: boolean }
 
-const CACHE_TTL_MS = 5 * 60 * 1000       // без изменений
-const ERROR_CACHE_TTL_MS = 20 * 1000     // cooldown перед повторным запросом
+const CACHE_TTL_MS = 5 * 60 * 1000 // без изменений
+const ERROR_CACHE_TTL_MS = 20 * 1000 // cooldown перед повторным запросом
 
 const isFresh = (timestamp: number, isError: boolean) => {
   const ttl = isError ? ERROR_CACHE_TTL_MS : CACHE_TTL_MS
@@ -126,7 +126,7 @@ export const createCachedFetcher = <P, R = Movie[]>(
     const entry: CacheEntry<R> = {
       promise: fetcher(params),
       timestamp: Date.now(),
-      isError: false
+      isError: false,
     }
 
     attachOutcomeHandlers(entry, sessionCache, key, true)

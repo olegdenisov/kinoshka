@@ -1,7 +1,7 @@
-import { use } from "react"
-import type { MovieDetail } from "../model/types"
-import { getMovieDetail } from "../api/getMovieDetail"
-import { getMovieImages, type MovieImage } from "../api/getMovieImages"
+import { use } from 'react'
+import type { MovieDetail } from '../model/types'
+import { getMovieDetail } from '../api/getMovieDetail'
+import { getMovieImages, type MovieImage } from '../api/getMovieImages'
 
 export type MovieDetailBundle = {
   detail: MovieDetail

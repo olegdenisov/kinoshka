@@ -15,7 +15,13 @@ const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   movieLength: 120,
   poster: { previewUrl: 'https://example.com/poster.jpg' },
   persons: [
-    { id: 10, name: 'Liv Korhonen', description: 'Ines Varga', enProfession: 'actor', profession: 'actor' },
+    {
+      id: 10,
+      name: 'Liv Korhonen',
+      description: 'Ines Varga',
+      enProfession: 'actor',
+      profession: 'actor',
+    },
     { id: 20, name: 'Hanna Vesper', enProfession: 'director', profession: 'director' },
   ],
   countries: [{ name: 'Finland' }],
@@ -86,7 +92,9 @@ describe('MoviePage — /movie/1, пока запрос не завершён', 
 describe('MoviePage — /movie/1 happy path', () => {
   it('показывает реальные данные после резолва MSW, табы переключаются', async () => {
     mockMovie(1)
-    mockImages([{ url: 'https://example.com/frame.jpg', previewUrl: 'https://example.com/frame-preview.jpg' }])
+    mockImages([
+      { url: 'https://example.com/frame.jpg', previewUrl: 'https://example.com/frame-preview.jpg' },
+    ])
 
     const user = userEvent.setup()
     const result = await renderMoviePage('/movie/1')
@@ -98,13 +106,17 @@ describe('MoviePage — /movie/1 happy path', () => {
     expect(screen.getByText('Liv Korhonen')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Media' }))
-    expect(result.container.querySelector('img[src="https://example.com/frame-preview.jpg"]')).toBeInTheDocument()
+    expect(
+      result.container.querySelector('img[src="https://example.com/frame-preview.jpg"]'),
+    ).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Details' }))
     expect(screen.getByText('Finland')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Overview' }))
-    expect(screen.getAllByText('Full synopsis text about the observatory.').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Full synopsis text about the observatory.').length).toBeGreaterThan(
+      0,
+    )
   })
 })
 

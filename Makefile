@@ -1,4 +1,4 @@
-.PHONY: dev build typecheck build-only lint preview install hooks clean check generate-api test test-watch coverage audit
+.PHONY: dev build typecheck build-only lint format format-check preview install hooks clean check generate-api test test-watch coverage audit
 
 dev:
 	pnpm dev
@@ -15,6 +15,12 @@ build-only:
 lint:
 	pnpm lint
 
+format:
+	pnpm format
+
+format-check:
+	pnpm format:check
+
 preview:
 	pnpm preview
 
@@ -27,7 +33,7 @@ hooks:
 clean:
 	rm -rf dist node_modules
 
-check: lint build
+check: format-check lint build
 
 generate-api:
 	pnpm generate-api

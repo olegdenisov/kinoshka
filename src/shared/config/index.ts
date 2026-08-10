@@ -1,1 +1,1 @@
-export { FeatureGate, useFeatureFlag, type FeatureName} from './features'
+export { FeatureGate, useFeatureFlag, type FeatureName } from './features'

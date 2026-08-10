@@ -32,7 +32,14 @@ type SearchResultsProps = {
  * от `page`, чтобы клик по номеру страницы в `Pagination` подсвечивался мгновенно, а не только
  * после того, как deferred-фетч догонит live `page`.
  */
-const SearchResults = ({ query, filters, sort, page, displayPage, onPageChange }: SearchResultsProps) => {
+const SearchResults = ({
+  query,
+  filters,
+  sort,
+  page,
+  displayPage,
+  onPageChange,
+}: SearchResultsProps) => {
   const { movies, totalPages } = useMovieCatalog({ query, filters, sort, page })
 
   if (movies.length === 0) {
@@ -48,7 +55,9 @@ const SearchResults = ({ query, filters, sort, page, displayPage, onPageChange }
           totalPages всё равно приходит из total. Без Pagination тут это тупик: EmptyState
           не даёт способа вернуться на валидную страницу.
         */}
-        {totalPages > 0 && <Pagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />}
+        {totalPages > 0 && (
+          <Pagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />
+        )}
       </>
     )
   }
@@ -70,18 +79,20 @@ const SearchResults = ({ query, filters, sort, page, displayPage, onPageChange }
 }
 
 export const SearchDesktop = () => {
-  const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } = useFilterState()
+  const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } =
+    useFilterState()
   const [searchParams] = useSearchParams()
 
   const query = searchParams.get('q') ?? ''
   const isSearchMode = query.trim().length > 0
   const { page, goToPage } = usePageSync({ query, filters })
-  const { deferredQuery, deferredFilters, deferredSort, deferredPage, isUpdating } = useCatalogUpdateStatus({
-    query,
-    filters,
-    sort,
-    page,
-  })
+  const { deferredQuery, deferredFilters, deferredSort, deferredPage, isUpdating } =
+    useCatalogUpdateStatus({
+      query,
+      filters,
+      sort,
+      page,
+    })
 
   return (
     <div className={s.page}>
@@ -106,7 +117,10 @@ export const SearchDesktop = () => {
             onSortChange={setSort}
             sortDisabled={isSearchMode}
           />
-          <div className={`${s.resultsWrapper} ${isUpdating ? s.updating : ''}`} aria-busy={isUpdating}>
+          <div
+            className={`${s.resultsWrapper} ${isUpdating ? s.updating : ''}`}
+            aria-busy={isUpdating}
+          >
             <AsyncBoundary fallback={<SearchResultSkeletonGrid />}>
               <SearchResults
                 query={deferredQuery}

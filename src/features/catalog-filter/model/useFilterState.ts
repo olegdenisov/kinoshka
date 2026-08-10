@@ -1,5 +1,10 @@
 import { useSearchParams } from 'react-router'
-import { EMPTY_FILTERS, FILTER_URL_KEYS, filtersToSearchParams, getFilterFromSearchParams } from '../lib/searchParams'
+import {
+  EMPTY_FILTERS,
+  FILTER_URL_KEYS,
+  filtersToSearchParams,
+  getFilterFromSearchParams,
+} from '../lib/searchParams'
 
 export type FilterState = {
   type: string | null
@@ -71,9 +76,7 @@ export const useFilterState = () => {
     const label = filters.type.charAt(0).toUpperCase() + filters.type.slice(1) + 's'
     activeChips.push({ label, onRemove: () => setFilters((f) => ({ ...f, type: null })) })
   }
-  filters.genres.forEach((g) =>
-    activeChips.push({ label: g, onRemove: () => toggleGenre(g) })
-  )
+  filters.genres.forEach((g) => activeChips.push({ label: g, onRemove: () => toggleGenre(g) }))
   if (filters.yearFrom || filters.yearTo) {
     // yearFrom/yearTo — независимые nullable-поля (валидный FilterState допускает только
     // один из них заданным), поэтому не склеиваем "2020–null"/"null–2025" вслепую.

@@ -25,7 +25,12 @@
 .backdropOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15,13,17,0.3) 0%, rgba(15,13,17,0.7) 60%, var(--bg-primary) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(15, 13, 17, 0.3) 0%,
+    rgba(15, 13, 17, 0.7) 60%,
+    var(--bg-primary) 100%
+  );
 }
 
 .backdropLines {
@@ -192,9 +197,15 @@
   letter-spacing: 0.04em;
 }
 
-.accentGold { color: var(--accent-rating); }
-.accentBlue { color: var(--accent-cool); }
-.accentMuted { color: var(--text-muted); }
+.accentGold {
+  color: var(--accent-rating);
+}
+.accentBlue {
+  color: var(--accent-cool);
+}
+.accentMuted {
+  color: var(--text-muted);
+}
 
 .synopsis {
   margin: 0;

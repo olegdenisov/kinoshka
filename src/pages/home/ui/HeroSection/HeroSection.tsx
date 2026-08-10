@@ -53,11 +53,13 @@ export const HeroSection = () => {
         </div>
 
         <h1 className={s.heading}>
-          What do you <em className={s.headingAccent}>want</em> to watch<span className={s.headingPunct}>?</span>
+          What do you <em className={s.headingAccent}>want</em> to watch
+          <span className={s.headingPunct}>?</span>
         </h1>
 
         <p className={s.description}>
-          A quiet place to track films, series and anime — without the noise. Rate. Keep lists. Come back.
+          A quiet place to track films, series and anime — without the noise. Rate. Keep lists. Come
+          back.
         </p>
 
         <div className={s.searchBar}>
@@ -66,15 +68,23 @@ export const HeroSection = () => {
             className={s.searchInput}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/search') }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') navigate('/search')
+            }}
             placeholder='Try "films from 2024 rated 8+" or a title…'
           />
-          <button className={s.searchBtn} onClick={() => navigate('/search')}>Search</button>
+          <button className={s.searchBtn} onClick={() => navigate('/search')}>
+            Search
+          </button>
         </div>
 
         <div className={s.chips}>
           {CHIPS.map((c) => (
-            <Chip key={c.key} active={activeFilter === c.key} onClick={() => setActiveFilter(c.key)}>
+            <Chip
+              key={c.key}
+              active={activeFilter === c.key}
+              onClick={() => setActiveFilter(c.key)}
+            >
               {c.label}
             </Chip>
           ))}

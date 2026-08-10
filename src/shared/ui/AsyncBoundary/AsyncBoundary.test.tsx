@@ -19,12 +19,16 @@ describe('AsyncBoundary — errorFallback', () => {
 
   it('с errorFallback показывает кастомный фолбэк вместо дефолтного ErrorState', () => {
     render(
-      <AsyncBoundary errorFallback={({ error, reset }) => (
-        <div>
-          <span data-testid="custom-error">{error?.message}</span>
-          <button type="button" onClick={reset}>Custom retry</button>
-        </div>
-      )}>
+      <AsyncBoundary
+        errorFallback={({ error, reset }) => (
+          <div>
+            <span data-testid="custom-error">{error?.message}</span>
+            <button type="button" onClick={reset}>
+              Custom retry
+            </button>
+          </div>
+        )}
+      >
         <Bomb />
       </AsyncBoundary>,
     )

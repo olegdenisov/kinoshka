@@ -1,26 +1,26 @@
-import { apiClient, type MovieControllerFindManyByQueryV15Data } from "@shared/api";
-import type { Movie } from "../model/types";
-import { createCachedFetcher } from "./createCachedFetcher";
-import { mapDocToMovie } from "./mapDocToMovie";
-import { PER_PAGE, MAX_PAGES } from "./paginationConfig";
+import { apiClient, type MovieControllerFindManyByQueryV15Data } from '@shared/api'
+import type { Movie } from '../model/types'
+import { createCachedFetcher } from './createCachedFetcher'
+import { mapDocToMovie } from './mapDocToMovie'
+import { PER_PAGE, MAX_PAGES } from './paginationConfig'
 
-export type CatalogParams = MovieControllerFindManyByQueryV15Data['query'];
+export type CatalogParams = MovieControllerFindManyByQueryV15Data['query']
 
 export type CatalogPageResult = {
-  movies: Movie[];
-  totalPages: number;
-};
+  movies: Movie[]
+  totalPages: number
+}
 
 type CursorStepParams = {
-  params: CatalogParams;
-  cursor?: string;
-};
+  params: CatalogParams
+  cursor?: string
+}
 
 type CursorStepResult = {
-  movies: Movie[];
-  next: string | null;
-  total: number | null;
-};
+  movies: Movie[]
+  next: string | null
+  total: number | null
+}
 
 const fetchCursorStep = async ({ params, cursor }: CursorStepParams): Promise<CursorStepResult> => {
   const response = await apiClient.getV15Movie({
@@ -36,57 +36,59 @@ const fetchCursorStep = async ({ params, cursor }: CursorStepParams): Promise<Cu
   })
 
   if (!('docs' in response.data)) {
-    return { movies: [], next: null, total: null };
+    return { movies: [], next: null, total: null }
   }
 
   return {
     movies: response.data.docs.map(mapDocToMovie),
     next: response.data.next ?? null,
     total: response.data.total ?? null,
-  };
+  }
 }
 
 // Кеш шагов-курсоров по ключу (params, cursor) — обобщённая фабрика Task 4
 // даёт 403-cooldown и session-persist бесплатно.
 const cachedCursorStep = createCachedFetcher('catalog-cursor', fetchCursorStep)
 
-export const fetchCatalogCursor = (params: CatalogParams, cursor?: string): Promise<CursorStepResult> =>
-  cachedCursorStep({ params, cursor })
+export const fetchCatalogCursor = (
+  params: CatalogParams,
+  cursor?: string,
+): Promise<CursorStepResult> => cachedCursorStep({ params, cursor })
 
 const toTotalPages = (total: number | null): number => {
   // total недоступен (withCount не отработал) — не режем пагинацию, отдаём потолок demo-тарифа
   if (total === null) {
-    return MAX_PAGES;
+    return MAX_PAGES
   }
 
-  return Math.min(MAX_PAGES, Math.ceil(total / PER_PAGE));
+  return Math.min(MAX_PAGES, Math.ceil(total / PER_PAGE))
 }
 
 const walkToPage = async (params: CatalogParams, page: number): Promise<CatalogPageResult> => {
-  let cursor: string | undefined;
-  let total: number | null = null;
-  let step: CursorStepResult = { movies: [], next: null, total: null };
+  let cursor: string | undefined
+  let total: number | null = null
+  let step: CursorStepResult = { movies: [], next: null, total: null }
 
   for (let current = 1; current <= page; current += 1) {
-    step = await fetchCatalogCursor(params, cursor);
+    step = await fetchCatalogCursor(params, cursor)
 
     if (current === 1) {
-      total = step.total;
+      total = step.total
     }
 
     if (current === page) {
-      break;
+      break
     }
 
     if (!step.next) {
       // курсор закончился раньше целевой страницы — пустой хвост
-      return { movies: [], totalPages: toTotalPages(total) };
+      return { movies: [], totalPages: toTotalPages(total) }
     }
 
-    cursor = step.next;
+    cursor = step.next
   }
 
-  return { movies: step.movies, totalPages: toTotalPages(total) };
+  return { movies: step.movies, totalPages: toTotalPages(total) }
 }
 
 type PageCacheEntry = { promise: Promise<CatalogPageResult>; timestamp: number; isError: boolean }

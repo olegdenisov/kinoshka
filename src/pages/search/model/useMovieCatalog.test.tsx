@@ -14,7 +14,13 @@ const importUseMovieCatalog = async () => {
   return mod.useMovieCatalog
 }
 
-const EMPTY_FILTERS: FilterState = { type: null, genres: [], yearFrom: null, yearTo: null, rating: null }
+const EMPTY_FILTERS: FilterState = {
+  type: null,
+  genres: [],
+  yearFrom: null,
+  yearTo: null,
+  rating: null,
+}
 
 const SEARCH_ENDPOINT = '*/v1.5/movie/search'
 const CATALOG_ENDPOINT = '*/v1.5/movie'
@@ -46,7 +52,14 @@ const mockSearch = (docs: Record<string, unknown>[], overrides: Record<string, u
   server.use(
     http.get(SEARCH_ENDPOINT, ({ request: req }) => {
       request = req
-      return HttpResponse.json({ docs, total: docs.length, page: 1, pages: 3, limit: 10, ...overrides })
+      return HttpResponse.json({
+        docs,
+        total: docs.length,
+        page: 1,
+        pages: 3,
+        limit: 10,
+        ...overrides,
+      })
     }),
   )
   return () => request
@@ -196,7 +209,12 @@ describe('useMovieCatalog — единый результат { movies, mode, to
 
     mockCatalog([catalogDoc('Dune')], { total: 5 })
     const useMovieCatalogCatalog = await importUseMovieCatalog()
-    await renderProbe(useMovieCatalogCatalog, { query: '', filters: EMPTY_FILTERS, sort: '', page: 1 })
+    await renderProbe(useMovieCatalogCatalog, {
+      query: '',
+      filters: EMPTY_FILTERS,
+      sort: '',
+      page: 1,
+    })
 
     expect(screen.getByTestId('mode')).toHaveTextContent('catalog')
     expect(screen.getByTestId('totalPages')).toHaveTextContent('1')
@@ -218,7 +236,12 @@ describe('useMovieCatalog — смена page/sort/фильтров меняет
     expect(new URL(getSearchRequest()!.url).searchParams.get('page')).toBe('1')
 
     const getSearchRequest2 = mockSearch([searchDoc('Matrix Page2')], { pages: 2 })
-    await rerenderProbe(rerender, useMovieCatalog, { query: 'matrix', filters: EMPTY_FILTERS, sort: '', page: 2 })
+    await rerenderProbe(rerender, useMovieCatalog, {
+      query: 'matrix',
+      filters: EMPTY_FILTERS,
+      sort: '',
+      page: 2,
+    })
 
     expect(screen.getByTestId('movies')).toHaveTextContent('Matrix Page2')
     expect(new URL(getSearchRequest2()!.url).searchParams.get('page')).toBe('2')

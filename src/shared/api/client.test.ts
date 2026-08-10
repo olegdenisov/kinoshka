@@ -4,14 +4,14 @@ import { apiClient } from './client'
 
 const ENDPOINT = '*/v1.5/movie/1'
 const NOT_FOUND = {
-  status: 404, 
-  message: 'Not found movie with id 1', 
-  error: 'Not found'
+  status: 404,
+  message: 'Not found movie with id 1',
+  error: 'Not found',
 }
 const FORBIDDEN = {
-  status: 403, 
-  message: 'Forbidden', 
-  error: 'Forbidden'
+  status: 403,
+  message: 'Forbidden',
+  error: 'Forbidden',
 }
 
 describe('apiClient', () => {
@@ -22,9 +22,10 @@ describe('apiClient', () => {
       }),
     )
 
-    await expect(apiClient.getV15MovieById({ path: { id: 1 }}))
-      .rejects
-      .toMatchObject({ status: NOT_FOUND.status, message: NOT_FOUND.message })
+    await expect(apiClient.getV15MovieById({ path: { id: 1 } })).rejects.toMatchObject({
+      status: NOT_FOUND.status,
+      message: NOT_FOUND.message,
+    })
   })
 
   it('api status 403 выставляется корректно', async () => {
@@ -34,9 +35,10 @@ describe('apiClient', () => {
       }),
     )
 
-    await expect(apiClient.getV15MovieById({ path: { id: 1 }}))
-      .rejects
-      .toMatchObject({ status: FORBIDDEN.status, message: FORBIDDEN.message })
+    await expect(apiClient.getV15MovieById({ path: { id: 1 } })).rejects.toMatchObject({
+      status: FORBIDDEN.status,
+      message: FORBIDDEN.message,
+    })
   })
 
   it('тело ответа без строкового message — падает обратно на error.message (не бросает и не теряет status)', async () => {
@@ -48,11 +50,9 @@ describe('apiClient', () => {
       }),
     )
 
-    await expect(apiClient.getV15MovieById({ path: { id: 1 }}))
-      .rejects
-      .toMatchObject({
-        status: 500,
-        message: expect.any(String),
-      })
+    await expect(apiClient.getV15MovieById({ path: { id: 1 } })).rejects.toMatchObject({
+      status: 500,
+      message: expect.any(String),
+    })
   })
 })

@@ -24,7 +24,7 @@ type StorageSlot<T> = {
   get(): T
   set(value: T): void
   remove(): void
-  subscribe(callback: () => void): () => void  // возвращает unsubscribe
+  subscribe(callback: () => void): () => void // возвращает unsubscribe
 }
 
 function createStorageSlot<T>(key: string, schema: z.ZodType<T>, fallback: T): StorageSlot<T> {
@@ -34,9 +34,9 @@ function createStorageSlot<T>(key: string, schema: z.ZodType<T>, fallback: T): S
         const raw = localStorage.getItem(key)
         if (raw === null) return fallback
         const parsed = schema.safeParse(JSON.parse(raw))
-        return parsed.success ? parsed.data : fallback  // невалидное → fallback
+        return parsed.success ? parsed.data : fallback // невалидное → fallback
       } catch {
-        return fallback  // невалидный JSON → fallback
+        return fallback // невалидный JSON → fallback
       }
     },
     set(value) {
@@ -52,24 +52,22 @@ function createStorageSlot<T>(key: string, schema: z.ZodType<T>, fallback: T): S
       }
       window.addEventListener('storage', handler)
       return () => window.removeEventListener('storage', handler)
-    }
+    },
   }
 }
 ```
 
 **Определение конкретных слотов:**
+
 ```ts
 // src/features/favorites/model/storage.ts
 const favoritesSchema = z.object({ ids: z.array(z.number()) })
 
-export const favoritesSlot = createStorageSlot(
-  'favorites',
-  favoritesSchema,
-  { ids: [] }
-)
+export const favoritesSlot = createStorageSlot('favorites', favoritesSchema, { ids: [] })
 ```
 
 **Подключение к React через `useSyncExternalStore`:**
+
 ```ts
 // src/features/favorites/model/useFavorites.ts
 import { useSyncExternalStore } from 'react'
@@ -77,15 +75,13 @@ import { favoritesSlot } from './storage'
 
 export function useFavorites() {
   const data = useSyncExternalStore(
-    favoritesSlot.subscribe,  // подписка на изменения
-    favoritesSlot.get,        // чтение текущего значения
-    () => ({ ids: [] })       // SSR-fallback (для будущего Phase 4)
+    favoritesSlot.subscribe, // подписка на изменения
+    favoritesSlot.get, // чтение текущего значения
+    () => ({ ids: [] }), // SSR-fallback (для будущего Phase 4)
   )
 
   const toggle = (id: number) => {
-    const ids = data.ids.includes(id)
-      ? data.ids.filter(x => x !== id)
-      : [...data.ids, id]
+    const ids = data.ids.includes(id) ? data.ids.filter((x) => x !== id) : [...data.ids, id]
     favoritesSlot.set({ ids })
     // ⚠ useSyncExternalStore НЕ реагирует на изменения в той же вкладке!
     // Нужно уведомить вручную — об этом ниже
@@ -95,7 +91,7 @@ export function useFavorites() {
 }
 ```
 
-**Нюанс с той же вкладкой.** `storage` event от `window` приходит только в *других* вкладках, не в текущей. Для синка в текущей вкладке нужен кастомный EventEmitter или `BroadcastChannel`:
+**Нюанс с той же вкладкой.** `storage` event от `window` приходит только в _других_ вкладках, не в текущей. Для синка в текущей вкладке нужен кастомный EventEmitter или `BroadcastChannel`:
 
 ```ts
 // В createStorageSlot:
@@ -123,23 +119,23 @@ subscribe(callback) {
 
 ## Преимущества
 
-| | |
-|---|---|
-| **Типобезопасность** | Zod-схема — единственный источник типа; TypeScript видит `T` напрямую |
-| **Защита от schema drift** | Невалидные данные → fallback, а не crash |
-| **Реактивность** | `useSyncExternalStore` — официальный React API для внешних store; cross-tab sync бесплатно |
-| **Единый реестр** | Все ключи в одном месте, нет опечаток, нет конфликтов |
-| **Тестируемость** | `createStorageSlot` — чистая функция, легко мокать через `vi.spyOn(Storage.prototype, 'getItem')` |
-| **SSR-ready** | `getServerSnapshot` в `useSyncExternalStore` = fallback при отсутствии window |
+|                            |                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Типобезопасность**       | Zod-схема — единственный источник типа; TypeScript видит `T` напрямую                             |
+| **Защита от schema drift** | Невалидные данные → fallback, а не crash                                                          |
+| **Реактивность**           | `useSyncExternalStore` — официальный React API для внешних store; cross-tab sync бесплатно        |
+| **Единый реестр**          | Все ключи в одном месте, нет опечаток, нет конфликтов                                             |
+| **Тестируемость**          | `createStorageSlot` — чистая функция, легко мокать через `vi.spyOn(Storage.prototype, 'getItem')` |
+| **SSR-ready**              | `getServerSnapshot` в `useSyncExternalStore` = fallback при отсутствии window                     |
 
 ## Недостатки
 
-| | |
-|---|---|
-| **Zod как зависимость** | Добавляет ~13 KB к бандлу (но он и так нужен в проекте для валидации форм/API) |
-| **Синхронный localStorage** | Блокирует main thread на крупных данных (не актуально для массива ID) |
-| **Не реактивный на set в той же вкладке** | Нужен дополнительный EventEmitter/BroadcastChannel — небольшой overhead |
-| **Нет миграций** | Если схема меняется принципиально, fallback просто затирает старые данные — нет версионирования |
+|                                           |                                                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Zod как зависимость**                   | Добавляет ~13 KB к бандлу (но он и так нужен в проекте для валидации форм/API)                  |
+| **Синхронный localStorage**               | Блокирует main thread на крупных данных (не актуально для массива ID)                           |
+| **Не реактивный на set в той же вкладке** | Нужен дополнительный EventEmitter/BroadcastChannel — небольшой overhead                         |
+| **Нет миграций**                          | Если схема меняется принципиально, fallback просто затирает старые данные — нет версионирования |
 
 ---
 

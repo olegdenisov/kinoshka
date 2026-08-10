@@ -64,7 +64,9 @@ describe('useFilterState', () => {
 
   it('activeChips выводятся из URL-фильтров', () => {
     const { result } = renderHook(() => useFilterState(), {
-      wrapper: wrapper(['/search?type=movie&genres=Drama,Action&yearFrom=2020&yearTo=2025&rating=7']),
+      wrapper: wrapper([
+        '/search?type=movie&genres=Drama,Action&yearFrom=2020&yearTo=2025&rating=7',
+      ]),
     })
 
     const labels = result.current.activeChips.map((c) => c.label)
@@ -157,7 +159,9 @@ describe('useFilterState', () => {
   })
 
   it('setFilters пишет весь FilterState в URL с replace:true, не трогая ?q', () => {
-    const { result } = renderHook(() => useFilterState(), { wrapper: wrapper(['/search?q=matrix']) })
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search?q=matrix']),
+    })
 
     act(() => result.current.setFilters({ ...EMPTY_FILTERS, type: 'movie', rating: 8 }))
 

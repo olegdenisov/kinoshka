@@ -11,7 +11,13 @@ type SearchControlsProps = {
   sortDisabled?: boolean
 }
 
-export const SearchControls = ({ chips, onClearAll, sort, onSortChange, sortDisabled }: SearchControlsProps) => {
+export const SearchControls = ({
+  chips,
+  onClearAll,
+  sort,
+  onSortChange,
+  sortDisabled,
+}: SearchControlsProps) => {
   return (
     <div className={s.row}>
       <ActiveFilterChips chips={chips} onClearAll={onClearAll} />

@@ -10,7 +10,13 @@ type MobileHeaderProps = {
   rightAction?: React.ReactNode
 }
 
-export const MobileHeader = ({ title, showSearch = true, onSearchFocus, onBack, rightAction }: MobileHeaderProps) => {
+export const MobileHeader = ({
+  title,
+  showSearch = true,
+  onSearchFocus,
+  onBack,
+  rightAction,
+}: MobileHeaderProps) => {
   const navigate = useNavigate()
   const handleSearchFocus = onSearchFocus ?? (() => navigate('/search'))
 

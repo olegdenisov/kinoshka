@@ -21,7 +21,9 @@ export const Footer = () => {
             <div className={s.colHeader}>{col.h}</div>
             <ul className={s.colList}>
               {col.items.map((item) => (
-                <li key={item} className={s.colItem}>{item}</li>
+                <li key={item} className={s.colItem}>
+                  {item}
+                </li>
               ))}
             </ul>
           </div>

@@ -7,4 +7,4 @@ export default {
       ['app', 'pages', 'widgets', 'features', 'entities', 'shared', 'e2e', 'ci', 'deps'],
     ],
   },
-};
+}

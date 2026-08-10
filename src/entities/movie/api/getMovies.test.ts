@@ -32,7 +32,9 @@ const expectedMovie = {
 
 const mockSuccess = (docs = [doc()]) => {
   server.use(
-    http.get(ENDPOINT, () => HttpResponse.json({ docs, total: docs.length, page: 1, pages: 1, limit: 10 })),
+    http.get(ENDPOINT, () =>
+      HttpResponse.json({ docs, total: docs.length, page: 1, pages: 1, limit: 10 }),
+    ),
   )
 }
 

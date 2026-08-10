@@ -32,11 +32,15 @@ describe('mapDocToMovie — полностью заполненный doc', () =
 
 describe('mapDocToMovie — fallback названия name ?? alternativeName ?? enName', () => {
   it('name есть — используется name', () => {
-    expect(mapDocToMovie(doc({ name: 'Primary', alternativeName: 'Alt', enName: 'En' })).title).toBe('Primary')
+    expect(
+      mapDocToMovie(doc({ name: 'Primary', alternativeName: 'Alt', enName: 'En' })).title,
+    ).toBe('Primary')
   })
 
   it('name отсутствует — используется alternativeName', () => {
-    expect(mapDocToMovie(doc({ name: null, alternativeName: 'Alt', enName: 'En' })).title).toBe('Alt')
+    expect(mapDocToMovie(doc({ name: null, alternativeName: 'Alt', enName: 'En' })).title).toBe(
+      'Alt',
+    )
   })
 
   it('name и alternativeName отсутствуют — используется enName', () => {

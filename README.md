@@ -68,7 +68,7 @@ ComponentName/
 Каждый слайс `widgets/` и `features/` предоставляет публичный API через `index.ts` в корне слайса. Всегда импортируй через него, не через внутренние пути:
 
 ```ts
-import { Header } from '@widgets/header'          // ✓
+import { Header } from '@widgets/header' // ✓
 import { Header } from '@widgets/header/ui/Header' // ✗
 ```
 

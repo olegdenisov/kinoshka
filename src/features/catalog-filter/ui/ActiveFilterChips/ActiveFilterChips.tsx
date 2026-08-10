@@ -8,7 +8,11 @@ type ActiveFilterChipsProps = {
   compact?: boolean
 }
 
-export const ActiveFilterChips = ({ chips, onClearAll, compact = false }: ActiveFilterChipsProps) => {
+export const ActiveFilterChips = ({
+  chips,
+  onClearAll,
+  compact = false,
+}: ActiveFilterChipsProps) => {
   if (compact) {
     return (
       <>
@@ -35,7 +39,9 @@ export const ActiveFilterChips = ({ chips, onClearAll, compact = false }: Active
         </span>
       ))}
       {chips.length > 0 && onClearAll && (
-        <button onClick={onClearAll} className={s.clearAll}>Clear all</button>
+        <button onClick={onClearAll} className={s.clearAll}>
+          Clear all
+        </button>
       )}
     </div>
   )

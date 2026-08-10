@@ -1,25 +1,19 @@
 {
   "name": "kinoshka",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
     "preview": "vite preview",
     "generate-api": "npx apicraft generate --config apicraft.config.ts",
     "test": "vitest",
     "prepare": "husky",
     "commit": "cz"
-  },
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": "oxlint --fix --deny-warnings"
   },
   "dependencies": {
     "@siberiacancode/fetches": "^1.14.3",
@@ -50,9 +44,21 @@
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
     "msw": "^2.14.6",
+    "oxfmt": "^0.62.0",
     "oxlint": "1.78.0",
     "typescript": "~7.0.2",
     "vite": "^8.0.12",
     "vitest": "^4.1.9"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "oxfmt --write",
+      "oxlint --fix --deny-warnings"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   }
 }

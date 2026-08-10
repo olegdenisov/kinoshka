@@ -63,7 +63,13 @@ const GenreChip = ({ label, active, disabled, onClick }: GenreChipProps) => (
   </button>
 )
 
-export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset, disabled }: SearchSidebarProps) => {
+export const SearchSidebar = ({
+  filters,
+  onFiltersChange,
+  onToggleGenre,
+  onReset,
+  disabled,
+}: SearchSidebarProps) => {
   return (
     <aside className={`${s.sidebar} ${disabled ? s.sidebarDisabled : ''}`}>
       <FilterGroup title="Type">
@@ -74,7 +80,9 @@ export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset
             { key: 'anime', label: 'Anime', count: '4,920' },
           ].map((t) => (
             <RadioRow
-              key={t.key} label={t.label} count={t.count}
+              key={t.key}
+              label={t.label}
+              count={t.count}
               active={filters.type === t.key}
               disabled={disabled}
               onClick={() => onFiltersChange({ ...filters, type: t.key })}
@@ -87,7 +95,9 @@ export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset
         <div className={s.genreList}>
           {ALL_GENRES.map((g) => (
             <GenreChip
-              key={g} label={g} active={filters.genres.includes(g)}
+              key={g}
+              label={g}
+              active={filters.genres.includes(g)}
               disabled={disabled}
               onClick={() => onToggleGenre(g)}
             />
@@ -115,7 +125,9 @@ export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset
             <button
               key={r}
               disabled={disabled}
-              onClick={() => onFiltersChange({ ...filters, rating: filters.rating === r ? null : r })}
+              onClick={() =>
+                onFiltersChange({ ...filters, rating: filters.rating === r ? null : r })
+              }
               className={`${s.ratingBtn} ${filters.rating === r ? s.ratingBtnActive : ''}`}
             >
               {r}+
@@ -125,7 +137,9 @@ export const SearchSidebar = ({ filters, onFiltersChange, onToggleGenre, onReset
       </FilterGroup>
 
       <div className={s.resetSection}>
-        <button onClick={onReset} disabled={disabled} className={s.resetBtn}>Reset filters</button>
+        <button onClick={onReset} disabled={disabled} className={s.resetBtn}>
+          Reset filters
+        </button>
       </div>
     </aside>
   )

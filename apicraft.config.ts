@@ -1,7 +1,7 @@
-import { apicraft } from '@siberiacancode/apicraft';
-import { loadEnv } from 'vite';
+import { apicraft } from '@siberiacancode/apicraft'
+import { loadEnv } from 'vite'
 
-const env = loadEnv('development', process.cwd(), '');
+const env = loadEnv('development', process.cwd(), '')
 
 export default apicraft([
   {
@@ -9,6 +9,6 @@ export default apicraft([
     output: './src/shared/api/',
     instance: 'fetches',
     nameBy: 'path',
-    groupBy: 'class'
-  }
-]);
+    groupBy: 'class',
+  },
+])

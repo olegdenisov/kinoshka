@@ -29,7 +29,13 @@
   position: absolute;
   inset: 0;
   opacity: 0.04;
-  background-image: repeating-linear-gradient(0deg, var(--text-primary) 0, var(--text-primary) 1px, transparent 1px, transparent 4px);
+  background-image: repeating-linear-gradient(
+    0deg,
+    var(--text-primary) 0,
+    var(--text-primary) 1px,
+    transparent 1px,
+    transparent 4px
+  );
 }
 
 .trailerPlay {

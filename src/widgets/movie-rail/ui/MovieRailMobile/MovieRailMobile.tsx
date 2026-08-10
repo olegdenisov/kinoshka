@@ -17,7 +17,9 @@ export const MovieRailMobile = ({ title, subtitle, items }: MovieRailMobileProps
           <div className={s.subtitle}>{subtitle}</div>
           <h2 className={s.title}>{title}</h2>
         </div>
-        <Link to="/search" className={s.seeAll}>See all →</Link>
+        <Link to="/search" className={s.seeAll}>
+          See all →
+        </Link>
       </div>
       <div className={`hide-scrollbar ${s.scroll}`}>
         {items.map((m) => (
