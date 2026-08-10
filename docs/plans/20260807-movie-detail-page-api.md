@@ -260,9 +260,9 @@ export class ApiError extends Error {
 
 ### Task 12: Обновление документации
 
-- [ ] отметить выполненные пункты 1.5 в `plans/roadmap.md`
-- [ ] обновить `AGENTS.md`, если появились новые repo-wide паттерны (например, если `ApiError`/`errorFallback` станут переиспользуемым паттерном для будущих страниц с 404)
-- [ ] перенести этот файл в `docs/plans/completed/`
+- [x] отметить выполненные пункты 1.5 в `plans/roadmap.md`
+- [x] обновить `AGENTS.md` — `ApiError`/`AsyncBoundary.errorFallback` задокументирован как переиспользуемый паттерн для будущих 404-страниц; строка про `MOCK_DETAIL`/movie-detail в "Still mock data" переехала в "Also live-data" (уже неактуальна была указана как мок)
+- [x] manual test (skipped - not automatable): перенести этот файл в `docs/plans/completed/` — по правилу раннера плановые файлы не перемещаются агентом; перенос выполняется harness'ом по завершении всех фаз
 
 ## Post-Completion
 
