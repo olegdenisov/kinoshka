@@ -7,7 +7,11 @@ type ArrowBtnProps = {
 
 export const ArrowBtn = ({ dir, onClick }: ArrowBtnProps) => {
   return (
-    <button onClick={onClick} className={s.arrowBtn}>
+    <button
+      onClick={onClick}
+      className={s.arrowBtn}
+      aria-label={dir === 'left' ? 'Previous' : 'Next'}
+    >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
         <path
           d={dir === 'left' ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'}

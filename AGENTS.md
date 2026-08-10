@@ -13,7 +13,7 @@ make dev          # start dev server with HMR
 make build        # type-check (tsc -b) then Vite production build
 make typecheck    # type-check only (tsc --noEmit)
 make build-only   # Vite production build, no type-check
-make lint         # ESLint over all TS/TSX files
+make lint         # oxlint over all TS/TSX files
 make preview      # serve the production build locally
 make install      # install dependencies
 make hooks        # install husky git hooks (pnpm exec husky)
@@ -26,7 +26,7 @@ make coverage     # run Vitest with coverage report
 make audit        # pnpm audit (prod deps, high severity)
 ```
 
-**Commit hooks:** husky + lint-staged run `eslint --fix --max-warnings=0` on staged `*.{ts,tsx}` files pre-commit. Commit messages are enforced by commitlint (`@commitlint/config-conventional`); use `pnpm commit` (commitizen, `cz-conventional-changelog`) for a guided conventional-commit prompt instead of `git commit` directly.
+**Commit hooks:** husky + lint-staged run `oxlint --fix --deny-warnings` on staged `*.{ts,tsx}` files pre-commit. Commit messages are enforced by commitlint (`@commitlint/config-conventional`); use `pnpm commit` (commitizen, `cz-conventional-changelog`) for a guided conventional-commit prompt instead of `git commit` directly.
 
 ## Architecture
 
