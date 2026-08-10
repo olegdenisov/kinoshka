@@ -1,19 +1,21 @@
-import { useSearchParams } from 'react-router'
-import { Header } from '@widgets/header'
-import { SearchSidebar } from '@widgets/search-sidebar'
 import { useFilterState } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
 import { AsyncBoundary, EmptyState, Spinner } from '@shared/ui'
-import { SearchHeader } from '../SearchHeader'
+import { Header } from '@widgets/header'
+import { SearchSidebar } from '@widgets/search-sidebar'
+import { useSearchParams } from 'react-router'
+
+import { useCatalogUpdateStatus } from '../../model/useCatalogUpdateStatus'
+import { useMovieCatalog } from '../../model/useMovieCatalog'
+import { usePageSync } from '../../model/usePageSync'
+import { Pagination } from '../Pagination'
 import { SearchControls } from '../SearchControls'
+import { SearchHeader } from '../SearchHeader'
 import {
   SearchResultsGrid,
   SearchResultSkeletonGrid,
 } from '../SearchResultsGrid'
-import { Pagination } from '../Pagination'
-import { useMovieCatalog } from '../../model/useMovieCatalog'
-import { usePageSync } from '../../model/usePageSync'
-import { useCatalogUpdateStatus } from '../../model/useCatalogUpdateStatus'
+
 import s from './SearchDesktop.module.css'
 
 type SearchResultsProps = {

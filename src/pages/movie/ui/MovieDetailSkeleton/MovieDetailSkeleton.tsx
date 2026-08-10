@@ -1,4 +1,5 @@
 import { Skeleton } from '@shared/ui'
+
 import s from './MovieDetailSkeleton.module.css'
 
 const TAB_COUNT = 4

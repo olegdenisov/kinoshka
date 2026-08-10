@@ -1,4 +1,5 @@
 import { ALL_GENRES } from '@entities/movie'
+
 import { toApiGenre } from './genreMap'
 
 // Локальная копия ALL_GENRES из SearchSidebar.tsx (widgets-слой) —

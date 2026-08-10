@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router'
+
 import {
   EMPTY_FILTERS,
   FILTER_URL_KEYS,

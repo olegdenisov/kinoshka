@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react'
-import { useSearchParams } from 'react-router'
 import {
   stripFilterAndSortParams,
   type FilterState,
 } from '@features/catalog-filter'
+import { useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router'
 
 /** Demo-тариф: страницы 1–10 (клэмп и на чтении из URL, и на записи через goToPage). */
 const MAX_PAGE = 10

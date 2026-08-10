@@ -1,5 +1,6 @@
 import type { MovieDetail, MovieImage } from '@entities/movie'
 import { PlayIcon } from '@shared/ui'
+
 import s from './MediaTab.module.css'
 
 const FALLBACK_SCREENSHOT_COUNT = 8

@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react'
 import { act } from 'react'
+
 import { useDebouncedValue } from './useDebouncedValue'
 
 beforeEach(() => vi.useFakeTimers())

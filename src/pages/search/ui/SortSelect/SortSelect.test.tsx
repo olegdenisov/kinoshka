@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react'
 import { SORT_LABELS } from '@features/catalog-filter'
+import { fireEvent, render, screen } from '@testing-library/react'
+
 import { SortSelect } from './SortSelect'
 
 describe('SortSelect', () => {

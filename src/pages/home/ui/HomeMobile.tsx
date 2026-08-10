@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { Link } from 'react-router'
+import { CATALOG } from '@entities/movie'
 import { MobileHeader, BottomNav } from '@widgets/mobile-chrome'
 import { MovieRailMobile } from '@widgets/movie-rail'
+import { useState } from 'react'
+import { Link } from 'react-router'
+
 import { SearchIcon } from '../../../shared/ui/Icon'
-import { CATALOG } from '@entities/movie'
 
 export const HomeMobile = () => {
   const [activeFilter, setActiveFilter] = useState('all')

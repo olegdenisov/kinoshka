@@ -1,9 +1,10 @@
-import type { ComponentType } from 'react'
+import type { FilterState } from '@features/catalog-filter'
+import { AsyncBoundary } from '@shared/ui'
 import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
+import type { ComponentType } from 'react'
+
 import { server } from '../../../test/setup'
-import { AsyncBoundary } from '@shared/ui'
-import type { FilterState } from '@features/catalog-filter'
 import type {
   MovieCatalogParams,
   useMovieCatalog as UseMovieCatalog,

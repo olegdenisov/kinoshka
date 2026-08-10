@@ -1,5 +1,7 @@
-import type { ActiveChip } from '../../model/useFilterState'
 import { CloseIcon } from '@shared/ui'
+
+import type { ActiveChip } from '../../model/useFilterState'
+
 import s from './ActiveFilterChips.module.css'
 
 type ActiveFilterChipsProps = {

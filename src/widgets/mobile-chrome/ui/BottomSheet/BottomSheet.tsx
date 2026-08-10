@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
 import { CloseIcon } from '@shared/ui'
+import { useEffect } from 'react'
+
 import s from './BottomSheet.module.css'
 
 type BottomSheetProps = React.PropsWithChildren<{

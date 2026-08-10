@@ -1,11 +1,12 @@
-import { useParams } from 'react-router'
-import { useViewport } from '@shared/lib'
 import { useMovieDetail } from '@entities/movie'
 import { ApiError } from '@shared/api'
+import { useViewport } from '@shared/lib'
 import { AsyncBoundary, ErrorState, type ErrorFallbackParams } from '@shared/ui'
+import { useParams } from 'react-router'
+
 import { MovieDesktop } from './ui/MovieDesktop'
-import { MovieMobile } from './ui/MovieMobile'
 import { MovieDetailSkeleton } from './ui/MovieDetailSkeleton'
+import { MovieMobile } from './ui/MovieMobile'
 
 const NOT_FOUND_TITLE = 'Movie not found'
 const NOT_FOUND_DESCRIPTION = "This movie doesn't exist or was removed."

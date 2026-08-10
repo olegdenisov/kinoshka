@@ -1,5 +1,7 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '@shared/ui'
+
 import { buildPageRange, clampPage } from '../../lib/buildPageRange'
+
 import s from './Pagination.module.css'
 
 type PaginationProps = {

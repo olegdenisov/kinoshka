@@ -1,8 +1,10 @@
-import { useRef } from 'react'
-import { Link } from 'react-router'
 import type { Movie } from '@entities/movie'
 import { Card } from '@entities/movie'
+import { useRef } from 'react'
+import { Link } from 'react-router'
+
 import { ArrowBtn } from './ArrowBtn'
+
 import s from './MovieRailDesktop.module.css'
 
 type MovieRailDesktopProps = {

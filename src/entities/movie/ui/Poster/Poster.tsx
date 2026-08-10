@@ -1,4 +1,5 @@
 import type { Movie } from '../../model/types'
+
 import s from './Poster.module.css'
 
 type PosterProps = {

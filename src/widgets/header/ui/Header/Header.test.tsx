@@ -1,6 +1,7 @@
-import { act, useEffect } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
+import { act, useEffect } from 'react'
 import { MemoryRouter, useLocation, useNavigate } from 'react-router'
+
 import { Header } from './Header'
 
 /** Читает текущую строку query из роутера — способ проверить, что запись в URL реально произошла. */

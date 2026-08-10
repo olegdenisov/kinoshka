@@ -1,9 +1,11 @@
+import { useDebouncedValue } from '@shared/lib'
+import { SearchIcon, BellIcon, CloseIcon } from '@shared/ui'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
-import { SearchIcon, BellIcon, CloseIcon } from '@shared/ui'
-import { useDebouncedValue } from '@shared/lib'
-import { NavPill } from '../NavPill'
+
 import { IconButton } from '../IconButton'
+import { NavPill } from '../NavPill'
+
 import s from './Header.module.css'
 
 const QUERY_DEBOUNCE_MS = 250

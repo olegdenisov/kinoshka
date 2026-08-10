@@ -1,5 +1,7 @@
 import { StarIcon, PlusIcon, EyeIcon, HeartIcon, ShareIcon } from '@shared/ui'
+
 import type { LikedState } from '../MovieDesktop/types'
+
 import s from './MovieActions.module.css'
 
 type PrimaryActionProps = {

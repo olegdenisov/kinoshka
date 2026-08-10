@@ -1,9 +1,10 @@
+import type { FilterState } from '@features/catalog-filter'
+import { act, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
-import { act, renderHook } from '@testing-library/react'
 import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
 import type * as ReactRouterModule from 'react-router'
-import type { FilterState } from '@features/catalog-filter'
+
 import { usePageSync } from './usePageSync'
 
 const EMPTY_FILTERS: FilterState = {

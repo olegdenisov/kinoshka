@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+
 import s from './Spinner.module.css'
 
 type SpinnerProps = {

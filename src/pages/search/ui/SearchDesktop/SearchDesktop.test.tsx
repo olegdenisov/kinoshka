@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
-import { MemoryRouter, useLocation } from 'react-router'
 import { http, HttpResponse } from 'msw'
+import { useEffect } from 'react'
+import { MemoryRouter, useLocation } from 'react-router'
+
 import { server } from '../../../../test/setup'
 import { SearchDesktop } from './SearchDesktop'
 

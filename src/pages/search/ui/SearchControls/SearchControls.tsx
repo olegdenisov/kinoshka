@@ -1,6 +1,8 @@
 import { ActiveFilterChips } from '@features/catalog-filter'
 import type { ActiveChip } from '@features/catalog-filter'
+
 import { SortSelect } from '../SortSelect'
+
 import s from './SearchControls.module.css'
 
 type SearchControlsProps = {

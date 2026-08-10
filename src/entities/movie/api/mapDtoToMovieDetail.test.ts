@@ -1,4 +1,5 @@
 import type { MovieDtoV14 } from '@shared/api'
+
 import { isCast, isCrew, mapDtoToMovieDetail } from './mapDtoToMovieDetail'
 
 const doc = (overrides: Partial<MovieDtoV14> = {}): MovieDtoV14 => ({

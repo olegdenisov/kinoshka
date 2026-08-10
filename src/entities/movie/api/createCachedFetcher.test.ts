@@ -1,5 +1,5 @@
-import { createCachedFetcher } from './createCachedFetcher'
 import type { Movie } from '../model/types'
+import { createCachedFetcher } from './createCachedFetcher'
 
 // Мирроят TTL-константы из createCachedFetcher.ts — при их изменении там нужно поправить и здесь.
 const CACHE_TTL_MS = 5 * 60 * 1000

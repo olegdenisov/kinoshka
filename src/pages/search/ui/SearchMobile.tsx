@@ -1,13 +1,10 @@
-import { useState } from 'react'
-import { useSearchParams } from 'react-router'
-import { MobileHeader, BottomNav, BottomSheet } from '@widgets/mobile-chrome'
+import { MobileCard, ALL_GENRES } from '@entities/movie'
 import {
   ActiveFilterChips,
   useFilterState,
   SORT_LABELS,
 } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
-import { MobileCard, ALL_GENRES } from '@entities/movie'
 import {
   AsyncBoundary,
   EmptyState,
@@ -19,10 +16,14 @@ import {
   ChevronRightIcon,
   CheckIcon,
 } from '@shared/ui'
+import { MobileHeader, BottomNav, BottomSheet } from '@widgets/mobile-chrome'
+import { useState } from 'react'
+import { useSearchParams } from 'react-router'
+
+import { buildPageRange, clampPage } from '../lib/buildPageRange'
+import { useCatalogUpdateStatus } from '../model/useCatalogUpdateStatus'
 import { useMovieCatalog } from '../model/useMovieCatalog'
 import { usePageSync } from '../model/usePageSync'
-import { useCatalogUpdateStatus } from '../model/useCatalogUpdateStatus'
-import { buildPageRange, clampPage } from '../lib/buildPageRange'
 
 type MobilePaginationProps = {
   page: number

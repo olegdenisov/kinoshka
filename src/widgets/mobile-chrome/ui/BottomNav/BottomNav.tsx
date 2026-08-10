@@ -1,5 +1,6 @@
-import { useNavigate } from 'react-router'
 import { HomeIcon, SearchIcon, ListsIcon, ProfileIcon } from '@shared/ui'
+import { useNavigate } from 'react-router'
+
 import s from './BottomNav.module.css'
 
 type NavKey = 'home' | 'search' | 'lists' | 'profile'

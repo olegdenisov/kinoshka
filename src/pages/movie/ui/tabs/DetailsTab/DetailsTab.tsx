@@ -1,5 +1,6 @@
 import type { MovieDetail } from '@entities/movie'
 import { formatCurrency } from '@entities/movie'
+
 import s from './DetailsTab.module.css'
 
 type DetailsTabProps = {

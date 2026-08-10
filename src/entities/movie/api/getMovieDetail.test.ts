@@ -1,6 +1,7 @@
-import { http, HttpResponse } from 'msw'
-import { server } from '../../../test/setup'
 import { ApiError } from '@shared/api'
+import { http, HttpResponse } from 'msw'
+
+import { server } from '../../../test/setup'
 import { getMovieDetail } from './getMovieDetail'
 
 const doc = (id: number, overrides: Record<string, unknown> = {}) => ({
