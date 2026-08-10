@@ -1,13 +1,13 @@
-import { useParams } from "react-router"
-import { useViewport } from "@shared/lib"
-import { useMovieDetail } from "@entities/movie"
-import { ApiError } from "@shared/api"
-import { AsyncBoundary, ErrorState, type ErrorFallbackParams } from "@shared/ui"
-import { MovieDesktop } from "./ui/MovieDesktop"
-import { MovieMobile } from "./ui/MovieMobile"
-import { MovieDetailSkeleton } from "./ui/MovieDetailSkeleton"
+import { useParams } from 'react-router'
+import { useViewport } from '@shared/lib'
+import { useMovieDetail } from '@entities/movie'
+import { ApiError } from '@shared/api'
+import { AsyncBoundary, ErrorState, type ErrorFallbackParams } from '@shared/ui'
+import { MovieDesktop } from './ui/MovieDesktop'
+import { MovieMobile } from './ui/MovieMobile'
+import { MovieDetailSkeleton } from './ui/MovieDetailSkeleton'
 
-const NOT_FOUND_TITLE = "Movie not found"
+const NOT_FOUND_TITLE = 'Movie not found'
 const NOT_FOUND_DESCRIPTION = "This movie doesn't exist or was removed."
 
 type MovieDetailContentProps = {
@@ -30,12 +30,8 @@ const movieErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
 
   return (
     <ErrorState
-      title={isNotFound ? NOT_FOUND_TITLE : "Something went wrong"}
-      description={
-        isNotFound
-          ? NOT_FOUND_DESCRIPTION
-          : error?.message || "Please try again later"
-      }
+      title={isNotFound ? NOT_FOUND_TITLE : 'Something went wrong'}
+      description={isNotFound ? NOT_FOUND_DESCRIPTION : error?.message || 'Please try again later'}
       onRetry={reset}
     />
   )
@@ -47,16 +43,11 @@ export const MoviePage = () => {
   const numericId = Number(id)
 
   if (!id || !Number.isInteger(numericId) || numericId <= 0) {
-    return (
-      <ErrorState title={NOT_FOUND_TITLE} description={NOT_FOUND_DESCRIPTION} />
-    )
+    return <ErrorState title={NOT_FOUND_TITLE} description={NOT_FOUND_DESCRIPTION} />
   }
 
   return (
-    <AsyncBoundary
-      errorFallback={movieErrorFallback}
-      fallback={<MovieDetailSkeleton />}
-    >
+    <AsyncBoundary errorFallback={movieErrorFallback} fallback={<MovieDetailSkeleton />}>
       <MovieDetailContent id={numericId} isMobile={isMobile} />
     </AsyncBoundary>
   )

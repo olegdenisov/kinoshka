@@ -1,8 +1,8 @@
-import { Link } from "react-router"
-import type { Movie } from "../../model/types"
-import { Poster } from "../Poster"
-import { StarIcon } from "@shared/ui"
-import s from "./MobileCard.module.css"
+import { Link } from 'react-router'
+import type { Movie } from '../../model/types'
+import { Poster } from '../Poster'
+import { StarIcon } from '@shared/ui'
+import s from './MobileCard.module.css'
 
 type MobileCardProps = {
   movie: Movie
@@ -20,7 +20,7 @@ export const MobileCard = ({ movie }: MobileCardProps) => {
       </div>
       <div className={s.title}>{movie.title}</div>
       <div className={s.meta}>
-        <span>{movie.year ? movie.year : "Unknown"}</span>
+        <span>{movie.year ? movie.year : 'Unknown'}</span>
         <span className={s.metaDot}>·</span>
         <span>{movie.genre[0]}</span>
       </div>

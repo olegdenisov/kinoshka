@@ -1,4 +1,4 @@
-export type FeatureName = "recommendations" | "popularThisWeek" | "toggleTheme"
+export type FeatureName = 'recommendations' | 'popularThisWeek' | 'toggleTheme'
 
 const FEATURE: Record<FeatureName, boolean> = {
   popularThisWeek: false,
@@ -6,5 +6,4 @@ const FEATURE: Record<FeatureName, boolean> = {
   toggleTheme: false,
 }
 
-export const useFeatureFlag = (featureName: FeatureName): boolean =>
-  FEATURE[featureName]
+export const useFeatureFlag = (featureName: FeatureName): boolean => FEATURE[featureName]

@@ -1,13 +1,13 @@
-import { useState } from "react"
-import { useNavigate } from "react-router"
-import { SearchIcon } from "@shared/ui"
-import s from "./HeroSection.module.css"
+import { useState } from 'react'
+import { useNavigate } from 'react-router'
+import { SearchIcon } from '@shared/ui'
+import s from './HeroSection.module.css'
 
 const CHIPS = [
-  { key: "all", label: "Everything" },
-  { key: "movies", label: "Movies" },
-  { key: "series", label: "Series" },
-  { key: "anime", label: "Anime" },
+  { key: 'all', label: 'Everything' },
+  { key: 'movies', label: 'Movies' },
+  { key: 'series', label: 'Series' },
+  { key: 'anime', label: 'Anime' },
 ]
 
 type ChipProps = React.PropsWithChildren<{
@@ -16,10 +16,7 @@ type ChipProps = React.PropsWithChildren<{
 }>
 
 const Chip = ({ children, active, onClick }: ChipProps) => (
-  <button
-    onClick={onClick}
-    className={`${s.chip}${active ? ` ${s.chipActive}` : ""}`}
-  >
+  <button onClick={onClick} className={`${s.chip}${active ? ` ${s.chipActive}` : ''}`}>
     {children}
   </button>
 )
@@ -38,8 +35,8 @@ const Stat = ({ value, label }: StatProps) => (
 
 export const HeroSection = () => {
   const navigate = useNavigate()
-  const [activeFilter, setActiveFilter] = useState("all")
-  const [q, setQ] = useState("")
+  const [activeFilter, setActiveFilter] = useState('all')
+  const [q, setQ] = useState('')
 
   return (
     <section className={s.hero}>
@@ -61,8 +58,8 @@ export const HeroSection = () => {
         </h1>
 
         <p className={s.description}>
-          A quiet place to track films, series and anime — without the noise.
-          Rate. Keep lists. Come back.
+          A quiet place to track films, series and anime — without the noise. Rate. Keep lists. Come
+          back.
         </p>
 
         <div className={s.searchBar}>
@@ -70,19 +67,19 @@ export const HeroSection = () => {
           <input
             className={s.searchInput}
             value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") navigate("/search")
+            onChange={e => setQ(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') navigate('/search')
             }}
             placeholder='Try "films from 2024 rated 8+" or a title…'
           />
-          <button className={s.searchBtn} onClick={() => navigate("/search")}>
+          <button className={s.searchBtn} onClick={() => navigate('/search')}>
             Search
           </button>
         </div>
 
         <div className={s.chips}>
-          {CHIPS.map((c) => (
+          {CHIPS.map(c => (
             <Chip
               key={c.key}
               active={activeFilter === c.key}
@@ -94,10 +91,10 @@ export const HeroSection = () => {
         </div>
 
         <div className={s.stats}>
-          <Stat value="148,230" label="Titles" />
-          <Stat value="2.4M" label="Ratings" />
-          <Stat value="480k" label="Watchers" />
-          <Stat value="12,400" label="Updates / wk" />
+          <Stat value='148,230' label='Titles' />
+          <Stat value='2.4M' label='Ratings' />
+          <Stat value='480k' label='Watchers' />
+          <Stat value='12,400' label='Updates / wk' />
         </div>
       </div>
     </section>

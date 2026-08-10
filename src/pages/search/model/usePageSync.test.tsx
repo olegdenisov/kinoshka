@@ -1,9 +1,9 @@
-import type { ReactNode } from "react"
-import { useEffect } from "react"
-import { act, renderHook } from "@testing-library/react"
-import { MemoryRouter, useLocation, useSearchParams } from "react-router"
-import type { FilterState } from "@features/catalog-filter"
-import { usePageSync } from "./usePageSync"
+import type { ReactNode } from 'react'
+import { useEffect } from 'react'
+import { act, renderHook } from '@testing-library/react'
+import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
+import type { FilterState } from '@features/catalog-filter'
+import { usePageSync } from './usePageSync'
 
 const EMPTY_FILTERS: FilterState = {
   type: null,
@@ -16,9 +16,8 @@ const EMPTY_FILTERS: FilterState = {
 /** Перехватывает опции (`replace: true`), с которыми хук вызывает `setSearchParams`. */
 let setSearchParamsCalls: Array<[unknown, unknown]> = []
 
-vi.mock("react-router", async () => {
-  const actual =
-    await vi.importActual<typeof import("react-router")>("react-router")
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router')
   return {
     ...actual,
     useSearchParams: (...args: Parameters<typeof actual.useSearchParams>) => {
@@ -33,7 +32,7 @@ vi.mock("react-router", async () => {
 })
 
 /** Читает текущую строку query из роутера — способ проверить итоговый результат записи в URL. */
-let lastSearch = ""
+let lastSearch = ''
 const LocationProbe = () => {
   const { search } = useLocation()
   useEffect(() => {
@@ -54,51 +53,39 @@ const wrapper = (initialEntries: string[]) => {
 
 beforeEach(() => {
   setSearchParamsCalls = []
-  lastSearch = ""
-  vi.stubGlobal("scrollTo", vi.fn())
+  lastSearch = ''
+  vi.stubGlobal('scrollTo', vi.fn())
 })
 
-describe("usePageSync", () => {
-  it("пустой URL → page=1", () => {
-    const { result } = renderHook(
-      () => usePageSync({ query: "", filters: EMPTY_FILTERS }),
-      {
-        wrapper: wrapper(["/search"]),
-      },
-    )
+describe('usePageSync', () => {
+  it('пустой URL → page=1', () => {
+    const { result } = renderHook(() => usePageSync({ query: '', filters: EMPTY_FILTERS }), {
+      wrapper: wrapper(['/search']),
+    })
 
     expect(result.current.page).toBe(1)
   })
 
-  it("читает page из ?page", () => {
-    const { result } = renderHook(
-      () => usePageSync({ query: "", filters: EMPTY_FILTERS }),
-      {
-        wrapper: wrapper(["/search?page=4"]),
-      },
-    )
+  it('читает page из ?page', () => {
+    const { result } = renderHook(() => usePageSync({ query: '', filters: EMPTY_FILTERS }), {
+      wrapper: wrapper(['/search?page=4']),
+    })
 
     expect(result.current.page).toBe(4)
   })
 
-  it("клэмпит page к demo-потолку 10 при чтении", () => {
-    const { result } = renderHook(
-      () => usePageSync({ query: "", filters: EMPTY_FILTERS }),
-      {
-        wrapper: wrapper(["/search?page=999"]),
-      },
-    )
+  it('клэмпит page к demo-потолку 10 при чтении', () => {
+    const { result } = renderHook(() => usePageSync({ query: '', filters: EMPTY_FILTERS }), {
+      wrapper: wrapper(['/search?page=999']),
+    })
 
     expect(result.current.page).toBe(10)
   })
 
-  it("goToPage пишет ?page с replace:true и клэмпит запись к [1,10]", () => {
-    const { result } = renderHook(
-      () => usePageSync({ query: "", filters: EMPTY_FILTERS }),
-      {
-        wrapper: wrapper(["/search"]),
-      },
-    )
+  it('goToPage пишет ?page с replace:true и клэмпит запись к [1,10]', () => {
+    const { result } = renderHook(() => usePageSync({ query: '', filters: EMPTY_FILTERS }), {
+      wrapper: wrapper(['/search']),
+    })
 
     act(() => result.current.goToPage(999))
 
@@ -106,137 +93,127 @@ describe("usePageSync", () => {
     expect(lastCall[1]).toEqual({ replace: true })
   })
 
-  it("goToPage прокручивает страницу наверх", () => {
+  it('goToPage прокручивает страницу наверх', () => {
     const scrollSpy = vi.fn()
-    vi.stubGlobal("scrollTo", scrollSpy)
-    const { result } = renderHook(
-      () => usePageSync({ query: "", filters: EMPTY_FILTERS }),
-      {
-        wrapper: wrapper(["/search"]),
-      },
-    )
+    vi.stubGlobal('scrollTo', scrollSpy)
+    const { result } = renderHook(() => usePageSync({ query: '', filters: EMPTY_FILTERS }), {
+      wrapper: wrapper(['/search']),
+    })
 
     act(() => result.current.goToPage(3))
 
-    expect(scrollSpy).toHaveBeenCalledWith({ top: 0, behavior: "smooth" })
+    expect(scrollSpy).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
   })
 
-  it("смена query сбрасывает ?page на 1", () => {
+  it('смена query сбрасывает ?page на 1', () => {
     const { result, rerender } = renderHook(
-      ({ query }: { query: string }) =>
-        usePageSync({ query, filters: EMPTY_FILTERS }),
-      { wrapper: wrapper(["/search?page=5"]), initialProps: { query: "" } },
+      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      { wrapper: wrapper(['/search?page=5']), initialProps: { query: '' } },
     )
     expect(result.current.page).toBe(5)
 
-    rerender({ query: "inception" })
+    rerender({ query: 'inception' })
 
     expect(result.current.page).toBe(1)
   })
 
-  it("смена filters сбрасывает ?page на 1", () => {
+  it('смена filters сбрасывает ?page на 1', () => {
     const { result, rerender } = renderHook(
-      ({ filters }: { filters: FilterState }) =>
-        usePageSync({ query: "", filters }),
+      ({ filters }: { filters: FilterState }) => usePageSync({ query: '', filters }),
       {
-        wrapper: wrapper(["/search?page=5"]),
+        wrapper: wrapper(['/search?page=5']),
         initialProps: { filters: EMPTY_FILTERS },
       },
     )
     expect(result.current.page).toBe(5)
 
-    rerender({ filters: { ...EMPTY_FILTERS, genres: ["Drama"] } })
+    rerender({ filters: { ...EMPTY_FILTERS, genres: ['Drama'] } })
 
     expect(result.current.page).toBe(1)
   })
 
-  it("page уже 1 — reset-эффект не меняет ?page (no-op update)", () => {
+  it('page уже 1 — reset-эффект не меняет ?page (no-op update)', () => {
     const { result, rerender } = renderHook(
-      ({ query }: { query: string }) =>
-        usePageSync({ query, filters: EMPTY_FILTERS }),
-      { wrapper: wrapper(["/search"]), initialProps: { query: "" } },
+      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      { wrapper: wrapper(['/search']), initialProps: { query: '' } },
     )
     expect(result.current.page).toBe(1)
 
-    rerender({ query: "dune" })
+    rerender({ query: 'dune' })
 
     expect(result.current.page).toBe(1)
   })
 
   it("'' → непустой query: один атомарный setSearchParams — фильтры/sort зачищены, page=1", () => {
     const { result, rerender } = renderHook(
-      ({ query }: { query: string }) =>
-        usePageSync({ query, filters: EMPTY_FILTERS }),
+      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
       {
-        wrapper: wrapper(["/search?genres=Drama&sort=Newest&page=3"]),
-        initialProps: { query: "" },
+        wrapper: wrapper(['/search?genres=Drama&sort=Newest&page=3']),
+        initialProps: { query: '' },
       },
     )
     expect(result.current.page).toBe(3)
 
-    act(() => rerender({ query: "inception" }))
+    act(() => rerender({ query: 'inception' }))
 
     expect(setSearchParamsCalls.length).toBe(1)
-    expect(lastSearch).not.toContain("genres=")
-    expect(lastSearch).not.toContain("sort=")
+    expect(lastSearch).not.toContain('genres=')
+    expect(lastSearch).not.toContain('sort=')
     expect(result.current.page).toBe(1)
   })
 
-  it("deep link прямо в search-режим с фильтрами/sort в URL: mount стрипает их один раз, page сбрасывается на 1", () => {
+  it('deep link прямо в search-режим с фильтрами/sort в URL: mount стрипает их один раз, page сбрасывается на 1', () => {
     // Тот же симптом бага 2, что и '' → непустой query переход, только с другим входом:
     // прямой заход по ссылке / refresh уже в search-режиме (см. докблок usePageSync —
     // "Deep-link guard"). Основной reset-эффект (по resetKey) на mount не срабатывает —
     // отдельный mount-only эффект обязан стрипнуть фильтры/sort здесь сам.
     const { result } = renderHook(
-      ({ query }: { query: string }) =>
-        usePageSync({ query, filters: EMPTY_FILTERS }),
+      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
       {
-        wrapper: wrapper(["/search?q=foo&genres=Drama&sort=Newest&page=5"]),
-        initialProps: { query: "foo" },
+        wrapper: wrapper(['/search?q=foo&genres=Drama&sort=Newest&page=5']),
+        initialProps: { query: 'foo' },
       },
     )
 
-    expect(lastSearch).toContain("q=foo")
-    expect(lastSearch).not.toContain("genres=")
-    expect(lastSearch).not.toContain("sort=")
+    expect(lastSearch).toContain('q=foo')
+    expect(lastSearch).not.toContain('genres=')
+    expect(lastSearch).not.toContain('sort=')
     expect(result.current.page).toBe(1)
   })
 
-  it("deep link в search-режим БЕЗ фильтров/sort: mount не трогает ?page (легитимный deep-link на произвольную страницу)", () => {
+  it('deep link в search-режим БЕЗ фильтров/sort: mount не трогает ?page (легитимный deep-link на произвольную страницу)', () => {
     const { result } = renderHook(
-      ({ query }: { query: string }) =>
-        usePageSync({ query, filters: EMPTY_FILTERS }),
+      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
       {
-        wrapper: wrapper(["/search?q=foo&page=7"]),
-        initialProps: { query: "foo" },
+        wrapper: wrapper(['/search?q=foo&page=7']),
+        initialProps: { query: 'foo' },
       },
     )
 
     // Нечего стрипать — mount-эффект обязан быть no-op'ом и оставить ?page как есть.
-    expect(lastSearch).toContain("q=foo")
-    expect(lastSearch).toContain("page=7")
+    expect(lastSearch).toContain('q=foo')
+    expect(lastSearch).toContain('page=7')
     expect(result.current.page).toBe(7)
   })
 
-  it("непустой → непустой query на уже смонтированной странице: повторной зачистки фильтров/sort не происходит", () => {
+  it('непустой → непустой query на уже смонтированной странице: повторной зачистки фильтров/sort не происходит', () => {
     const { result, rerender } = renderHook(
-      ({ query }: { query: string }) =>
-        usePageSync({ query, filters: EMPTY_FILTERS }),
+      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
       {
-        wrapper: wrapper(["/search?q=inception&page=5"]),
-        initialProps: { query: "inception" },
+        wrapper: wrapper(['/search?q=inception&page=5']),
+        initialProps: { query: 'inception' },
       },
     )
     expect(result.current.page).toBe(5)
-    expect(lastSearch).not.toContain("sort=")
+    expect(lastSearch).not.toContain('sort=')
 
-    act(() => rerender({ query: "inception2" }))
+    act(() => rerender({ query: 'inception2' }))
 
-    expect(lastSearch).not.toContain("sort=")
+    expect(lastSearch).not.toContain('sort=')
     expect(result.current.page).toBe(1)
   })
 
-  it("непустой → пустой → непустой query (round-trip): возврат в поиск снова стрипает фильтры/sort, накопленные в catalog-режиме между поисками", () => {
+  it('непустой → пустой → непустой query (round-trip): возврат в поиск снова стрипает фильтры/sort, накопленные в catalog-режиме между поисками', () => {
     // Экерсайзит wasSearchingRef.current = isSearching (сброс на '' → false, usePageSync.ts:
     // ~64-66), а не только однократный переход '' → непустой из предыдущих тестов: пользователь
     // выходит из поиска (query становится '' — sort снова доступен через сайдбар), затем
@@ -251,51 +228,50 @@ describe("usePageSync", () => {
         }
       },
       {
-        wrapper: wrapper(["/search?q=inception&page=5"]),
-        initialProps: { query: "inception" },
+        wrapper: wrapper(['/search?q=inception&page=5']),
+        initialProps: { query: 'inception' },
       },
     )
     expect(result.current.page).toBe(5)
 
-    act(() => rerender({ query: "" }))
+    act(() => rerender({ query: '' }))
     expect(result.current.page).toBe(1)
 
     // Пока query пустой, пользователь выставляет сортировку через сайдбар (в реальном
     // приложении — SortSelect/BottomSheet; здесь эмулируем прямой записью в URL, как это
     // делают эти виджеты).
     act(() => {
-      result.current.setSearchParams((prev) => {
+      result.current.setSearchParams(prev => {
         const params = new URLSearchParams(prev)
-        params.set("sort", "Newest")
+        params.set('sort', 'Newest')
         return params
       })
     })
-    expect(lastSearch).toContain("sort=Newest")
+    expect(lastSearch).toContain('sort=Newest')
 
-    act(() => rerender({ query: "inception2" }))
+    act(() => rerender({ query: 'inception2' }))
 
     // usePageSync сам не пишет `?q` (это делает Header/URL до вызова хука) — здесь важно,
     // что sort, накопленный за время catalog-режима, не пережил повторный вход в поиск.
-    expect(lastSearch).not.toContain("sort=")
+    expect(lastSearch).not.toContain('sort=')
     expect(result.current.page).toBe(1)
   })
 
-  it("смена filters при пустом query: page сбрасывается, зачистки фильтров/sort не происходит", () => {
+  it('смена filters при пустом query: page сбрасывается, зачистки фильтров/sort не происходит', () => {
     const { result, rerender } = renderHook(
-      ({ filters }: { filters: FilterState }) =>
-        usePageSync({ query: "", filters }),
+      ({ filters }: { filters: FilterState }) => usePageSync({ query: '', filters }),
       {
-        wrapper: wrapper(["/search?sort=Newest&page=5"]),
+        wrapper: wrapper(['/search?sort=Newest&page=5']),
         initialProps: { filters: EMPTY_FILTERS },
       },
     )
     expect(result.current.page).toBe(5)
 
-    act(() => rerender({ filters: { ...EMPTY_FILTERS, genres: ["Drama"] } }))
+    act(() => rerender({ filters: { ...EMPTY_FILTERS, genres: ['Drama'] } }))
 
     expect(result.current.page).toBe(1)
     // sort — не связан с изменившимся filters-пропом и не должен зачищаться (query всё ещё пустой,
     // стрип фильтров/sort происходит только на переходе '' → непустой query).
-    expect(lastSearch).toContain("sort=Newest")
+    expect(lastSearch).toContain('sort=Newest')
   })
 })

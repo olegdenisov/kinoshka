@@ -13,19 +13,16 @@ export const clampPage = (page: number, totalPages: number): number => {
  * (`'…L'`/`'…R'`) — общая pure-функция для desktop `Pagination` и mobile `MobilePagination`
  * (вынесена ревью-фазой 2, ранее была продублирована и уже расходилась один раз).
  */
-export const buildPageRange = (
-  page: number,
-  totalPages: number,
-): (number | string)[] => {
+export const buildPageRange = (page: number, totalPages: number): (number | string)[] => {
   const safeTotalPages = Math.max(1, totalPages)
   const safePage = clampPage(page, totalPages)
 
   const pages: (number | string)[] = [1]
   const left = Math.max(2, safePage - 1)
   const right = Math.min(safeTotalPages - 1, safePage + 1)
-  if (left > 2) pages.push("…L")
+  if (left > 2) pages.push('…L')
   for (let i = left; i <= right; i++) pages.push(i)
-  if (right < safeTotalPages - 1) pages.push("…R")
+  if (right < safeTotalPages - 1) pages.push('…R')
   if (safeTotalPages > 1) pages.push(safeTotalPages)
   return pages
 }

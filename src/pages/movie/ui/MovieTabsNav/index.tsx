@@ -1,1 +1,1 @@
-export { MovieTabsNav } from "./MovieTabsNav"
+export { MovieTabsNav } from './MovieTabsNav'

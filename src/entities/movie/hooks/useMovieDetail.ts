@@ -1,7 +1,7 @@
-import { use } from "react"
-import type { MovieDetail } from "../model/types"
-import { getMovieDetail } from "../api/getMovieDetail"
-import { getMovieImages, type MovieImage } from "../api/getMovieImages"
+import { use } from 'react'
+import type { MovieDetail } from '../model/types'
+import { getMovieDetail } from '../api/getMovieDetail'
+import { getMovieImages, type MovieImage } from '../api/getMovieImages'
 
 export type MovieDetailBundle = {
   detail: MovieDetail
@@ -12,18 +12,15 @@ const combineDetail = async (
   detailPromise: Promise<MovieDetail>,
   imagesPromise: Promise<MovieImage[]>,
 ): Promise<MovieDetailBundle> => {
-  const [detailResult, imagesResult] = await Promise.allSettled([
-    detailPromise,
-    imagesPromise,
-  ])
+  const [detailResult, imagesResult] = await Promise.allSettled([detailPromise, imagesPromise])
 
-  if (detailResult.status === "rejected") {
+  if (detailResult.status === 'rejected') {
     throw detailResult.reason
   }
 
   return {
     detail: detailResult.value,
-    images: imagesResult.status === "fulfilled" ? imagesResult.value : [],
+    images: imagesResult.status === 'fulfilled' ? imagesResult.value : [],
   }
 }
 
@@ -49,19 +46,13 @@ const bundleCache = new Map<number, BundleCacheEntry>()
 
 // Экспортируется отдельно от useMovieDetail (не хук — plain function) для теста
 // стабильности ссылки: см. useMovieDetail.test.tsx, "идентичность bundle-промиса".
-export const getMovieDetailBundle = (
-  id: number,
-): Promise<MovieDetailBundle> => {
+export const getMovieDetailBundle = (id: number): Promise<MovieDetailBundle> => {
   const detailPromise = getMovieDetail(id)
   const imagesPromise = getMovieImages(id)
 
   const cached = bundleCache.get(id)
 
-  if (
-    cached &&
-    cached.detailPromise === detailPromise &&
-    cached.imagesPromise === imagesPromise
-  ) {
+  if (cached && cached.detailPromise === detailPromise && cached.imagesPromise === imagesPromise) {
     return cached.bundlePromise
   }
 
@@ -71,5 +62,4 @@ export const getMovieDetailBundle = (
   return bundlePromise
 }
 
-export const useMovieDetail = (id: number): MovieDetailBundle =>
-  use(getMovieDetailBundle(id))
+export const useMovieDetail = (id: number): MovieDetailBundle => use(getMovieDetailBundle(id))

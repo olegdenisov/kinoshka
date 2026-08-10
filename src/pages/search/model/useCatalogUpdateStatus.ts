@@ -1,5 +1,5 @@
-import { useDeferredValue, useEffect, useState } from "react"
-import type { FilterState } from "@features/catalog-filter"
+import { useDeferredValue, useEffect, useState } from 'react'
+import type { FilterState } from '@features/catalog-filter'
 
 const areFiltersEqual = (a: FilterState, b: FilterState): boolean =>
   a.type === b.type &&
@@ -102,7 +102,7 @@ export const useCatalogUpdateStatus = ({
     // и `isUpdating` кратко становился `true` даже без единого реального изменения параметров
     // (лишний "Updating…"-флэш на каждом свежем маунте `/search`).
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLive((prevLive) => {
+    setLive(prevLive => {
       const unchanged =
         prevLive.query === query &&
         prevLive.sort === sort &&

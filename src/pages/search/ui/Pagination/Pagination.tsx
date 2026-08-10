@@ -1,6 +1,6 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@shared/ui"
-import { buildPageRange, clampPage } from "../../lib/buildPageRange"
-import s from "./Pagination.module.css"
+import { ChevronLeftIcon, ChevronRightIcon } from '@shared/ui'
+import { buildPageRange, clampPage } from '../../lib/buildPageRange'
+import s from './Pagination.module.css'
 
 type PaginationProps = {
   page: number
@@ -26,7 +26,7 @@ export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
         <ChevronLeftIcon size={11} />
       </button>
       {pages.map((p, i) =>
-        typeof p === "string" ? (
+        typeof p === 'string' ? (
           <span key={p + i} className={s.ellipsis}>
             …
           </span>
@@ -34,7 +34,7 @@ export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
           <button
             key={p}
             onClick={() => onChange(p)}
-            className={`${s.btn}${p === safePage ? ` ${s.btnActive}` : ""}`}
+            className={`${s.btn}${p === safePage ? ` ${s.btnActive}` : ''}`}
           >
             {p}
           </button>

@@ -18,7 +18,7 @@
 
 ```ts
 // src/shared/lib/storage.ts
-import { z } from "zod"
+import { z } from 'zod'
 
 type StorageSlot<T> = {
   get(): T
@@ -27,11 +27,7 @@ type StorageSlot<T> = {
   subscribe(callback: () => void): () => void // возвращает unsubscribe
 }
 
-function createStorageSlot<T>(
-  key: string,
-  schema: z.ZodType<T>,
-  fallback: T,
-): StorageSlot<T> {
+function createStorageSlot<T>(key: string, schema: z.ZodType<T>, fallback: T): StorageSlot<T> {
   return {
     get() {
       try {
@@ -54,8 +50,8 @@ function createStorageSlot<T>(
       const handler = (e: StorageEvent) => {
         if (e.key === key) callback()
       }
-      window.addEventListener("storage", handler)
-      return () => window.removeEventListener("storage", handler)
+      window.addEventListener('storage', handler)
+      return () => window.removeEventListener('storage', handler)
     },
   }
 }
@@ -67,7 +63,7 @@ function createStorageSlot<T>(
 // src/features/favorites/model/storage.ts
 const favoritesSchema = z.object({ ids: z.array(z.number()) })
 
-export const favoritesSlot = createStorageSlot("favorites", favoritesSchema, {
+export const favoritesSlot = createStorageSlot('favorites', favoritesSchema, {
   ids: [],
 })
 ```
@@ -76,8 +72,8 @@ export const favoritesSlot = createStorageSlot("favorites", favoritesSchema, {
 
 ```ts
 // src/features/favorites/model/useFavorites.ts
-import { useSyncExternalStore } from "react"
-import { favoritesSlot } from "./storage"
+import { useSyncExternalStore } from 'react'
+import { favoritesSlot } from './storage'
 
 export function useFavorites() {
   const data = useSyncExternalStore(
@@ -87,9 +83,7 @@ export function useFavorites() {
   )
 
   const toggle = (id: number) => {
-    const ids = data.ids.includes(id)
-      ? data.ids.filter((x) => x !== id)
-      : [...data.ids, id]
+    const ids = data.ids.includes(id) ? data.ids.filter(x => x !== id) : [...data.ids, id]
     favoritesSlot.set({ ids })
     // ⚠ useSyncExternalStore НЕ реагирует на изменения в той же вкладке!
     // Нужно уведомить вручную — об этом ниже

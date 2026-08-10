@@ -1,10 +1,10 @@
-export { ActiveFilterChips } from "./ui/ActiveFilterChips"
-export { useFilterState } from "./model/useFilterState"
-export type { FilterState, ActiveChip } from "./model/useFilterState"
-export { filtersToParams, SORT_LABELS } from "./lib/filtersToParams"
-export type { CatalogQueryParams } from "./lib/filtersToParams"
+export { ActiveFilterChips } from './ui/ActiveFilterChips'
+export { useFilterState } from './model/useFilterState'
+export type { FilterState, ActiveChip } from './model/useFilterState'
+export { filtersToParams, SORT_LABELS } from './lib/filtersToParams'
+export type { CatalogQueryParams } from './lib/filtersToParams'
 export {
   getFilterFromSearchParams,
   filtersToSearchParams,
   stripFilterAndSortParams,
-} from "./lib/searchParams"
+} from './lib/searchParams'

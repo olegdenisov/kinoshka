@@ -1,6 +1,6 @@
-import type { Movie } from "@entities/movie"
-import { Card } from "@entities/movie"
-import s from "./RelatedMovies.module.css"
+import type { Movie } from '@entities/movie'
+import { Card } from '@entities/movie'
+import s from './RelatedMovies.module.css'
 
 type RelatedMoviesProps = {
   movies: Movie[]
@@ -19,8 +19,8 @@ export const RelatedMovies = ({ movies, movieTitle }: RelatedMoviesProps) => {
         <h2 className={s.heading}>More like {movieTitle}</h2>
       </div>
       <div className={s.grid}>
-        {movies.map((x) => (
-          <Card key={x.id} movie={x} variant="grid" />
+        {movies.map(x => (
+          <Card key={x.id} movie={x} variant='grid' />
         ))}
       </div>
     </div>

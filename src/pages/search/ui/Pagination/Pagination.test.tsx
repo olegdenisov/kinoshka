@@ -1,21 +1,21 @@
-import { render, screen } from "@testing-library/react"
-import { Pagination } from "./Pagination"
+import { render, screen } from '@testing-library/react'
+import { Pagination } from './Pagination'
 
-describe("Pagination", () => {
-  it("рендерит номера страниц вокруг текущей с эллипсисами по краям", () => {
+describe('Pagination', () => {
+  it('рендерит номера страниц вокруг текущей с эллипсисами по краям', () => {
     render(<Pagination page={5} totalPages={10} onChange={vi.fn()} />)
 
-    ;["1", "4", "5", "6", "10"].forEach((label) => {
-      expect(screen.getByRole("button", { name: label })).toBeInTheDocument()
+    ;['1', '4', '5', '6', '10'].forEach(label => {
+      expect(screen.getByRole('button', { name: label })).toBeInTheDocument()
     })
-    expect(screen.getAllByText("…")).toHaveLength(2)
+    expect(screen.getAllByText('…')).toHaveLength(2)
   })
 
-  it("клик по номеру страницы вызывает onChange с этим номером", () => {
+  it('клик по номеру страницы вызывает onChange с этим номером', () => {
     const onChange = vi.fn()
     render(<Pagination page={5} totalPages={10} onChange={onChange} />)
 
-    screen.getByRole("button", { name: "4" }).click()
+    screen.getByRole('button', { name: '4' }).click()
 
     expect(onChange).toHaveBeenCalledWith(4)
   })
@@ -24,7 +24,7 @@ describe("Pagination", () => {
     const onChange = vi.fn()
     render(<Pagination page={1} totalPages={10} onChange={onChange} />)
 
-    const buttons = screen.getAllByRole("button")
+    const buttons = screen.getAllByRole('button')
     const prevBtn = buttons[0]
     expect(prevBtn).toBeDisabled()
 
@@ -36,7 +36,7 @@ describe("Pagination", () => {
     const onChange = vi.fn()
     render(<Pagination page={10} totalPages={10} onChange={onChange} />)
 
-    const buttons = screen.getAllByRole("button")
+    const buttons = screen.getAllByRole('button')
     const nextBtn = buttons[buttons.length - 1]
     expect(nextBtn).toBeDisabled()
 
@@ -48,7 +48,7 @@ describe("Pagination", () => {
     const onChange = vi.fn()
     render(<Pagination page={5} totalPages={10} onChange={onChange} />)
 
-    const buttons = screen.getAllByRole("button")
+    const buttons = screen.getAllByRole('button')
     buttons[0].click()
     expect(onChange).toHaveBeenLastCalledWith(4)
 
@@ -59,19 +59,19 @@ describe("Pagination", () => {
   it('totalPages=1: единственная кнопка "1", обе стрелки задизейблены', () => {
     render(<Pagination page={1} totalPages={1} onChange={vi.fn()} />)
 
-    expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument()
-    const buttons = screen.getAllByRole("button")
+    expect(screen.getByRole('button', { name: '1' })).toBeInTheDocument()
+    const buttons = screen.getAllByRole('button')
     expect(buttons[0]).toBeDisabled()
     expect(buttons[buttons.length - 1]).toBeDisabled()
   })
 
-  it("edge: page > totalPages клэмпится для рендера — не крашит, подсвечивает последнюю страницу", () => {
+  it('edge: page > totalPages клэмпится для рендера — не крашит, подсвечивает последнюю страницу', () => {
     render(<Pagination page={999} totalPages={5} onChange={vi.fn()} />)
 
-    const activeBtn = screen.getByRole("button", { name: "5" })
+    const activeBtn = screen.getByRole('button', { name: '5' })
     expect(activeBtn.className).toMatch(/btnActive/)
 
-    const buttons = screen.getAllByRole("button")
+    const buttons = screen.getAllByRole('button')
     // "вперёд" клэмпится к последней валидной странице и задизейблен
     expect(buttons[buttons.length - 1]).toBeDisabled()
   })
