@@ -15,7 +15,7 @@
 - **React Compiler** — автоматическая мемоизация (`babel-plugin-react-compiler`); ручные `useMemo` / `useCallback` / `memo` не нужны
 - **Vitest** + **Testing Library** + **MSW** — юнит и интеграционные тесты, мокирование API-запросов
 - **Zod** — валидация данных (localStorage, API-границы)
-- **ESLint 10** + `typescript-eslint`
+- **oxlint** — Rust-линтер (TS/React/jsx-a11y правила)
 - **husky** + **lint-staged** + **commitlint** — pre-commit линтинг и conventional commits (`pnpm commit`)
 
 ## Команды
@@ -23,7 +23,7 @@
 ```bash
 make dev          # dev-сервер с HMR
 make build        # проверка типов (tsc -b) + production-сборка
-make lint         # ESLint по всем TS/TSX-файлам
+make lint         # oxlint по всем TS/TSX-файлам
 make preview      # раздача production-сборки локально
 make test         # запустить тесты один раз
 make test-watch   # тесты в watch-режиме

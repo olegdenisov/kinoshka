@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "react", "jsx-a11y"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    // React 19 automatic JSX runtime — no `import React` needed in scope.
+    "react-in-jsx-scope": "off",
+    // Ports of eslint-plugin-react-hooks; not in oxlint's "correctness" category by default.
+    "rules-of-hooks": "error",
+    "exhaustive-deps": "error",
+    // Port of eslint-plugin-react-refresh's vite preset.
+    "only-export-components": ["error", { "allowConstantExport": true }],
+    // ul[role=listbox] > li > [role=option] is the standard WAI-ARIA listbox pattern
+    // (SortSelect) — oxlint's jsx-a11y is stricter here than eslint-plugin-jsx-a11y's
+    // recommended config and would push toward a native <select>, which can't carry
+    // the custom trigger/icon markup this component needs.
+    "prefer-tag-over-role": "off",
+    "no-noninteractive-element-to-interactive-role": "off"
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "vitest": true
+  },
+  "ignorePatterns": ["dist", "src/shared/api/*.gen.ts"]
+}
