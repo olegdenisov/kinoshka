@@ -1,6 +1,7 @@
+import { SearchIcon } from '@shared/ui'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { SearchIcon } from '@shared/ui'
+
 import s from './HeroSection.module.css'
 
 const CHIPS = [

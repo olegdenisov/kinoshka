@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import { MobileCard } from './index'
+
 import type { Movie } from '../../model/types'
+import { MobileCard } from './index'
 
 const baseMovie: Movie = {
   id: 1,

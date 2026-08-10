@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import type { FilterState } from '../model/useFilterState'
 
 /** URL-ключи фильтров (без сортировки) — используются и для чтения/записи, и для удаления. */

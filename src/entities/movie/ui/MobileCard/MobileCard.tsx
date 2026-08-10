@@ -1,7 +1,9 @@
+import { StarIcon } from '@shared/ui'
 import { Link } from 'react-router'
+
 import type { Movie } from '../../model/types'
 import { Poster } from '../Poster'
-import { StarIcon } from '@shared/ui'
+
 import s from './MobileCard.module.css'
 
 type MobileCardProps = {

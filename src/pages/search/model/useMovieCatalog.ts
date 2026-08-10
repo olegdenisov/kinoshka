@@ -1,8 +1,8 @@
-import { use } from 'react'
-import { filtersToParams } from '@features/catalog-filter'
-import type { FilterState } from '@features/catalog-filter'
 import { getMoviesPage, getSearchMovies } from '@entities/movie'
 import type { Movie } from '@entities/movie'
+import { filtersToParams } from '@features/catalog-filter'
+import type { FilterState } from '@features/catalog-filter'
+import { use } from 'react'
 
 export type CatalogMode = 'search' | 'catalog'
 

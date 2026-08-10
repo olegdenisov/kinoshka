@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from 'react'
+
 import { ErrorBoundary } from '../ErrorBoundary'
 import { ErrorState } from '../ErrorState'
 import { Spinner } from '../Spinner'

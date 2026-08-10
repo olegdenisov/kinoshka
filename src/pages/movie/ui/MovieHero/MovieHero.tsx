@@ -1,9 +1,11 @@
-import { Link } from 'react-router'
 import type { MovieDetail } from '@entities/movie'
 import { Poster } from '@entities/movie'
 import { StarIcon, PlayIcon } from '@shared/ui'
-import type { LikedState } from '../MovieDesktop/types'
+import { Link } from 'react-router'
+
 import { MovieActions } from '../MovieActions'
+import type { LikedState } from '../MovieDesktop/types'
+
 import s from './MovieHero.module.css'
 
 type TagPillProps = React.PropsWithChildren

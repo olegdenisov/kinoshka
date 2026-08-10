@@ -8,5 +8,6 @@
   "jsxSingleQuote": true,
   "bracketSpacing": true,
   "arrowParens": "avoid",
+  "sortImports": { "newlinesBetween": true },
   "ignorePatterns": ["src/shared/api/*.gen.ts"]
 }

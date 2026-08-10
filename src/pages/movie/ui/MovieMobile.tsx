@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router'
 import type { CastMember, MovieDetail, MovieImage } from '@entities/movie'
 import { Poster, MobileCard, formatCurrency } from '@entities/movie'
 import { MobileHeader, BottomNav } from '@widgets/mobile-chrome'
+import { useState } from 'react'
+import { useNavigate } from 'react-router'
+
 import {
   StarIcon,
   PlusIcon,

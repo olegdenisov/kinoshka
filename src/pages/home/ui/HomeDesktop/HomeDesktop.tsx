@@ -1,12 +1,14 @@
 import { AsyncBoundary, Footer } from '@shared/ui'
 import { Header } from '@widgets/header'
-import { HeroSection } from '../HeroSection'
-import s from './HomeDesktop.module.css'
-import { PopularMoviesRail } from '../PopularMoviesRail'
-import { TrandingSeriesRail } from '../TrandingSeriesRail'
-import { TopAnimeRails } from '../TopAnimeRails'
-import { PersonalRails } from '../PersonalRails'
 import { MovieRailSkeletonDesktop } from '@widgets/movie-rail'
+
+import { HeroSection } from '../HeroSection'
+import { PersonalRails } from '../PersonalRails'
+import { PopularMoviesRail } from '../PopularMoviesRail'
+import { TopAnimeRails } from '../TopAnimeRails'
+import { TrandingSeriesRail } from '../TrandingSeriesRail'
+
+import s from './HomeDesktop.module.css'
 
 export const HomeDesktop = () => {
   return (

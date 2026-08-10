@@ -1,4 +1,5 @@
 import { apiClient } from '@shared/api'
+
 import { createCachedFetcher } from './createCachedFetcher'
 
 export type MovieImage = {

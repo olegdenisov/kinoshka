@@ -1,4 +1,5 @@
 import { use } from 'react'
+
 import { getMovies } from '../api/getMovies'
 import type { MovieType } from '../model/types'
 

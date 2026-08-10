@@ -1,8 +1,10 @@
+import { StarIcon, PlusIcon, EyeIcon } from '@shared/ui'
 import { Link } from 'react-router'
+
 import type { Movie } from '../../model/types'
 import { Poster } from '../Poster'
-import { StarIcon, PlusIcon, EyeIcon } from '@shared/ui'
 import { CardBtn } from './CardBtn'
+
 import s from './Card.module.css'
 
 type CardProps = {

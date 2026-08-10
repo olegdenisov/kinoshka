@@ -1,5 +1,6 @@
-import type { FilterState } from '@features/catalog-filter'
 import { ALL_GENRES } from '@entities/movie'
+import type { FilterState } from '@features/catalog-filter'
+
 import s from './SearchSidebar.module.css'
 
 type SearchSidebarProps = {

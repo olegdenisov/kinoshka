@@ -1,5 +1,5 @@
-import { useDeferredValue, useEffect, useState } from 'react'
 import type { FilterState } from '@features/catalog-filter'
+import { useDeferredValue, useEffect, useState } from 'react'
 
 const areFiltersEqual = (a: FilterState, b: FilterState): boolean =>
   a.type === b.type &&

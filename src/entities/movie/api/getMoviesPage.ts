@@ -2,6 +2,7 @@ import {
   apiClient,
   type MovieControllerFindManyByQueryV15Data,
 } from '@shared/api'
+
 import type { Movie } from '../model/types'
 import { createCachedFetcher } from './createCachedFetcher'
 import { mapDocToMovie } from './mapDocToMovie'

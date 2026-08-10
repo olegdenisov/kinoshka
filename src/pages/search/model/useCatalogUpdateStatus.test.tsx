@@ -1,5 +1,6 @@
-import { renderHook, waitFor } from '@testing-library/react'
 import type { FilterState } from '@features/catalog-filter'
+import { renderHook, waitFor } from '@testing-library/react'
+
 import { useCatalogUpdateStatus } from './useCatalogUpdateStatus'
 
 const EMPTY_FILTERS: FilterState = {

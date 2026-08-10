@@ -1,4 +1,5 @@
 import { createSessionCache } from '@shared/lib'
+
 import type { Movie } from '../model/types'
 
 type CacheEntry<R> = {

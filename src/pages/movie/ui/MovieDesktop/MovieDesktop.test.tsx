@@ -1,7 +1,8 @@
+import type { MovieDetail, MovieImage } from '@entities/movie'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
-import type { MovieDetail, MovieImage } from '@entities/movie'
+
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
 import { MovieDesktop } from './MovieDesktop'
 

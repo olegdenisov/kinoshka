@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import { createStorageSlot } from './storage'
 
 const schema = z.array(z.number())

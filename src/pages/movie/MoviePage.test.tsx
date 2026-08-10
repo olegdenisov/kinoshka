@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router'
 import { http, HttpResponse } from 'msw'
+import { MemoryRouter, Route, Routes } from 'react-router'
+
 import { server } from '../../test/setup'
 import { MoviePage } from './MoviePage'
 

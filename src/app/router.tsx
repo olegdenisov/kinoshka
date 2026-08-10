@@ -1,7 +1,8 @@
 import { createBrowserRouter } from 'react-router'
+
 import { HomePage } from '../pages/home'
-import { SearchPage } from '../pages/search'
 import { MoviePage } from '../pages/movie'
+import { SearchPage } from '../pages/search'
 
 export const router = createBrowserRouter([
   { path: '/', element: <HomePage /> },

@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw'
+
 import { server } from '../../../test/setup'
 
 // Механика кэша (дедупликация, TTL, cooldown, sessionStorage) покрыта в createCachedFetcher.test.ts.

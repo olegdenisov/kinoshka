@@ -1,14 +1,16 @@
-import { useState } from 'react'
-import { Header } from '@widgets/header'
 import type { MovieDetail, MovieImage } from '@entities/movie'
-import { OverviewTab } from '../tabs/OverviewTab'
-import { CastTab } from '../tabs/CastTab'
-import { MediaTab } from '../tabs/MediaTab'
-import { DetailsTab } from '../tabs/DetailsTab'
+import { Header } from '@widgets/header'
+import { useState } from 'react'
+
 import { MovieHero } from '../MovieHero'
 import { MovieTabsNav } from '../MovieTabsNav'
 import { RelatedMovies } from '../RelatedMovies'
+import { CastTab } from '../tabs/CastTab'
+import { DetailsTab } from '../tabs/DetailsTab'
+import { MediaTab } from '../tabs/MediaTab'
+import { OverviewTab } from '../tabs/OverviewTab'
 import type { LikedState } from './types'
+
 import s from './MovieDesktop.module.css'
 
 export type { LikedState }

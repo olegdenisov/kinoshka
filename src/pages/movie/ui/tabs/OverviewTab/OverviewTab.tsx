@@ -1,4 +1,5 @@
 import type { MovieDetail } from '@entities/movie'
+
 import s from './OverviewTab.module.css'
 
 type SectionHeadProps = React.PropsWithChildren

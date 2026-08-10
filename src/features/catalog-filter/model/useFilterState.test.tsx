@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react'
 import { act, renderHook } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { MemoryRouter } from 'react-router'
 import type * as ReactRouterModule from 'react-router'
+
 import { EMPTY_FILTERS } from '../lib/searchParams'
 import { useFilterState } from './useFilterState'
 

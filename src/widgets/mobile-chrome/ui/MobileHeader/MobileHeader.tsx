@@ -1,5 +1,6 @@
-import { useNavigate } from 'react-router'
 import { SearchIcon, ChevronLeftIcon } from '@shared/ui'
+import { useNavigate } from 'react-router'
+
 import s from './MobileHeader.module.css'
 
 type MobileHeaderProps = {

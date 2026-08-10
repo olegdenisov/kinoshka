@@ -1,4 +1,5 @@
 import type { MovieDtoV14, PersonInMovie } from '@shared/api'
+
 import type { MovieDetail } from '../model/types'
 import { mapDocToMovie } from './mapDocToMovie'
 

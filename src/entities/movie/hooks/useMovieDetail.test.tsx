@@ -1,7 +1,8 @@
+import { AsyncBoundary } from '@shared/ui'
 import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
+
 import { server } from '../../../test/setup'
-import { AsyncBoundary } from '@shared/ui'
 import { getMovieDetailBundle, useMovieDetail } from './useMovieDetail'
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({

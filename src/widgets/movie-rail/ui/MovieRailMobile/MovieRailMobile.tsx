@@ -1,6 +1,7 @@
-import { Link } from 'react-router'
 import type { Movie } from '@entities/movie'
 import { MobileCard } from '@entities/movie'
+import { Link } from 'react-router'
+
 import s from './MovieRailMobile.module.css'
 
 type MovieRailMobileProps = {

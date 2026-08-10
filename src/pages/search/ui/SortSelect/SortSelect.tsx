@@ -1,6 +1,7 @@
-import { useState } from 'react'
 import { SORT_LABELS } from '@features/catalog-filter'
 import { ChevronDownIcon, CheckIcon } from '@shared/ui'
+import { useState } from 'react'
+
 import s from './SortSelect.module.css'
 
 type SortSelectProps = {

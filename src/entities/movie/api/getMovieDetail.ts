@@ -1,4 +1,5 @@
 import { apiClient, ApiError } from '@shared/api'
+
 import type { MovieDetail } from '../model/types'
 import { createCachedFetcher } from './createCachedFetcher'
 import { mapDtoToMovieDetail } from './mapDtoToMovieDetail'
