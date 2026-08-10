@@ -19,6 +19,7 @@ export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
   return (
     <div className={s.container}>
       <button
+        type='button'
         disabled={safePage <= 1}
         onClick={() => onChange(Math.max(1, safePage - 1))}
         className={s.btn}
@@ -32,6 +33,7 @@ export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
           </span>
         ) : (
           <button
+            type='button'
             key={p}
             onClick={() => onChange(p)}
             className={`${s.btn}${p === safePage ? ` ${s.btnActive}` : ''}`}
@@ -41,6 +43,7 @@ export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
         ),
       )}
       <button
+        type='button'
         disabled={safePage >= safeTotalPages}
         onClick={() => onChange(Math.min(safeTotalPages, safePage + 1))}
         className={s.btn}

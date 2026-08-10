@@ -24,7 +24,7 @@ export const MobileHeader = ({
     <header className={s.header}>
       <div className={s.inner}>
         {onBack ? (
-          <button onClick={onBack} className={s.backBtn}>
+          <button type='button' onClick={onBack} className={s.backBtn}>
             <ChevronLeftIcon size={14} />
           </button>
         ) : (

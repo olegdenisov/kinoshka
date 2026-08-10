@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useEffect } from 'react'
 import { act, renderHook } from '@testing-library/react'
 import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
+import type * as ReactRouterModule from 'react-router'
 import type { FilterState } from '@features/catalog-filter'
 import { usePageSync } from './usePageSync'
 
@@ -17,8 +18,7 @@ const EMPTY_FILTERS: FilterState = {
 let setSearchParamsCalls: Array<[unknown, unknown]> = []
 
 vi.mock('react-router', async () => {
-  const actual =
-    await vi.importActual<typeof import('react-router')>('react-router')
+  const actual = await vi.importActual<typeof ReactRouterModule>('react-router')
   return {
     ...actual,
     useSearchParams: (...args: Parameters<typeof actual.useSearchParams>) => {

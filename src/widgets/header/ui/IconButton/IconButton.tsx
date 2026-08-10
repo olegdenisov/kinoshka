@@ -11,7 +11,12 @@ export const IconButton = ({
   'aria-label': ariaLabel,
 }: IconButtonProps) => {
   return (
-    <button onClick={onClick} className={s.iconButton} aria-label={ariaLabel}>
+    <button
+      type='button'
+      onClick={onClick}
+      className={s.iconButton}
+      aria-label={ariaLabel}
+    >
       {children}
     </button>
   )

@@ -9,6 +9,7 @@ type CardBtnProps = {
 export const CardBtn = ({ icon, label, square }: CardBtnProps) => {
   return (
     <button
+      type='button'
       onClick={e => e.stopPropagation()}
       className={`${s.btn} ${square ? s.btnSquare : ''}`}
     >

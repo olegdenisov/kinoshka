@@ -9,7 +9,7 @@ type PrimaryActionProps = {
 }
 
 const PrimaryAction = ({ icon, label, onClick }: PrimaryActionProps) => (
-  <button onClick={onClick} className={s.primaryBtn}>
+  <button type='button' onClick={onClick} className={s.primaryBtn}>
     {icon}
     {label}
   </button>
@@ -29,6 +29,7 @@ const SecondaryAction = ({
   onClick,
 }: SecondaryActionProps) => (
   <button
+    type='button'
     onClick={onClick}
     className={`${s.secondaryBtn}${active ? ` ${s.secondaryBtnActive}` : ''}`}
   >

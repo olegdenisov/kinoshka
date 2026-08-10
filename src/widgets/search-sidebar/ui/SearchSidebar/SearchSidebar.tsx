@@ -38,6 +38,7 @@ const RadioRow = ({
   onClick,
 }: RadioRowProps) => (
   <button
+    type='button'
     onClick={onClick}
     disabled={disabled}
     className={`${s.radioRow} ${active ? s.radioRowActive : ''}`}
@@ -63,6 +64,7 @@ type GenreChipProps = {
 
 const GenreChip = ({ label, active, disabled, onClick }: GenreChipProps) => (
   <button
+    type='button'
     onClick={onClick}
     disabled={disabled}
     className={`${s.genreChip} ${active ? s.genreChipActive : ''}`}
@@ -131,6 +133,7 @@ export const SearchSidebar = ({
         <div className={s.ratingList}>
           {[5, 6, 7, 8, 9].map(r => (
             <button
+              type='button'
               key={r}
               disabled={disabled}
               onClick={() =>
@@ -148,7 +151,12 @@ export const SearchSidebar = ({
       </FilterGroup>
 
       <div className={s.resetSection}>
-        <button onClick={onReset} disabled={disabled} className={s.resetBtn}>
+        <button
+          type='button'
+          onClick={onReset}
+          disabled={disabled}
+          className={s.resetBtn}
+        >
           Reset filters
         </button>
       </div>

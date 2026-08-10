@@ -8,6 +8,7 @@ type ArrowBtnProps = {
 export const ArrowBtn = ({ dir, onClick }: ArrowBtnProps) => {
   return (
     <button
+      type='button'
       onClick={onClick}
       className={s.arrowBtn}
       aria-label={dir === 'left' ? 'Previous' : 'Next'}

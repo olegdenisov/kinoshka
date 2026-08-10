@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "unicorn", "oxc", "react", "jsx-a11y"],
+  "plugins": ["typescript", "unicorn", "oxc", "react", "jsx-a11y", "import"],
   "categories": {
     "correctness": "error"
   },
@@ -18,7 +18,11 @@
     // recommended config and would push toward a native <select>, which can't carry
     // the custom trigger/icon markup this component needs.
     "prefer-tag-over-role": "off",
-    "no-noninteractive-element-to-interactive-role": "off"
+    "no-noninteractive-element-to-interactive-role": "off",
+    "no-explicit-any": "error",
+    "consistent-type-imports": "error",
+    "button-has-type": "error",
+    "import/no-cycle": "error"
   },
   "env": {
     "builtin": true,
