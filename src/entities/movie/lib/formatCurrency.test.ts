@@ -8,4 +8,8 @@ describe('formatCurrency', () => {
   it('пустая currency — только число, без хвостового пробела', () => {
     expect(formatCurrency({ value: 1000, currency: '' })).toBe('1,000')
   })
+
+  it('value: 0 — форматирует как "0", а не как falsy-пропуск', () => {
+    expect(formatCurrency({ value: 0, currency: '$' })).toBe('0 $')
+  })
 })

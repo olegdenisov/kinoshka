@@ -188,7 +188,7 @@ For UI icons (search, arrow, close, chevrons, play, star, etc.) use the React co
 
 | Import | Exports |
 |--------|---------|
-| `@entities/movie` | `Card`, `MobileCard`, `Poster`, `Movie`, `MovieDetail`, `MovieType`, `CastMember`, `CrewMember`, `CATALOG`, `ALL_GENRES`, `useNewMovies()`, `useTopRatedMovies()`, `useMovieDetail()`, `getMoviesPage()`, `CatalogParams`, `CatalogPageResult`, `getSearchMovies()`, `SearchMoviesResult`, `MovieImage`, `formatCurrency()`, `resetAllCachedFetchers()` |
+| `@entities/movie` | `Card`, `MobileCard`, `Poster`, `Movie`, `MovieDetail`, `MovieType`, `CastMember`, `CrewMember`, `CATALOG`, `ALL_GENRES`, `useNewMovies()`, `useTopRatedMovies()`, `useMovieDetail()`, `MovieDetailBundle`, `getMoviesPage()`, `CatalogParams`, `CatalogPageResult`, `getSearchMovies()`, `SearchMoviesResult`, `MovieImage`, `formatCurrency()`, `resetAllCachedFetchers()` |
 | `@features/catalog-filter` | `useFilterState()`, `ActiveFilterChips`, `FilterState`, `ActiveChip`, `filtersToParams()`, `CatalogQueryParams`, `SORT_LABELS`, `getFilterFromSearchParams()`, `filtersToSearchParams()` |
 | `@shared/ui` | `*Icon` components (`StarIcon`, `SearchIcon`, `CloseIcon`, `PlayIcon`, `ChevronLeftIcon`, etc.), `Footer`, `Spinner`, `Skeleton`, `EmptyState`, `ErrorState`, `ErrorBoundary`, `AsyncBoundary` |
 | `@shared/lib` | `useViewport()` → `{ isMobile: boolean }`, `useStorageSlot()`, `createSessionCache()`, `useDebouncedValue()` |
@@ -210,4 +210,4 @@ API integration is in progress, not all-or-nothing:
 
 When adding a new feature, check whether an equivalent live-data hook already exists before reaching for mock data.
 
-**Testing:** API calls are mocked in tests via **MSW** (`msw/node`, `setupServer()` in `src/test/setup.ts`, `onUnhandledRequest: 'error'`). Vitest config lives inline in `vite.config.ts` (`test: { environment: 'jsdom', setupFiles: [...], globals: true }` — `globals: true` means `describe`/`it`/`expect` need no import). **Zod** validates data at boundaries (localStorage, API responses).
+**Testing:** API calls are mocked in tests via **MSW** (`msw/node`, `setupServer()` in `src/test/setup.ts`, `onUnhandledRequest: 'error'`). Vitest config lives inline in `vite.config.ts` (`test: { environment: 'jsdom', setupFiles: [...], globals: true }` — `globals: true` means `describe`/`it`/`expect` need no import). **Zod** validates data at the localStorage/sessionStorage boundary only — API responses are trusted as-is against the generated types (no Zod schema), matching `getMovies.ts`/`getSearchMovies.ts`/`getMoviesPage.ts`/`getMovieDetail.ts`/`getMovieImages.ts`.

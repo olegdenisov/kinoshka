@@ -160,6 +160,20 @@ describe('MoviePage — /movie/abc (нечисловой id)', () => {
   })
 })
 
+describe('MoviePage — /movie/-1 и /movie/1.5 (отрицательный/дробный id)', () => {
+  it('отрицательный id — рендерит not-found без сетевого запроса', async () => {
+    await renderMoviePage('/movie/-1')
+
+    expect(await screen.findByText('Movie not found')).toBeInTheDocument()
+  })
+
+  it('дробный id — рендерит not-found без сетевого запроса', async () => {
+    await renderMoviePage('/movie/1.5')
+
+    expect(await screen.findByText('Movie not found')).toBeInTheDocument()
+  })
+})
+
 describe('MoviePage — общая ошибка (500)', () => {
   it('рендерит общий ErrorState, текстово отличимый от not-found-варианта', async () => {
     mockMovieError(777, 500, 'Internal Server Error')

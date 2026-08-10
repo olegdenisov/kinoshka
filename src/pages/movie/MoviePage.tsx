@@ -2,7 +2,7 @@ import { useParams } from 'react-router'
 import { useViewport } from '@shared/lib'
 import { useMovieDetail } from '@entities/movie'
 import { ApiError } from '@shared/api'
-import { AsyncBoundary, ErrorState } from '@shared/ui'
+import { AsyncBoundary, ErrorState, type ErrorFallbackParams } from '@shared/ui'
 import { MovieDesktop } from './ui/MovieDesktop'
 import { MovieMobile } from './ui/MovieMobile'
 import { MovieDetailSkeleton } from './ui/MovieDetailSkeleton'
@@ -21,7 +21,7 @@ const MovieDetailContent = ({ id, isMobile }: MovieDetailContentProps) => {
   return isMobile ? <MovieMobile movie={detail} images={images} /> : <MovieDesktop movie={detail} images={images} />
 }
 
-const movieErrorFallback = ({ error, reset }: { error: Error | null; reset: () => void }) => {
+const movieErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
   const isNotFound = error instanceof ApiError && error.status === 404
 
   return (
@@ -38,7 +38,7 @@ export const MoviePage = () => {
   const { isMobile } = useViewport()
   const numericId = Number(id)
 
-  if (!id || Number.isNaN(numericId)) {
+  if (!id || !Number.isInteger(numericId) || numericId <= 0) {
     return <ErrorState title={NOT_FOUND_TITLE} description={NOT_FOUND_DESCRIPTION} />
   }
 

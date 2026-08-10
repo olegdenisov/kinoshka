@@ -10,11 +10,11 @@ export const apiClient = new ApiInstance({
 
 export class ApiError extends Error {
   status?: number
-  
-  constructor(message: string, status?: number) { 
-    super(message); 
-    this.name = 'ApiError'; 
-    this.status = status 
+
+  constructor(message: string, status?: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
   }
 }
 
@@ -23,7 +23,7 @@ apiClient.instance.interceptors.response.use(
   (error) => {
     const data = error.response?.data as {message: unknown} | undefined
     const message = typeof data?.message === 'string' ? data.message : error.message
-    
+
     return Promise.reject(new ApiError(message, error.response?.status))
   }
 )

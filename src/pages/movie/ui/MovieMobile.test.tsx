@@ -2,49 +2,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import type { MovieDetail, MovieImage } from '@entities/movie'
+import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../testFixtures'
 import { MovieMobile } from './MovieMobile'
-
-const MOVIE: MovieDetail = {
-  id: 1,
-  title: 'Orbit of Silence',
-  year: 2024,
-  rating: 8.4,
-  type: 'movie',
-  genre: ['Sci-Fi', 'Drama'],
-  runtime: '2h 18m',
-  hue: 18,
-  poster: 'https://example.com/poster.jpg',
-  tagline: "Some stories don't resolve.",
-  synopsis: 'Full synopsis text about the observatory.',
-  shortSynopsis: 'Short teaser synopsis.',
-  trailerUrl: 'https://example.com/trailer',
-  cast: [
-    { id: 10, name: 'Liv Korhonen', role: 'Ines Varga', photo: 'https://example.com/liv.jpg' },
-    { id: 11, name: 'Matteo Pereira', role: 'Arto Lind' },
-  ],
-  crew: [
-    { id: 20, name: 'Hanna Vesper', profession: 'director' },
-    { id: 21, name: 'Kasper Lind', profession: 'composer' },
-  ],
-  countries: ['Finland', 'Portugal'],
-  ratingKp: 8.1,
-  ratingImdb: 7.9,
-  votesKp: '25k',
-  criticScore: 85,
-  criticReviewCount: 38,
-  ageRating: 16,
-  ratingMpaa: 'R',
-  budget: { value: 4800000, currency: '$' },
-  feesWorld: { value: 12300000, currency: '$' },
-  premiereWorld: '2024-03-14',
-  similarMovies: [
-    { id: 2, title: 'The Quiet Archive', year: 2023, rating: 7.9, type: 'movie', genre: ['Drama'], runtime: '1h 52m', hue: 210 },
-  ],
-}
-
-const IMAGES: MovieImage[] = [
-  { url: 'https://example.com/frame.jpg', previewUrl: 'https://example.com/frame-preview.jpg' },
-]
 
 const renderMovieMobile = (movie: MovieDetail = MOVIE, images: MovieImage[] = IMAGES) => (
   render(
@@ -124,5 +83,44 @@ describe('MovieMobile — Similar titles', () => {
     renderMovieMobile({ ...MOVIE, similarMovies: [] })
 
     expect(screen.queryByText('Similar titles')).not.toBeInTheDocument()
+  })
+})
+
+describe('MovieMobile — fallback-ветки при отсутствующих опциональных полях', () => {
+  it('hero: criticScore отсутствует — рейтинг "—"', () => {
+    renderMovieMobile(MOVIE_NO_OPTIONALS, [])
+
+    // Critics-блок (criticScore undefined) добавляет второе "—" рядом с всегда-"—" Yours.
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('Overview: countries/ratingKp/ratingImdb/ratingMpaa отсутствуют — рендерит "—" вместо значений', async () => {
+    const user = userEvent.setup()
+    renderMovieMobile(MOVIE_NO_OPTIONALS, [])
+
+    await user.click(screen.getByRole('button', { name: 'Overview' }))
+
+    // Countries + Kinopoisk + IMDb + MPAA — 4 отдельных "—"
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(4)
+  })
+
+  it('Details: premiereWorld/countries/ratingMpaa/ageRating/budget/feesWorld отсутствуют — все "—"', async () => {
+    const user = userEvent.setup()
+    renderMovieMobile(MOVIE_NO_OPTIONALS, [])
+
+    await user.click(screen.getByRole('button', { name: 'Details' }))
+
+    // Release date, Country, MPAA rating, Age rating, Budget, Box office — 6 отдельных "—"
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(6)
+  })
+
+  it('Media: images пуст — рендерит градиентный fallback вместо <img>, кнопка трейлера задизейблена', async () => {
+    const user = userEvent.setup()
+    const { container } = renderMovieMobile(MOVIE_NO_OPTIONALS, [])
+
+    await user.click(screen.getByRole('button', { name: 'Media' }))
+
+    expect(container.querySelectorAll('img').length).toBe(0)
+    expect(container.querySelector('button:disabled')).toBeInTheDocument()
   })
 })

@@ -3,7 +3,7 @@ import { ErrorBoundary } from "../ErrorBoundary";
 import { ErrorState } from "../ErrorState";
 import { Spinner } from "../Spinner";
 
-type ErrorFallbackParams = {
+export type ErrorFallbackParams = {
   error: Error | null;
   reset: () => void;
 };

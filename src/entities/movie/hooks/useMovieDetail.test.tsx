@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../../test/setup'
 import { AsyncBoundary } from '@shared/ui'
-import { useMovieDetail } from './useMovieDetail'
+import { getMovieDetailBundle, useMovieDetail } from './useMovieDetail'
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -101,5 +101,23 @@ describe('useMovieDetail — фильм падает (404)', () => {
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument()
     expect(screen.queryByTestId('title')).not.toBeInTheDocument()
+  })
+})
+
+// Регрессия на баг из истории Task 4 (см. докблок useMovieDetail.ts): 3 более ранние
+// реализации кэша связки (без кэша / useMemo / ручной TTL-Map) ловили бесконечный
+// ре-саспенс, потому что getMovieDetailBundle(id) отдавал новый Promise на каждый вызов.
+// Этот тест — быстрая, читаемая проверка инварианта стабильности ссылки вместо того,
+// чтобы полагаться на то, что регрессия проявится как зависший/таймаутящийся RTL-тест.
+describe('getMovieDetailBundle — стабильность ссылки на промис связки', () => {
+  it('повторный вызов с тем же id возвращает тот же Promise-объект (не пересобирает bundle)', async () => {
+    mockMovie(3, { name: 'Stable Reference' })
+    mockImages([])
+
+    const first = getMovieDetailBundle(3)
+    const second = getMovieDetailBundle(3)
+
+    expect(first).toBe(second)
+    await first
   })
 })

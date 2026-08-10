@@ -29,7 +29,7 @@ export const mapDtoToMovieDetail = (doc: MovieDtoV14): MovieDetail => ({
   crew: doc.persons?.filter(isCrew).map((person) => ({
     id: person.id,
     name: person.name ?? '',
-    profession: person.profession ?? '',
+    profession: person.enProfession ?? '',
   })) ?? [],
   countries: doc.countries?.map((country) => country.name).filter((name): name is string => !!name) ?? [],
   ratingKp: doc.rating?.kp ?? undefined,
