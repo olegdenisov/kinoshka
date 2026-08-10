@@ -12,7 +12,10 @@ const combineDetail = async (
   detailPromise: Promise<MovieDetail>,
   imagesPromise: Promise<MovieImage[]>,
 ): Promise<MovieDetailBundle> => {
-  const [detailResult, imagesResult] = await Promise.allSettled([detailPromise, imagesPromise])
+  const [detailResult, imagesResult] = await Promise.allSettled([
+    detailPromise,
+    imagesPromise,
+  ])
 
   if (detailResult.status === 'rejected') {
     throw detailResult.reason
@@ -46,13 +49,19 @@ const bundleCache = new Map<number, BundleCacheEntry>()
 
 // Экспортируется отдельно от useMovieDetail (не хук — plain function) для теста
 // стабильности ссылки: см. useMovieDetail.test.tsx, "идентичность bundle-промиса".
-export const getMovieDetailBundle = (id: number): Promise<MovieDetailBundle> => {
+export const getMovieDetailBundle = (
+  id: number,
+): Promise<MovieDetailBundle> => {
   const detailPromise = getMovieDetail(id)
   const imagesPromise = getMovieImages(id)
 
   const cached = bundleCache.get(id)
 
-  if (cached && cached.detailPromise === detailPromise && cached.imagesPromise === imagesPromise) {
+  if (
+    cached &&
+    cached.detailPromise === detailPromise &&
+    cached.imagesPromise === imagesPromise
+  ) {
     return cached.bundlePromise
   }
 
@@ -62,4 +71,5 @@ export const getMovieDetailBundle = (id: number): Promise<MovieDetailBundle> => 
   return bundlePromise
 }
 
-export const useMovieDetail = (id: number): MovieDetailBundle => use(getMovieDetailBundle(id))
+export const useMovieDetail = (id: number): MovieDetailBundle =>
+  use(getMovieDetailBundle(id))

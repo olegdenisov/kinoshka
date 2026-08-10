@@ -105,8 +105,12 @@ describe('useCatalogUpdateStatus', () => {
     const filtersB: FilterState = { ...EMPTY_FILTERS, genres: ['Drama'] }
 
     const { result, rerender } = renderHook(
-      (props: { query: string; filters: FilterState; sort: string; page: number }) =>
-        useCatalogUpdateStatus(props),
+      (props: {
+        query: string
+        filters: FilterState
+        sort: string
+        page: number
+      }) => useCatalogUpdateStatus(props),
       { initialProps: { query: 'a', filters: filtersA, sort: '', page: 1 } },
     )
 
@@ -165,7 +169,12 @@ describe('useCatalogUpdateStatus', () => {
     const seen: Array<{ q: string; f: FilterState; s: string; p: number }> = []
 
     const { rerender } = renderHook(
-      (props: { query: string; filters: FilterState; sort: string; page: number }) => {
+      (props: {
+        query: string
+        filters: FilterState
+        sort: string
+        page: number
+      }) => {
         const status = useCatalogUpdateStatus(props)
         seen.push({
           q: status.deferredQuery,
@@ -187,7 +196,10 @@ describe('useCatalogUpdateStatus', () => {
 
     seen.forEach(snapshot => {
       const isAllOld =
-        snapshot.q === 'a' && snapshot.f === filtersA && snapshot.s === '' && snapshot.p === 1
+        snapshot.q === 'a' &&
+        snapshot.f === filtersA &&
+        snapshot.s === '' &&
+        snapshot.p === 1
       const isAllNew =
         snapshot.q === 'ab' &&
         snapshot.f === filtersB &&

@@ -40,7 +40,10 @@ const catalogDoc = (name: string, id: number) => ({
   poster: { previewUrl: 'https://example.com/catalog.jpg' },
 })
 
-const mockSearch = (docs: Record<string, unknown>[], overrides: Record<string, unknown> = {}) => {
+const mockSearch = (
+  docs: Record<string, unknown>[],
+  overrides: Record<string, unknown> = {},
+) => {
   server.use(
     http.get(SEARCH_ENDPOINT, () =>
       HttpResponse.json({
@@ -55,7 +58,10 @@ const mockSearch = (docs: Record<string, unknown>[], overrides: Record<string, u
   )
 }
 
-const mockCatalog = (docs: Record<string, unknown>[], overrides: Record<string, unknown> = {}) => {
+const mockCatalog = (
+  docs: Record<string, unknown>[],
+  overrides: Record<string, unknown> = {},
+) => {
   server.use(
     http.get(CATALOG_ENDPOINT, () =>
       HttpResponse.json({
@@ -120,7 +126,9 @@ describe('SearchDesktop — режим search (?q задан)', () => {
     expect(ratingButtons.length).toBeGreaterThan(0)
     ratingButtons.forEach(btn => expect(btn).toBeDisabled())
 
-    expect(within(sidebar).getByRole('button', { name: 'Reset filters' })).toBeDisabled()
+    expect(
+      within(sidebar).getByRole('button', { name: 'Reset filters' }),
+    ).toBeDisabled()
 
     // Сортировка тоже задизейблена в search-режиме (Variant A) — sortDisabled=isSearchMode,
     // проброшенный SearchDesktop → SearchControls → SortSelect.
@@ -154,7 +162,9 @@ describe('SearchDesktop — режим catalog (без ?q, есть фильтр
     })
     ratingButtons.forEach(btn => expect(btn).not.toBeDisabled())
 
-    expect(within(sidebar).getByRole('button', { name: 'Reset filters' })).not.toBeDisabled()
+    expect(
+      within(sidebar).getByRole('button', { name: 'Reset filters' }),
+    ).not.toBeDisabled()
 
     // Сортировка активна вне search-режима.
     expect(screen.getByRole('button', { name: /^Sort/ })).not.toBeDisabled()
@@ -175,9 +185,13 @@ describe('SearchDesktop — ошибка фетчера (403/квота) дос�
     await renderSearchDesktop(['/search?q=quota-exceeded-probe'])
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Попробовать снова' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Попробовать снова' }),
+    ).toBeInTheDocument()
     // Заголовок/шапка страницы остаются — падает только контент внутри AsyncBoundary.
-    expect(screen.getByPlaceholderText('Search movies, series, anime…')).toBeInTheDocument()
+    expect(
+      screen.getByPlaceholderText('Search movies, series, anime…'),
+    ).toBeInTheDocument()
   })
 })
 
@@ -187,7 +201,9 @@ describe('SearchDesktop — пустой результат', () => {
 
     await renderSearchDesktop(['/search?q=nonexistent-movie-xyz'])
 
-    expect(screen.getByText(/Ничего не найдено по «nonexistent-movie-xyz»/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Ничего не найдено по «nonexistent-movie-xyz»/),
+    ).toBeInTheDocument()
   })
 })
 
@@ -200,7 +216,9 @@ describe('SearchDesktop — устаревший/deep-linked ?page вне диа
 
     await renderSearchDesktop(['/search?q=matrix&page=8'])
 
-    expect(screen.getByText(/Ничего не найдено по «matrix»/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Ничего не найдено по «matrix»/),
+    ).toBeInTheDocument()
 
     const pageOneBtn = screen.getByRole('button', { name: '1' })
     expect(pageOneBtn).toBeInTheDocument()
@@ -295,7 +313,9 @@ describe('SearchDesktop — переходное состояние индика
       }),
     )
 
-    expect((await screen.findAllByText('Interstellar Redux')).length).toBeGreaterThan(0)
+    expect(
+      (await screen.findAllByText('Interstellar Redux')).length,
+    ).toBeGreaterThan(0)
     expect(screen.queryAllByText('Matrix Revolutions')).toHaveLength(0)
 
     const busyNodeAfter = document.querySelector('[aria-busy]')!
@@ -458,7 +478,9 @@ describe('SearchDesktop — пагинация: сброс ?page на 1 при �
     // поэтому scoping через `main` не путает chip 'Drama' с одноимённой кнопкой в сайдбаре.
     const main = document.querySelector('main')!
     expect(within(main).getByText('Drama')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Sort/ })).toHaveTextContent('Newest')
+    expect(screen.getByRole('button', { name: /^Sort/ })).toHaveTextContent(
+      'Newest',
+    )
 
     vi.useFakeTimers()
     try {
@@ -485,6 +507,8 @@ describe('SearchDesktop — пагинация: сброс ?page на 1 при �
 
     expect(within(main).queryByText('Drama')).not.toBeInTheDocument()
     expect(within(main).queryByText('Clear all')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Sort/ })).toHaveTextContent('Default')
+    expect(screen.getByRole('button', { name: /^Sort/ })).toHaveTextContent(
+      'Default',
+    )
   })
 })

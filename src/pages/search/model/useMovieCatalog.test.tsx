@@ -4,7 +4,10 @@ import { http, HttpResponse } from 'msw'
 import { server } from '../../../test/setup'
 import { AsyncBoundary } from '@shared/ui'
 import type { FilterState } from '@features/catalog-filter'
-import type { MovieCatalogParams, useMovieCatalog as UseMovieCatalog } from './useMovieCatalog'
+import type {
+  MovieCatalogParams,
+  useMovieCatalog as UseMovieCatalog,
+} from './useMovieCatalog'
 
 // Оба фетчера (getSearchMovies/getMoviesPage) кешируют промисы в module-scope Map —
 // свежий модуль на каждый тест, чтобы одинаковые (query,page)/(params,page) не залипали.
@@ -47,7 +50,10 @@ const catalogDoc = (name: string) => ({
   poster: { previewUrl: 'https://example.com/catalog.jpg' },
 })
 
-const mockSearch = (docs: Record<string, unknown>[], overrides: Record<string, unknown> = {}) => {
+const mockSearch = (
+  docs: Record<string, unknown>[],
+  overrides: Record<string, unknown> = {},
+) => {
   let request: Request | undefined
   server.use(
     http.get(SEARCH_ENDPOINT, ({ request: req }) => {
@@ -65,7 +71,10 @@ const mockSearch = (docs: Record<string, unknown>[], overrides: Record<string, u
   return () => request
 }
 
-const mockCatalog = (docs: Record<string, unknown>[], overrides: Record<string, unknown> = {}) => {
+const mockCatalog = (
+  docs: Record<string, unknown>[],
+  overrides: Record<string, unknown> = {},
+) => {
   let request: Request | undefined
   server.use(
     http.get(CATALOG_ENDPOINT, ({ request: req }) => {
@@ -108,7 +117,10 @@ const Probe: ComponentType<ProbeProps> = ({ useMovieCatalog, params }) => {
 // (synchronous) `act` inside plain `render()` warns "act call was not awaited" and the
 // eventual re-render after the promise resolves never flushes. Wrapping in `await act(async …)`
 // gives React's scheduler a real async act scope to await the pending suspended work.
-const renderProbe = async (useMovieCatalog: typeof UseMovieCatalog, params: MovieCatalogParams) => {
+const renderProbe = async (
+  useMovieCatalog: typeof UseMovieCatalog,
+  params: MovieCatalogParams,
+) => {
   let result: ReturnType<typeof render> | undefined
   await act(async () => {
     result = render(
@@ -267,7 +279,9 @@ describe('useMovieCatalog — смена page/sort/фильтров меняет
       page: 1,
     })
     expect(screen.getByTestId('movies')).toHaveTextContent('Dune')
-    expect(new URL(getRequest1()!.url).searchParams.getAll('sortField')).toEqual([])
+    expect(
+      new URL(getRequest1()!.url).searchParams.getAll('sortField'),
+    ).toEqual([])
 
     const getRequest2 = mockCatalog([catalogDoc('Highest Rated Movie')])
     await rerenderProbe(rerender, useMovieCatalog, {
@@ -277,7 +291,9 @@ describe('useMovieCatalog — смена page/sort/фильтров меняет
       page: 1,
     })
 
-    expect(screen.getByTestId('movies')).toHaveTextContent('Highest Rated Movie')
+    expect(screen.getByTestId('movies')).toHaveTextContent(
+      'Highest Rated Movie',
+    )
     const url2 = new URL(getRequest2()!.url)
     expect(url2.searchParams.getAll('sortField')).toEqual(['rating.kp'])
     expect(url2.searchParams.getAll('rating.kp')).toEqual(['8-10'])

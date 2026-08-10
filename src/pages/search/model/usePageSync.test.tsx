@@ -17,7 +17,8 @@ const EMPTY_FILTERS: FilterState = {
 let setSearchParamsCalls: Array<[unknown, unknown]> = []
 
 vi.mock('react-router', async () => {
-  const actual = await vi.importActual<typeof import('react-router')>('react-router')
+  const actual =
+    await vi.importActual<typeof import('react-router')>('react-router')
   return {
     ...actual,
     useSearchParams: (...args: Parameters<typeof actual.useSearchParams>) => {
@@ -59,33 +60,45 @@ beforeEach(() => {
 
 describe('usePageSync', () => {
   it('пустой URL → page=1', () => {
-    const { result } = renderHook(() => usePageSync({ query: '', filters: EMPTY_FILTERS }), {
-      wrapper: wrapper(['/search']),
-    })
+    const { result } = renderHook(
+      () => usePageSync({ query: '', filters: EMPTY_FILTERS }),
+      {
+        wrapper: wrapper(['/search']),
+      },
+    )
 
     expect(result.current.page).toBe(1)
   })
 
   it('читает page из ?page', () => {
-    const { result } = renderHook(() => usePageSync({ query: '', filters: EMPTY_FILTERS }), {
-      wrapper: wrapper(['/search?page=4']),
-    })
+    const { result } = renderHook(
+      () => usePageSync({ query: '', filters: EMPTY_FILTERS }),
+      {
+        wrapper: wrapper(['/search?page=4']),
+      },
+    )
 
     expect(result.current.page).toBe(4)
   })
 
   it('клэмпит page к demo-потолку 10 при чтении', () => {
-    const { result } = renderHook(() => usePageSync({ query: '', filters: EMPTY_FILTERS }), {
-      wrapper: wrapper(['/search?page=999']),
-    })
+    const { result } = renderHook(
+      () => usePageSync({ query: '', filters: EMPTY_FILTERS }),
+      {
+        wrapper: wrapper(['/search?page=999']),
+      },
+    )
 
     expect(result.current.page).toBe(10)
   })
 
   it('goToPage пишет ?page с replace:true и клэмпит запись к [1,10]', () => {
-    const { result } = renderHook(() => usePageSync({ query: '', filters: EMPTY_FILTERS }), {
-      wrapper: wrapper(['/search']),
-    })
+    const { result } = renderHook(
+      () => usePageSync({ query: '', filters: EMPTY_FILTERS }),
+      {
+        wrapper: wrapper(['/search']),
+      },
+    )
 
     act(() => result.current.goToPage(999))
 
@@ -96,9 +109,12 @@ describe('usePageSync', () => {
   it('goToPage прокручивает страницу наверх', () => {
     const scrollSpy = vi.fn()
     vi.stubGlobal('scrollTo', scrollSpy)
-    const { result } = renderHook(() => usePageSync({ query: '', filters: EMPTY_FILTERS }), {
-      wrapper: wrapper(['/search']),
-    })
+    const { result } = renderHook(
+      () => usePageSync({ query: '', filters: EMPTY_FILTERS }),
+      {
+        wrapper: wrapper(['/search']),
+      },
+    )
 
     act(() => result.current.goToPage(3))
 
@@ -107,7 +123,8 @@ describe('usePageSync', () => {
 
   it('смена query сбрасывает ?page на 1', () => {
     const { result, rerender } = renderHook(
-      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      ({ query }: { query: string }) =>
+        usePageSync({ query, filters: EMPTY_FILTERS }),
       { wrapper: wrapper(['/search?page=5']), initialProps: { query: '' } },
     )
     expect(result.current.page).toBe(5)
@@ -119,7 +136,8 @@ describe('usePageSync', () => {
 
   it('смена filters сбрасывает ?page на 1', () => {
     const { result, rerender } = renderHook(
-      ({ filters }: { filters: FilterState }) => usePageSync({ query: '', filters }),
+      ({ filters }: { filters: FilterState }) =>
+        usePageSync({ query: '', filters }),
       {
         wrapper: wrapper(['/search?page=5']),
         initialProps: { filters: EMPTY_FILTERS },
@@ -134,7 +152,8 @@ describe('usePageSync', () => {
 
   it('page уже 1 — reset-эффект не меняет ?page (no-op update)', () => {
     const { result, rerender } = renderHook(
-      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      ({ query }: { query: string }) =>
+        usePageSync({ query, filters: EMPTY_FILTERS }),
       { wrapper: wrapper(['/search']), initialProps: { query: '' } },
     )
     expect(result.current.page).toBe(1)
@@ -146,7 +165,8 @@ describe('usePageSync', () => {
 
   it("'' → непустой query: один атомарный setSearchParams — фильтры/sort зачищены, page=1", () => {
     const { result, rerender } = renderHook(
-      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      ({ query }: { query: string }) =>
+        usePageSync({ query, filters: EMPTY_FILTERS }),
       {
         wrapper: wrapper(['/search?genres=Drama&sort=Newest&page=3']),
         initialProps: { query: '' },
@@ -168,7 +188,8 @@ describe('usePageSync', () => {
     // "Deep-link guard"). Основной reset-эффект (по resetKey) на mount не срабатывает —
     // отдельный mount-only эффект обязан стрипнуть фильтры/sort здесь сам.
     const { result } = renderHook(
-      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      ({ query }: { query: string }) =>
+        usePageSync({ query, filters: EMPTY_FILTERS }),
       {
         wrapper: wrapper(['/search?q=foo&genres=Drama&sort=Newest&page=5']),
         initialProps: { query: 'foo' },
@@ -183,7 +204,8 @@ describe('usePageSync', () => {
 
   it('deep link в search-режим БЕЗ фильтров/sort: mount не трогает ?page (легитимный deep-link на произвольную страницу)', () => {
     const { result } = renderHook(
-      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      ({ query }: { query: string }) =>
+        usePageSync({ query, filters: EMPTY_FILTERS }),
       {
         wrapper: wrapper(['/search?q=foo&page=7']),
         initialProps: { query: 'foo' },
@@ -198,7 +220,8 @@ describe('usePageSync', () => {
 
   it('непустой → непустой query на уже смонтированной странице: повторной зачистки фильтров/sort не происходит', () => {
     const { result, rerender } = renderHook(
-      ({ query }: { query: string }) => usePageSync({ query, filters: EMPTY_FILTERS }),
+      ({ query }: { query: string }) =>
+        usePageSync({ query, filters: EMPTY_FILTERS }),
       {
         wrapper: wrapper(['/search?q=inception&page=5']),
         initialProps: { query: 'inception' },
@@ -259,7 +282,8 @@ describe('usePageSync', () => {
 
   it('смена filters при пустом query: page сбрасывается, зачистки фильтров/sort не происходит', () => {
     const { result, rerender } = renderHook(
-      ({ filters }: { filters: FilterState }) => usePageSync({ query: '', filters }),
+      ({ filters }: { filters: FilterState }) =>
+        usePageSync({ query: '', filters }),
       {
         wrapper: wrapper(['/search?sort=Newest&page=5']),
         initialProps: { filters: EMPTY_FILTERS },

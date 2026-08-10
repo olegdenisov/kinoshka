@@ -216,7 +216,10 @@ describe('createCachedFetcher — generic R (не Movie[])', () => {
       calls.count += 1
       return result
     }
-    const get = createCachedFetcher<{ q: number }, SearchResult>('search-ns', fetcher)
+    const get = createCachedFetcher<{ q: number }, SearchResult>(
+      'search-ns',
+      fetcher,
+    )
 
     const [a, b] = await Promise.all([get({ q: 1 }), get({ q: 1 })])
 
@@ -232,7 +235,10 @@ describe('createCachedFetcher — generic R (не Movie[])', () => {
       calls.count += 1
       return result
     }
-    const get = createCachedFetcher<{ q: number }, SearchResult>('search-ns-2', fetcher)
+    const get = createCachedFetcher<{ q: number }, SearchResult>(
+      'search-ns-2',
+      fetcher,
+    )
 
     await get({ q: 1 })
     await get({ q: 1 })
@@ -248,10 +254,16 @@ describe('createCachedFetcher — generic R (не Movie[])', () => {
       return result
     }
 
-    const first = createCachedFetcher<{ q: number }, SearchResult>('search-ns-3', fetcher)
+    const first = createCachedFetcher<{ q: number }, SearchResult>(
+      'search-ns-3',
+      fetcher,
+    )
     const a = await first({ q: 1 })
 
-    const second = createCachedFetcher<{ q: number }, SearchResult>('search-ns-3', fetcher)
+    const second = createCachedFetcher<{ q: number }, SearchResult>(
+      'search-ns-3',
+      fetcher,
+    )
     const b = await second({ q: 1 })
 
     expect(calls.count).toBe(1)
@@ -264,7 +276,10 @@ describe('createCachedFetcher — generic R (не Movie[])', () => {
       calls.count += 1
       throw new Error('Forbidden')
     }
-    const get = createCachedFetcher<{ q: number }, SearchResult>('search-ns-4', fetcher)
+    const get = createCachedFetcher<{ q: number }, SearchResult>(
+      'search-ns-4',
+      fetcher,
+    )
 
     await expect(get({ q: 1 })).rejects.toThrow('Forbidden')
     await expect(get({ q: 1 })).rejects.toThrow('Forbidden')

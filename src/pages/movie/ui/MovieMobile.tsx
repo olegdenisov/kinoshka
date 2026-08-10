@@ -89,7 +89,12 @@ type MobileActionBtnProps = {
   onClick: () => void
 }
 
-const MobileActionBtn = ({ icon, label, active, onClick }: MobileActionBtnProps) => {
+const MobileActionBtn = ({
+  icon,
+  label,
+  active,
+  onClick,
+}: MobileActionBtnProps) => {
   return (
     <button
       onClick={onClick}
@@ -266,10 +271,18 @@ export const MovieMobile = ({ movie, images }: MovieMobileProps) => {
               borderBottom: '1px solid rgba(184,173,171,0.08)',
             }}
           >
-            <MiniStat label='Users' value={movie.rating.toFixed(1)} accent='#E6B86A' />
+            <MiniStat
+              label='Users'
+              value={movie.rating.toFixed(1)}
+              accent='#E6B86A'
+            />
             <MiniStat
               label='Critics'
-              value={movie.criticScore != null ? `${movie.criticScore.toFixed(0)}%` : '—'}
+              value={
+                movie.criticScore != null
+                  ? `${movie.criticScore.toFixed(0)}%`
+                  : '—'
+              }
               accent='#D7EEF3'
             />
             <MiniStat label='Yours' value='—' accent='#92887F' />
@@ -872,7 +885,10 @@ const MobileDetailsContent = ({ m }: MobileDetailsContentProps) => {
             display: 'flex',
             justifyContent: 'space-between',
             padding: '14px 0',
-            borderBottom: i === rows.length - 1 ? 'none' : '1px solid rgba(184,173,171,0.08)',
+            borderBottom:
+              i === rows.length - 1
+                ? 'none'
+                : '1px solid rgba(184,173,171,0.08)',
           }}
         >
           <span

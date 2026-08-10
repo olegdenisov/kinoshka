@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { MobileHeader, BottomNav, BottomSheet } from '@widgets/mobile-chrome'
-import { ActiveFilterChips, useFilterState, SORT_LABELS } from '@features/catalog-filter'
+import {
+  ActiveFilterChips,
+  useFilterState,
+  SORT_LABELS,
+} from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
 import { MobileCard, ALL_GENRES } from '@entities/movie'
 import {
@@ -26,7 +30,11 @@ type MobilePaginationProps = {
   onChange: (p: number) => void
 }
 
-const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps) => {
+const MobilePagination = ({
+  page,
+  totalPages,
+  onChange,
+}: MobilePaginationProps) => {
   // Та же защита от рассинхрона, что в desktop Pagination.tsx: ?page из URL может временно
   // выйти за пределы totalPages (напр. смена фильтров ещё не долетела до фетчера) — клэмпим
   // для рендера/disabled, не мутируя проп и не решая за вызывающий код, что писать в URL.
@@ -82,7 +90,11 @@ const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps)
             …
           </span>
         ) : (
-          <button key={p} style={btnStyle(p === safePage, false)} onClick={() => onChange(p)}>
+          <button
+            key={p}
+            style={btnStyle(p === safePage, false)}
+            onClick={() => onChange(p)}
+          >
             {p}
           </button>
         ),
@@ -152,7 +164,11 @@ const MobileSearchResults = ({
       <div style={{ padding: '12px 20px 40px' }}>
         <EmptyState
           title='Nothing found'
-          description={query ? `Ничего не найдено по «${query}»` : 'Try adjusting the filters'}
+          description={
+            query
+              ? `Ничего не найдено по «${query}»`
+              : 'Try adjusting the filters'
+          }
         />
         {/*
           Тот же дед-энд, что в SearchDesktop: устаревший/deep-linked ?page может указывать
@@ -161,7 +177,11 @@ const MobileSearchResults = ({
         */}
         {totalPages > 0 && (
           <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <MobilePagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />
+            <MobilePagination
+              page={displayPage}
+              totalPages={totalPages}
+              onChange={onPageChange}
+            />
           </div>
         )}
       </div>
@@ -184,7 +204,11 @@ const MobileSearchResults = ({
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 24, padding: '0 16px' }}>
-        <MobilePagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />
+        <MobilePagination
+          page={displayPage}
+          totalPages={totalPages}
+          onChange={onPageChange}
+        />
         <div
           style={{
             marginTop: 14,
@@ -206,20 +230,32 @@ const MobileSearchResults = ({
 export const SearchMobile = () => {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
-  const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } =
-    useFilterState()
+  const {
+    filters,
+    setFilters,
+    sort,
+    setSort,
+    toggleGenre,
+    resetFilters,
+    activeChips,
+  } = useFilterState()
   const [searchParams] = useSearchParams()
 
   const query = searchParams.get('q') ?? ''
   const isSearchMode = query.trim().length > 0
   const { page, goToPage } = usePageSync({ query, filters })
-  const { deferredQuery, deferredFilters, deferredSort, deferredPage, isUpdating } =
-    useCatalogUpdateStatus({
-      query,
-      filters,
-      sort,
-      page,
-    })
+  const {
+    deferredQuery,
+    deferredFilters,
+    deferredSort,
+    deferredPage,
+    isUpdating,
+  } = useCatalogUpdateStatus({
+    query,
+    filters,
+    sort,
+    page,
+  })
 
   return (
     <div
@@ -258,7 +294,9 @@ export const SearchMobile = () => {
             gap: 6,
             height: 32,
             padding: '0 12px',
-            background: activeChips.length ? 'rgba(209,142,95,0.15)' : 'rgba(24,22,27,0.6)',
+            background: activeChips.length
+              ? 'rgba(209,142,95,0.15)'
+              : 'rgba(24,22,27,0.6)',
             border: `1px solid ${activeChips.length ? 'rgba(209,142,95,0.35)' : 'rgba(184,173,171,0.12)'}`,
             color: activeChips.length ? '#D18E5F' : '#F2F0EF',
             borderRadius: 999,
@@ -438,7 +476,9 @@ export const SearchMobile = () => {
                     height: 40,
                     borderRadius: 6,
                     background:
-                      filters.type === t.key ? 'rgba(209,142,95,0.15)' : 'rgba(184,173,171,0.04)',
+                      filters.type === t.key
+                        ? 'rgba(209,142,95,0.15)'
+                        : 'rgba(184,173,171,0.04)',
                     color: filters.type === t.key ? '#D18E5F' : '#F2F0EF',
                     border: `1px solid ${filters.type === t.key ? 'rgba(209,142,95,0.35)' : 'rgba(184,173,171,0.1)'}`,
                     cursor: 'pointer',
@@ -597,7 +637,9 @@ export const SearchMobile = () => {
                     height: 40,
                     borderRadius: 6,
                     background:
-                      filters.rating === r ? 'rgba(209,142,95,0.15)' : 'rgba(184,173,171,0.04)',
+                      filters.rating === r
+                        ? 'rgba(209,142,95,0.15)'
+                        : 'rgba(184,173,171,0.04)',
                     color: filters.rating === r ? '#D18E5F' : '#B8ADAB',
                     border: `1px solid ${filters.rating === r ? 'rgba(209,142,95,0.35)' : 'rgba(184,173,171,0.1)'}`,
                     cursor: 'pointer',

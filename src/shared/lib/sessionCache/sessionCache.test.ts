@@ -66,11 +66,15 @@ describe('createSessionCache', () => {
   it('Переполнение квоты — setItem бросает исключение, set() не падает', () => {
     vi.stubEnv('DEV', true)
     const cache = createSessionCache<number[]>('test')
-    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('QuotaExceededError')
-    })
+    const setItemSpy = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new Error('QuotaExceededError')
+      })
 
-    expect(() => cache.set('key', { data: [1], timestamp: 1, isError: false })).not.toThrow()
+    expect(() =>
+      cache.set('key', { data: [1], timestamp: 1, isError: false }),
+    ).not.toThrow()
 
     setItemSpy.mockRestore()
   })

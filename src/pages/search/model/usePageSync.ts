@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router'
-import { stripFilterAndSortParams, type FilterState } from '@features/catalog-filter'
+import {
+  stripFilterAndSortParams,
+  type FilterState,
+} from '@features/catalog-filter'
 
 /** Demo-тариф: страницы 1–10 (клэмп и на чтении из URL, и на записи через goToPage). */
 const MAX_PAGE = 10
@@ -53,7 +56,10 @@ const resetPageToOne = (params: URLSearchParams): URLSearchParams => {
  * deep-link'е вида `?q=foo&page=8` без единого фильтра (см. тест "устаревший/deep-linked
  * ?page вне диапазона").
  */
-export const usePageSync = ({ query, filters }: PageSyncParams): PageSyncResult => {
+export const usePageSync = ({
+  query,
+  filters,
+}: PageSyncParams): PageSyncResult => {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const rawPage = Number.parseInt(searchParams.get('page') ?? '1', 10) || 1
@@ -109,7 +115,8 @@ export const usePageSync = ({ query, filters }: PageSyncParams): PageSyncResult 
     wasSearchingRef.current = isSearching
 
     setSearchParams(
-      prev => resetPageToOne(enteringSearch ? stripFilterAndSortParams(prev) : prev),
+      prev =>
+        resetPageToOne(enteringSearch ? stripFilterAndSortParams(prev) : prev),
       { replace: true },
     )
   }, [resetKey, setSearchParams, isSearching])

@@ -22,7 +22,12 @@ export const StarIcon = ({ size = 11, filled = true }: IconProps) => (
 
 export const PlusIcon = ({ size = 12 }: IconProps) => (
   <svg width={size} height={size} viewBox='0 0 24 24' fill='none'>
-    <path d='M12 5v14M5 12h14' stroke='currentColor' strokeWidth='2' strokeLinecap='round' />
+    <path
+      d='M12 5v14M5 12h14'
+      stroke='currentColor'
+      strokeWidth='2'
+      strokeLinecap='round'
+    />
   </svg>
 )
 
@@ -40,7 +45,12 @@ export const EyeIcon = ({ size = 12 }: IconProps) => (
 export const SearchIcon = ({ size = 15 }: IconProps) => (
   <svg width={size} height={size} viewBox='0 0 24 24' fill='none'>
     <circle cx='11' cy='11' r='7' stroke='currentColor' strokeWidth='1.6' />
-    <path d='m20 20-3.5-3.5' stroke='currentColor' strokeWidth='1.6' strokeLinecap='round' />
+    <path
+      d='m20 20-3.5-3.5'
+      stroke='currentColor'
+      strokeWidth='1.6'
+      strokeLinecap='round'
+    />
   </svg>
 )
 
@@ -52,12 +62,22 @@ export const BellIcon = ({ size = 15 }: IconProps) => (
       strokeWidth='1.6'
       strokeLinejoin='round'
     />
-    <path d='M10 19a2 2 0 0 0 4 0' stroke='currentColor' strokeWidth='1.6' strokeLinecap='round' />
+    <path
+      d='M10 19a2 2 0 0 0 4 0'
+      stroke='currentColor'
+      strokeWidth='1.6'
+      strokeLinecap='round'
+    />
   </svg>
 )
 
 export const HeartIcon = ({ size = 13, filled = false }: IconProps) => (
-  <svg width={size} height={size} viewBox='0 0 24 24' fill={filled ? 'currentColor' : 'none'}>
+  <svg
+    width={size}
+    height={size}
+    viewBox='0 0 24 24'
+    fill={filled ? 'currentColor' : 'none'}
+  >
     <path
       d='M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10Z'
       stroke='currentColor'
@@ -77,7 +97,12 @@ export const ShareIcon = ({ size = 13 }: IconProps) => (
 )
 
 export const HomeIcon = ({ size = 20, filled = false }: IconProps) => (
-  <svg width={size} height={size} viewBox='0 0 24 24' fill={filled ? 'currentColor' : 'none'}>
+  <svg
+    width={size}
+    height={size}
+    viewBox='0 0 24 24'
+    fill={filled ? 'currentColor' : 'none'}
+  >
     <path
       d='M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9Z'
       stroke='currentColor'
@@ -100,7 +125,12 @@ export const ListsIcon = ({ size = 20, filled = false }: IconProps) => (
 )
 
 export const ProfileIcon = ({ size = 20, filled = false }: IconProps) => (
-  <svg width={size} height={size} viewBox='0 0 24 24' fill={filled ? 'currentColor' : 'none'}>
+  <svg
+    width={size}
+    height={size}
+    viewBox='0 0 24 24'
+    fill={filled ? 'currentColor' : 'none'}
+  >
     <circle cx='12' cy='8' r='4' stroke='currentColor' strokeWidth='1.7' />
     <path
       d='M4 21c0-4 3.5-7 8-7s8 3 8 7'
@@ -149,13 +179,23 @@ export const ChevronDownIcon = ({ size = 10 }: IconProps) => (
 
 export const CloseIcon = ({ size = 12 }: IconProps) => (
   <svg width={size} height={size} viewBox='0 0 24 24' fill='none'>
-    <path d='M5 5l14 14M19 5 5 19' stroke='currentColor' strokeWidth='2' strokeLinecap='round' />
+    <path
+      d='M5 5l14 14M19 5 5 19'
+      stroke='currentColor'
+      strokeWidth='2'
+      strokeLinecap='round'
+    />
   </svg>
 )
 
 export const FilterIcon = ({ size = 12 }: IconProps) => (
   <svg width={size} height={size} viewBox='0 0 24 24' fill='none'>
-    <path d='M4 6h16M7 12h10M10 18h4' stroke='currentColor' strokeWidth='2' strokeLinecap='round' />
+    <path
+      d='M4 6h16M7 12h10M10 18h4'
+      stroke='currentColor'
+      strokeWidth='2'
+      strokeLinecap='round'
+    />
   </svg>
 )
 

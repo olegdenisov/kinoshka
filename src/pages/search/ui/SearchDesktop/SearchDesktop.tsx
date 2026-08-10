@@ -6,7 +6,10 @@ import type { FilterState } from '@features/catalog-filter'
 import { AsyncBoundary, EmptyState, Spinner } from '@shared/ui'
 import { SearchHeader } from '../SearchHeader'
 import { SearchControls } from '../SearchControls'
-import { SearchResultsGrid, SearchResultSkeletonGrid } from '../SearchResultsGrid'
+import {
+  SearchResultsGrid,
+  SearchResultSkeletonGrid,
+} from '../SearchResultsGrid'
 import { Pagination } from '../Pagination'
 import { useMovieCatalog } from '../../model/useMovieCatalog'
 import { usePageSync } from '../../model/usePageSync'
@@ -47,7 +50,11 @@ const SearchResults = ({
       <>
         <EmptyState
           title='Nothing found'
-          description={query ? `Ничего не найдено по «${query}»` : 'Try adjusting the filters'}
+          description={
+            query
+              ? `Ничего не найдено по «${query}»`
+              : 'Try adjusting the filters'
+          }
         />
         {/*
           Deep-linked/устаревший ?page может указывать за пределы реальной выдачи (курсор
@@ -56,7 +63,11 @@ const SearchResults = ({
           не даёт способа вернуться на валидную страницу.
         */}
         {totalPages > 0 && (
-          <Pagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />
+          <Pagination
+            page={displayPage}
+            totalPages={totalPages}
+            onChange={onPageChange}
+          />
         )}
       </>
     )
@@ -70,7 +81,11 @@ const SearchResults = ({
         русские жанры как есть, reverse RU→EN не делаем (принятое решение, не баг).
       */}
       <SearchResultsGrid movies={movies} />
-      <Pagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />
+      <Pagination
+        page={displayPage}
+        totalPages={totalPages}
+        onChange={onPageChange}
+      />
       <div className={s.countText} aria-live='polite'>
         {movies.length} shown · page {displayPage} of {totalPages}
       </div>
@@ -79,20 +94,32 @@ const SearchResults = ({
 }
 
 export const SearchDesktop = () => {
-  const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } =
-    useFilterState()
+  const {
+    filters,
+    setFilters,
+    sort,
+    setSort,
+    toggleGenre,
+    resetFilters,
+    activeChips,
+  } = useFilterState()
   const [searchParams] = useSearchParams()
 
   const query = searchParams.get('q') ?? ''
   const isSearchMode = query.trim().length > 0
   const { page, goToPage } = usePageSync({ query, filters })
-  const { deferredQuery, deferredFilters, deferredSort, deferredPage, isUpdating } =
-    useCatalogUpdateStatus({
-      query,
-      filters,
-      sort,
-      page,
-    })
+  const {
+    deferredQuery,
+    deferredFilters,
+    deferredSort,
+    deferredPage,
+    isUpdating,
+  } = useCatalogUpdateStatus({
+    query,
+    filters,
+    sort,
+    page,
+  })
 
   return (
     <div className={s.page}>

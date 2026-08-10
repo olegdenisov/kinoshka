@@ -36,13 +36,20 @@ const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
 })
 
 const mockMovie = (id: number, overrides: Record<string, unknown> = {}) => {
-  server.use(http.get(`*/v1.5/movie/${id}`, () => HttpResponse.json(movieDoc(id, overrides))))
+  server.use(
+    http.get(`*/v1.5/movie/${id}`, () =>
+      HttpResponse.json(movieDoc(id, overrides)),
+    ),
+  )
 }
 
 const mockMovieError = (id: number, status: number, message = 'error') => {
   server.use(
     http.get(`*/v1.5/movie/${id}`, () =>
-      HttpResponse.json({ statusCode: status, message, error: 'error' }, { status }),
+      HttpResponse.json(
+        { statusCode: status, message, error: 'error' },
+        { status },
+      ),
     ),
   )
 }
@@ -115,23 +122,27 @@ describe('MoviePage — /movie/1 happy path', () => {
     const result = await renderMoviePage('/movie/1')
 
     expect(screen.getAllByText('Orbit of Silence').length).toBeGreaterThan(0)
-    expect(result.container.querySelector('[class*="skeleton"]')).not.toBeInTheDocument()
+    expect(
+      result.container.querySelector('[class*="skeleton"]'),
+    ).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Cast' }))
     expect(screen.getByText('Liv Korhonen')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Media' }))
     expect(
-      result.container.querySelector('img[src="https://example.com/frame-preview.jpg"]'),
+      result.container.querySelector(
+        'img[src="https://example.com/frame-preview.jpg"]',
+      ),
     ).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Details' }))
     expect(screen.getByText('Finland')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Overview' }))
-    expect(screen.getAllByText('Full synopsis text about the observatory.').length).toBeGreaterThan(
-      0,
-    )
+    expect(
+      screen.getAllByText('Full synopsis text about the observatory.').length,
+    ).toBeGreaterThan(0)
   })
 })
 
@@ -156,7 +167,9 @@ describe('MoviePage — /movie/666 не найден (404)', () => {
     await renderMoviePage('/movie/666')
 
     expect(await screen.findByText('Movie not found')).toBeInTheDocument()
-    expect(screen.getByText("This movie doesn't exist or was removed.")).toBeInTheDocument()
+    expect(
+      screen.getByText("This movie doesn't exist or was removed."),
+    ).toBeInTheDocument()
     expect(requestCount).toBe(1)
 
     const retryButton = screen.getByRole('button', {
@@ -189,7 +202,9 @@ describe('MoviePage — /movie/abc (нечисловой id)', () => {
     await renderMoviePage('/movie/abc')
 
     expect(await screen.findByText('Movie not found')).toBeInTheDocument()
-    expect(screen.getByText("This movie doesn't exist or was removed.")).toBeInTheDocument()
+    expect(
+      screen.getByText("This movie doesn't exist or was removed."),
+    ).toBeInTheDocument()
   })
 })
 

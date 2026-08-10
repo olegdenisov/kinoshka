@@ -6,4 +6,5 @@ const FEATURE: Record<FeatureName, boolean> = {
   toggleTheme: false,
 }
 
-export const useFeatureFlag = (featureName: FeatureName): boolean => FEATURE[featureName]
+export const useFeatureFlag = (featureName: FeatureName): boolean =>
+  FEATURE[featureName]

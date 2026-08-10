@@ -55,7 +55,11 @@ export const OverviewTab = ({ m }: OverviewTabProps) => {
           {m.crew.map(c => (
             // ключ — не просто c.id: один человек может встречаться в persons несколько раз
             // с разными профессиями (напр. и режиссёр, и сценарист) — id одинаковый.
-            <MetaRow key={`${c.id}-${c.profession}`} label={c.profession} value={c.name} />
+            <MetaRow
+              key={`${c.id}-${c.profession}`}
+              label={c.profession}
+              value={c.name}
+            />
           ))}
         </div>
       </div>
@@ -70,8 +74,14 @@ export const OverviewTab = ({ m }: OverviewTabProps) => {
 
         <div className={s.signalsBox}>
           <SectionHead>Ratings</SectionHead>
-          <SignalRow label='Kinopoisk' value={m.ratingKp != null ? m.ratingKp.toFixed(1) : '—'} />
-          <SignalRow label='IMDb' value={m.ratingImdb != null ? m.ratingImdb.toFixed(1) : '—'} />
+          <SignalRow
+            label='Kinopoisk'
+            value={m.ratingKp != null ? m.ratingKp.toFixed(1) : '—'}
+          />
+          <SignalRow
+            label='IMDb'
+            value={m.ratingImdb != null ? m.ratingImdb.toFixed(1) : '—'}
+          />
           <SignalRow label='MPAA' value={m.ratingMpaa ?? '—'} />
         </div>
       </aside>

@@ -3,7 +3,13 @@ import type { MovieDetail } from '../model/types'
 import { mapDocToMovie } from './mapDocToMovie'
 
 const CAST_PROFESSIONS = new Set(['actor'])
-const CREW_PROFESSIONS = new Set(['director', 'writer', 'producer', 'composer', 'operator'])
+const CREW_PROFESSIONS = new Set([
+  'director',
+  'writer',
+  'producer',
+  'composer',
+  'operator',
+])
 
 export const isCast = (person: PersonInMovie): boolean =>
   CAST_PROFESSIONS.has(person.enProfession ?? '')
@@ -34,7 +40,9 @@ export const mapDtoToMovieDetail = (doc: MovieDtoV14): MovieDetail => ({
       profession: person.enProfession ?? '',
     })) ?? [],
   countries:
-    doc.countries?.map(country => country.name).filter((name): name is string => !!name) ?? [],
+    doc.countries
+      ?.map(country => country.name)
+      .filter((name): name is string => !!name) ?? [],
   ratingKp: doc.rating?.kp ?? undefined,
   ratingImdb: doc.rating?.imdb ?? undefined,
   votesKp: doc.votes?.kp ?? undefined,

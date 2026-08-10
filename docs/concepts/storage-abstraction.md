@@ -27,7 +27,11 @@ type StorageSlot<T> = {
   subscribe(callback: () => void): () => void // возвращает unsubscribe
 }
 
-function createStorageSlot<T>(key: string, schema: z.ZodType<T>, fallback: T): StorageSlot<T> {
+function createStorageSlot<T>(
+  key: string,
+  schema: z.ZodType<T>,
+  fallback: T,
+): StorageSlot<T> {
   return {
     get() {
       try {
@@ -83,7 +87,9 @@ export function useFavorites() {
   )
 
   const toggle = (id: number) => {
-    const ids = data.ids.includes(id) ? data.ids.filter(x => x !== id) : [...data.ids, id]
+    const ids = data.ids.includes(id)
+      ? data.ids.filter(x => x !== id)
+      : [...data.ids, id]
     favoritesSlot.set({ ids })
     // ⚠ useSyncExternalStore НЕ реагирует на изменения в той же вкладке!
     // Нужно уведомить вручную — об этом ниже

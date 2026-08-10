@@ -22,7 +22,12 @@ export const MediaTab = ({ m, images }: MediaTabProps) => {
         >
           <div className={s.trailerScanlines} />
           {m.trailerUrl ? (
-            <a className={s.trailerPlay} href={m.trailerUrl} target='_blank' rel='noreferrer'>
+            <a
+              className={s.trailerPlay}
+              href={m.trailerUrl}
+              target='_blank'
+              rel='noreferrer'
+            >
               <PlayIcon size={22} />
             </a>
           ) : (

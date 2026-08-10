@@ -5,7 +5,10 @@ import type { MovieDetail, MovieImage } from '@entities/movie'
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
 import { MovieDesktop } from './MovieDesktop'
 
-const renderMovieDesktop = (movie: MovieDetail = MOVIE, images: MovieImage[] = IMAGES) =>
+const renderMovieDesktop = (
+  movie: MovieDetail = MOVIE,
+  images: MovieImage[] = IMAGES,
+) =>
   render(
     <MemoryRouter>
       <MovieDesktop movie={movie} images={images} />
@@ -53,7 +56,9 @@ describe('MovieDesktop — Media', () => {
 
     await user.click(screen.getByRole('button', { name: 'Media' }))
 
-    expect(container.querySelector(`img[src="${IMAGES[0].previewUrl}"]`)).toBeInTheDocument()
+    expect(
+      container.querySelector(`img[src="${IMAGES[0].previewUrl}"]`),
+    ).toBeInTheDocument()
   })
 })
 
@@ -93,7 +98,9 @@ describe('MovieDesktop — fallback-ветки при отсутствующих
     expect(screen.getByText('— reviews')).toBeInTheDocument()
     // Critics-блок (criticScore undefined) добавляет второе "—" рядом с всегда-"—" Your rating.
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2)
-    expect(screen.queryByRole('link', { name: /trailer/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: /trailer/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('Overview: countries/ratingKp/ratingImdb/ratingMpaa отсутствуют — рендерит "—" вместо значений', async () => {

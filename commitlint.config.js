@@ -4,7 +4,17 @@ export default {
     'scope-enum': [
       2,
       'always',
-      ['app', 'pages', 'widgets', 'features', 'entities', 'shared', 'e2e', 'ci', 'deps'],
+      [
+        'app',
+        'pages',
+        'widgets',
+        'features',
+        'entities',
+        'shared',
+        'e2e',
+        'ci',
+        'deps',
+      ],
     ],
   },
 }

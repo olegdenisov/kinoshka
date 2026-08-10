@@ -22,11 +22,19 @@ const doc = (id: number, overrides: Record<string, unknown> = {}) => ({
 })
 
 const mockSuccess = (id: number, overrides: Record<string, unknown> = {}) => {
-  server.use(http.get(`*/v1.5/movie/${id}`, () => HttpResponse.json(doc(id, overrides))))
+  server.use(
+    http.get(`*/v1.5/movie/${id}`, () => HttpResponse.json(doc(id, overrides))),
+  )
 }
 
-const mockError = (id: number, status: number, body: Record<string, unknown>) => {
-  server.use(http.get(`*/v1.5/movie/${id}`, () => HttpResponse.json(body, { status })))
+const mockError = (
+  id: number,
+  status: number,
+  body: Record<string, unknown>,
+) => {
+  server.use(
+    http.get(`*/v1.5/movie/${id}`, () => HttpResponse.json(body, { status })),
+  )
 }
 
 describe('getMovieDetail — success', () => {

@@ -44,7 +44,10 @@ describe('SortSelect', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Sort/ }))
 
-    expect(screen.getByRole('option', { name: 'A to Z' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('option', { name: 'A to Z' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
     expect(screen.getByRole('option', { name: 'Popular' })).toHaveAttribute(
       'aria-selected',
       'false',

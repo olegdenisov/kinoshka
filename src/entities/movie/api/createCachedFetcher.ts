@@ -119,7 +119,9 @@ export const createCachedFetcher = <P, R = Movie[]>(
     if (snapshot && isFresh(snapshot.timestamp, snapshot.isError)) {
       const entry: CacheEntry<R> = {
         promise: snapshot.isError
-          ? Promise.reject(new Error(snapshot.message ?? 'cached error cooldown'))
+          ? Promise.reject(
+              new Error(snapshot.message ?? 'cached error cooldown'),
+            )
           : Promise.resolve(snapshot.data),
         timestamp: snapshot.timestamp,
         isError: snapshot.isError,

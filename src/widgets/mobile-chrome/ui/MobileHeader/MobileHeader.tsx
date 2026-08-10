@@ -38,7 +38,11 @@ export const MobileHeader = ({
         {title && <div className={s.title}>{title}</div>}
 
         {showSearch && !title && (
-          <button type='button' onClick={handleSearchFocus} className={s.searchTrigger}>
+          <button
+            type='button'
+            onClick={handleSearchFocus}
+            className={s.searchTrigger}
+          >
             <SearchIcon size={14} />
             <span>Search…</span>
           </button>

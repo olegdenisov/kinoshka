@@ -106,7 +106,9 @@ describe('filtersToSearchParams', () => {
       yearTo: 2022,
       rating: 5,
     }
-    const roundTripped = getFilterFromSearchParams(filtersToSearchParams(filters))
+    const roundTripped = getFilterFromSearchParams(
+      filtersToSearchParams(filters),
+    )
     expect(roundTripped).toEqual(filters)
   })
 })

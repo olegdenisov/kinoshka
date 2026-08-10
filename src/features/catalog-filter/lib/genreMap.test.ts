@@ -41,10 +41,13 @@ describe('genreMap / toApiGenre', () => {
     },
   )
 
-  it.each(UNKNOWN_GENRES)('неизвестный жанр "%s" → undefined (skip), не бросает', genre => {
-    expect(() => toApiGenre(genre)).not.toThrow()
-    expect(toApiGenre(genre)).toBeUndefined()
-  })
+  it.each(UNKNOWN_GENRES)(
+    'неизвестный жанр "%s" → undefined (skip), не бросает',
+    genre => {
+      expect(() => toApiGenre(genre)).not.toThrow()
+      expect(toApiGenre(genre)).toBeUndefined()
+    },
+  )
 
   it('жанр, отсутствующий в обоих UI-списках, тоже → undefined', () => {
     expect(toApiGenre('Not A Real Genre')).toBeUndefined()

@@ -31,7 +31,10 @@ export const BottomSheet = ({
         onClick={onClose}
         className={`${s.backdrop} ${open ? s.backdropOpen : ''}`}
       />
-      <div className={`${s.sheet} ${open ? s.sheetOpen : ''}`} style={{ height: `${heightVh}vh` }}>
+      <div
+        className={`${s.sheet} ${open ? s.sheetOpen : ''}`}
+        style={{ height: `${heightVh}vh` }}
+      >
         <div className={s.handle}>
           <div className={s.handleBar} />
         </div>

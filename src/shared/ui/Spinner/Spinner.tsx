@@ -9,7 +9,11 @@ export const Spinner = ({ size }: SpinnerProps) => {
   return (
     <span
       className={s.spinner}
-      style={size !== undefined ? ({ '--spinner-size': `${size}px` } as CSSProperties) : undefined}
+      style={
+        size !== undefined
+          ? ({ '--spinner-size': `${size}px` } as CSSProperties)
+          : undefined
+      }
     ></span>
   )
 }
