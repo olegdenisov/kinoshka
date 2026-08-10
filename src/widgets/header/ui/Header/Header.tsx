@@ -82,7 +82,8 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
     // Ref обновляем и когда write ничего не поменял (currentQ уже совпадает с trimmed) —
     // синхронизация с тем, что реально окажется в URL после этого эффекта, не даёт
     // resync-эффекту выше принять наш собственный write за внешнее изменение.
-    lastSyncedQueryRef.current = trimmed.length >= QUERY_MIN_LENGTH ? trimmed : ''
+    lastSyncedQueryRef.current =
+      trimmed.length >= QUERY_MIN_LENGTH ? trimmed : ''
   }, [debouncedDraft, draft, setSearchParams])
 
   const clearQuery = () => {

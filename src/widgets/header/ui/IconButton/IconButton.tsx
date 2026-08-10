@@ -5,7 +5,11 @@ type IconButtonProps = React.PropsWithChildren<{
   'aria-label'?: string
 }>
 
-export const IconButton = ({ children, onClick, 'aria-label': ariaLabel }: IconButtonProps) => {
+export const IconButton = ({
+  children,
+  onClick,
+  'aria-label': ariaLabel,
+}: IconButtonProps) => {
   return (
     <button onClick={onClick} className={s.iconButton} aria-label={ariaLabel}>
       {children}

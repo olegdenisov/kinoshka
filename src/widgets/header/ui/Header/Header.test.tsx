@@ -90,12 +90,16 @@ describe('Header (variant="search")', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear search' }))
 
     expect(lastSearch).toBe('')
-    expect(screen.getByPlaceholderText('Search movies, series, anime…')).toHaveValue('')
+    expect(
+      screen.getByPlaceholderText('Search movies, series, anime…'),
+    ).toHaveValue('')
   })
 
   it('инициализация инпута из URL', () => {
     renderHeader(['/search?q=dune'])
-    expect(screen.getByPlaceholderText('Search movies, series, anime…')).toHaveValue('dune')
+    expect(
+      screen.getByPlaceholderText('Search movies, series, anime…'),
+    ).toHaveValue('dune')
   })
 
   it('внешнее изменение ?q (навигация в истории, без ремаунта Header) — draft инпута пересинхронизируется с URL', () => {
@@ -108,7 +112,9 @@ describe('Header (variant="search")', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByPlaceholderText('Search movies, series, anime…')).toHaveValue('dune')
+    expect(
+      screen.getByPlaceholderText('Search movies, series, anime…'),
+    ).toHaveValue('dune')
 
     // Header не размонтируется (тот же MemoryRouter/тот же /search) — только меняется ?q,
     // как при browser back/forward внутри /search.
@@ -122,7 +128,9 @@ describe('Header (variant="search")', () => {
       )
     })
 
-    expect(screen.getByPlaceholderText('Search movies, series, anime…')).toHaveValue('matrix')
+    expect(
+      screen.getByPlaceholderText('Search movies, series, anime…'),
+    ).toHaveValue('matrix')
   })
 
   it('внешнее изменение ?q на пусто (например, переход назад до состояния без query) — инпут очищается', () => {
@@ -135,7 +143,9 @@ describe('Header (variant="search")', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByPlaceholderText('Search movies, series, anime…')).toHaveValue('dune')
+    expect(
+      screen.getByPlaceholderText('Search movies, series, anime…'),
+    ).toHaveValue('dune')
 
     act(() => {
       rerender(
@@ -147,6 +157,8 @@ describe('Header (variant="search")', () => {
       )
     })
 
-    expect(screen.getByPlaceholderText('Search movies, series, anime…')).toHaveValue('')
+    expect(
+      screen.getByPlaceholderText('Search movies, series, anime…'),
+    ).toHaveValue('')
   })
 })

@@ -10,12 +10,20 @@ export const Footer = () => {
             <span className={s.logoDot}>·</span>
             <span className={s.logoMain}>shka</span>
           </div>
-          <p className={s.tagline}>A quiet place to track films, series, and anime.</p>
+          <p className={s.tagline}>
+            A quiet place to track films, series, and anime.
+          </p>
         </div>
         {[
           {
             h: 'Catalog',
-            items: ['Movies', 'Series', 'Anime', 'Documentaries', 'New releases'],
+            items: [
+              'Movies',
+              'Series',
+              'Anime',
+              'Documentaries',
+              'New releases',
+            ],
           },
           {
             h: 'Account',

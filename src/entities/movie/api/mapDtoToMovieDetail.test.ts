@@ -125,7 +125,9 @@ describe('mapDtoToMovieDetail — отсутствующие опциональ�
   })
 
   it('description/shortDescription отсутствуют — synopsis пустая строка, shortSynopsis undefined', () => {
-    const detail = mapDtoToMovieDetail(doc({ description: null, shortDescription: null }))
+    const detail = mapDtoToMovieDetail(
+      doc({ description: null, shortDescription: null }),
+    )
     expect(detail.synopsis).toBe('')
     expect(detail.shortSynopsis).toBeUndefined()
   })
@@ -142,11 +144,15 @@ describe('mapDtoToMovieDetail — отсутствующие опциональ�
   })
 
   it('videos.trailers отсутствуют — trailerUrl undefined', () => {
-    expect(mapDtoToMovieDetail(doc({ videos: undefined })).trailerUrl).toBeUndefined()
+    expect(
+      mapDtoToMovieDetail(doc({ videos: undefined })).trailerUrl,
+    ).toBeUndefined()
   })
 
   it('rating/votes целиком отсутствуют — соответствующие поля undefined', () => {
-    const detail = mapDtoToMovieDetail(doc({ rating: undefined, votes: undefined }))
+    const detail = mapDtoToMovieDetail(
+      doc({ rating: undefined, votes: undefined }),
+    )
     expect(detail.ratingKp).toBeUndefined()
     expect(detail.ratingImdb).toBeUndefined()
     expect(detail.criticScore).toBeUndefined()

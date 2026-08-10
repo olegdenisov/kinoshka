@@ -22,4 +22,5 @@ export const GENRE_MAP: Record<string, string> = {
   Fantasy: 'фэнтези',
 }
 
-export const toApiGenre = (genre: string): string | undefined => GENRE_MAP[genre]
+export const toApiGenre = (genre: string): string | undefined =>
+  GENRE_MAP[genre]

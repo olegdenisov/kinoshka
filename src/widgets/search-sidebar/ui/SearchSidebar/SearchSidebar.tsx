@@ -30,7 +30,13 @@ type RadioRowProps = {
   onClick: () => void
 }
 
-const RadioRow = ({ label, count, active, disabled, onClick }: RadioRowProps) => (
+const RadioRow = ({
+  label,
+  count,
+  active,
+  disabled,
+  onClick,
+}: RadioRowProps) => (
   <button
     onClick={onClick}
     disabled={disabled}
@@ -40,7 +46,9 @@ const RadioRow = ({ label, count, active, disabled, onClick }: RadioRowProps) =>
       <span className={`${s.radioCircle} ${active ? s.radioCircleActive : ''}`}>
         {active && <span className={s.radioDot} />}
       </span>
-      <span className={`${s.radioLabel} ${active ? s.radioLabelActive : ''}`}>{label}</span>
+      <span className={`${s.radioLabel} ${active ? s.radioLabelActive : ''}`}>
+        {label}
+      </span>
     </span>
     <span className={s.radioCount}>{count}</span>
   </button>

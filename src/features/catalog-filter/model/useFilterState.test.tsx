@@ -8,7 +8,8 @@ import { useFilterState } from './useFilterState'
 let setSearchParamsCalls: Array<[unknown, unknown]> = []
 
 vi.mock('react-router', async () => {
-  const actual = await vi.importActual<typeof import('react-router')>('react-router')
+  const actual =
+    await vi.importActual<typeof import('react-router')>('react-router')
   return {
     ...actual,
     useSearchParams: (...args: Parameters<typeof actual.useSearchParams>) => {
@@ -72,7 +73,13 @@ describe('useFilterState', () => {
     })
 
     const labels = result.current.activeChips.map(c => c.label)
-    expect(labels).toEqual(['Movies', 'Drama', 'Action', '2020–2025', 'Rating 7+'])
+    expect(labels).toEqual([
+      'Movies',
+      'Drama',
+      'Action',
+      '2020–2025',
+      'Rating 7+',
+    ])
   })
 
   it('activeChips: только yearFrom задан (без yearTo) — лейбл не содержит "null"', () => {
@@ -80,7 +87,9 @@ describe('useFilterState', () => {
       wrapper: wrapper(['/search?yearFrom=2020']),
     })
 
-    const yearChip = result.current.activeChips.find(c => c.label.includes('2020'))
+    const yearChip = result.current.activeChips.find(c =>
+      c.label.includes('2020'),
+    )
     expect(yearChip?.label).toBe('2020+')
     expect(yearChip?.label).not.toContain('null')
   })
@@ -90,7 +99,9 @@ describe('useFilterState', () => {
       wrapper: wrapper(['/search?yearTo=2010']),
     })
 
-    const yearChip = result.current.activeChips.find(c => c.label.includes('2010'))
+    const yearChip = result.current.activeChips.find(c =>
+      c.label.includes('2010'),
+    )
     expect(yearChip?.label).toBe('–2010')
     expect(yearChip?.label).not.toContain('null')
   })
@@ -125,7 +136,9 @@ describe('useFilterState', () => {
       wrapper: wrapper(['/search?yearFrom=2020&yearTo=2025']),
     })
 
-    const yearChip = result.current.activeChips.find(c => c.label === '2020–2025')!
+    const yearChip = result.current.activeChips.find(
+      c => c.label === '2020–2025',
+    )!
     act(() => yearChip.onRemove())
 
     expect(result.current.filters.yearFrom).toBeNull()
@@ -137,7 +150,9 @@ describe('useFilterState', () => {
       wrapper: wrapper(['/search?rating=7']),
     })
 
-    const ratingChip = result.current.activeChips.find(c => c.label === 'Rating 7+')!
+    const ratingChip = result.current.activeChips.find(
+      c => c.label === 'Rating 7+',
+    )!
     act(() => ratingChip.onRemove())
 
     expect(result.current.filters.rating).toBeNull()
@@ -170,7 +185,9 @@ describe('useFilterState', () => {
       wrapper: wrapper(['/search?q=matrix']),
     })
 
-    act(() => result.current.setFilters({ ...EMPTY_FILTERS, type: 'movie', rating: 8 }))
+    act(() =>
+      result.current.setFilters({ ...EMPTY_FILTERS, type: 'movie', rating: 8 }),
+    )
 
     expect(result.current.filters).toEqual({
       ...EMPTY_FILTERS,

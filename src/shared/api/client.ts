@@ -22,7 +22,8 @@ apiClient.instance.interceptors.response.use(
   response => response,
   error => {
     const data = error.response?.data as { message: unknown } | undefined
-    const message = typeof data?.message === 'string' ? data.message : error.message
+    const message =
+      typeof data?.message === 'string' ? data.message : error.message
 
     return Promise.reject(new ApiError(message, error.response?.status))
   },

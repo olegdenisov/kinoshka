@@ -22,7 +22,9 @@ describe('apiClient', () => {
       }),
     )
 
-    await expect(apiClient.getV15MovieById({ path: { id: 1 } })).rejects.toMatchObject({
+    await expect(
+      apiClient.getV15MovieById({ path: { id: 1 } }),
+    ).rejects.toMatchObject({
       status: NOT_FOUND.status,
       message: NOT_FOUND.message,
     })
@@ -35,7 +37,9 @@ describe('apiClient', () => {
       }),
     )
 
-    await expect(apiClient.getV15MovieById({ path: { id: 1 } })).rejects.toMatchObject({
+    await expect(
+      apiClient.getV15MovieById({ path: { id: 1 } }),
+    ).rejects.toMatchObject({
       status: FORBIDDEN.status,
       message: FORBIDDEN.message,
     })
@@ -46,11 +50,16 @@ describe('apiClient', () => {
       http.get(ENDPOINT, () => {
         // Тело без поля `message` (или с нестроковым message) — интерцептор не может
         // прочитать data.message и обязан упасть обратно на error.message.
-        return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+        return HttpResponse.json(
+          { error: 'Internal Server Error' },
+          { status: 500 },
+        )
       }),
     )
 
-    await expect(apiClient.getV15MovieById({ path: { id: 1 } })).rejects.toMatchObject({
+    await expect(
+      apiClient.getV15MovieById({ path: { id: 1 } }),
+    ).rejects.toMatchObject({
       status: 500,
       message: expect.any(String),
     })

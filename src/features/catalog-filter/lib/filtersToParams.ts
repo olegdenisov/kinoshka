@@ -2,7 +2,9 @@ import type { MovieControllerFindManyByQueryV15Data } from '@shared/api'
 import type { FilterState } from '../model/useFilterState'
 import { toApiGenre } from './genreMap'
 
-export type CatalogQueryParams = NonNullable<MovieControllerFindManyByQueryV15Data['query']>
+export type CatalogQueryParams = NonNullable<
+  MovieControllerFindManyByQueryV15Data['query']
+>
 
 type ApiMovieType = NonNullable<CatalogQueryParams['type']>[number]
 type ApiSortField = NonNullable<CatalogQueryParams['sortField']>[number]
@@ -44,7 +46,10 @@ const YEAR_RANGE_MAX = 2050
  * для `getV15Movie` (каталог, без текстового поиска — Variant A).
  * Пустой фильтр без sort даёт минимальный `{ limit: 10 }`.
  */
-export const filtersToParams = (filters: FilterState, sort?: string): CatalogQueryParams => {
+export const filtersToParams = (
+  filters: FilterState,
+  sort?: string,
+): CatalogQueryParams => {
   const params: CatalogQueryParams = { limit: PAGE_LIMIT }
 
   const apiType = filters.type ? TYPE_MAP[filters.type] : undefined

@@ -7,9 +7,12 @@ afterEach(() => vi.useRealTimers())
 
 describe('useDebouncedValue', () => {
   it('обновляет значение через 250ms тишины', () => {
-    const { result, rerender } = renderHook(({ value }) => useDebouncedValue(value, 250), {
-      initialProps: { value: 'a' },
-    })
+    const { result, rerender } = renderHook(
+      ({ value }) => useDebouncedValue(value, 250),
+      {
+        initialProps: { value: 'a' },
+      },
+    )
 
     expect(result.current).toBe('a')
 
@@ -21,9 +24,12 @@ describe('useDebouncedValue', () => {
   })
 
   it('схлопывает быстрые последовательные изменения — наружу уходит только финальное значение', () => {
-    const { result, rerender } = renderHook(({ value }) => useDebouncedValue(value, 250), {
-      initialProps: { value: 'a' },
-    })
+    const { result, rerender } = renderHook(
+      ({ value }) => useDebouncedValue(value, 250),
+      {
+        initialProps: { value: 'a' },
+      },
+    )
 
     rerender({ value: 'ab' })
     act(() => vi.advanceTimersByTime(100))
@@ -39,9 +45,12 @@ describe('useDebouncedValue', () => {
   })
 
   it('cleanup при размонтировании — таймер отменяется, повторный вызов setState не происходит', () => {
-    const { rerender, unmount } = renderHook(({ value }) => useDebouncedValue(value, 250), {
-      initialProps: { value: 'a' },
-    })
+    const { rerender, unmount } = renderHook(
+      ({ value }) => useDebouncedValue(value, 250),
+      {
+        initialProps: { value: 'a' },
+      },
+    )
 
     rerender({ value: 'ab' })
     unmount()

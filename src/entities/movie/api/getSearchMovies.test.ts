@@ -33,7 +33,10 @@ const expectedMovie = {
   hue: 0,
 }
 
-const mockSuccess = (docs: Record<string, unknown>[], overrides: Record<string, unknown> = {}) => {
+const mockSuccess = (
+  docs: Record<string, unknown>[],
+  overrides: Record<string, unknown> = {},
+) => {
   let request: Request | undefined
 
   server.use(
@@ -129,7 +132,9 @@ describe('getSearchMovies — форма результата { movies, totalPag
   })
 
   it('ответ без поля docs (неожиданная форма) — { movies: [], totalPages: 0 }', async () => {
-    server.use(http.get(ENDPOINT, () => HttpResponse.json({ unexpected: true })))
+    server.use(
+      http.get(ENDPOINT, () => HttpResponse.json({ unexpected: true })),
+    )
 
     const result = await getSearchMovies({ query: 'no-docs' })
 
@@ -149,7 +154,9 @@ describe('getSearchMovies — маппинг SearchMovieDtoV14 → Movie', () =>
 
 describe('getSearchMovies — fallback названия name ?? alternativeName ?? enName', () => {
   it('name есть — используется name', async () => {
-    mockSuccess([doc({ name: 'Primary', alternativeName: 'Alt', enName: 'En' })])
+    mockSuccess([
+      doc({ name: 'Primary', alternativeName: 'Alt', enName: 'En' }),
+    ])
 
     const {
       movies: [movie],

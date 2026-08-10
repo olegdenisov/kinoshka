@@ -16,7 +16,10 @@ type ChipProps = React.PropsWithChildren<{
 }>
 
 const Chip = ({ children, active, onClick }: ChipProps) => (
-  <button onClick={onClick} className={`${s.chip}${active ? ` ${s.chipActive}` : ''}`}>
+  <button
+    onClick={onClick}
+    className={`${s.chip}${active ? ` ${s.chipActive}` : ''}`}
+  >
     {children}
   </button>
 )
@@ -58,8 +61,8 @@ export const HeroSection = () => {
         </h1>
 
         <p className={s.description}>
-          A quiet place to track films, series and anime — without the noise. Rate. Keep lists. Come
-          back.
+          A quiet place to track films, series and anime — without the noise.
+          Rate. Keep lists. Come back.
         </p>
 
         <div className={s.searchBar}>

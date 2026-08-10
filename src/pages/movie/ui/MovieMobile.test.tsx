@@ -5,7 +5,10 @@ import type { MovieDetail, MovieImage } from '@entities/movie'
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../testFixtures'
 import { MovieMobile } from './MovieMobile'
 
-const renderMovieMobile = (movie: MovieDetail = MOVIE, images: MovieImage[] = IMAGES) =>
+const renderMovieMobile = (
+  movie: MovieDetail = MOVIE,
+  images: MovieImage[] = IMAGES,
+) =>
   render(
     <MemoryRouter>
       <MovieMobile movie={movie} images={images} />
@@ -53,7 +56,9 @@ describe('MovieMobile — Media', () => {
 
     await user.click(screen.getByRole('button', { name: 'Media' }))
 
-    expect(container.querySelector(`img[src="${IMAGES[0].previewUrl}"]`)).toBeInTheDocument()
+    expect(
+      container.querySelector(`img[src="${IMAGES[0].previewUrl}"]`),
+    ).toBeInTheDocument()
   })
 })
 

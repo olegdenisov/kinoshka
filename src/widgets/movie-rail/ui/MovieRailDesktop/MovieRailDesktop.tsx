@@ -11,7 +11,11 @@ type MovieRailDesktopProps = {
   items: Movie[]
 }
 
-export const MovieRailDesktop = ({ title, subtitle, items }: MovieRailDesktopProps) => {
+export const MovieRailDesktop = ({
+  title,
+  subtitle,
+  items,
+}: MovieRailDesktopProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const scroll = (dir: number) => {

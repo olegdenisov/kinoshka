@@ -9,7 +9,11 @@ type MovieRailMobileProps = {
   items: Movie[]
 }
 
-export const MovieRailMobile = ({ title, subtitle, items }: MovieRailMobileProps) => {
+export const MovieRailMobile = ({
+  title,
+  subtitle,
+  items,
+}: MovieRailMobileProps) => {
   return (
     <section className={s.section}>
       <div className={s.header}>

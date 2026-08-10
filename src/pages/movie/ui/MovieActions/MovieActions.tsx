@@ -22,7 +22,12 @@ type SecondaryActionProps = {
   onClick?: () => void
 }
 
-const SecondaryAction = ({ icon, label, active, onClick }: SecondaryActionProps) => (
+const SecondaryAction = ({
+  icon,
+  label,
+  active,
+  onClick,
+}: SecondaryActionProps) => (
   <button
     onClick={onClick}
     className={`${s.secondaryBtn}${active ? ` ${s.secondaryBtnActive}` : ''}`}

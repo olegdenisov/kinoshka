@@ -1,4 +1,7 @@
-import { apiClient, type MovieControllerFindManyByQueryV15Data } from '@shared/api'
+import {
+  apiClient,
+  type MovieControllerFindManyByQueryV15Data,
+} from '@shared/api'
 import type { Movie } from '../model/types'
 import { createCachedFetcher } from './createCachedFetcher'
 import { mapDocToMovie } from './mapDocToMovie'
@@ -10,7 +13,16 @@ const fetchMovies = async (params: RequestParams): Promise<Movie[]> => {
     query: {
       ...params,
       notNullFields: ['poster.url', 'rating.kp', 'rating.imdb'],
-      selectFields: ['id', 'name', 'year', 'rating', 'type', 'genres', 'movieLength', 'poster'],
+      selectFields: [
+        'id',
+        'name',
+        'year',
+        'rating',
+        'type',
+        'genres',
+        'movieLength',
+        'poster',
+      ],
     },
   })
 

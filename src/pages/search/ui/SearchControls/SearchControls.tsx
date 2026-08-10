@@ -21,7 +21,11 @@ export const SearchControls = ({
   return (
     <div className={s.row}>
       <ActiveFilterChips chips={chips} onClearAll={onClearAll} />
-      <SortSelect value={sort} onChange={onSortChange} disabled={sortDisabled} />
+      <SortSelect
+        value={sort}
+        onChange={onSortChange}
+        disabled={sortDisabled}
+      />
     </div>
   )
 }

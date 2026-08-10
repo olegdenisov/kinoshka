@@ -65,7 +65,8 @@ export const HomeMobile = () => {
             style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(180deg, transparent 50%, #0F0D11 100%)',
+              background:
+                'linear-gradient(180deg, transparent 50%, #0F0D11 100%)',
             }}
           />
         </div>
@@ -173,7 +174,9 @@ export const HomeMobile = () => {
                   height: 32,
                   padding: '0 14px',
                   background:
-                    activeFilter === c.key ? 'rgba(209,142,95,0.15)' : 'rgba(24,22,27,0.6)',
+                    activeFilter === c.key
+                      ? 'rgba(209,142,95,0.15)'
+                      : 'rgba(24,22,27,0.6)',
                   color: activeFilter === c.key ? '#D18E5F' : '#F2F0EF',
                   border: `1px solid ${activeFilter === c.key ? 'rgba(209,142,95,0.35)' : 'rgba(184,173,171,0.12)'}`,
                   borderRadius: 999,
@@ -199,7 +202,12 @@ export const HomeMobile = () => {
         }}
       >
         {sections.map((s, i) => (
-          <MovieRailMobile key={i} title={s.title} subtitle={s.subtitle} items={s.items} />
+          <MovieRailMobile
+            key={i}
+            title={s.title}
+            subtitle={s.subtitle}
+            items={s.items}
+          />
         ))}
       </div>
 

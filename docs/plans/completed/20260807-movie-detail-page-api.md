@@ -84,7 +84,9 @@ type MovieDetail = Movie & {
 **`src/entities/movie/hooks/useMovieDetail.ts`:**
 
 ```ts
-const useMovieDetail = (id: number): { detail: MovieDetail; images: MovieImage[] } => {
+const useMovieDetail = (
+  id: number,
+): { detail: MovieDetail; images: MovieImage[] } => {
   // Promise.allSettled([getMovieDetail(id), getMovieImages(id)])
   // detail rejected → пробросить ошибку дальше (включая 404)
   // images rejected → images: []

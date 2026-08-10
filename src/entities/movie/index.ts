@@ -1,7 +1,13 @@
 export { Card } from './ui/Card'
 export { MobileCard } from './ui/MobileCard'
 export { Poster } from './ui/Poster'
-export type { Movie, MovieDetail, MovieType, CastMember, CrewMember } from './model/types'
+export type {
+  Movie,
+  MovieDetail,
+  MovieType,
+  CastMember,
+  CrewMember,
+} from './model/types'
 export { CATALOG, ALL_GENRES } from './model/catalog'
 export { getMoviesPage } from './api/getMoviesPage'
 export type { CatalogParams, CatalogPageResult } from './api/getMoviesPage'

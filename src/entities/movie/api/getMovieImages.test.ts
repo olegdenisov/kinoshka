@@ -55,7 +55,10 @@ describe('getMovieImages — запрос', () => {
     expect(url.searchParams.getAll('movieId')).toEqual(['1'])
     expect(url.searchParams.getAll('type')).toEqual(['frame', 'screenshot'])
     expect(url.searchParams.get('limit')).toBe('8')
-    expect(url.searchParams.getAll('selectFields')).toEqual(['url', 'previewUrl'])
+    expect(url.searchParams.getAll('selectFields')).toEqual([
+      'url',
+      'previewUrl',
+    ])
   })
 
   it('403 — промис реджектится (isError-cooldown в фабрике)', async () => {
@@ -103,7 +106,10 @@ describe('getMovieImages — форма результата MovieImage[]', () =
   })
 
   it('запись с пустым url отфильтровывается', async () => {
-    mockSuccess([image({ url: undefined }), image({ url: 'https://example.com/b.jpg' })])
+    mockSuccess([
+      image({ url: undefined }),
+      image({ url: 'https://example.com/b.jpg' }),
+    ])
 
     const images = await getMovieImages(6)
 

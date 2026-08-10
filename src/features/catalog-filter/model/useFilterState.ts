@@ -36,14 +36,18 @@ export const useFilterState = () => {
       prev => {
         const params = new URLSearchParams(prev)
         FILTER_URL_KEYS.forEach(key => params.delete(key))
-        filtersToSearchParams(next).forEach((value, key) => params.set(key, value))
+        filtersToSearchParams(next).forEach((value, key) =>
+          params.set(key, value),
+        )
         return params
       },
       { replace: true },
     )
   }
 
-  const setFilters = (next: FilterState | ((prev: FilterState) => FilterState)) => {
+  const setFilters = (
+    next: FilterState | ((prev: FilterState) => FilterState),
+  ) => {
     applyFilters(typeof next === 'function' ? next(filters) : next)
   }
 
@@ -65,7 +69,9 @@ export const useFilterState = () => {
   const toggleGenre = (g: string) => {
     setFilters(f => ({
       ...f,
-      genres: f.genres.includes(g) ? f.genres.filter(x => x !== g) : [...f.genres, g],
+      genres: f.genres.includes(g)
+        ? f.genres.filter(x => x !== g)
+        : [...f.genres, g],
     }))
   }
 
@@ -73,13 +79,16 @@ export const useFilterState = () => {
 
   const activeChips: ActiveChip[] = []
   if (filters.type) {
-    const label = filters.type.charAt(0).toUpperCase() + filters.type.slice(1) + 's'
+    const label =
+      filters.type.charAt(0).toUpperCase() + filters.type.slice(1) + 's'
     activeChips.push({
       label,
       onRemove: () => setFilters(f => ({ ...f, type: null })),
     })
   }
-  filters.genres.forEach(g => activeChips.push({ label: g, onRemove: () => toggleGenre(g) }))
+  filters.genres.forEach(g =>
+    activeChips.push({ label: g, onRemove: () => toggleGenre(g) }),
+  )
   if (filters.yearFrom || filters.yearTo) {
     // yearFrom/yearTo — независимые nullable-поля (валидный FilterState допускает только
     // один из них заданным), поэтому не склеиваем "2020–null"/"null–2025" вслепую.

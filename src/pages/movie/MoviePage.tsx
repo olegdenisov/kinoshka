@@ -31,7 +31,11 @@ const movieErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
   return (
     <ErrorState
       title={isNotFound ? NOT_FOUND_TITLE : 'Something went wrong'}
-      description={isNotFound ? NOT_FOUND_DESCRIPTION : error?.message || 'Please try again later'}
+      description={
+        isNotFound
+          ? NOT_FOUND_DESCRIPTION
+          : error?.message || 'Please try again later'
+      }
       onRetry={reset}
     />
   )
@@ -43,11 +47,16 @@ export const MoviePage = () => {
   const numericId = Number(id)
 
   if (!id || !Number.isInteger(numericId) || numericId <= 0) {
-    return <ErrorState title={NOT_FOUND_TITLE} description={NOT_FOUND_DESCRIPTION} />
+    return (
+      <ErrorState title={NOT_FOUND_TITLE} description={NOT_FOUND_DESCRIPTION} />
+    )
   }
 
   return (
-    <AsyncBoundary errorFallback={movieErrorFallback} fallback={<MovieDetailSkeleton />}>
+    <AsyncBoundary
+      errorFallback={movieErrorFallback}
+      fallback={<MovieDetailSkeleton />}
+    >
       <MovieDetailContent id={numericId} isMobile={isMobile} />
     </AsyncBoundary>
   )

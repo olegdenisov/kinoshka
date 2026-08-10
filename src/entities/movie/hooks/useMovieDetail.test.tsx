@@ -21,13 +21,20 @@ const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
 })
 
 const mockMovie = (id: number, overrides: Record<string, unknown> = {}) => {
-  server.use(http.get(`*/v1.5/movie/${id}`, () => HttpResponse.json(movieDoc(id, overrides))))
+  server.use(
+    http.get(`*/v1.5/movie/${id}`, () =>
+      HttpResponse.json(movieDoc(id, overrides)),
+    ),
+  )
 }
 
 const mockMovieError = (id: number, status: number) => {
   server.use(
     http.get(`*/v1.5/movie/${id}`, () =>
-      HttpResponse.json({ statusCode: status, message: 'error', error: 'error' }, { status }),
+      HttpResponse.json(
+        { statusCode: status, message: 'error', error: 'error' },
+        { status },
+      ),
     ),
   )
 }
@@ -50,7 +57,10 @@ const mockImages = (docs: Record<string, unknown>[]) => {
 const mockImagesError = (status: number) => {
   server.use(
     http.get('*/v1.5/image', () =>
-      HttpResponse.json({ statusCode: status, message: 'error', error: 'error' }, { status }),
+      HttpResponse.json(
+        { statusCode: status, message: 'error', error: 'error' },
+        { status },
+      ),
     ),
   )
 }
@@ -78,7 +88,9 @@ const renderProbe = async (id: number) => {
 describe('useMovieDetail — оба запроса успешны', () => {
   it('отдаёт detail и images', async () => {
     mockMovie(1, { name: 'Orbit of Silence' })
-    mockImages([{ movieId: 1, type: 'frame', url: 'https://example.com/frame.jpg' }])
+    mockImages([
+      { movieId: 1, type: 'frame', url: 'https://example.com/frame.jpg' },
+    ])
 
     await renderProbe(1)
 

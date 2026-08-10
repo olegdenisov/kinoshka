@@ -14,7 +14,9 @@ export type SearchMoviesResult = {
   totalPages: number
 }
 
-const fetchSearchMovies = async (params: RequestParams): Promise<SearchMoviesResult> => {
+const fetchSearchMovies = async (
+  params: RequestParams,
+): Promise<SearchMoviesResult> => {
   const response = await apiClient.getV15MovieSearch({
     query: {
       ...params,

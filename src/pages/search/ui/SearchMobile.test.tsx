@@ -40,7 +40,10 @@ const catalogDoc = (name: string, id: number) => ({
   poster: { previewUrl: 'https://example.com/catalog.jpg' },
 })
 
-const mockSearch = (docs: Record<string, unknown>[], overrides: Record<string, unknown> = {}) => {
+const mockSearch = (
+  docs: Record<string, unknown>[],
+  overrides: Record<string, unknown> = {},
+) => {
   server.use(
     http.get(SEARCH_ENDPOINT, () =>
       HttpResponse.json({
@@ -55,7 +58,10 @@ const mockSearch = (docs: Record<string, unknown>[], overrides: Record<string, u
   )
 }
 
-const mockCatalog = (docs: Record<string, unknown>[], overrides: Record<string, unknown> = {}) => {
+const mockCatalog = (
+  docs: Record<string, unknown>[],
+  overrides: Record<string, unknown> = {},
+) => {
   server.use(
     http.get(CATALOG_ENDPOINT, () =>
       HttpResponse.json({
@@ -131,7 +137,9 @@ describe('SearchMobile — пустой результат', () => {
 
     await renderSearchMobile(['/search?q=nonexistent-movie-xyz'])
 
-    expect(screen.getByText(/Ничего не найдено по «nonexistent-movie-xyz»/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Ничего не найдено по «nonexistent-movie-xyz»/),
+    ).toBeInTheDocument()
   })
 })
 
@@ -144,7 +152,9 @@ describe('SearchMobile — устаревший/deep-linked ?page вне диа�
 
     await renderSearchMobile(['/search?q=matrix&page=8'])
 
-    expect(screen.getByText(/Ничего не найдено по «matrix»/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Ничего не найдено по «matrix»/),
+    ).toBeInTheDocument()
 
     const pageOneBtn = screen.getByRole('button', { name: '1' })
     expect(pageOneBtn).toBeInTheDocument()
@@ -187,7 +197,9 @@ describe('SearchMobile — MobilePagination и page-URL-sync', () => {
 
   it('клик по номеру страницы пишет ?page в URL', async () => {
     mockCatalog(
-      Array.from({ length: 10 }, (_, i) => catalogDoc(`Catalog Movie ${i}`, 500 + i)),
+      Array.from({ length: 10 }, (_, i) =>
+        catalogDoc(`Catalog Movie ${i}`, 500 + i),
+      ),
       { total: 100 },
     )
 
@@ -202,7 +214,9 @@ describe('SearchMobile — MobilePagination и page-URL-sync', () => {
 
   it('клик по стрелке "вперёд" увеличивает ?page на 1', async () => {
     mockCatalog(
-      Array.from({ length: 10 }, (_, i) => catalogDoc(`Catalog Movie ${i}`, 600 + i)),
+      Array.from({ length: 10 }, (_, i) =>
+        catalogDoc(`Catalog Movie ${i}`, 600 + i),
+      ),
       { total: 100 },
     )
 
@@ -212,7 +226,8 @@ describe('SearchMobile — MobilePagination и page-URL-sync', () => {
     // поэтому "последняя кнопка в документе" ненадёжна — сужаем поиск до контейнера
     // MobilePagination через соседний aria-live счётчик: [pagination-div, counter-div].
     const counter = screen.getByText(/shown · page/)
-    const paginationContainer = counter.parentElement!.firstElementChild as HTMLElement
+    const paginationContainer = counter.parentElement!
+      .firstElementChild as HTMLElement
     const paginationButtons = within(paginationContainer).getAllByRole('button')
     const nextBtn = paginationButtons[paginationButtons.length - 1]
     expect(nextBtn).not.toBeDisabled()
@@ -226,7 +241,9 @@ describe('SearchMobile — MobilePagination и page-URL-sync', () => {
 
   it('смена фильтров сбрасывает ?page на 1', async () => {
     mockCatalog(
-      Array.from({ length: 10 }, (_, i) => catalogDoc(`Catalog Movie ${i}`, 700 + i)),
+      Array.from({ length: 10 }, (_, i) =>
+        catalogDoc(`Catalog Movie ${i}`, 700 + i),
+      ),
       { total: 100 },
     )
 
@@ -280,7 +297,9 @@ describe('SearchMobile — появление ?q сбрасывает фильт
     lastSearch = ''
     await act(async () => {
       render(
-        <MemoryRouter initialEntries={['/search?genres=Drama&sort=Newest&page=3']}>
+        <MemoryRouter
+          initialEntries={['/search?genres=Drama&sort=Newest&page=3']}
+        >
           <SearchMobile />
           <HeaderQuerySetter />
           <LocationProbe />
@@ -297,10 +316,14 @@ describe('SearchMobile — появление ?q сбрасывает фильт
       name: /Sort/,
     }).parentElement!
     expect(within(stickyBar).getByText('Drama')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Sort/ })).toHaveTextContent('Newest')
+    expect(screen.getByRole('button', { name: /Sort/ })).toHaveTextContent(
+      'Newest',
+    )
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'simulate header q write' }))
+      fireEvent.click(
+        screen.getByRole('button', { name: 'simulate header q write' }),
+      )
     })
 
     expect(lastSearch).toContain('q=matrix')
@@ -310,7 +333,9 @@ describe('SearchMobile — появление ?q сбрасывает фильт
     expect(lastSearch).not.toContain('sort=')
 
     expect(within(stickyBar).queryByText('Drama')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Sort/ })).toHaveTextContent('Default')
+    expect(screen.getByRole('button', { name: /Sort/ })).toHaveTextContent(
+      'Default',
+    )
   })
 })
 
@@ -332,7 +357,9 @@ describe('SearchMobile — ошибка фетчера (403/квота) дост
     await renderSearchMobile(['/search?rating=9'])
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Попробовать снова' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Попробовать снова' }),
+    ).toBeInTheDocument()
     // MobileHeader / BottomNav остаются — падает только контент внутри AsyncBoundary.
     expect(screen.getByRole('button', { name: /Filters/ })).toBeInTheDocument()
   })
