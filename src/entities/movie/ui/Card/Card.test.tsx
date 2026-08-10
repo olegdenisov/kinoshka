@@ -41,8 +41,6 @@ describe('Card', () => {
   it('рендерит заголовок, рейтинг и первый жанр', () => {
     renderCard(baseMovie)
 
-    // Заголовок рендерится дважды (Poster label + Card info) — оба валидны, проверяем факт наличия.
-    expect(screen.getAllByText('Dune Part Two').length).toBeGreaterThan(0)
     expect(screen.getByText('8.4')).toBeInTheDocument()
     expect(screen.getByText('Sci-Fi')).toBeInTheDocument()
   })
@@ -51,5 +49,22 @@ describe('Card', () => {
     renderCard(baseMovie)
 
     expect(screen.getByRole('link')).toHaveAttribute('href', '/movie/1')
+  })
+
+  it('без реального постера — показывает fallback-плейсхолдер Poster (label)', () => {
+    renderCard(baseMovie)
+
+    // baseMovie.poster не задан → Poster рендерит "— poster —" + заголовок как fallback-label,
+    // плюс заголовок ещё раз в Card.info — итого 2 вхождения.
+    expect(screen.getByText('— poster —')).toBeInTheDocument()
+    expect(screen.getAllByText('Dune Part Two')).toHaveLength(2)
+  })
+
+  it('с реальным постером — не показывает fallback-плейсхолдер Poster (label)', () => {
+    renderCard({ ...baseMovie, poster: 'https://example.com/poster.jpg' })
+
+    // Реальный постер есть → showLabel=false, "— poster —" и повторный заголовок-label не рендерятся.
+    expect(screen.queryByText('— poster —')).not.toBeInTheDocument()
+    expect(screen.getAllByText('Dune Part Two')).toHaveLength(1)
   })
 })

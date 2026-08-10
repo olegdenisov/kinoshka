@@ -10,6 +10,9 @@ import { StarIcon, PlusIcon, EyeIcon, HeartIcon, ShareIcon, PlayIcon } from '../
 // и того же приёма в desktop-варианте (CastTab.tsx).
 const FALLBACK_CAST_HUE = 220
 
+// Совпадает с FALLBACK_SCREENSHOT_COUNT в desktop-варианте (MediaTab.tsx).
+const FALLBACK_SCREENSHOT_COUNT = 8
+
 type LikedState = { rate: boolean; list: boolean; watched: boolean; fav: boolean }
 
 type TagPillMiniProps = React.PropsWithChildren
@@ -77,11 +80,20 @@ export const MovieMobile = ({ movie, images }: MovieMobileProps) => {
 
       <section style={{ position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <div style={{
-            position: 'absolute', inset: '-40px',
-            background: `radial-gradient(ellipse 60% 60% at 30% 30%, oklch(0.32 0.1 ${movie.hue} / 0.6), transparent 70%), radial-gradient(ellipse 40% 50% at 75% 40%, oklch(0.28 0.08 ${movie.hue + 30} / 0.4), transparent 70%), #0F0D11`,
-            filter: 'blur(40px)',
-          }} />
+          {movie.backdrop ? (
+            <div style={{
+              position: 'absolute', inset: 0,
+              backgroundImage: `url(${movie.backdrop})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center 20%',
+            }} />
+          ) : (
+            <div style={{
+              position: 'absolute', inset: '-40px',
+              background: `radial-gradient(ellipse 60% 60% at 30% 30%, oklch(0.32 0.1 ${movie.hue} / 0.6), transparent 70%), radial-gradient(ellipse 40% 50% at 75% 40%, oklch(0.28 0.08 ${movie.hue + 30} / 0.4), transparent 70%), #0F0D11`,
+              filter: 'blur(40px)',
+            }} />
+          )}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(15,13,17,0.2) 0%, rgba(15,13,17,0.8) 70%, #0F0D11 100%)' }} />
         </div>
 
@@ -273,7 +285,7 @@ const MobileMedia = ({ m, images }: MobileMediaProps) => {
           ? images.map((image) => (
             <img key={image.url} src={image.previewUrl ?? image.url} alt="" style={{ display: 'block', width: '100%', aspectRatio: '16/9', border: '1px solid rgba(184,173,171,0.06)', borderRadius: 4, objectFit: 'cover' }} />
           ))
-          : [0, 1, 2, 3, 4, 5].map((i) => (
+          : Array.from({ length: FALLBACK_SCREENSHOT_COUNT }, (_, i) => (
             <div key={i} style={{ aspectRatio: '16/9', background: `linear-gradient(${135 + i * 20}deg, oklch(0.2 0.05 ${m.hue + i * 15}), oklch(0.1 0.03 ${m.hue}))`, border: '1px solid rgba(184,173,171,0.06)', borderRadius: 4 }} />
           ))}
       </div>

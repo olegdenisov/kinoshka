@@ -51,7 +51,7 @@ describe('mapDtoToMovieDetail — полностью заполненный doc'
       backdrop: 'https://example.com/backdrop.jpg',
       trailerUrl: 'https://example.com/trailer.mp4',
       cast: [{ id: 10, name: 'Liv Korhonen', role: 'Ines Varga', photo: 'https://example.com/liv.jpg' }],
-      crew: [{ id: 11, name: 'Hanna Vesper', profession: 'режиссеры' }],
+      crew: [{ id: 11, name: 'Hanna Vesper', profession: 'director' }],
       countries: ['Finland', 'Portugal'],
       ratingKp: 8.1,
       ratingImdb: 7.9,
