@@ -1,0 +1,1 @@
+export { SearchResultSkeletonGrid } from './SearchResultSkeletonGrid'

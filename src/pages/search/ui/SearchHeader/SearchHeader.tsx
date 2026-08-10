@@ -2,7 +2,8 @@ import s from './SearchHeader.module.css'
 
 type SearchHeaderProps = {
   title: string
-  resultsCount: number
+  /** Не всегда известен синхронно (real-data режимы каталога/поиска не отдают точный total) — опционален. */
+  resultsCount?: number
   route: string
 }
 
@@ -12,7 +13,7 @@ export const SearchHeader = ({ title, resultsCount, route }: SearchHeaderProps) 
       <div className={s.breadcrumb}>Catalog · {route}</div>
       <h1 className={s.title}>
         {title}
-        <span className={s.count}>{resultsCount.toLocaleString()} results</span>
+        {resultsCount != null && <span className={s.count}>{resultsCount.toLocaleString()} results</span>}
       </h1>
     </div>
   )

@@ -20,9 +20,12 @@
 }
 
 .avatar {
+  display: block;
+  width: 100%;
   aspect-ratio: 1;
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
+  object-fit: cover;
 }
 
 .actorName {

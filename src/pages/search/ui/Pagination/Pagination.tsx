@@ -1,4 +1,5 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '@shared/ui'
+import { buildPageRange, clampPage } from '../../lib/buildPageRange'
 import s from './Pagination.module.css'
 
 type PaginationProps = {
@@ -8,20 +9,18 @@ type PaginationProps = {
 }
 
 export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
-  const pages: (number | string)[] = []
-  pages.push(1)
-  const left = Math.max(2, page - 1)
-  const right = Math.min(totalPages - 1, page + 1)
-  if (left > 2) pages.push('…L')
-  for (let i = left; i <= right; i++) pages.push(i)
-  if (right < totalPages - 1) pages.push('…R')
-  if (totalPages > 1) pages.push(totalPages)
+  // Защита от рассинхрона: ?page из URL может временно выйти за пределы totalPages
+  // (напр. смена фильтров ещё не долетела до фетчера) — клэмпим для рендера/disabled,
+  // не мутируя проп и не решая за вызывающий код, что писать в URL.
+  const safeTotalPages = Math.max(1, totalPages)
+  const safePage = clampPage(page, totalPages)
+  const pages = buildPageRange(page, totalPages)
 
   return (
     <div className={s.container}>
       <button
-        disabled={page === 1}
-        onClick={() => onChange(page - 1)}
+        disabled={safePage <= 1}
+        onClick={() => onChange(Math.max(1, safePage - 1))}
         className={s.btn}
       >
         <ChevronLeftIcon size={11} />
@@ -33,13 +32,13 @@ export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
           <button
             key={p}
             onClick={() => onChange(p)}
-            className={`${s.btn}${p === page ? ` ${s.btnActive}` : ''}`}
+            className={`${s.btn}${p === safePage ? ` ${s.btnActive}` : ''}`}
           >{p}</button>
         )
       )}
       <button
-        disabled={page === totalPages}
-        onClick={() => onChange(page + 1)}
+        disabled={safePage >= safeTotalPages}
+        onClick={() => onChange(Math.min(safeTotalPages, safePage + 1))}
         className={s.btn}
       >
         <ChevronRightIcon size={11} />

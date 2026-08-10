@@ -1,0 +1,35 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.poster {
+  width: 200px;
+  height: 300px;
+  border-radius: 6px;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.infoTitle {
+  width: 140px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.infoMeta {
+  width: 100px;
+  height: 12px;
+  border-radius: 4px;
+}

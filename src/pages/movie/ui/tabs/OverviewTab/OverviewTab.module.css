@@ -71,11 +71,25 @@
   color: var(--text-primary);
 }
 
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .signalsBox {
   background: var(--bg-secondary);
   border: 1px solid var(--border-faint);
   border-radius: 8px;
   padding: 24px;
+}
+
+.countriesText {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-primary);
 }
 
 .signalRow {
@@ -103,32 +117,3 @@
   color: var(--text-primary);
 }
 
-.recommendBox {
-  margin-top: 16px;
-  background: linear-gradient(135deg, var(--accent-warm-tint), rgba(209,142,95,0.02));
-  border: 1px solid rgba(209,142,95,0.25);
-  border-radius: 8px;
-  padding: 20px;
-}
-
-.recommendLabel {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--accent-warm);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.recommendText {
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: var(--text-primary);
-}
-
-.recommendHighlight {
-  color: var(--accent-cool);
-  font-style: normal;
-}

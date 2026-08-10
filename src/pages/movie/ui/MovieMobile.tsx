@@ -1,10 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import type { Movie } from '@entities/movie'
-import { Poster, MobileCard } from '@entities/movie'
+import type { CastMember, MovieDetail, MovieImage } from '@entities/movie'
+import { Poster, MobileCard, formatCurrency } from '@entities/movie'
 import { MobileHeader, BottomNav } from '@widgets/mobile-chrome'
-import { CATALOG, MOCK_DETAIL } from '@entities/movie'
 import { StarIcon, PlusIcon, EyeIcon, HeartIcon, ShareIcon, PlayIcon } from '../../../shared/ui/Icon'
+
+// В CastMember нет hue (в отличие от Movie) — фиксированный оттенок для градиента-заглушки,
+// когда у персоны нет photo, по образцу статичного фолбэка в Poster.tsx (movie.hue ?? 20)
+// и того же приёма в desktop-варианте (CastTab.tsx).
+const FALLBACK_CAST_HUE = 220
+
+// Совпадает с FALLBACK_SCREENSHOT_COUNT в desktop-варианте (MediaTab.tsx).
+const FALLBACK_SCREENSHOT_COUNT = 8
 
 type LikedState = { rate: boolean; list: boolean; watched: boolean; fav: boolean }
 
@@ -48,14 +55,15 @@ const MobileActionBtn = ({ icon, label, active, onClick }: MobileActionBtnProps)
 }
 
 type MovieMobileProps = {
-  movie: Movie
+  movie: MovieDetail
+  images: MovieImage[]
 }
 
-export const MovieMobile = ({ movie }: MovieMobileProps) => {
+export const MovieMobile = ({ movie, images }: MovieMobileProps) => {
   const navigate = useNavigate()
   const [tab, setTab] = useState('Overview')
   const [liked, setLiked] = useState<LikedState>({ rate: false, list: false, watched: true, fav: false })
-  const related = CATALOG.filter((x) => x.id !== movie.id).slice(0, 6)
+  const related = movie.similarMovies.slice(0, 6)
   const tabs = ['Overview', 'Cast', 'Media', 'Details']
 
   return (
@@ -72,11 +80,20 @@ export const MovieMobile = ({ movie }: MovieMobileProps) => {
 
       <section style={{ position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <div style={{
-            position: 'absolute', inset: '-40px',
-            background: `radial-gradient(ellipse 60% 60% at 30% 30%, oklch(0.32 0.1 ${movie.hue} / 0.6), transparent 70%), radial-gradient(ellipse 40% 50% at 75% 40%, oklch(0.28 0.08 ${movie.hue + 30} / 0.4), transparent 70%), #0F0D11`,
-            filter: 'blur(40px)',
-          }} />
+          {movie.backdrop ? (
+            <div style={{
+              position: 'absolute', inset: 0,
+              backgroundImage: `url(${movie.backdrop})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center 20%',
+            }} />
+          ) : (
+            <div style={{
+              position: 'absolute', inset: '-40px',
+              background: `radial-gradient(ellipse 60% 60% at 30% 30%, oklch(0.32 0.1 ${movie.hue} / 0.6), transparent 70%), radial-gradient(ellipse 40% 50% at 75% 40%, oklch(0.28 0.08 ${movie.hue + 30} / 0.4), transparent 70%), #0F0D11`,
+              filter: 'blur(40px)',
+            }} />
+          )}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(15,13,17,0.2) 0%, rgba(15,13,17,0.8) 70%, #0F0D11 100%)' }} />
         </div>
 
@@ -93,11 +110,11 @@ export const MovieMobile = ({ movie }: MovieMobileProps) => {
           </div>
 
           <h1 style={{ margin: '0 0 6px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 32, lineHeight: 1.02, letterSpacing: '-0.03em', fontWeight: 500 }}>{movie.title}</h1>
-          <div style={{ textAlign: 'center', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 15, color: '#92887F', marginBottom: 20 }}>{MOCK_DETAIL.tagline}</div>
+          <div style={{ textAlign: 'center', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 15, color: '#92887F', marginBottom: 20 }}>{movie.tagline}</div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20, padding: '14px 0', borderTop: '1px solid rgba(184,173,171,0.08)', borderBottom: '1px solid rgba(184,173,171,0.08)' }}>
             <MiniStat label="Users" value={movie.rating.toFixed(1)} accent="#E6B86A" />
-            <MiniStat label="Critics" value={MOCK_DETAIL.criticScore} accent="#D7EEF3" />
+            <MiniStat label="Critics" value={movie.criticScore != null ? `${movie.criticScore.toFixed(0)}%` : '—'} accent="#D7EEF3" />
             <MiniStat label="Yours" value="—" accent="#92887F" />
           </div>
 
@@ -144,20 +161,22 @@ export const MovieMobile = ({ movie }: MovieMobileProps) => {
 
       <div style={{ padding: '24px 20px' }}>
         {tab === 'Overview' && <MobileOverview m={movie} />}
-        {tab === 'Cast' && <MobileCast />}
-        {tab === 'Media' && <MobileMedia m={movie} />}
+        {tab === 'Cast' && <MobileCast cast={movie.cast} />}
+        {tab === 'Media' && <MobileMedia m={movie} images={images} />}
         {tab === 'Details' && <MobileDetailsContent m={movie} />}
       </div>
 
-      <div style={{ padding: '24px 0 20px', borderTop: '1px solid rgba(184,173,171,0.08)', marginTop: 8 }}>
-        <div style={{ padding: '0 20px 14px' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 3 }}>Similar titles</div>
-          <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em' }}>More like this</h2>
+      {related.length > 0 && (
+        <div style={{ padding: '24px 0 20px', borderTop: '1px solid rgba(184,173,171,0.08)', marginTop: 8 }}>
+          <div style={{ padding: '0 20px 14px' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 3 }}>Similar titles</div>
+            <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em' }}>More like this</h2>
+          </div>
+          <div className="hide-scrollbar" style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: '140px', gap: 12, overflowX: 'auto', padding: '0 20px' }}>
+            {related.map((x) => <MobileCard key={x.id} movie={x} />)}
+          </div>
         </div>
-        <div className="hide-scrollbar" style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: '140px', gap: 12, overflowX: 'auto', padding: '0 20px' }}>
-          {related.map((x) => <MobileCard key={x.id} movie={x} />)}
-        </div>
-      </div>
+      )}
 
       <BottomNav active="search" />
     </div>
@@ -165,17 +184,16 @@ export const MovieMobile = ({ movie }: MovieMobileProps) => {
 }
 
 type MobileOverviewProps = {
-  m: Movie
+  m: MovieDetail
 }
 
 const MobileOverview = ({ m }: MobileOverviewProps) => {
-  const detail = MOCK_DETAIL
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Synopsis</div>
         <p style={{ margin: 0, fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.6, color: '#F2F0EF', letterSpacing: '-0.003em' }}>
-          {detail.synopsis.split('\n')[0]}
+          {m.synopsis}
         </p>
       </div>
       <div>
@@ -186,18 +204,29 @@ const MobileOverview = ({ m }: MobileOverviewProps) => {
           ))}
         </div>
       </div>
-      <div style={{ background: 'linear-gradient(135deg, rgba(209,142,95,0.12), rgba(209,142,95,0.02))', border: '1px solid rgba(209,142,95,0.25)', borderRadius: 8, padding: 16 }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: '#D18E5F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>Why it's for you</div>
-        <p style={{ margin: 0, fontFamily: 'var(--font-body)', fontSize: 13, lineHeight: 1.55, color: '#F2F0EF' }}>
-          You rated <em style={{ color: '#D7EEF3', fontStyle: 'normal' }}>Glasswater</em> 9.0 and watched three slow-burn sci-fi films this month.
+      <div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Countries</div>
+        <p style={{ margin: 0, fontFamily: 'var(--font-body)', fontSize: 13.5, lineHeight: 1.5, color: '#F2F0EF' }}>
+          {m.countries.length > 0 ? m.countries.join(' · ') : '—'}
         </p>
       </div>
       <div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Ratings</div>
+        {[['Kinopoisk', m.ratingKp != null ? m.ratingKp.toFixed(1) : '—'], ['IMDb', m.ratingImdb != null ? m.ratingImdb.toFixed(1) : '—'], ['MPAA', m.ratingMpaa ?? '—']].map(([l, v]) => (
+          <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(184,173,171,0.08)' }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#92887F' }}>{l}</span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: '#F2F0EF' }}>{v}</span>
+          </div>
+        ))}
+      </div>
+      <div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 10 }}>Crew</div>
-        {[['Director', detail.crew.director], ['Writer', detail.crew.writer], ['Composer', detail.crew.composer], ['Studio', detail.crew.studio]].map(([l, v]) => (
-          <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgba(184,173,171,0.08)' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: '#92887F', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{l}</span>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, color: '#F2F0EF' }}>{v}</span>
+        {m.crew.map((c) => (
+          // ключ — не просто c.id: один человек может встречаться в persons несколько раз
+          // с разными профессиями (напр. и режиссёр, и сценарист) — id одинаковый.
+          <div key={`${c.id}-${c.profession}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgba(184,173,171,0.08)' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: '#92887F', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{c.profession}</span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, color: '#F2F0EF' }}>{c.name}</span>
           </div>
         ))}
       </div>
@@ -205,15 +234,25 @@ const MobileOverview = ({ m }: MobileOverviewProps) => {
   )
 }
 
-const MobileCast = () => {
+type MobileCastProps = {
+  cast: CastMember[]
+}
+
+const MobileCast = ({ cast }: MobileCastProps) => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-      {MOCK_DETAIL.cast.map((c) => (
-        <div key={c.name} style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'center' }}>
-          <div style={{ aspectRatio: '1', borderRadius: 999, background: `linear-gradient(145deg, oklch(0.35 0.06 ${c.hue}), oklch(0.15 0.03 ${c.hue + 20}))`, border: '1px solid rgba(184,173,171,0.1)' }} />
+      {cast.map((c) => (
+        // ключ — не просто c.id: Kinopoisk может отдать одну и ту же персону дважды в
+        // persons (напр. актёр в двух ролях/дубляже) — id одинаковый, role разная.
+        <div key={`${c.id}-${c.role}`} style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'center' }}>
+          {c.photo ? (
+            <img src={c.photo} alt={c.name} style={{ display: 'block', width: '100%', aspectRatio: '1', borderRadius: 999, border: '1px solid rgba(184,173,171,0.1)', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ aspectRatio: '1', borderRadius: 999, background: `linear-gradient(145deg, oklch(0.35 0.06 ${FALLBACK_CAST_HUE}), oklch(0.15 0.03 ${FALLBACK_CAST_HUE + 20}))`, border: '1px solid rgba(184,173,171,0.1)' }} />
+          )}
           <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 12.5, fontWeight: 500, color: '#F2F0EF', letterSpacing: '-0.01em' }}>{c.actor}</div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: '#92887F', letterSpacing: '0.04em', marginTop: 2 }}>as {c.name}</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 12.5, fontWeight: 500, color: '#F2F0EF', letterSpacing: '-0.01em' }}>{c.name}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: '#92887F', letterSpacing: '0.04em', marginTop: 2 }}>as {c.role}</div>
           </div>
         </div>
       ))}
@@ -222,42 +261,51 @@ const MobileCast = () => {
 }
 
 type MobileMediaProps = {
-  m: Movie
+  m: MovieDetail
+  images: MovieImage[]
 }
 
-const MobileMedia = ({ m }: MobileMediaProps) => {
+const MobileMedia = ({ m, images }: MobileMediaProps) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ aspectRatio: '16/9', background: `linear-gradient(135deg, oklch(0.2 0.05 ${m.hue}), oklch(0.1 0.03 ${m.hue + 20}))`, border: '1px solid rgba(184,173,171,0.08)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <button style={{ width: 56, height: 56, borderRadius: 999, background: '#D18E5F', color: '#0F0D11', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(209,142,95,0.3)' }}>
-          <PlayIcon size={18} />
-        </button>
+        {m.trailerUrl ? (
+          <a href={m.trailerUrl} target="_blank" rel="noreferrer" style={{ width: 56, height: 56, borderRadius: 999, background: '#D18E5F', color: '#0F0D11', border: 'none', cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(209,142,95,0.3)' }}>
+            <PlayIcon size={18} />
+          </a>
+        ) : (
+          <button disabled style={{ width: 56, height: 56, borderRadius: 999, background: '#D18E5F', color: '#0F0D11', border: 'none', cursor: 'not-allowed', opacity: 0.4, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(209,142,95,0.3)' }}>
+            <PlayIcon size={18} />
+          </button>
+        )}
       </div>
       <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#92887F', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Screenshots</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <div key={i} style={{ aspectRatio: '16/9', background: `linear-gradient(${135 + i * 20}deg, oklch(0.2 0.05 ${m.hue + i * 15}), oklch(0.1 0.03 ${m.hue}))`, border: '1px solid rgba(184,173,171,0.06)', borderRadius: 4 }} />
-        ))}
+        {images.length > 0
+          ? images.map((image) => (
+            <img key={image.url} src={image.previewUrl ?? image.url} alt="" style={{ display: 'block', width: '100%', aspectRatio: '16/9', border: '1px solid rgba(184,173,171,0.06)', borderRadius: 4, objectFit: 'cover' }} />
+          ))
+          : Array.from({ length: FALLBACK_SCREENSHOT_COUNT }, (_, i) => (
+            <div key={i} style={{ aspectRatio: '16/9', background: `linear-gradient(${135 + i * 20}deg, oklch(0.2 0.05 ${m.hue + i * 15}), oklch(0.1 0.03 ${m.hue}))`, border: '1px solid rgba(184,173,171,0.06)', borderRadius: 4 }} />
+          ))}
       </div>
     </div>
   )
 }
 
 type MobileDetailsContentProps = {
-  m: Movie
+  m: MovieDetail
 }
 
 const MobileDetailsContent = ({ m }: MobileDetailsContentProps) => {
-  const { details } = MOCK_DETAIL
   const rows = [
-    { label: 'Release date', value: details.releaseDate },
-    { label: 'Country', value: details.country },
-    { label: 'Language', value: details.language },
+    { label: 'Release date', value: m.premiereWorld ?? '—' },
+    { label: 'Country', value: m.countries.length > 0 ? m.countries.join(' · ') : '—' },
     { label: 'Runtime', value: m.runtime },
-    { label: 'Aspect ratio', value: details.aspectRatio },
-    { label: 'Sound mix', value: details.soundMix },
-    { label: 'Budget', value: details.budget },
-    { label: 'Box office', value: details.boxOffice },
+    { label: 'MPAA rating', value: m.ratingMpaa ?? '—' },
+    { label: 'Age rating', value: m.ageRating != null ? `${m.ageRating}+` : '—' },
+    { label: 'Budget', value: m.budget ? formatCurrency(m.budget) : '—' },
+    { label: 'Box office', value: m.feesWorld ? formatCurrency(m.feesWorld) : '—' },
   ]
   return (
     <div>

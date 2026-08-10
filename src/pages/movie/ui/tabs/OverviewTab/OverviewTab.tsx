@@ -1,5 +1,4 @@
-import type { Movie } from '@entities/movie'
-import { MOCK_DETAIL } from '@entities/movie'
+import type { MovieDetail } from '@entities/movie'
 import s from './OverviewTab.module.css'
 
 type SectionHeadProps = React.PropsWithChildren
@@ -33,17 +32,15 @@ const SignalRow = ({ label, value }: SignalRowProps) => (
 )
 
 type OverviewTabProps = {
-  m: Movie
+  m: MovieDetail
 }
 
 export const OverviewTab = ({ m }: OverviewTabProps) => {
-  const detail = MOCK_DETAIL
-
   return (
     <div className={s.root}>
       <div>
         <SectionHead>Synopsis</SectionHead>
-        <p className={s.synopsis}>{detail.synopsis}</p>
+        <p className={s.synopsis}>{m.synopsis}</p>
 
         <SectionHead>Genres</SectionHead>
         <div className={s.genres}>
@@ -53,29 +50,25 @@ export const OverviewTab = ({ m }: OverviewTabProps) => {
         </div>
 
         <div className={s.crew}>
-          <MetaRow label="Director" value={detail.crew.director} />
-          <MetaRow label="Writer" value={detail.crew.writer} />
-          <MetaRow label="Composer" value={detail.crew.composer} />
-          <MetaRow label="Studio" value={detail.crew.studio} />
+          {m.crew.map((c) => (
+            // ключ — не просто c.id: один человек может встречаться в persons несколько раз
+            // с разными профессиями (напр. и режиссёр, и сценарист) — id одинаковый.
+            <MetaRow key={`${c.id}-${c.profession}`} label={c.profession} value={c.name} />
+          ))}
         </div>
       </div>
 
-      <aside>
+      <aside className={s.sidebar}>
         <div className={s.signalsBox}>
-          <SectionHead>Signals</SectionHead>
-          <SignalRow label="Critical consensus" value={detail.signals.criticalConsensus} />
-          <SignalRow label="Audience" value={detail.signals.audience} />
-          <SignalRow label="Pacing" value={detail.signals.pacing} />
-          <SignalRow label="Mood" value={detail.signals.mood} />
-          <SignalRow label="Violence" value={detail.signals.violence} />
-          <SignalRow label="Tear risk" value={detail.signals.tearRisk} />
+          <SectionHead>Countries</SectionHead>
+          <p className={s.countriesText}>{m.countries.length > 0 ? m.countries.join(' · ') : '—'}</p>
         </div>
 
-        <div className={s.recommendBox}>
-          <div className={s.recommendLabel}>Why it's for you</div>
-          <p className={s.recommendText}>
-            You rated <em className={s.recommendHighlight}>Glasswater</em> 9.0 and watched three slow-burn sci-fi films this month. This sits in that same key.
-          </p>
+        <div className={s.signalsBox}>
+          <SectionHead>Ratings</SectionHead>
+          <SignalRow label="Kinopoisk" value={m.ratingKp != null ? m.ratingKp.toFixed(1) : '—'} />
+          <SignalRow label="IMDb" value={m.ratingImdb != null ? m.ratingImdb.toFixed(1) : '—'} />
+          <SignalRow label="MPAA" value={m.ratingMpaa ?? '—'} />
         </div>
       </aside>
     </div>

@@ -185,13 +185,18 @@
 - Suspense patterns: https://react.dev/reference/react/Suspense#displaying-a-fallback-while-content-is-loading
 
 ### 1.2 Поиск с debounce
-- [ ] Хук `useSearch(query)` с debounce 250ms.
-- [ ] Использование `useDeferredValue` для рендера.
-- [ ] Endpoint `instance.getV14MovieSearch(...)`.
-- [ ] URL-sync через `useSearchParams()` (`?q=...`).
-- [ ] Loading/empty/error состояния.
+- [x] `getSearchMovies({query, page})` — обёртка над `instance.getV15MovieSearch` (миграция с v1.4 — коммит `2b25be6`), маппинг `SearchMovieDtoV14 → Movie` с fallback `name ?? alternativeName ?? enName` и placeholder-постером (у search-эндпоинта нет `notNullFields`/`selectFields` — записи без постера/рейтинга не отсечь на сервере).
+- [x] Кэш промисов + sessionStorage (переиспользовать паттерн из `getMovies.ts`) — для `use()` это не оптимизация, а условие работоспособности (нестабильный промис = бесконечный цикл fetch); бонусом решает race conditions и дедуплицирует повторный набор.
+- [x] Debounce 250ms **до** записи в URL, чтение результата через `use()` + Suspense — реализовано без отдельного хука `useSearch`: `Header` дебаунсит инпут через `useDebouncedValue` и пишет `?q`, `useMovieCatalog` (page-слой, `src/pages/search/model/`) читает URL и вызывает `use(getSearchMovies(...))`/`use(getMoviesPage(...))` внутри `<AsyncBoundary>`; `useSearch` как отдельная сущность не заведён и позже удалён (см. 1.3/Task 9 плана url-sync).
+- [x] `useDeferredValue` для рендера — реализовано в `useCatalogUpdateStatus` (`src/pages/search/model/useCatalogUpdateStatus.ts`, план `docs/plans/20260806-search-loading-indicator-and-filter-reset.md`): `query`/`filters`/`sort`/`page` зеркалятся в локальный `useState` (эффект вне transition-области react-router, см. докблок хука — `setSearchParams` иначе оборачивает апдейт в `startTransition`, и `useDeferredValue` не стадирует значение), затем один `useDeferredValue` над объединённым объектом. `SearchResults`/`MobileSearchResults` рендерятся от `deferred*`, старые данные остаются на экране (не skeleton), пока `isUpdating` — лёгкий бейдж «Updating…» поверх приглушённого (`opacity`) блока результатов; `Pagination`/`MobilePagination` при этом получают live `displayPage`, а не deferred, чтобы клик по номеру страницы подсвечивался мгновенно.
+- [x] URL-sync через `useSearchParams()` (`?q=...`), запись с `replace: true`; поисковый инпут в `Header` связан с URL (`src/widgets/header/ui/Header/Header.tsx`).
+- [x] Два режима `/search`: есть `q` → `/v1.5/movie/search` (`getSearchMovies`, миграция с v1.4 — коммит `2b25be6`), нет `q` → каталожный эндпоинт с фильтрами (`getMoviesPage`, см. 1.3) — реализовано как `useMovieCatalog`. Вход в текстовый поиск не просто дизейблит сайдбар/сортировку визуально — `usePageSync` (`src/pages/search/model/usePageSync.ts`) атомарно зачищает `type`/`genres`/`yearFrom`/`yearTo`/`rating`/`sort` из URL через `stripFilterAndSortParams` (Variant A — API не сочетает текстовый поиск с фильтрами), и на смене `'' → непустой query`, и на deep-link/refresh сразу в search-режиме с уже проставленными фильтрами.
+- [x] Min length 2 + `trim` — `Header.tsx` (`QUERY_MIN_LENGTH = 2`), пустой/короткий запрос не пишется в `?q`.
+- [x] Loading/empty/error: `EmptyState` с эхом запроса («Ничего не найдено по „…“»), isError-cooldown на 403 в `getSearchMovies`/`getMoviesPage` через обобщённый `createCachedFetcher`.
+- [ ] ⌘K / `/` фокусирует инпут — не реализовано, подсказка `⌘K` в `Header` остаётся визуальной, без реального хоткея.
+- [x] A11y: `role="search"` на форме (`Header.tsx`), `aria-live="polite"` на счётчике результатов (`SearchDesktop`/`SearchMobile`), кнопка очистки (×) при непустом `q`.
 
-**Как лучше:** `useDeferredValue` сам по себе не дебаунсит сетевые запросы — это про рендеринг-приоритеты. Нужен явный debounce поверх. `useTransition` для «не блокировать input при дорогом фильтрационном update».
+**Как лучше:** `useDeferredValue` сам по себе не дебаунсит сетевые запросы — это про рендеринг-приоритеты. Нужен явный debounce поверх. `useTransition` для «не блокировать input при дорогом фильтрационном update». Квота demo-тарифа (200 req/сутки) выжигается поиском по мере ввода быстрее всего в приложении — debounce, min length и sessionStorage-кэш обязательны. Лимиты `limit ≤ 10` / страницы 1–10 действуют и здесь: `SearchDesktop` рассчитан на `PER_PAGE = 16` — на demo-ключе больше 10 не получить, привести сетку в соответствие.
 
 **📚 Refs:**
 - useDeferredValue: https://react.dev/reference/react/useDeferredValue
@@ -199,29 +204,29 @@
 - React Router useSearchParams: https://reactrouter.com/api/hooks/useSearchParams
 
 ### 1.3 Фильтры с URL-sync
-- [ ] `useFilterState()` расширен URL-sync (паттерн из rtk-ветки перенесён в main).
-- [ ] `getFilterFromSearchParams()` / `filtersToParams()` в `features/catalog-filter/lib/`.
-- [ ] `/search` использует фильтры в запросе к API.
-- [ ] Жанры подгружаются через `getV1MoviePossibleValuesByField({ field: 'genres.name' })`.
-- [ ] Активные чипы рендерятся из URL-параметров.
+- [x] `useFilterState()` расширен URL-sync (`src/features/catalog-filter/model/useFilterState.ts`, на `useSearchParams`, `replace: true`; общий для `SearchDesktop` и `SearchMobile`).
+- [x] `getFilterFromSearchParams()` / `filtersToParams()` в `features/catalog-filter/lib/` (`searchParams.ts`, `filtersToParams.ts`), Zod на границе URL.
+- [x] `/search` использует фильтры в запросе к API (только режим без `q`) — `useMovieCatalog` → `getMoviesPage(filtersToParams(filters, sort), page)`.
+- [ ] Жанры подгружаются через `getV1MoviePossibleValuesByField({ field: 'genres.name' })` — не реализовано; вместо динамической загрузки используется статический словарь EN→RU (`src/features/catalog-filter/lib/genreMap.ts`) поверх фиксированного UI-списка `ALL_GENRES`.
+- [x] Активные чипы рендерятся из URL-параметров (`ActiveFilterChips`, `activeChips` из `useFilterState`).
 
 **Как лучше:** URL — single source of truth для фильтров (shareable links, back/forward работают). Локальный state — только для UI-черновика, если будет «Применить».
 
 ### 1.4 Пагинация
-- [ ] `/search` — нумерованная (`page`/`limit`, v1.4 — параметра `offset` в этой версии API нет).
-- [ ] Главная rails — `limit: 10`, без пагинации.
-- [ ] Корректная обработка last page / total = 0.
-- [ ] Сохранение страницы в URL (`?page=2`).
-- [ ] UI не рисует страницы дальше 10-й на demo-ключе (запрос `page > 10` вернёт 403).
+- [x] `/search` — нумерованная везде: search-режим — нативный `page`/`limit`, теперь на v1.5 (`getV15MovieSearch` уже отдаёт постраничный `pages`/`page`, а не курсор — миграция с v1.4 не потребовала эмуляции, см. `getSearchMovies`); catalog-режим — эмуляция numbered-page через курсорный обход `next` v1.5 (`getMoviesPage`, `src/entities/movie/api/getMoviesPage.ts`), не трогая общий `createCachedFetcher`/рельсы главной.
+- [ ] Главная rails — `limit: 10`, без пагинации — вне рамок плана url-sync (Task 1–14 не трогали `useNewMovies`/`useTopRatedMovies`/`getMovies.ts`); `limit` там сейчас не выставлен явно, оставлено как есть.
+- [x] Корректная обработка last page / total = 0 — `EmptyState` при пустом результате, `getMoviesPage` отдаёт пустой хвост при отсутствии `next`, тесты покрывают оба случая (`getMoviesPage.test.ts`).
+- [x] Сохранение страницы в URL (`?page=...`) — `SearchDesktop`/`SearchMobile` читают/пишут `page` через `useSearchParams`, сброс на 1 при смене `q`/фильтров.
+- [x] UI не рисует страницы дальше 10-й на demo-ключе — `MAX_PAGE = 10` clamp и на чтении из URL, и на записи (`goToPage`) в обоих вариантах страницы; `totalPages` также clamp'ится к 10 в `getMoviesPage`/`getSearchMovies`.
 
-**Как лучше:** пагинация здесь — только для `/search` (numbered). Виртуализация (2.7) имеет смысл только для infinite scroll — не смешивай оба подхода на одной странице. Для нумерованной пагинации бери **v1.4** (`page`/`limit`) — v1.5 курсорный (`next`/`prev`), `page` не принимает. На demo-тарифе жёсткий потолок: `limit ≤ 10`, страницы 1–10 → максимум 100 элементов на любую выборку.
+**Как лучше:** пагинация здесь — только для `/search` (numbered). Виртуализация (2.7) имеет смысл только для infinite scroll — не смешивай оба подхода на одной странице. ⚠️ Устарело на момент написания: ожидалось, что нумерованную пагинацию можно получить только на v1.4 (`page`/`limit`), а v1.5 — исключительно курсорный (`next`/`prev`) без `page`. По факту `getV15MovieSearch` (`/v1.5/movie/search`) отдаёт `page`/`pages` нативно — курсорный без `page` оказался только каталожный `/v1.5/movie` (см. `getMoviesPage`). На demo-тарифе жёсткий потолок: `limit ≤ 10`, страницы 1–10 → максимум 100 элементов на любую выборку.
 
 ### 1.5 Детальная страница
-- [ ] `instance.getV14MovieById(...)` подключён, `MOCK_DETAIL` удалён.
-- [ ] Tabs: Overview, Cast, Details, Media.
-- [ ] Параллельные запросы (movie + images + similar) через `Promise.allSettled`.
-- [ ] Skeleton при загрузке деталей.
-- [ ] 404-обработка несуществующих ID.
+- [x] `apiClient.getV15MovieById(...)` подключён (не v1.4, как в исходной формулировке — на момент реализации проект уже на v1.5, см. коммит `2b25be6`), `MOCK_DETAIL` удалён (`grep -r MOCK_DETAIL src` — пусто). Детали: `docs/plans/20260807-movie-detail-page-api.md`.
+- [x] Tabs: Overview, Cast, Details, Media — все четыре переведены на реальный `MovieDetail`.
+- [x] Параллельные запросы через `Promise.allSettled` — реализовано как `(movie, images)`, а не `(movie, images, similar)`: `similarMovies`/`sequelsAndPrequels`/`persons` (cast+crew) оказались полями самого `MovieDtoV14`, а не отдельными эндпоинтами — единственный отдельный вызов остался за картинками (`getV15Image`). Осознанное отклонение от буквальной формулировки, зафиксировано в плане.
+- [x] Skeleton при загрузке деталей — `MovieDetailSkeleton`, один вариант на оба device-типа.
+- [x] 404-обработка несуществующих ID — `ApiError { status }` из `client.ts` + `AsyncBoundary.errorFallback` в `MoviePage.tsx`, различающий 404 от прочих ошибок; `/movie/666` → `ErrorState` с retry (acceptance criteria плана), покрыто `MoviePage.test.tsx`.
 
 **Как лучше:** не делай waterfall — параллель через `Promise.allSettled` (допускаешь частичный отказ media/similar). В Suspense-стиле: дёрни оба promise сразу, передай в use() — Suspense сам разберётся с lifecycle.
 

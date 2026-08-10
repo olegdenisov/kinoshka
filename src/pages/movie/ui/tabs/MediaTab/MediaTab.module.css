@@ -40,10 +40,16 @@
   color: var(--bg-primary);
   border: none;
   cursor: pointer;
+  text-decoration: none;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 10px 40px var(--accent-warm-shadow);
+}
+
+.trailerPlay:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .screenshotsGrid {
@@ -53,7 +59,10 @@
 }
 
 .screenshot {
+  display: block;
+  width: 100%;
   aspect-ratio: 16 / 9;
   border: 1px solid var(--bg-chip);
   border-radius: 4px;
+  object-fit: cover;
 }
