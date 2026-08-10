@@ -1,1 +1,1 @@
-export { SearchSidebar } from './ui/SearchSidebar'
+export { SearchSidebar } from "./ui/SearchSidebar"

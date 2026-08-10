@@ -1,1 +1,1 @@
-export { MovieRailMobile } from './MovieRailMobile'
+export { MovieRailMobile } from "./MovieRailMobile"

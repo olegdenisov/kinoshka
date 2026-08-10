@@ -1,6 +1,6 @@
-import { StarIcon, PlusIcon, EyeIcon, HeartIcon, ShareIcon } from '@shared/ui'
-import type { LikedState } from '../MovieDesktop/types'
-import s from './MovieActions.module.css'
+import { StarIcon, PlusIcon, EyeIcon, HeartIcon, ShareIcon } from "@shared/ui"
+import type { LikedState } from "../MovieDesktop/types"
+import s from "./MovieActions.module.css"
 
 type PrimaryActionProps = {
   icon: React.ReactNode
@@ -22,10 +22,15 @@ type SecondaryActionProps = {
   onClick?: () => void
 }
 
-const SecondaryAction = ({ icon, label, active, onClick }: SecondaryActionProps) => (
+const SecondaryAction = ({
+  icon,
+  label,
+  active,
+  onClick,
+}: SecondaryActionProps) => (
   <button
     onClick={onClick}
-    className={`${s.secondaryBtn}${active ? ` ${s.secondaryBtnActive}` : ''}`}
+    className={`${s.secondaryBtn}${active ? ` ${s.secondaryBtnActive}` : ""}`}
   >
     {icon}
     {label}

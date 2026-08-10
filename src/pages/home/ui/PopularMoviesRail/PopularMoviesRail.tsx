@@ -1,5 +1,5 @@
-import { useTopRatedMovies } from '@entities/movie'
-import { MovieRailDesktop } from '@widgets/movie-rail'
+import { useTopRatedMovies } from "@entities/movie"
+import { MovieRailDesktop } from "@widgets/movie-rail"
 
 export const PopularMoviesRail = () => {
   const popularMovies = useTopRatedMovies()

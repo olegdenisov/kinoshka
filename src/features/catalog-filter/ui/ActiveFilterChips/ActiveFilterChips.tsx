@@ -1,6 +1,6 @@
-import type { ActiveChip } from '../../model/useFilterState'
-import { CloseIcon } from '@shared/ui'
-import s from './ActiveFilterChips.module.css'
+import type { ActiveChip } from "../../model/useFilterState"
+import { CloseIcon } from "@shared/ui"
+import s from "./ActiveFilterChips.module.css"
 
 type ActiveFilterChipsProps = {
   chips: ActiveChip[]

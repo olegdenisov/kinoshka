@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "semi": false,
-  "singleQuote": true,
+  "singleQuote": false,
+  "printWidth": 80,
   "ignorePatterns": ["src/shared/api/*.gen.ts"]
 }

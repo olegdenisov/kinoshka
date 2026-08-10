@@ -1,23 +1,23 @@
-import { render, screen } from '@testing-library/react'
-import { AsyncBoundary } from './AsyncBoundary'
+import { render, screen } from "@testing-library/react"
+import { AsyncBoundary } from "./AsyncBoundary"
 
 const Bomb = () => {
-  throw new Error('boom')
+  throw new Error("boom")
 }
 
-describe('AsyncBoundary — errorFallback', () => {
-  it('без errorFallback показывает дефолтный ErrorState', () => {
+describe("AsyncBoundary — errorFallback", () => {
+  it("без errorFallback показывает дефолтный ErrorState", () => {
     render(
       <AsyncBoundary>
         <Bomb />
       </AsyncBoundary>,
     )
 
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
-    expect(screen.getByText('boom')).toBeInTheDocument()
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument()
+    expect(screen.getByText("boom")).toBeInTheDocument()
   })
 
-  it('с errorFallback показывает кастомный фолбэк вместо дефолтного ErrorState', () => {
+  it("с errorFallback показывает кастомный фолбэк вместо дефолтного ErrorState", () => {
     render(
       <AsyncBoundary
         errorFallback={({ error, reset }) => (
@@ -33,8 +33,8 @@ describe('AsyncBoundary — errorFallback', () => {
       </AsyncBoundary>,
     )
 
-    expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
-    expect(screen.getByTestId('custom-error')).toHaveTextContent('boom')
-    expect(screen.getByText('Custom retry')).toBeInTheDocument()
+    expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument()
+    expect(screen.getByTestId("custom-error")).toHaveTextContent("boom")
+    expect(screen.getByText("Custom retry")).toBeInTheDocument()
   })
 })

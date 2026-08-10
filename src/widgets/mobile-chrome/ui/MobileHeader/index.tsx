@@ -1,1 +1,1 @@
-export { MobileHeader } from './MobileHeader'
+export { MobileHeader } from "./MobileHeader"

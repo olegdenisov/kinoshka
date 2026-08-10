@@ -1,5 +1,5 @@
-import { useDeferredValue, useEffect, useState } from 'react'
-import type { FilterState } from '@features/catalog-filter'
+import { useDeferredValue, useEffect, useState } from "react"
+import type { FilterState } from "@features/catalog-filter"
 
 const areFiltersEqual = (a: FilterState, b: FilterState): boolean =>
   a.type === b.type &&
@@ -78,7 +78,12 @@ export const useCatalogUpdateStatus = ({
   sort,
   page,
 }: CatalogUpdateStatusParams): CatalogUpdateStatusResult => {
-  const [live, setLive] = useState<CatalogUpdateStatusParams>({ query, filters, sort, page })
+  const [live, setLive] = useState<CatalogUpdateStatusParams>({
+    query,
+    filters,
+    sort,
+    page,
+  })
 
   useEffect(() => {
     // Зеркалим live URL-derived значения в локальный useState НАМЕРЕННО, а не по недосмотру:

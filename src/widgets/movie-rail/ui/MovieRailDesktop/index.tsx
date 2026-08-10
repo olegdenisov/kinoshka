@@ -1,2 +1,2 @@
-export { MovieRailDesktop } from './MovieRailDesktop'
-export { MovieRailSkeletonDesktop } from './MovieRailSkeletonDesktop'
+export { MovieRailDesktop } from "./MovieRailDesktop"
+export { MovieRailSkeletonDesktop } from "./MovieRailSkeletonDesktop"

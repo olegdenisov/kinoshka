@@ -1,4 +1,4 @@
-import s from './NavPill.module.css'
+import s from "./NavPill.module.css"
 
 type NavPillProps = {
   label: string
@@ -8,7 +8,10 @@ type NavPillProps = {
 
 export const NavPill = ({ label, active, onClick }: NavPillProps) => {
   return (
-    <button onClick={onClick} className={`${s.navPill} ${active ? s.navPillActive : ''}`}>
+    <button
+      onClick={onClick}
+      className={`${s.navPill} ${active ? s.navPillActive : ""}`}
+    >
       {label}
     </button>
   )

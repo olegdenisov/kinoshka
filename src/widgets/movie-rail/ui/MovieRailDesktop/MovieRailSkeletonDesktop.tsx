@@ -1,5 +1,5 @@
-import { Skeleton } from '@shared/ui'
-import s from './MovieRailSkeletonDesktop.module.css'
+import { Skeleton } from "@shared/ui"
+import s from "./MovieRailSkeletonDesktop.module.css"
 
 const SKELETON_COUNT = 7
 

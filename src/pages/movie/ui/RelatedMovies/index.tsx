@@ -1,1 +1,1 @@
-export { RelatedMovies } from './RelatedMovies'
+export { RelatedMovies } from "./RelatedMovies"

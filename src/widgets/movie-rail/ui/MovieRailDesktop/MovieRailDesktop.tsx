@@ -1,9 +1,9 @@
-import { useRef } from 'react'
-import { Link } from 'react-router'
-import type { Movie } from '@entities/movie'
-import { Card } from '@entities/movie'
-import { ArrowBtn } from './ArrowBtn'
-import s from './MovieRailDesktop.module.css'
+import { useRef } from "react"
+import { Link } from "react-router"
+import type { Movie } from "@entities/movie"
+import { Card } from "@entities/movie"
+import { ArrowBtn } from "./ArrowBtn"
+import s from "./MovieRailDesktop.module.css"
 
 type MovieRailDesktopProps = {
   title: string
@@ -11,11 +11,15 @@ type MovieRailDesktopProps = {
   items: Movie[]
 }
 
-export const MovieRailDesktop = ({ title, subtitle, items }: MovieRailDesktopProps) => {
+export const MovieRailDesktop = ({
+  title,
+  subtitle,
+  items,
+}: MovieRailDesktopProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const scroll = (dir: number) => {
-    scrollRef.current?.scrollBy({ left: dir * 480, behavior: 'smooth' })
+    scrollRef.current?.scrollBy({ left: dir * 480, behavior: "smooth" })
   }
 
   return (

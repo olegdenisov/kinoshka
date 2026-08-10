@@ -1,7 +1,11 @@
-import { createSessionCache } from '@shared/lib'
-import type { Movie } from '../model/types'
+import { createSessionCache } from "@shared/lib"
+import type { Movie } from "../model/types"
 
-type CacheEntry<R> = { promise: Promise<R>; timestamp: number; isError: boolean }
+type CacheEntry<R> = {
+  promise: Promise<R>
+  timestamp: number
+  isError: boolean
+}
 
 const CACHE_TTL_MS = 5 * 60 * 1000 // без изменений
 const ERROR_CACHE_TTL_MS = 20 * 1000 // cooldown перед повторным запросом
@@ -38,7 +42,11 @@ const attachOutcomeHandlers = <R>(
   entry.promise.then(
     (data) => {
       if (persistToSession) {
-        sessionCache.set(key, { data, timestamp: entry.timestamp, isError: false })
+        sessionCache.set(key, {
+          data,
+          timestamp: entry.timestamp,
+          isError: false,
+        })
       }
     },
     (error: unknown) => {
@@ -111,7 +119,9 @@ export const createCachedFetcher = <P, R = Movie[]>(
     if (snapshot && isFresh(snapshot.timestamp, snapshot.isError)) {
       const entry: CacheEntry<R> = {
         promise: snapshot.isError
-          ? Promise.reject(new Error(snapshot.message ?? 'cached error cooldown'))
+          ? Promise.reject(
+              new Error(snapshot.message ?? "cached error cooldown"),
+            )
           : Promise.resolve(snapshot.data),
         timestamp: snapshot.timestamp,
         isError: snapshot.isError,

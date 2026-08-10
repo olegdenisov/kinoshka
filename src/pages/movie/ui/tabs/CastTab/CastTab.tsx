@@ -1,5 +1,5 @@
-import type { CastMember } from '@entities/movie'
-import s from './CastTab.module.css'
+import type { CastMember } from "@entities/movie"
+import s from "./CastTab.module.css"
 
 // В CastMember нет hue (в отличие от Movie) — фиксированный оттенок для градиента-заглушки,
 // когда у персоны нет photo, по образцу статичного фолбэка в Poster.tsx (movie.hue ?? 20).

@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { SORT_LABELS } from '@features/catalog-filter'
-import { ChevronDownIcon, CheckIcon } from '@shared/ui'
-import s from './SortSelect.module.css'
+import { useState } from "react"
+import { SORT_LABELS } from "@features/catalog-filter"
+import { ChevronDownIcon, CheckIcon } from "@shared/ui"
+import s from "./SortSelect.module.css"
 
 type SortSelectProps = {
   value: string
@@ -33,7 +33,7 @@ export const SortSelect = ({ value, onChange, disabled }: SortSelectProps) => {
         aria-expanded={open}
       >
         <span className={s.label}>Sort</span>
-        <span>{value || 'Default'}</span>
+        <span>{value || "Default"}</span>
         <ChevronDownIcon />
       </button>
       {open && !disabled && (
@@ -44,7 +44,7 @@ export const SortSelect = ({ value, onChange, disabled }: SortSelectProps) => {
                 type="button"
                 role="option"
                 aria-selected={value === option}
-                className={`${s.option} ${value === option ? s.active : ''}`}
+                className={`${s.option} ${value === option ? s.active : ""}`}
                 onClick={() => handleSelect(option)}
               >
                 {option}

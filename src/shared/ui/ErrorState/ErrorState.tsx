@@ -1,4 +1,4 @@
-import s from './ErrorState.module.css'
+import s from "./ErrorState.module.css"
 
 type Props = {
   title: string

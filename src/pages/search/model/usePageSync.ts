@@ -1,6 +1,9 @@
-import { useEffect, useRef } from 'react'
-import { useSearchParams } from 'react-router'
-import { stripFilterAndSortParams, type FilterState } from '@features/catalog-filter'
+import { useEffect, useRef } from "react"
+import { useSearchParams } from "react-router"
+import {
+  stripFilterAndSortParams,
+  type FilterState,
+} from "@features/catalog-filter"
 
 /** Demo-тариф: страницы 1–10 (клэмп и на чтении из URL, и на записи через goToPage). */
 const MAX_PAGE = 10
@@ -17,11 +20,11 @@ export type PageSyncResult = {
 
 /** `?page` → `1`, если ещё не `1` — иначе возвращает `params` без изменений (no-op). */
 const resetPageToOne = (params: URLSearchParams): URLSearchParams => {
-  if ((params.get('page') ?? '1') === '1') {
+  if ((params.get("page") ?? "1") === "1") {
     return params
   }
   const next = new URLSearchParams(params)
-  next.set('page', '1')
+  next.set("page", "1")
   return next
 }
 
@@ -53,10 +56,13 @@ const resetPageToOne = (params: URLSearchParams): URLSearchParams => {
  * deep-link'е вида `?q=foo&page=8` без единого фильтра (см. тест "устаревший/deep-linked
  * ?page вне диапазона").
  */
-export const usePageSync = ({ query, filters }: PageSyncParams): PageSyncResult => {
+export const usePageSync = ({
+  query,
+  filters,
+}: PageSyncParams): PageSyncResult => {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const rawPage = Number.parseInt(searchParams.get('page') ?? '1', 10) || 1
+  const rawPage = Number.parseInt(searchParams.get("page") ?? "1", 10) || 1
   const page = Math.min(MAX_PAGE, Math.max(1, rawPage))
 
   const goToPage = (p: number) => {
@@ -64,15 +70,15 @@ export const usePageSync = ({ query, filters }: PageSyncParams): PageSyncResult 
     setSearchParams(
       (prev) => {
         const params = new URLSearchParams(prev)
-        params.set('page', String(clamped))
+        params.set("page", String(clamped))
         return params
       },
       { replace: true },
     )
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  const isSearching = query.trim() !== ''
+  const isSearching = query.trim() !== ""
 
   useEffect(() => {
     if (!isSearching) {
@@ -85,7 +91,9 @@ export const usePageSync = ({ query, filters }: PageSyncParams): PageSyncResult 
       return
     }
 
-    setSearchParams((prev) => resetPageToOne(stripFilterAndSortParams(prev)), { replace: true })
+    setSearchParams((prev) => resetPageToOne(stripFilterAndSortParams(prev)), {
+      replace: true,
+    })
     // Пустой массив зависимостей — намеренно: эффект должен запуститься строго один раз при
     // монтировании (deep-link guard, см. докблок выше); обычные смены query/filters уже
     // покрыты отдельным reset-эффектом ниже через resetKey, повторный прогон здесь не нужен
@@ -107,7 +115,8 @@ export const usePageSync = ({ query, filters }: PageSyncParams): PageSyncResult 
     wasSearchingRef.current = isSearching
 
     setSearchParams(
-      (prev) => resetPageToOne(enteringSearch ? stripFilterAndSortParams(prev) : prev),
+      (prev) =>
+        resetPageToOne(enteringSearch ? stripFilterAndSortParams(prev) : prev),
       { replace: true },
     )
   }, [resetKey, setSearchParams, isSearching])

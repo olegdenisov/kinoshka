@@ -1,9 +1,13 @@
-import { useState } from 'react'
-import { useSearchParams } from 'react-router'
-import { MobileHeader, BottomNav, BottomSheet } from '@widgets/mobile-chrome'
-import { ActiveFilterChips, useFilterState, SORT_LABELS } from '@features/catalog-filter'
-import type { FilterState } from '@features/catalog-filter'
-import { MobileCard, ALL_GENRES } from '@entities/movie'
+import { useState } from "react"
+import { useSearchParams } from "react-router"
+import { MobileHeader, BottomNav, BottomSheet } from "@widgets/mobile-chrome"
+import {
+  ActiveFilterChips,
+  useFilterState,
+  SORT_LABELS,
+} from "@features/catalog-filter"
+import type { FilterState } from "@features/catalog-filter"
+import { MobileCard, ALL_GENRES } from "@entities/movie"
 import {
   AsyncBoundary,
   EmptyState,
@@ -14,11 +18,11 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CheckIcon,
-} from '@shared/ui'
-import { useMovieCatalog } from '../model/useMovieCatalog'
-import { usePageSync } from '../model/usePageSync'
-import { useCatalogUpdateStatus } from '../model/useCatalogUpdateStatus'
-import { buildPageRange, clampPage } from '../lib/buildPageRange'
+} from "@shared/ui"
+import { useMovieCatalog } from "../model/useMovieCatalog"
+import { usePageSync } from "../model/usePageSync"
+import { useCatalogUpdateStatus } from "../model/useCatalogUpdateStatus"
+import { buildPageRange, clampPage } from "../lib/buildPageRange"
 
 type MobilePaginationProps = {
   page: number
@@ -26,7 +30,11 @@ type MobilePaginationProps = {
   onChange: (p: number) => void
 }
 
-const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps) => {
+const MobilePagination = ({
+  page,
+  totalPages,
+  onChange,
+}: MobilePaginationProps) => {
   // Та же защита от рассинхрона, что в desktop Pagination.tsx: ?page из URL может временно
   // выйти за пределы totalPages (напр. смена фильтров ещё не долетела до фетчера) — клэмпим
   // для рендера/disabled, не мутируя проп и не решая за вызывающий код, что писать в URL.
@@ -38,28 +46,28 @@ const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps)
   const btnStyle = (active: boolean, disabled: boolean) => ({
     minWidth: 34,
     height: 34,
-    padding: '0 8px',
+    padding: "0 8px",
     borderRadius: 4,
-    background: active ? 'rgba(209,142,95,0.15)' : 'transparent',
-    color: active ? '#D18E5F' : disabled ? '#3A3639' : '#B8ADAB',
-    border: `1px solid ${active ? 'rgba(209,142,95,0.35)' : 'rgba(184,173,171,0.1)'}`,
-    cursor: disabled ? ('default' as const) : ('pointer' as const),
-    fontFamily: 'var(--font-mono)',
+    background: active ? "rgba(209,142,95,0.15)" : "transparent",
+    color: active ? "#D18E5F" : disabled ? "#3A3639" : "#B8ADAB",
+    border: `1px solid ${active ? "rgba(209,142,95,0.35)" : "rgba(184,173,171,0.1)"}`,
+    cursor: disabled ? ("default" as const) : ("pointer" as const),
+    fontFamily: "var(--font-mono)",
     fontSize: 12,
     fontWeight: 500,
-    display: 'inline-flex' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    display: "inline-flex" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   })
 
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         gap: 3,
-        flexWrap: 'wrap' as const,
+        flexWrap: "wrap" as const,
       }}
     >
       <button
@@ -70,12 +78,23 @@ const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps)
         <ChevronLeftIcon size={10} />
       </button>
       {pages.map((p, i) =>
-        typeof p === 'string' ? (
-          <span key={p + i} style={{ ...btnStyle(false, true), border: 'none', color: '#5A5059' }}>
+        typeof p === "string" ? (
+          <span
+            key={p + i}
+            style={{
+              ...btnStyle(false, true),
+              border: "none",
+              color: "#5A5059",
+            }}
+          >
             …
           </span>
         ) : (
-          <button key={p} style={btnStyle(p === safePage, false)} onClick={() => onChange(p)}>
+          <button
+            key={p}
+            style={btnStyle(p === safePage, false)}
+            onClick={() => onChange(p)}
+          >
             {p}
           </button>
         ),
@@ -93,10 +112,15 @@ const MobilePagination = ({ page, totalPages, onChange }: MobilePaginationProps)
 
 const MobileResultsSkeleton = () => (
   <div
-    style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, padding: '0 16px' }}
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(2, 1fr)",
+      gap: 14,
+      padding: "0 16px",
+    }}
   >
     {Array.from({ length: 6 }, (_, i) => (
-      <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div key={i} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <Skeleton height={220} borderRadius={10} />
         <Skeleton height={14} width="80%" />
         <Skeleton height={10} width="50%" />
@@ -137,10 +161,14 @@ const MobileSearchResults = ({
 
   if (movies.length === 0) {
     return (
-      <div style={{ padding: '12px 20px 40px' }}>
+      <div style={{ padding: "12px 20px 40px" }}>
         <EmptyState
           title="Nothing found"
-          description={query ? `Ничего не найдено по «${query}»` : 'Try adjusting the filters'}
+          description={
+            query
+              ? `Ничего не найдено по «${query}»`
+              : "Try adjusting the filters"
+          }
         />
         {/*
           Тот же дед-энд, что в SearchDesktop: устаревший/deep-linked ?page может указывать
@@ -148,8 +176,12 @@ const MobileSearchResults = ({
           Без MobilePagination тут нет способа вернуться на валидную страницу.
         */}
         {totalPages > 0 && (
-          <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <MobilePagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />
+          <div style={{ textAlign: "center", marginTop: 24 }}>
+            <MobilePagination
+              page={displayPage}
+              totalPages={totalPages}
+              onChange={onPageChange}
+            />
           </div>
         )}
       </div>
@@ -160,10 +192,10 @@ const MobileSearchResults = ({
     <>
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)",
           gap: 14,
-          padding: '0 16px',
+          padding: "0 16px",
         }}
       >
         {movies.map((m) => (
@@ -171,16 +203,20 @@ const MobileSearchResults = ({
         ))}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: 24, padding: '0 16px' }}>
-        <MobilePagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />
+      <div style={{ textAlign: "center", marginTop: 24, padding: "0 16px" }}>
+        <MobilePagination
+          page={displayPage}
+          totalPages={totalPages}
+          onChange={onPageChange}
+        />
         <div
           style={{
             marginTop: 14,
-            fontFamily: 'var(--font-mono)',
+            fontFamily: "var(--font-mono)",
             fontSize: 10,
-            color: '#5A5059',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
+            color: "#5A5059",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
           }}
           aria-live="polite"
         >
@@ -194,39 +230,58 @@ const MobileSearchResults = ({
 export const SearchMobile = () => {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
-  const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } =
-    useFilterState()
+  const {
+    filters,
+    setFilters,
+    sort,
+    setSort,
+    toggleGenre,
+    resetFilters,
+    activeChips,
+  } = useFilterState()
   const [searchParams] = useSearchParams()
 
-  const query = searchParams.get('q') ?? ''
+  const query = searchParams.get("q") ?? ""
   const isSearchMode = query.trim().length > 0
   const { page, goToPage } = usePageSync({ query, filters })
-  const { deferredQuery, deferredFilters, deferredSort, deferredPage, isUpdating } =
-    useCatalogUpdateStatus({
-      query,
-      filters,
-      sort,
-      page,
-    })
+  const {
+    deferredQuery,
+    deferredFilters,
+    deferredSort,
+    deferredPage,
+    isUpdating,
+  } = useCatalogUpdateStatus({
+    query,
+    filters,
+    sort,
+    page,
+  })
 
   return (
-    <div style={{ background: '#0F0D11', color: '#F2F0EF', minHeight: '100vh', paddingBottom: 80 }}>
+    <div
+      style={{
+        background: "#0F0D11",
+        color: "#F2F0EF",
+        minHeight: "100vh",
+        paddingBottom: 80,
+      }}
+    >
       <MobileHeader />
 
       <div
         className="hide-scrollbar"
         style={{
-          position: 'sticky',
+          position: "sticky",
           top: 52,
           zIndex: 30,
-          background: 'rgba(15,13,17,0.88)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(184,173,171,0.08)',
-          padding: '10px 16px',
-          display: 'flex',
+          background: "rgba(15,13,17,0.88)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid rgba(184,173,171,0.08)",
+          padding: "10px 16px",
+          display: "flex",
           gap: 8,
-          alignItems: 'center',
-          overflowX: 'auto',
+          alignItems: "center",
+          overflowX: "auto",
         }}
       >
         <button
@@ -234,18 +289,20 @@ export const SearchMobile = () => {
           disabled={isSearchMode}
           style={{
             flexShrink: 0,
-            display: 'inline-flex',
-            alignItems: 'center',
+            display: "inline-flex",
+            alignItems: "center",
             gap: 6,
             height: 32,
-            padding: '0 12px',
-            background: activeChips.length ? 'rgba(209,142,95,0.15)' : 'rgba(24,22,27,0.6)',
-            border: `1px solid ${activeChips.length ? 'rgba(209,142,95,0.35)' : 'rgba(184,173,171,0.12)'}`,
-            color: activeChips.length ? '#D18E5F' : '#F2F0EF',
+            padding: "0 12px",
+            background: activeChips.length
+              ? "rgba(209,142,95,0.15)"
+              : "rgba(24,22,27,0.6)",
+            border: `1px solid ${activeChips.length ? "rgba(209,142,95,0.35)" : "rgba(184,173,171,0.12)"}`,
+            color: activeChips.length ? "#D18E5F" : "#F2F0EF",
             borderRadius: 999,
-            cursor: isSearchMode ? 'not-allowed' : 'pointer',
+            cursor: isSearchMode ? "not-allowed" : "pointer",
             opacity: isSearchMode ? 0.4 : 1,
-            fontFamily: 'var(--font-body)',
+            fontFamily: "var(--font-body)",
             fontSize: 12.5,
             fontWeight: 500,
           }}
@@ -255,14 +312,14 @@ export const SearchMobile = () => {
           {activeChips.length > 0 && (
             <span
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
                 minWidth: 16,
                 height: 16,
-                padding: '0 5px',
-                background: '#D18E5F',
-                color: '#0F0D11',
+                padding: "0 5px",
+                background: "#D18E5F",
+                color: "#0F0D11",
                 borderRadius: 999,
                 fontSize: 10,
                 fontWeight: 600,
@@ -278,72 +335,72 @@ export const SearchMobile = () => {
           disabled={isSearchMode}
           style={{
             flexShrink: 0,
-            display: 'inline-flex',
-            alignItems: 'center',
+            display: "inline-flex",
+            alignItems: "center",
             gap: 6,
             height: 32,
-            padding: '0 12px',
-            background: 'rgba(24,22,27,0.6)',
-            border: '1px solid rgba(184,173,171,0.12)',
-            color: '#F2F0EF',
+            padding: "0 12px",
+            background: "rgba(24,22,27,0.6)",
+            border: "1px solid rgba(184,173,171,0.12)",
+            color: "#F2F0EF",
             borderRadius: 999,
-            cursor: isSearchMode ? 'not-allowed' : 'pointer',
+            cursor: isSearchMode ? "not-allowed" : "pointer",
             opacity: isSearchMode ? 0.4 : 1,
-            fontFamily: 'var(--font-body)',
+            fontFamily: "var(--font-body)",
             fontSize: 12.5,
             fontWeight: 500,
           }}
         >
           <span
             style={{
-              color: '#92887F',
-              fontFamily: 'var(--font-mono)',
+              color: "#92887F",
+              fontFamily: "var(--font-mono)",
               fontSize: 9.5,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
             }}
           >
             Sort
           </span>
-          {sort || 'Default'}
+          {sort || "Default"}
           <ChevronDownIcon />
         </button>
 
         <ActiveFilterChips chips={activeChips} compact />
       </div>
 
-      <div style={{ padding: '20px 20px 12px' }}>
+      <div style={{ padding: "20px 20px 12px" }}>
         <div
           style={{
-            fontFamily: 'var(--font-mono)',
+            fontFamily: "var(--font-mono)",
             fontSize: 9.5,
-            color: '#92887F',
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
+            color: "#92887F",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
             marginBottom: 4,
           }}
         >
-          {isSearchMode ? 'Search results' : 'Catalog'}
+          {isSearchMode ? "Search results" : "Catalog"}
         </div>
         <h1
           style={{
             margin: 0,
-            fontFamily: 'var(--font-display)',
+            fontFamily: "var(--font-display)",
             fontSize: 22,
             fontWeight: 500,
-            letterSpacing: '-0.02em',
+            letterSpacing: "-0.02em",
           }}
         >
-          {isSearchMode ? `Results for “${query}”` : 'Browse catalog'}
+          {isSearchMode ? `Results for “${query}”` : "Browse catalog"}
         </h1>
       </div>
 
       <div
         style={{
-          position: 'relative',
+          position: "relative",
           opacity: isUpdating ? 0.5 : 1,
-          pointerEvents: isUpdating ? 'none' : 'auto',
-          transition: 'opacity 150ms ease',
+          pointerEvents: isUpdating ? "none" : "auto",
+          transition: "opacity 150ms ease",
         }}
         aria-busy={isUpdating}
       >
@@ -360,17 +417,17 @@ export const SearchMobile = () => {
         {isUpdating && (
           <div
             style={{
-              position: 'absolute',
+              position: "absolute",
               top: 0,
               right: 16,
-              display: 'flex',
-              alignItems: 'center',
+              display: "flex",
+              alignItems: "center",
               gap: 6,
-              fontFamily: 'var(--font-mono)',
+              fontFamily: "var(--font-mono)",
               fontSize: 9.5,
-              color: '#92887F',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
+              color: "#92887F",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
             }}
           >
             <Spinner size={12} />
@@ -386,25 +443,31 @@ export const SearchMobile = () => {
         onClose={() => setFiltersOpen(false)}
         title="Filters"
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
           <div>
             <div
               style={{
-                fontFamily: 'var(--font-mono)',
+                fontFamily: "var(--font-mono)",
                 fontSize: 10,
-                color: '#92887F',
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
+                color: "#92887F",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
                 marginBottom: 10,
               }}
             >
               Type
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: 6,
+              }}
+            >
               {[
-                { key: 'movie', label: 'Movies' },
-                { key: 'series', label: 'Series' },
-                { key: 'anime', label: 'Anime' },
+                { key: "movie", label: "Movies" },
+                { key: "series", label: "Series" },
+                { key: "anime", label: "Anime" },
               ].map((t) => (
                 <button
                   key={t.key}
@@ -413,11 +476,13 @@ export const SearchMobile = () => {
                     height: 40,
                     borderRadius: 6,
                     background:
-                      filters.type === t.key ? 'rgba(209,142,95,0.15)' : 'rgba(184,173,171,0.04)',
-                    color: filters.type === t.key ? '#D18E5F' : '#F2F0EF',
-                    border: `1px solid ${filters.type === t.key ? 'rgba(209,142,95,0.35)' : 'rgba(184,173,171,0.1)'}`,
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-body)',
+                      filters.type === t.key
+                        ? "rgba(209,142,95,0.15)"
+                        : "rgba(184,173,171,0.04)",
+                    color: filters.type === t.key ? "#D18E5F" : "#F2F0EF",
+                    border: `1px solid ${filters.type === t.key ? "rgba(209,142,95,0.35)" : "rgba(184,173,171,0.1)"}`,
+                    cursor: "pointer",
+                    fontFamily: "var(--font-body)",
                     fontSize: 13.5,
                     fontWeight: 500,
                   }}
@@ -431,32 +496,32 @@ export const SearchMobile = () => {
           <div>
             <div
               style={{
-                fontFamily: 'var(--font-mono)',
+                fontFamily: "var(--font-mono)",
                 fontSize: 10,
-                color: '#92887F',
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
+                color: "#92887F",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
                 marginBottom: 10,
               }}
             >
               Genre
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {ALL_GENRES.map((g) => (
                 <button
                   key={g}
                   onClick={() => toggleGenre(g)}
                   style={{
                     height: 34,
-                    padding: '0 14px',
+                    padding: "0 14px",
                     background: filters.genres.includes(g)
-                      ? 'rgba(209,142,95,0.15)'
-                      : 'rgba(184,173,171,0.04)',
-                    color: filters.genres.includes(g) ? '#D18E5F' : '#B8ADAB',
-                    border: `1px solid ${filters.genres.includes(g) ? 'rgba(209,142,95,0.35)' : 'rgba(184,173,171,0.1)'}`,
+                      ? "rgba(209,142,95,0.15)"
+                      : "rgba(184,173,171,0.04)",
+                    color: filters.genres.includes(g) ? "#D18E5F" : "#B8ADAB",
+                    border: `1px solid ${filters.genres.includes(g) ? "rgba(209,142,95,0.35)" : "rgba(184,173,171,0.1)"}`,
                     borderRadius: 999,
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-body)',
+                    cursor: "pointer",
+                    fontFamily: "var(--font-body)",
                     fontSize: 12.5,
                     fontWeight: 500,
                   }}
@@ -470,11 +535,11 @@ export const SearchMobile = () => {
           <div>
             <div
               style={{
-                fontFamily: 'var(--font-mono)',
+                fontFamily: "var(--font-mono)",
                 fontSize: 10,
-                color: '#92887F',
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
+                color: "#92887F",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
                 marginBottom: 10,
               }}
             >
@@ -482,63 +547,63 @@ export const SearchMobile = () => {
             </div>
             <div
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontFamily: 'var(--font-mono)',
+                display: "flex",
+                justifyContent: "space-between",
+                fontFamily: "var(--font-mono)",
                 fontSize: 12,
-                color: '#F2F0EF',
-                letterSpacing: '0.04em',
+                color: "#F2F0EF",
+                letterSpacing: "0.04em",
                 marginBottom: 10,
               }}
             >
-              <span>{filters.yearFrom ?? '1970'}</span>
-              <span>{filters.yearTo ?? '2025'}</span>
+              <span>{filters.yearFrom ?? "1970"}</span>
+              <span>{filters.yearTo ?? "2025"}</span>
             </div>
             <div
               style={{
-                position: 'relative',
+                position: "relative",
                 height: 6,
                 borderRadius: 3,
-                background: 'rgba(184,173,171,0.1)',
+                background: "rgba(184,173,171,0.1)",
               }}
             >
               <div
                 style={{
-                  position: 'absolute',
-                  left: '60%',
-                  right: '5%',
+                  position: "absolute",
+                  left: "60%",
+                  right: "5%",
                   top: 0,
                   bottom: 0,
-                  background: '#D18E5F',
+                  background: "#D18E5F",
                   borderRadius: 3,
                 }}
               />
               <div
                 style={{
-                  position: 'absolute',
-                  left: '60%',
+                  position: "absolute",
+                  left: "60%",
                   top: -6,
                   width: 18,
                   height: 18,
                   borderRadius: 999,
-                  background: '#F2F0EF',
-                  border: '2px solid #D18E5F',
-                  transform: 'translateX(-50%)',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                  background: "#F2F0EF",
+                  border: "2px solid #D18E5F",
+                  transform: "translateX(-50%)",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
                 }}
               />
               <div
                 style={{
-                  position: 'absolute',
-                  left: '95%',
+                  position: "absolute",
+                  left: "95%",
                   top: -6,
                   width: 18,
                   height: 18,
                   borderRadius: 999,
-                  background: '#F2F0EF',
-                  border: '2px solid #D18E5F',
-                  transform: 'translateX(-50%)',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                  background: "#F2F0EF",
+                  border: "2px solid #D18E5F",
+                  transform: "translateX(-50%)",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
                 }}
               />
             </div>
@@ -547,33 +612,38 @@ export const SearchMobile = () => {
           <div>
             <div
               style={{
-                fontFamily: 'var(--font-mono)',
+                fontFamily: "var(--font-mono)",
                 fontSize: 10,
-                color: '#92887F',
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
+                color: "#92887F",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
                 marginBottom: 10,
               }}
             >
               Minimum rating
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ display: "flex", gap: 6 }}>
               {[5, 6, 7, 8, 9].map((r) => (
                 <button
                   key={r}
                   onClick={() =>
-                    setFilters({ ...filters, rating: filters.rating === r ? null : r })
+                    setFilters({
+                      ...filters,
+                      rating: filters.rating === r ? null : r,
+                    })
                   }
                   style={{
                     flex: 1,
                     height: 40,
                     borderRadius: 6,
                     background:
-                      filters.rating === r ? 'rgba(209,142,95,0.15)' : 'rgba(184,173,171,0.04)',
-                    color: filters.rating === r ? '#D18E5F' : '#B8ADAB',
-                    border: `1px solid ${filters.rating === r ? 'rgba(209,142,95,0.35)' : 'rgba(184,173,171,0.1)'}`,
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-mono)',
+                      filters.rating === r
+                        ? "rgba(209,142,95,0.15)"
+                        : "rgba(184,173,171,0.04)",
+                    color: filters.rating === r ? "#D18E5F" : "#B8ADAB",
+                    border: `1px solid ${filters.rating === r ? "rgba(209,142,95,0.35)" : "rgba(184,173,171,0.1)"}`,
+                    cursor: "pointer",
+                    fontFamily: "var(--font-mono)",
                     fontSize: 13,
                     fontWeight: 500,
                   }}
@@ -588,14 +658,14 @@ export const SearchMobile = () => {
         <div style={{ height: 80 }} />
         <div
           style={{
-            position: 'sticky',
+            position: "sticky",
             bottom: -20,
             left: -20,
             right: -20,
-            margin: '0 -20px -20px',
-            padding: '14px 20px 20px',
-            background: 'linear-gradient(180deg, transparent, #18161B 40%)',
-            display: 'flex',
+            margin: "0 -20px -20px",
+            padding: "14px 20px 20px",
+            background: "linear-gradient(180deg, transparent, #18161B 40%)",
+            display: "flex",
             gap: 10,
           }}
         >
@@ -605,11 +675,11 @@ export const SearchMobile = () => {
               flex: 1,
               height: 48,
               borderRadius: 8,
-              background: 'transparent',
-              border: '1px solid rgba(184,173,171,0.2)',
-              color: '#B8ADAB',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-body)',
+              background: "transparent",
+              border: "1px solid rgba(184,173,171,0.2)",
+              color: "#B8ADAB",
+              cursor: "pointer",
+              fontFamily: "var(--font-body)",
               fontSize: 14,
               fontWeight: 500,
             }}
@@ -622,11 +692,11 @@ export const SearchMobile = () => {
               flex: 2,
               height: 48,
               borderRadius: 8,
-              background: '#D18E5F',
-              color: '#0F0D11',
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-body)',
+              background: "#D18E5F",
+              color: "#0F0D11",
+              border: "none",
+              cursor: "pointer",
+              fontFamily: "var(--font-body)",
               fontSize: 14,
               fontWeight: 600,
             }}
@@ -642,7 +712,7 @@ export const SearchMobile = () => {
         title="Sort by"
         heightVh={50}
       >
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
           {SORT_LABELS.map((o) => (
             <button
               key={o}
@@ -651,18 +721,18 @@ export const SearchMobile = () => {
                 setSortOpen(false)
               }}
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '16px 4px',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                borderBottom: '1px solid rgba(184,173,171,0.06)',
-                textAlign: 'left',
-                fontFamily: 'var(--font-body)',
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "16px 4px",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                borderBottom: "1px solid rgba(184,173,171,0.06)",
+                textAlign: "left",
+                fontFamily: "var(--font-body)",
                 fontSize: 15,
-                color: sort === o ? '#D18E5F' : '#F2F0EF',
+                color: sort === o ? "#D18E5F" : "#F2F0EF",
               }}
             >
               {o}

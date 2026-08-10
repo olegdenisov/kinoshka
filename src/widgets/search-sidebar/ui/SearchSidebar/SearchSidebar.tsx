@@ -1,6 +1,6 @@
-import type { FilterState } from '@features/catalog-filter'
-import { ALL_GENRES } from '@entities/movie'
-import s from './SearchSidebar.module.css'
+import type { FilterState } from "@features/catalog-filter"
+import { ALL_GENRES } from "@entities/movie"
+import s from "./SearchSidebar.module.css"
 
 type SearchSidebarProps = {
   filters: FilterState
@@ -30,17 +30,25 @@ type RadioRowProps = {
   onClick: () => void
 }
 
-const RadioRow = ({ label, count, active, disabled, onClick }: RadioRowProps) => (
+const RadioRow = ({
+  label,
+  count,
+  active,
+  disabled,
+  onClick,
+}: RadioRowProps) => (
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`${s.radioRow} ${active ? s.radioRowActive : ''}`}
+    className={`${s.radioRow} ${active ? s.radioRowActive : ""}`}
   >
     <span className={s.radioRowLeft}>
-      <span className={`${s.radioCircle} ${active ? s.radioCircleActive : ''}`}>
+      <span className={`${s.radioCircle} ${active ? s.radioCircleActive : ""}`}>
         {active && <span className={s.radioDot} />}
       </span>
-      <span className={`${s.radioLabel} ${active ? s.radioLabelActive : ''}`}>{label}</span>
+      <span className={`${s.radioLabel} ${active ? s.radioLabelActive : ""}`}>
+        {label}
+      </span>
     </span>
     <span className={s.radioCount}>{count}</span>
   </button>
@@ -57,7 +65,7 @@ const GenreChip = ({ label, active, disabled, onClick }: GenreChipProps) => (
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`${s.genreChip} ${active ? s.genreChipActive : ''}`}
+    className={`${s.genreChip} ${active ? s.genreChipActive : ""}`}
   >
     {label}
   </button>
@@ -71,13 +79,13 @@ export const SearchSidebar = ({
   disabled,
 }: SearchSidebarProps) => {
   return (
-    <aside className={`${s.sidebar} ${disabled ? s.sidebarDisabled : ''}`}>
+    <aside className={`${s.sidebar} ${disabled ? s.sidebarDisabled : ""}`}>
       <FilterGroup title="Type">
         <div className={s.radioList}>
           {[
-            { key: 'movie', label: 'Movies', count: '42,180' },
-            { key: 'series', label: 'Series', count: '8,640' },
-            { key: 'anime', label: 'Anime', count: '4,920' },
+            { key: "movie", label: "Movies", count: "42,180" },
+            { key: "series", label: "Series", count: "8,640" },
+            { key: "anime", label: "Anime", count: "4,920" },
           ].map((t) => (
             <RadioRow
               key={t.key}
@@ -108,8 +116,8 @@ export const SearchSidebar = ({
       <FilterGroup title="Year">
         <div>
           <div className={s.yearDisplay}>
-            <span>{filters.yearFrom ?? '1970'}</span>
-            <span>{filters.yearTo ?? '2025'}</span>
+            <span>{filters.yearFrom ?? "1970"}</span>
+            <span>{filters.yearTo ?? "2025"}</span>
           </div>
           <div className={s.rangeTrack}>
             <div className={s.rangeFill} />
@@ -126,9 +134,12 @@ export const SearchSidebar = ({
               key={r}
               disabled={disabled}
               onClick={() =>
-                onFiltersChange({ ...filters, rating: filters.rating === r ? null : r })
+                onFiltersChange({
+                  ...filters,
+                  rating: filters.rating === r ? null : r,
+                })
               }
-              className={`${s.ratingBtn} ${filters.rating === r ? s.ratingBtnActive : ''}`}
+              className={`${s.ratingBtn} ${filters.rating === r ? s.ratingBtnActive : ""}`}
             >
               {r}+
             </button>

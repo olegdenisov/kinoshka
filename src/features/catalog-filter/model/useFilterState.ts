@@ -1,10 +1,10 @@
-import { useSearchParams } from 'react-router'
+import { useSearchParams } from "react-router"
 import {
   EMPTY_FILTERS,
   FILTER_URL_KEYS,
   filtersToSearchParams,
   getFilterFromSearchParams,
-} from '../lib/searchParams'
+} from "../lib/searchParams"
 
 export type FilterState = {
   type: string | null
@@ -29,22 +29,26 @@ export const useFilterState = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const filters = getFilterFromSearchParams(searchParams)
-  const sort = searchParams.get('sort') ?? ''
+  const sort = searchParams.get("sort") ?? ""
 
   const applyFilters = (next: FilterState) => {
     setSearchParams(
       (prev) => {
         const params = new URLSearchParams(prev)
         FILTER_URL_KEYS.forEach((key) => params.delete(key))
-        filtersToSearchParams(next).forEach((value, key) => params.set(key, value))
+        filtersToSearchParams(next).forEach((value, key) =>
+          params.set(key, value),
+        )
         return params
       },
       { replace: true },
     )
   }
 
-  const setFilters = (next: FilterState | ((prev: FilterState) => FilterState)) => {
-    applyFilters(typeof next === 'function' ? next(filters) : next)
+  const setFilters = (
+    next: FilterState | ((prev: FilterState) => FilterState),
+  ) => {
+    applyFilters(typeof next === "function" ? next(filters) : next)
   }
 
   const setSort = (next: string) => {
@@ -52,9 +56,9 @@ export const useFilterState = () => {
       (prev) => {
         const params = new URLSearchParams(prev)
         if (next) {
-          params.set('sort', next)
+          params.set("sort", next)
         } else {
-          params.delete('sort')
+          params.delete("sort")
         }
         return params
       },
@@ -65,7 +69,9 @@ export const useFilterState = () => {
   const toggleGenre = (g: string) => {
     setFilters((f) => ({
       ...f,
-      genres: f.genres.includes(g) ? f.genres.filter((x) => x !== g) : [...f.genres, g],
+      genres: f.genres.includes(g)
+        ? f.genres.filter((x) => x !== g)
+        : [...f.genres, g],
     }))
   }
 
@@ -73,10 +79,16 @@ export const useFilterState = () => {
 
   const activeChips: ActiveChip[] = []
   if (filters.type) {
-    const label = filters.type.charAt(0).toUpperCase() + filters.type.slice(1) + 's'
-    activeChips.push({ label, onRemove: () => setFilters((f) => ({ ...f, type: null })) })
+    const label =
+      filters.type.charAt(0).toUpperCase() + filters.type.slice(1) + "s"
+    activeChips.push({
+      label,
+      onRemove: () => setFilters((f) => ({ ...f, type: null })),
+    })
   }
-  filters.genres.forEach((g) => activeChips.push({ label: g, onRemove: () => toggleGenre(g) }))
+  filters.genres.forEach((g) =>
+    activeChips.push({ label: g, onRemove: () => toggleGenre(g) }),
+  )
   if (filters.yearFrom || filters.yearTo) {
     // yearFrom/yearTo — независимые nullable-поля (валидный FilterState допускает только
     // один из них заданным), поэтому не склеиваем "2020–null"/"null–2025" вслепую.
@@ -88,7 +100,8 @@ export const useFilterState = () => {
           : `–${filters.yearTo}`
     activeChips.push({
       label,
-      onRemove: () => setFilters((f) => ({ ...f, yearFrom: null, yearTo: null })),
+      onRemove: () =>
+        setFilters((f) => ({ ...f, yearFrom: null, yearTo: null })),
     })
   }
   if (filters.rating) {
@@ -98,5 +111,13 @@ export const useFilterState = () => {
     })
   }
 
-  return { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips }
+  return {
+    filters,
+    setFilters,
+    sort,
+    setSort,
+    toggleGenre,
+    resetFilters,
+    activeChips,
+  }
 }

@@ -1,4 +1,4 @@
-import s from './CardBtn.module.css'
+import s from "./CardBtn.module.css"
 
 type CardBtnProps = {
   icon: React.ReactNode
@@ -10,7 +10,7 @@ export const CardBtn = ({ icon, label, square }: CardBtnProps) => {
   return (
     <button
       onClick={(e) => e.stopPropagation()}
-      className={`${s.btn} ${square ? s.btnSquare : ''}`}
+      className={`${s.btn} ${square ? s.btnSquare : ""}`}
     >
       {icon}
       {label && <span>{label}</span>}
