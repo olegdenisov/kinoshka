@@ -242,13 +242,13 @@ export class ApiError extends Error {
 **Files:**
 - Create: `src/pages/movie/MoviePage.test.tsx`
 
-- [ ] `/movie/1` happy path: сперва skeleton, затем реальные данные после резолва MSW (заголовок, cast, переключение табов)
-- [ ] `/movie/666` с MSW-мокнутым 404 → рендерится `ErrorState` с текстом not-found и рабочей кнопкой retry (клик → повторный запрос через MSW call-capture, по образцу `getSearchMovies.test.ts`)
-- [ ] `/movie/abc` (нечисловой id) → not-found без единого зарегистрированного MSW-хендлера, полагаясь на `onUnhandledRequest: 'error'`
-- [ ] общая ошибка (500/network error) → рендерится общий `ErrorState`, текстово отличимый от not-found-варианта
-- [ ] переключение табов (Overview/Cast/Details/Media) после загрузки — каждый таб показывает реальные данные
-- [ ] это финальный гейт, напрямую проверяющий критерий приёмки roadmap («`/movie/666` → ErrorState с retry»)
-- [ ] запустить полный набор тестов — должны пройти перед задачей 11
+- [x] `/movie/1` happy path: сперва skeleton, затем реальные данные после резолва MSW (заголовок, cast, переключение табов) — ⚠️ отклонение: разбито на 2 отдельных теста вместо одного (`показывает MovieDetailSkeleton, а не реальные данные` / `показывает реальные данные после резолва MSW, табы переключаются`), а не единый сценарий "skeleton → data" внутри одного `it`. Причина — экспериментально найденный React 19 act()-гоча: рендер, начатый вне `await act(async () => ...)`, а затем резолвнутый вне того же act-скоупа, оставляет обновление незафлашенным в jsdom (React выводит предупреждение "A suspended resource finished loading inside a test, but the event was not wrapped in act(...)" и DOM реально не обновляется, зависая на fallback бесконечно — воспроизведено через временный debug-тест). Рабочий паттерн, уже принятый в репо (`useMovieDetail.test.tsx`): весь цикл рендер+резолв — внутри одного `await act(async () => { render(...) })`. Поэтому skeleton-состояние проверяется отдельным тестом с намеренно бесконечно pending MSW-хендлером (`() => new Promise(() => {})`), а resolved-состояние — через `renderMoviePage()` (единый `await act(async () => ...)`, по образцу `useMovieDetail.test.tsx`)
+- [x] `/movie/666` с MSW-мокнутым 404 → рендерится `ErrorState` с текстом not-found и рабочей кнопкой retry (клик → повторный запрос через MSW call-capture, по образцу `getSearchMovies.test.ts`) — использован `vi.useFakeTimers()` + `advanceTimersByTime(21_000)` перед кликом, чтобы обойти `ERROR_CACHE_TTL_MS` (20с) cooldown в `createCachedFetcher` и получить реальный повторный сетевой запрос, а не cache-hit на том же реджекнутом промисе
+- [x] `/movie/abc` (нечисловой id) → not-found без единого зарегистрированного MSW-хендлера, полагаясь на `onUnhandledRequest: 'error'`
+- [x] общая ошибка (500/network error) → рендерится общий `ErrorState`, текстово отличимый от not-found-варианта
+- [x] переключение табов (Overview/Cast/Details/Media) после загрузки — каждый таб показывает реальные данные
+- [x] это финальный гейт, напрямую проверяющий критерий приёмки roadmap («`/movie/666` → ErrorState с retry»)
+- [x] запустить полный набор тестов — должны пройти перед задачей 11. `make test` — 323/323 зелёных, `make lint` — чисто, `make typecheck` — чисто
 
 ### Task 11: Проверка acceptance criteria
 
