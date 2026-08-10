@@ -15,7 +15,7 @@ export const Card = ({ movie, variant = 'grid' }: CardProps) => {
     <Link to={`/movie/${movie.id}`} className={s.card}>
       <div className={s.posterContainer}>
         <div className={s.posterWrapper}>
-          <Poster movie={movie} />
+          <Poster movie={movie} showLabel={!!movie.poster} />
         </div>
 
         <div className={s.overlay} />

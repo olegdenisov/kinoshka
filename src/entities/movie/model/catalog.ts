@@ -1,4 +1,4 @@
-import type { Movie, MovieDetail } from './types'
+import type { Movie } from './types'
 
 export const CATALOG: Movie[] = [
   { id: 1, title: 'Orbit of Silence', year: 2024, rating: 8.4, type: 'movie', genre: ['Sci-Fi', 'Drama'], runtime: '2h 18m', hue: 18 },
@@ -20,48 +20,6 @@ export const CATALOG: Movie[] = [
   { id: 17, title: 'Phosphor', year: 2025, rating: 7.7, type: 'anime', genre: ['Action'], runtime: '24 ep', hue: 5 },
   { id: 18, title: 'The Cartographer', year: 2024, rating: 8.5, type: 'movie', genre: ['Adventure'], runtime: '2h 14m', hue: 40 },
 ]
-
-export const MOCK_DETAIL: Omit<MovieDetail, keyof Movie> = {
-  tagline: "Some stories don't resolve. They just quiet down.",
-  synopsis: `Dr. Ines Varga returns to the Hallesk Ridge observatory after a two-decade absence.
-What was once her life's work is now a ghost station — rusted dishes, forgotten tapes, a younger
-colleague who inherited her silence. When the old array starts receiving a rhythmic pulse from
-an empty patch of sky, the two are forced to decide whether to listen, transmit, or run.`,
-  cast: [
-    { name: 'Ines Varga', actor: 'Liv Korhonen', hue: 20 },
-    { name: 'Arto Lind', actor: 'Matteo Pereira', hue: 200 },
-    { name: 'Young Ines', actor: 'Hana Tokumi', hue: 340 },
-    { name: 'The Operator', actor: 'Samuel Orell', hue: 50 },
-    { name: 'Anya', actor: 'Ruth Adeyemi', hue: 260 },
-    { name: 'Father', actor: 'Erik Solberg', hue: 170 },
-  ],
-  crew: {
-    director: 'Hanna Vesper',
-    writer: 'Hanna Vesper, M. Orell',
-    composer: 'Kasper Lind',
-    studio: 'North Pillar Films',
-  },
-  signals: {
-    criticalConsensus: 'Quiet stunner',
-    audience: 'Polarizing · 68%',
-    pacing: 'Slow',
-    mood: 'Contemplative',
-    violence: 'Mild',
-    tearRisk: 'High',
-  },
-  details: {
-    releaseDate: 'March 14, 2024',
-    country: 'Finland · Portugal',
-    language: 'English · Finnish · Portuguese',
-    aspectRatio: '2.39 : 1',
-    soundMix: 'Dolby Atmos',
-    budget: '$4.8M (est.)',
-    boxOffice: '$12.3M worldwide',
-  },
-  criticScore: '85%',
-  criticReviews: 38,
-  userVotes: '25k',
-}
 
 export const ALL_GENRES = [
   'Action', 'Drama', 'Sci-Fi', 'Thriller', 'Romance', 'Horror',

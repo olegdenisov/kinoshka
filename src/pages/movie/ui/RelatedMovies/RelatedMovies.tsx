@@ -8,6 +8,10 @@ type RelatedMoviesProps = {
 }
 
 export const RelatedMovies = ({ movies, movieTitle }: RelatedMoviesProps) => {
+  if (movies.length === 0) {
+    return null
+  }
+
   return (
     <div className={s.section}>
       <div className={s.header}>

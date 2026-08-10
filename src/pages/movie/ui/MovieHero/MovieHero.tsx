@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
-import type { Movie } from '@entities/movie'
-import { Poster, MOCK_DETAIL } from '@entities/movie'
+import type { MovieDetail } from '@entities/movie'
+import { Poster } from '@entities/movie'
 import { StarIcon, PlayIcon } from '@shared/ui'
 import type { LikedState } from '../MovieDesktop/types'
 import { MovieActions } from '../MovieActions'
@@ -29,7 +29,7 @@ const RatingBlock = ({ label, value, sub, accentClass, icon }: RatingBlockProps)
 )
 
 type MovieHeroProps = {
-  movie: Movie
+  movie: MovieDetail
   liked: LikedState
   onLikedChange: (l: LikedState) => void
 }
@@ -58,10 +58,12 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
         <div className={s.layout}>
           <div className={s.poster}>
             <Poster movie={movie} showLabel={false} />
-            <button className={s.trailerBtn}>
-              <PlayIcon size={10} />
-              Trailer
-            </button>
+            {movie.trailerUrl && (
+              <a className={s.trailerBtn} href={movie.trailerUrl} target="_blank" rel="noreferrer">
+                <PlayIcon size={10} />
+                Trailer
+              </a>
+            )}
           </div>
 
           <div className={s.info}>
@@ -73,17 +75,17 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
             </div>
 
             <h1 className={s.heading}>{movie.title}</h1>
-            <div className={s.tagline}>{MOCK_DETAIL.tagline}</div>
+            <div className={s.tagline}>{movie.tagline}</div>
 
             <div className={s.ratings}>
-              <RatingBlock label="Users" value={movie.rating.toFixed(1)} sub={`${MOCK_DETAIL.userVotes} votes`} accentClass={s.accentGold} icon={<StarIcon size={12} />} />
-              <RatingBlock label="Critics" value={MOCK_DETAIL.criticScore} sub={`${MOCK_DETAIL.criticReviews} reviews`} accentClass={s.accentBlue} />
+              <RatingBlock label="Users" value={movie.rating.toFixed(1)} sub={`${movie.votesKp ?? '—'} votes`} accentClass={s.accentGold} icon={<StarIcon size={12} />} />
+              <RatingBlock label="Critics" value={movie.criticScore != null ? `${movie.criticScore.toFixed(0)}%` : '—'} sub={`${movie.criticReviewCount ?? '—'} reviews`} accentClass={s.accentBlue} />
               <RatingBlock label="Your rating" value="—" sub="Not rated" accentClass={s.accentMuted} />
             </div>
 
             <MovieActions liked={liked} onChange={onLikedChange} />
 
-            <p className={s.synopsis}>{MOCK_DETAIL.synopsis.split('\n')[0]}</p>
+            <p className={s.synopsis}>{movie.shortSynopsis ?? movie.synopsis}</p>
           </div>
         </div>
       </div>
