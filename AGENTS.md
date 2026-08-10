@@ -30,7 +30,7 @@ make audit        # pnpm audit (prod deps, high severity)
 
 ## Architecture
 
-React 19 + TypeScript 6 + Vite 8 single-page app.
+React 19 + TypeScript 7 + Vite 8 single-page app.
 
 **React Compiler is enabled.** The compiler (`babel-plugin-react-compiler`) runs via `@rolldown/plugin-babel` alongside `@vitejs/plugin-react` (see `vite.config.ts`). It automatically memoizes components and hooks, so manual `useMemo` / `useCallback` / `memo` calls are unnecessary and should be avoided — the compiler handles that.
 
