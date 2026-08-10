@@ -1,20 +1,17 @@
-import { useSearchParams } from "react-router"
-import { Header } from "@widgets/header"
-import { SearchSidebar } from "@widgets/search-sidebar"
-import { useFilterState } from "@features/catalog-filter"
-import type { FilterState } from "@features/catalog-filter"
-import { AsyncBoundary, EmptyState, Spinner } from "@shared/ui"
-import { SearchHeader } from "../SearchHeader"
-import { SearchControls } from "../SearchControls"
-import {
-  SearchResultsGrid,
-  SearchResultSkeletonGrid,
-} from "../SearchResultsGrid"
-import { Pagination } from "../Pagination"
-import { useMovieCatalog } from "../../model/useMovieCatalog"
-import { usePageSync } from "../../model/usePageSync"
-import { useCatalogUpdateStatus } from "../../model/useCatalogUpdateStatus"
-import s from "./SearchDesktop.module.css"
+import { useSearchParams } from 'react-router'
+import { Header } from '@widgets/header'
+import { SearchSidebar } from '@widgets/search-sidebar'
+import { useFilterState } from '@features/catalog-filter'
+import type { FilterState } from '@features/catalog-filter'
+import { AsyncBoundary, EmptyState, Spinner } from '@shared/ui'
+import { SearchHeader } from '../SearchHeader'
+import { SearchControls } from '../SearchControls'
+import { SearchResultsGrid, SearchResultSkeletonGrid } from '../SearchResultsGrid'
+import { Pagination } from '../Pagination'
+import { useMovieCatalog } from '../../model/useMovieCatalog'
+import { usePageSync } from '../../model/usePageSync'
+import { useCatalogUpdateStatus } from '../../model/useCatalogUpdateStatus'
+import s from './SearchDesktop.module.css'
 
 type SearchResultsProps = {
   query: string
@@ -49,12 +46,8 @@ const SearchResults = ({
     return (
       <>
         <EmptyState
-          title="Nothing found"
-          description={
-            query
-              ? `Ничего не найдено по «${query}»`
-              : "Try adjusting the filters"
-          }
+          title='Nothing found'
+          description={query ? `Ничего не найдено по «${query}»` : 'Try adjusting the filters'}
         />
         {/*
           Deep-linked/устаревший ?page может указывать за пределы реальной выдачи (курсор
@@ -63,11 +56,7 @@ const SearchResults = ({
           не даёт способа вернуться на валидную страницу.
         */}
         {totalPages > 0 && (
-          <Pagination
-            page={displayPage}
-            totalPages={totalPages}
-            onChange={onPageChange}
-          />
+          <Pagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />
         )}
       </>
     )
@@ -81,12 +70,8 @@ const SearchResults = ({
         русские жанры как есть, reverse RU→EN не делаем (принятое решение, не баг).
       */}
       <SearchResultsGrid movies={movies} />
-      <Pagination
-        page={displayPage}
-        totalPages={totalPages}
-        onChange={onPageChange}
-      />
-      <div className={s.countText} aria-live="polite">
+      <Pagination page={displayPage} totalPages={totalPages} onChange={onPageChange} />
+      <div className={s.countText} aria-live='polite'>
         {movies.length} shown · page {displayPage} of {totalPages}
       </div>
     </>
@@ -94,36 +79,24 @@ const SearchResults = ({
 }
 
 export const SearchDesktop = () => {
-  const {
-    filters,
-    setFilters,
-    sort,
-    setSort,
-    toggleGenre,
-    resetFilters,
-    activeChips,
-  } = useFilterState()
+  const { filters, setFilters, sort, setSort, toggleGenre, resetFilters, activeChips } =
+    useFilterState()
   const [searchParams] = useSearchParams()
 
-  const query = searchParams.get("q") ?? ""
+  const query = searchParams.get('q') ?? ''
   const isSearchMode = query.trim().length > 0
   const { page, goToPage } = usePageSync({ query, filters })
-  const {
-    deferredQuery,
-    deferredFilters,
-    deferredSort,
-    deferredPage,
-    isUpdating,
-  } = useCatalogUpdateStatus({
-    query,
-    filters,
-    sort,
-    page,
-  })
+  const { deferredQuery, deferredFilters, deferredSort, deferredPage, isUpdating } =
+    useCatalogUpdateStatus({
+      query,
+      filters,
+      sort,
+      page,
+    })
 
   return (
     <div className={s.page}>
-      <Header variant="search" activeNav="search" />
+      <Header variant='search' activeNav='search' />
       <div className={s.layout}>
         <SearchSidebar
           filters={filters}
@@ -134,8 +107,8 @@ export const SearchDesktop = () => {
         />
         <main>
           <SearchHeader
-            title={isSearchMode ? `Results for “${query}”` : "Browse catalog"}
-            route="/search"
+            title={isSearchMode ? `Results for “${query}”` : 'Browse catalog'}
+            route='/search'
           />
           <SearchControls
             chips={activeChips}
@@ -145,7 +118,7 @@ export const SearchDesktop = () => {
             sortDisabled={isSearchMode}
           />
           <div
-            className={`${s.resultsWrapper} ${isUpdating ? s.updating : ""}`}
+            className={`${s.resultsWrapper} ${isUpdating ? s.updating : ''}`}
             aria-busy={isUpdating}
           >
             <AsyncBoundary fallback={<SearchResultSkeletonGrid />}>

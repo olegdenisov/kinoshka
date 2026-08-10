@@ -29,11 +29,7 @@
   position: absolute;
   inset: 0;
   border-radius: 6px;
-  background: linear-gradient(
-    180deg,
-    transparent 40%,
-    var(--accent-warm-glow) 100%
-  );
+  background: linear-gradient(180deg, transparent 40%, var(--accent-warm-glow) 100%);
   opacity: 0;
   transition: opacity 220ms;
   pointer-events: none;

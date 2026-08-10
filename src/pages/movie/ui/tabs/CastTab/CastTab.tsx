@@ -1,5 +1,5 @@
-import type { CastMember } from "@entities/movie"
-import s from "./CastTab.module.css"
+import type { CastMember } from '@entities/movie'
+import s from './CastTab.module.css'
 
 // В CastMember нет hue (в отличие от Movie) — фиксированный оттенок для градиента-заглушки,
 // когда у персоны нет photo, по образцу статичного фолбэка в Poster.tsx (movie.hue ?? 20).
@@ -14,7 +14,7 @@ export const CastTab = ({ cast }: CastTabProps) => {
     <div>
       <div className={s.sectionHead}>Cast</div>
       <div className={s.grid}>
-        {cast.map((c) => (
+        {cast.map(c => (
           // ключ — не просто c.id: Kinopoisk может отдать одну и ту же персону дважды в
           // persons (напр. актёр в двух ролях/дубляже) — id одинаковый, role разная.
           <div key={`${c.id}-${c.role}`} className={s.castCard}>

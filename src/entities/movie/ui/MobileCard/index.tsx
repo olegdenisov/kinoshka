@@ -1,1 +1,1 @@
-export { MobileCard } from "./MobileCard"
+export { MobileCard } from './MobileCard'

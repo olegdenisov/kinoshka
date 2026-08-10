@@ -1,5 +1,5 @@
-import type { Movie } from "../../model/types"
-import s from "./Poster.module.css"
+import type { Movie } from '../../model/types'
+import s from './Poster.module.css'
 
 type PosterProps = {
   movie: Movie
@@ -7,11 +7,7 @@ type PosterProps = {
   showLabel?: boolean
 }
 
-export const Poster = ({
-  movie,
-  ratio = "2/3",
-  showLabel = true,
-}: PosterProps) => {
+export const Poster = ({ movie, ratio = '2/3', showLabel = true }: PosterProps) => {
   const hue = movie.hue ?? 20
 
   const bg = `linear-gradient(155deg,
@@ -23,7 +19,7 @@ export const Poster = ({
 
   return (
     <div className={s.poster} style={{ aspectRatio: ratio, background: bg }}>
-      {movie.poster && <img src={movie.poster} alt="" className={s.img} />}
+      {movie.poster && <img src={movie.poster} alt='' className={s.img} />}
       <div className={s.grain} />
       <div className={s.highlight} />
       <div className={s.glow} style={{ background: glowBg }} />

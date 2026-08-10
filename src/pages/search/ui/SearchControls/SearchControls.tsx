@@ -1,7 +1,7 @@
-import { ActiveFilterChips } from "@features/catalog-filter"
-import type { ActiveChip } from "@features/catalog-filter"
-import { SortSelect } from "../SortSelect"
-import s from "./SearchControls.module.css"
+import { ActiveFilterChips } from '@features/catalog-filter'
+import type { ActiveChip } from '@features/catalog-filter'
+import { SortSelect } from '../SortSelect'
+import s from './SearchControls.module.css'
 
 type SearchControlsProps = {
   chips: ActiveChip[]
@@ -21,11 +21,7 @@ export const SearchControls = ({
   return (
     <div className={s.row}>
       <ActiveFilterChips chips={chips} onClearAll={onClearAll} />
-      <SortSelect
-        value={sort}
-        onChange={onSortChange}
-        disabled={sortDisabled}
-      />
+      <SortSelect value={sort} onChange={onSortChange} disabled={sortDisabled} />
     </div>
   )
 }

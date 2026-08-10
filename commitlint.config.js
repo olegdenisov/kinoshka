@@ -1,20 +1,10 @@
 export default {
-  extends: ["@commitlint/config-conventional"],
+  extends: ['@commitlint/config-conventional'],
   rules: {
-    "scope-enum": [
+    'scope-enum': [
       2,
-      "always",
-      [
-        "app",
-        "pages",
-        "widgets",
-        "features",
-        "entities",
-        "shared",
-        "e2e",
-        "ci",
-        "deps",
-      ],
+      'always',
+      ['app', 'pages', 'widgets', 'features', 'entities', 'shared', 'e2e', 'ci', 'deps'],
     ],
   },
 }

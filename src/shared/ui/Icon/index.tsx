@@ -16,4 +16,4 @@ export {
   FilterIcon,
   PlayIcon,
   CheckIcon,
-} from "./Icon"
+} from './Icon'

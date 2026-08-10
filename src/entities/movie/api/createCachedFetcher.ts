@@ -1,5 +1,5 @@
-import { createSessionCache } from "@shared/lib"
-import type { Movie } from "../model/types"
+import { createSessionCache } from '@shared/lib'
+import type { Movie } from '../model/types'
 
 type CacheEntry<R> = {
   promise: Promise<R>
@@ -40,7 +40,7 @@ const attachOutcomeHandlers = <R>(
   persistToSession: boolean,
 ) => {
   entry.promise.then(
-    (data) => {
+    data => {
       if (persistToSession) {
         sessionCache.set(key, {
           data,
@@ -91,7 +91,7 @@ const allCaches: Map<string, CacheEntry<unknown>>[] = []
  * `beforeEach(() => sessionStorage.clear())` в тестовых файлах уже делает эту часть.
  */
 export const resetAllCachedFetchers = (): void => {
-  allCaches.forEach((cache) => cache.clear())
+  allCaches.forEach(cache => cache.clear())
 }
 
 // R по умолчанию — Movie[] (совместимость getMovies/getSearchMovies без правок сигнатур);
@@ -119,9 +119,7 @@ export const createCachedFetcher = <P, R = Movie[]>(
     if (snapshot && isFresh(snapshot.timestamp, snapshot.isError)) {
       const entry: CacheEntry<R> = {
         promise: snapshot.isError
-          ? Promise.reject(
-              new Error(snapshot.message ?? "cached error cooldown"),
-            )
+          ? Promise.reject(new Error(snapshot.message ?? 'cached error cooldown'))
           : Promise.resolve(snapshot.data),
         timestamp: snapshot.timestamp,
         isError: snapshot.isError,

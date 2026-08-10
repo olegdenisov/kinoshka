@@ -1,1 +1,1 @@
-export { DetailsTab } from "./DetailsTab"
+export { DetailsTab } from './DetailsTab'

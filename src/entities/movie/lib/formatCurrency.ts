@@ -4,7 +4,7 @@ type CurrencyAmount = {
 }
 
 export const formatCurrency = ({ value, currency }: CurrencyAmount): string => {
-  const formattedValue = new Intl.NumberFormat("en-US").format(value)
+  const formattedValue = new Intl.NumberFormat('en-US').format(value)
 
   return currency ? `${formattedValue} ${currency}` : formattedValue
 }

@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from 'zod'
 
 export type StorageSlot<T> = {
   get: () => T
@@ -33,7 +33,7 @@ export const createStorageSlot = <T>(
     },
     set(value: T) {
       localStorage.setItem(key, JSON.stringify(value))
-      emitter.dispatchEvent(new Event("change")) // уведомляем текущую вкладку
+      emitter.dispatchEvent(new Event('change')) // уведомляем текущую вкладку
     },
     subscribe(callback) {
       const localHandler = () => callback()
@@ -41,12 +41,12 @@ export const createStorageSlot = <T>(
         if (e.key === key) callback()
       }
 
-      window.addEventListener("storage", storageHandler)
-      emitter.addEventListener("change", localHandler)
+      window.addEventListener('storage', storageHandler)
+      emitter.addEventListener('change', localHandler)
 
       return () => {
-        window.removeEventListener("storage", storageHandler)
-        emitter.removeEventListener("change", localHandler)
+        window.removeEventListener('storage', storageHandler)
+        emitter.removeEventListener('change', localHandler)
       }
     },
   }

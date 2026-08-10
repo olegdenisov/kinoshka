@@ -1,2 +1,2 @@
-export { MovieDesktop } from "./MovieDesktop"
-export type { LikedState } from "./MovieDesktop"
+export { MovieDesktop } from './MovieDesktop'
+export type { LikedState } from './MovieDesktop'

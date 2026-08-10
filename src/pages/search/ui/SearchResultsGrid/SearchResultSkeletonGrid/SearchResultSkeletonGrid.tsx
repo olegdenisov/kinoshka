@@ -1,5 +1,5 @@
-import { Skeleton } from "@shared/ui"
-import s from "./SearchResultSkeletonGrid.module.css"
+import { Skeleton } from '@shared/ui'
+import s from './SearchResultSkeletonGrid.module.css'
 
 const SKELETON_COUNT = 14
 

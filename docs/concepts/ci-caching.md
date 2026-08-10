@@ -17,7 +17,7 @@
 ```yaml
 - uses: pnpm/action-setup@v4 # должен быть РАНЬШЕ setup-node
   with:
-    version: "10"
+    version: '10'
 
 - uses: actions/setup-node@v4
   with:
@@ -47,7 +47,7 @@ Linux-node-22.x-<hash of pnpm-lock.yaml>
 ```yaml
 - uses: pnpm/action-setup@v4
   with:
-    version: "10"
+    version: '10'
 
 - uses: actions/setup-node@v4
   with:

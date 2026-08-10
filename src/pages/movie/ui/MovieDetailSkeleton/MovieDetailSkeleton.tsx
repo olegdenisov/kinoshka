@@ -1,5 +1,5 @@
-import { Skeleton } from "@shared/ui"
-import s from "./MovieDetailSkeleton.module.css"
+import { Skeleton } from '@shared/ui'
+import s from './MovieDetailSkeleton.module.css'
 
 const TAB_COUNT = 4
 const RATING_COUNT = 3

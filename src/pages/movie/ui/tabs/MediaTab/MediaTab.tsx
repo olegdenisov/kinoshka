@@ -1,6 +1,6 @@
-import type { MovieDetail, MovieImage } from "@entities/movie"
-import { PlayIcon } from "@shared/ui"
-import s from "./MediaTab.module.css"
+import type { MovieDetail, MovieImage } from '@entities/movie'
+import { PlayIcon } from '@shared/ui'
+import s from './MediaTab.module.css'
 
 const FALLBACK_SCREENSHOT_COUNT = 8
 
@@ -22,12 +22,7 @@ export const MediaTab = ({ m, images }: MediaTabProps) => {
         >
           <div className={s.trailerScanlines} />
           {m.trailerUrl ? (
-            <a
-              className={s.trailerPlay}
-              href={m.trailerUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a className={s.trailerPlay} href={m.trailerUrl} target='_blank' rel='noreferrer'>
               <PlayIcon size={22} />
             </a>
           ) : (
@@ -42,12 +37,12 @@ export const MediaTab = ({ m, images }: MediaTabProps) => {
         <div className={s.sectionHead}>Screenshots</div>
         <div className={s.screenshotsGrid}>
           {images.length > 0
-            ? images.map((image) => (
+            ? images.map(image => (
                 <img
                   key={image.url}
                   className={s.screenshot}
                   src={image.previewUrl ?? image.url}
-                  alt=""
+                  alt=''
                 />
               ))
             : Array.from({ length: FALLBACK_SCREENSHOT_COUNT }, (_, i) => (

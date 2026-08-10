@@ -1,1 +1,1 @@
-export { MovieDetailSkeleton } from "./MovieDetailSkeleton"
+export { MovieDetailSkeleton } from './MovieDetailSkeleton'

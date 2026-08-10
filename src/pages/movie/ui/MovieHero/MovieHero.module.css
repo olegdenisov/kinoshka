@@ -37,11 +37,7 @@
   position: absolute;
   inset: 0;
   opacity: 0.08;
-  background-image: linear-gradient(
-    to right,
-    var(--border-heavy) 1px,
-    transparent 1px
-  );
+  background-image: linear-gradient(to right, var(--border-heavy) 1px, transparent 1px);
   background-size: 80px 100%;
 }
 

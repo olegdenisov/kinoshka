@@ -1,7 +1,7 @@
-import { useState } from "react"
-import { SORT_LABELS } from "@features/catalog-filter"
-import { ChevronDownIcon, CheckIcon } from "@shared/ui"
-import s from "./SortSelect.module.css"
+import { useState } from 'react'
+import { SORT_LABELS } from '@features/catalog-filter'
+import { ChevronDownIcon, CheckIcon } from '@shared/ui'
+import s from './SortSelect.module.css'
 
 type SortSelectProps = {
   value: string
@@ -25,26 +25,26 @@ export const SortSelect = ({ value, onChange, disabled }: SortSelectProps) => {
   return (
     <div className={s.wrapper}>
       <button
-        type="button"
+        type='button'
         className={s.trigger}
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => setOpen(prev => !prev)}
         disabled={disabled}
-        aria-haspopup="listbox"
+        aria-haspopup='listbox'
         aria-expanded={open}
       >
         <span className={s.label}>Sort</span>
-        <span>{value || "Default"}</span>
+        <span>{value || 'Default'}</span>
         <ChevronDownIcon />
       </button>
       {open && !disabled && (
-        <ul className={s.menu} role="listbox">
-          {SORT_LABELS.map((option) => (
+        <ul className={s.menu} role='listbox'>
+          {SORT_LABELS.map(option => (
             <li key={option}>
               <button
-                type="button"
-                role="option"
+                type='button'
+                role='option'
                 aria-selected={value === option}
-                className={`${s.option} ${value === option ? s.active : ""}`}
+                className={`${s.option} ${value === option ? s.active : ''}`}
                 onClick={() => handleSelect(option)}
               >
                 {option}
