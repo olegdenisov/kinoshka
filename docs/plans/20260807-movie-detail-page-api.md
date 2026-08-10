@@ -252,11 +252,11 @@ export class ApiError extends Error {
 
 ### Task 11: Проверка acceptance criteria
 
-- [ ] проверить, что все требования из Overview реализованы (`getV15MovieById` подключён, `MOCK_DETAIL` удалён, 4 таба на реальных данных, `Promise.allSettled` для movie+images, skeleton, 404-обработка)
-- [ ] проверить edge cases: нечисловой id, отказ только images, отказ movie (404), отказ movie (500/network)
-- [ ] запустить полный набор тестов: `make test`
-- [ ] запустить `make lint && make typecheck && make build`
-- [ ] проверить покрытие тестами соответствует уровню остальных API-обёрток (`getSearchMovies`/`getMoviesPage`)
+- [x] проверить, что все требования из Overview реализованы (`getV15MovieById` подключён, `MOCK_DETAIL` удалён, 4 таба на реальных данных, `Promise.allSettled` для movie+images, skeleton, 404-обработка) — подтверждено чтением кода: `getMovieDetail.ts` вызывает `apiClient.getV15MovieById`, `grep -rn MOCK_DETAIL src` — пусто, `useMovieDetail.ts` использует `Promise.allSettled`, `MoviePage.tsx` рендерит `MovieDetailSkeleton` как `fallback` и `errorFallback` с веткой `ApiError.status === 404`
+- [x] проверить edge cases: нечисловой id, отказ только images, отказ movie (404), отказ movie (500/network) — все 4 сценария покрыты тестами (`MoviePage.test.tsx`: `/movie/abc` без сетевых запросов, `/movie/666` → 404 + retry, `/movie/777` → 500 → общий `ErrorState`; `useMovieDetail.test.tsx`: images-500 → `images: []` без throw)
+- [x] запустить полный набор тестов: `make test` — 323/323 зелёных
+- [x] запустить `make lint && make typecheck && make build` — все три прошли без ошибок
+- [x] проверить покрытие тестами соответствует уровню остальных API-обёрток (`getSearchMovies`/`getMoviesPage`) — coverage-прогон: `getMovieDetail.ts` 83.33%/`getMovieImages.ts` 87.5% (тот же профиль непокрытой type-narrowing ветки, что у уже принятого `getMovies.ts` — 83.33%, идентичный паттерн), `mapDtoToMovieDetail.ts` 100%, `MoviePage.tsx` 93.33%, `MovieDesktop.tsx`/`MovieMobile.tsx` ~83-84% — на уровне или выше `getMoviesPage.ts` (97.56%); суммарно 881 строк тестов по 8 файлам для movie-detail vs 531 строк по 2 файлам для search-фетчеров — покрытие шире по слоям (fetcher/mapper/hook/page/components), не только по фетчерам
 
 ### Task 12: Обновление документации
 
