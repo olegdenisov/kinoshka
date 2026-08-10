@@ -222,11 +222,11 @@
 **Как лучше:** пагинация здесь — только для `/search` (numbered). Виртуализация (2.7) имеет смысл только для infinite scroll — не смешивай оба подхода на одной странице. Для нумерованной пагинации бери **v1.4** (`page`/`limit`) — v1.5 курсорный (`next`/`prev`), `page` не принимает. На demo-тарифе жёсткий потолок: `limit ≤ 10`, страницы 1–10 → максимум 100 элементов на любую выборку.
 
 ### 1.5 Детальная страница
-- [ ] `instance.getV14MovieById(...)` подключён, `MOCK_DETAIL` удалён.
-- [ ] Tabs: Overview, Cast, Details, Media.
-- [ ] Параллельные запросы (movie + images + similar) через `Promise.allSettled`.
-- [ ] Skeleton при загрузке деталей.
-- [ ] 404-обработка несуществующих ID.
+- [x] `apiClient.getV15MovieById(...)` подключён (не v1.4, как в исходной формулировке — на момент реализации проект уже на v1.5, см. коммит `2b25be6`), `MOCK_DETAIL` удалён (`grep -r MOCK_DETAIL src` — пусто). Детали: `docs/plans/20260807-movie-detail-page-api.md`.
+- [x] Tabs: Overview, Cast, Details, Media — все четыре переведены на реальный `MovieDetail`.
+- [x] Параллельные запросы через `Promise.allSettled` — реализовано как `(movie, images)`, а не `(movie, images, similar)`: `similarMovies`/`sequelsAndPrequels`/`persons` (cast+crew) оказались полями самого `MovieDtoV14`, а не отдельными эндпоинтами — единственный отдельный вызов остался за картинками (`getV15Image`). Осознанное отклонение от буквальной формулировки, зафиксировано в плане.
+- [x] Skeleton при загрузке деталей — `MovieDetailSkeleton`, один вариант на оба device-типа.
+- [x] 404-обработка несуществующих ID — `ApiError { status }` из `client.ts` + `AsyncBoundary.errorFallback` в `MoviePage.tsx`, различающий 404 от прочих ошибок; `/movie/666` → `ErrorState` с retry (acceptance criteria плана), покрыто `MoviePage.test.tsx`.
 
 **Как лучше:** не делай waterfall — параллель через `Promise.allSettled` (допускаешь частичный отказ media/similar). В Suspense-стиле: дёрни оба promise сразу, передай в use() — Suspense сам разберётся с lifecycle.
 
