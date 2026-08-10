@@ -158,12 +158,12 @@ export class ApiError extends Error {
 - Modify: `src/entities/movie/index.ts`
 - Modify: `src/entities/movie/model/catalog.ts`
 
-- [ ] реализовать `useMovieDetail(id)` — `Promise.allSettled([getMovieDetail(id), getMovieImages(id)])`; `detail` rejected → пробросить ошибку; `images` rejected → `images: []`
-- [ ] держать промис связки в module-level `Map<number, Promise<...>>` (стабильная ссылка под `use()`, по аналогии с `pageCache` в `getMoviesPage.ts`), удалять запись при rejection
-- [ ] экспортировать `useMovieDetail` из `hooks/index.ts` → `@entities/movie`
-- [ ] удалить `MOCK_DETAIL` из `catalog.ts` и из `entities/movie/index.ts` (оставить `CATALOG`/`ALL_GENRES` — `CATALOG` всё ещё используется в `HomeMobile`, вне рамок 1.5)
-- [ ] написать тесты `useMovieDetail` (RTL + MSW): оба успешны; фильм успешен + картинки падают → `images: []` без throw; фильм падает (404) → промис реджектится
-- [ ] запустить тесты — должны пройти перед задачей 5
+- [x] реализовать `useMovieDetail(id)` — `Promise.allSettled([getMovieDetail(id), getMovieImages(id)])`; `detail` rejected → пробросить ошибку; `images` rejected → `images: []`
+- [x] держать промис связки в module-level кеше (стабильная ссылка под `use()`) — ⚠️ отклонение от буквального плана: не `Map<number, Promise<...>>` с ручным TTL/cooldown (как `pageCache` в `getMoviesPage.ts`), а `WeakMap<Promise<MovieDetail>, WeakMap<Promise<MovieImage[]>, Promise<MovieDetailBundle>>>`, ключ — сами уже-закешированные внутренние промисы `getMovieDetail(id)`/`getMovieImages(id)`. История ревизий: (1) без всякого кеша, полагаясь на React Compiler — не сработало, `use(combineDetail(id))` создаёт новый промис на каждый вызов, "suspended by an uncached promise" в цикле на 404-тесте; (2) `useMemo(() => combineDetail(id), [id])` — тоже не сработало (тот же баг): React не сохраняет hook-memo между суспендом до первого коммита и ретраем, инициализатор `useMemo` перезапускается заново на каждый ретрай; (3) `Map<number, {promise, timestamp, isError}>` с ручным `ERROR_CACHE_TTL_MS` cooldown — заработало, но получилась дублирующая копия TTL/cooldown-логики поверх уже закешированных `getMovieDetail`/`getMovieImages`, и (уже найденный баг) успешные записи никогда не устаревали и кеш не сбрасывался в `resetAllCachedFetchers`. По второму мнению (codex, gpt-5.5, xhigh) — финальный вариант (4): `WeakMap`, ключ — сами внутренние промисы. Стабильность автоматически наследуется от `createCachedFetcher`: пока внутренний промис не поменял ссылку (жив в своём TTL/cooldown), связка стабильна; как только он инвалидируется — `WeakMap`-запись естественно "устаревает" сама, без ручного TTL и без impact на `resetAllCachedFetchers`
+- [x] экспортировать `useMovieDetail` из `hooks/index.ts` → `@entities/movie`
+- [x] удалить `MOCK_DETAIL` из `catalog.ts` и из `entities/movie/index.ts` (оставить `CATALOG`/`ALL_GENRES` — `CATALOG` всё ещё используется в `HomeMobile`, вне рамок 1.5)
+- [x] написать тесты `useMovieDetail` (RTL + MSW): оба успешны; фильм успешен + картинки падают → `images: []` без throw; фильм падает (404) → промис реджектится
+- [x] запустить тесты — должны пройти перед задачей 5
 
 ### Task 5: `AsyncBoundary.errorFallback`
 
@@ -171,22 +171,23 @@ export class ApiError extends Error {
 - Modify: `src/shared/ui/AsyncBoundary/AsyncBoundary.tsx`
 - Create: `src/shared/ui/AsyncBoundary/AsyncBoundary.test.tsx` (если такого теста ещё нет)
 
-- [ ] добавить опциональный проп `errorFallback?: (params: { error: Error | null; reset: () => void }) => ReactNode`, по умолчанию — текущее поведение
-- [ ] проверить существующие вызовы (`SearchDesktop`, home rails) — не должны измениться ни в поведении, ни в тестах
-- [ ] написать тест: рендер с кастомным `errorFallback` показывает его вместо дефолтного `ErrorState`
-- [ ] запустить тесты — должны пройти перед задачей 6
+- [x] добавить опциональный проп `errorFallback?: (params: { error: Error | null; reset: () => void }) => ReactNode`, по умолчанию — текущее поведение
+- [x] проверить существующие вызовы (`SearchDesktop`, home rails) — не должны измениться ни в поведении, ни в тестах
+- [x] написать тест: рендер с кастомным `errorFallback` показывает его вместо дефолтного `ErrorState`
+- [x] запустить тесты — должны пройти перед задачей 6
 
 ### Task 6: Переписать `MoviePage.tsx`
 
 **Files:**
 - Modify: `src/pages/movie/MoviePage.tsx`
 
-- [ ] убрать `CATALOG.find(...) ?? CATALOG[0]` полностью
-- [ ] `numericId = Number(id)`; если `!id || Number.isNaN(numericId)` — рендерить not-found `ErrorState` сразу, без `AsyncBoundary`/сетевого запроса
-- [ ] добавить внутренний компонент `MovieDetailContent({ id, isMobile })`, вызывающий `useMovieDetail(id)` и рендерящий `MovieMobile`/`MovieDesktop` с `movie`+`images`
-- [ ] обернуть в один `AsyncBoundary` с `errorFallback`, различающим `error instanceof ApiError && error.status === 404` (текст «Movie not found») от прочих ошибок (общий текст) — оба варианта с `onRetry={reset}`
-- [ ] временный простой `fallback` (заменится в Task 7)
-- [ ] запустить `make typecheck` — должен пройти против нового `useMovieDetail`
+- [x] убрать `CATALOG.find(...) ?? CATALOG[0]` полностью
+- [x] `numericId = Number(id)`; если `!id || Number.isNaN(numericId)` — рендерить not-found `ErrorState` сразу, без `AsyncBoundary`/сетевого запроса
+- [x] добавить внутренний компонент `MovieDetailContent({ id, isMobile })`, вызывающий `useMovieDetail(id)` и рендерящий `MovieMobile`/`MovieDesktop` с `movie`+`images`
+- [x] обернуть в один `AsyncBoundary` с `errorFallback`, различающим `error instanceof ApiError && error.status === 404` (текст «Movie not found») от прочих ошибок (общий текст) — оба варианта с `onRetry={reset}`
+- [x] временный простой `fallback` — не передаём явно, используется дефолтный `<Spinner />` из `AsyncBoundary` (заменится в Task 7)
+- [x] по пути поправлен pre-existing огрех: `useViewport` импортировался в обход публичного API слайса (`'../../shared/lib/viewport/useViewport'` вместо `@shared/lib`) — переведено на алиас
+- [x] запустить `make typecheck` — ⚠️ 2 новые ожидаемые ошибки (в дополнение к уже известным 7 из Task 4): `MovieDetailContent` передаёт `images` в `<MovieMobile>`/`<MovieDesktop>`, а `MovieMobileProps`/`MovieDesktopProps` пока объявляют только `movie` — их прото́типы обновятся в Task 8/9 (единственных задачах, которые трогают эти файлы; `MoviePage.tsx` в их списке файлов нет, поэтому проброс `images` пришлось делать здесь). Итого 9 известных ошибок, все — ожидаемый fallout, закроются к концу Task 9. `make test` — 302/302 зелёных, `eslint` — чисто
 
 ### Task 7: `MovieDetailSkeleton`
 
@@ -196,10 +197,10 @@ export class ApiError extends Error {
 - Create: `src/pages/movie/ui/MovieDetailSkeleton/index.tsx`
 - Modify: `src/pages/movie/MoviePage.tsx`
 
-- [ ] собрать из примитива `Skeleton` (по образцу `MovieRailSkeletonDesktop`/`SearchResultSkeletonGrid`): hero-блок (постер + заголовок + 3 рейтинг-блока + абзац синопсиса), полоска табов (4 pill-скелетона), контент-область (2-колоночная сетка текстовых линий)
-- [ ] один вариант на оба device-типа (не под `isMobile` отдельно)
-- [ ] подключить в `MoviePage.tsx` как `fallback` вместо временного placeholder'а из Task 6
-- [ ] визуальная smoke-проверка (без снепшот-теста — по прецеденту `MovieRailSkeletonDesktop`/`SearchResultSkeletonGrid`)
+- [x] собрать из примитива `Skeleton` (по образцу `MovieRailSkeletonDesktop`/`SearchResultSkeletonGrid`): hero-блок (постер + заголовок + 3 рейтинг-блока + абзац синопсиса), полоска табов (4 pill-скелетона), контент-область (2-колоночная сетка текстовых линий)
+- [x] один вариант на оба device-типа (не под `isMobile` отдельно)
+- [x] подключить в `MoviePage.tsx` как `fallback` вместо временного placeholder'а из Task 6
+- [x] визуальная smoke-проверка — ⚠️ отклонение: полноценная проверка в браузере (`/movie/:id`) сейчас невозможна — страница падает на этапе загрузки модуля («does not provide an export named 'MOCK_DETAIL'»), т.к. `MovieHero`/`MovieMobile`/`CastTab`/`DetailsTab`/`OverviewTab` всё ещё импортируют `MOCK_DETAIL` (fallout Task 4, закроется в Task 8/9). Проверено то, что можно проверить сейчас: `MovieDetailSkeleton` рендерится без ошибок изолированно (RTL, временный smoke-тест, не закоммичен — по прецеденту `MovieRailSkeletonDesktop` без выделенного теста); полноценный визуальный проход по `/movie/:id` (dev-сервер + Chromium-скриншот) — перенесён на Post-Completion / после Task 9
 
 ### Task 8: Перевести desktop-компоненты на реальные данные
 
@@ -214,15 +215,15 @@ export class ApiError extends Error {
 - Create: `src/entities/movie/lib/formatCurrency.ts`
 - Create: `src/pages/movie/ui/MovieDesktop/MovieDesktop.test.tsx`
 
-- [ ] `MovieDesktop`/все табы: проп `movie: Movie` → `movie: MovieDetail`; убрать `import { MOCK_DETAIL }`; `MediaTab` дополнительно получает `images: MovieImage[]`
-- [ ] `MovieHero`: `tagline`/`synopsis` — из `movie`; блок рейтингов — `votesKp ?? '—'`, `criticScore != null ? \`${criticScore.toFixed(0)}%\` : '—'`; кнопка трейлера видима/активна только если `movie.trailerUrl` задан
-- [ ] `OverviewTab`: `crew` — маппинг переменной длины (`movie.crew.map(c => <MetaRow label={c.profession} value={c.name} />)`); блок `signals` и «Why it's for you» удалить целиком; заменить на блок «Страны»/«Рейтинги» (`countries.join(' · ')`, KP/IMDb/MPAA)
-- [ ] `CastTab`: принимает `cast: CastMember[]`; `c.role`/`c.name` вместо старых `name`/`actor`; если `c.photo` есть — рендерить `<img>`, иначе оставить hue-градиент как fallback
-- [ ] `DetailsTab`: `Release date` ← `premiereWorld`, `Country` ← `countries.join(' · ')`, убрать `Language`/`Aspect ratio`/`Sound mix`, добавить `MPAA rating` (`ratingMpaa`) и `Age rating` (`ageRating`, формат `"16+"`), `Budget`/`Box office` — через новый `formatCurrency`, `'—'` при отсутствии поля
-- [ ] `MediaTab`: скриншоты — `images.length > 0 ? images.map(...) : <текущий градиентный fallback>`; кнопка трейлера открывает `movie.trailerUrl` в новой вкладке, если задан
-- [ ] `RelatedMovies`: сигнатура не меняется; вызов в `MovieDesktop` — `movie.similarMovies.slice(0, 6)` вместо `CATALOG.filter(...)`; секция скрывается целиком, если `similarMovies` пуст
-- [ ] написать компонентный RTL-тест `MovieDesktop` на вручную собранном фикстур-объекте `MovieDetail` (без MSW) — ключевые поля видны в каждом табе
-- [ ] запустить тесты — должны пройти перед задачей 9
+- [x] `MovieDesktop`/все табы: проп `movie: Movie` → `movie: MovieDetail`; убрать `import { MOCK_DETAIL }`; `MediaTab` дополнительно получает `images: MovieImage[]`
+- [x] `MovieHero`: `tagline`/`synopsis` — из `movie`; блок рейтингов — `votesKp ?? '—'`, `criticScore != null ? \`${criticScore.toFixed(0)}%\` : '—'`; кнопка трейлера видима/активна только если `movie.trailerUrl` задан — ➕ synopsis-тизер в Hero берёт `movie.shortSynopsis ?? movie.synopsis` (эквивалент старого `.split('\n')[0]`, но через специально предназначенное для этого поле типа вместо магии на строке); кнопка трейлера — теперь `<a href target="_blank" rel="noreferrer">`, а не голый `<button>`
+- [x] `OverviewTab`: `crew` — маппинг переменной длины (`movie.crew.map(c => <MetaRow label={c.profession} value={c.name} />)`); блок `signals` и «Why it's for you» удалить целиком; заменить на блок «Страны»/«Рейтинги» (`countries.join(' · ')`, KP/IMDb/MPAA)
+- [x] `CastTab`: принимает `cast: CastMember[]`; `c.role`/`c.name` вместо старых `name`/`actor`; если `c.photo` есть — рендерить `<img>`, иначе оставить hue-градиент как fallback — ⚠️ отклонение: `CastMember` (в отличие от старого мок-cast) не несёт `hue`, взят фиксированный `FALLBACK_HUE = 220` по прецеденту статичного фолбэка в `Poster.tsx` (`movie.hue ?? 20`), не id-хэш
+- [x] `DetailsTab`: `Release date` ← `premiereWorld`, `Country` ← `countries.join(' · ')`, убрать `Language`/`Aspect ratio`/`Sound mix`, добавить `MPAA rating` (`ratingMpaa`) и `Age rating` (`ageRating`, формат `"16+"`), `Budget`/`Box office` — через новый `formatCurrency`, `'—'` при отсутствии поля
+- [x] `MediaTab`: скриншоты — `images.length > 0 ? images.map(...) : <текущий градиентный fallback>`; кнопка трейлера открывает `movie.trailerUrl` в новой вкладке, если задан (иначе — задизейбленная `<button disabled>`)
+- [x] `RelatedMovies`: сигнатура не меняется; вызов в `MovieDesktop` — `movie.similarMovies.slice(0, 6)` вместо `CATALOG.filter(...)`; секция скрывается целиком, если `similarMovies` пуст (`return null`, если `movies.length === 0`, внутри самого компонента)
+- [x] написать компонентный RTL-тест `MovieDesktop` на вручную собранном фикстур-объекте `MovieDetail` (без MSW) — ключевые поля видны в каждом табе (7 тестов: Overview×2, Cast, Media, Details, RelatedMovies×2)
+- [x] запустить тесты — должны пройти перед задачей 9. `make test` — 311/311, `eslint .` по всему проекту — чисто, `tsc` — 3 известные ошибки, все в `MovieMobile.tsx`/`MoviePage.tsx` (Task 9 scope); весь desktop-fallout из Task 4 закрыт
 
 ### Task 9: Перевести `MovieMobile.tsx` на реальные данные
 
@@ -230,11 +231,11 @@ export class ApiError extends Error {
 - Modify: `src/pages/movie/ui/MovieMobile.tsx`
 - Create: `src/pages/movie/ui/MovieMobile.test.tsx`
 
-- [ ] применить те же изменения полей, что в Task 8, к 4 инлайновым саб-компонентам (`MobileOverview`↔`OverviewTab`, `MobileCast`↔`CastTab`, `MobileMedia`↔`MediaTab`, `MobileDetailsContent`↔`DetailsTab`) — не переводить файл на CSS-модули, только источник данных
-- [ ] проп `movie: MovieDetail` + новый `images: MovieImage[]` в `MovieMobileProps`
-- [ ] `related` — `movie.similarMovies.slice(0, 6)` вместо `CATALOG.filter(...)`
-- [ ] написать компонентный RTL-тест `MovieMobile` на той же фикстуре, что в Task 8
-- [ ] запустить тесты — должны пройти перед задачей 10
+- [x] применить те же изменения полей, что в Task 8, к 4 инлайновым саб-компонентам (`MobileOverview`↔`OverviewTab`, `MobileCast`↔`CastTab`, `MobileMedia`↔`MediaTab`, `MobileDetailsContent`↔`DetailsTab`) — не переводить файл на CSS-модули, только источник данных
+- [x] проп `movie: MovieDetail` + новый `images: MovieImage[]` в `MovieMobileProps`
+- [x] `related` — `movie.similarMovies.slice(0, 6)` вместо `CATALOG.filter(...)`
+- [x] написать компонентный RTL-тест `MovieMobile` на той же фикстуре, что в Task 8
+- [x] запустить тесты — должны пройти перед задачей 10. `make test` — 318/318 зелёных, `make lint` — чисто, `make typecheck` — чисто (весь fallout Task 4 закрыт)
 
 ### Task 10: Интеграционные тесты `MoviePage`
 

@@ -12,14 +12,14 @@ export type Movie = {
   poster?: string
 }
 
-type CastMember = { 
-  id: number; 
-  name: string; 
-  role: string; 
-  photo?: string 
+export type CastMember = {
+  id: number;
+  name: string;
+  role: string;
+  photo?: string
 }
 
-type CrewMember = {
+export type CrewMember = {
   id: number;
   name: string;
   profession: string

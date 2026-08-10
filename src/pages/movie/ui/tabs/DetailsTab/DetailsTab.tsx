@@ -1,22 +1,20 @@
-import type { Movie } from '@entities/movie'
-import { MOCK_DETAIL } from '@entities/movie'
+import type { MovieDetail } from '@entities/movie'
+import { formatCurrency } from '@entities/movie'
 import s from './DetailsTab.module.css'
 
 type DetailsTabProps = {
-  m: Movie
+  m: MovieDetail
 }
 
 export const DetailsTab = ({ m }: DetailsTabProps) => {
-  const { details } = MOCK_DETAIL
   const rows = [
-    { label: 'Release date', value: details.releaseDate },
-    { label: 'Country', value: details.country },
-    { label: 'Language', value: details.language },
+    { label: 'Release date', value: m.premiereWorld ?? '—' },
+    { label: 'Country', value: m.countries.length > 0 ? m.countries.join(' · ') : '—' },
     { label: 'Runtime', value: m.runtime },
-    { label: 'Aspect ratio', value: details.aspectRatio },
-    { label: 'Sound mix', value: details.soundMix },
-    { label: 'Budget', value: details.budget },
-    { label: 'Box office', value: details.boxOffice },
+    { label: 'MPAA rating', value: m.ratingMpaa ?? '—' },
+    { label: 'Age rating', value: m.ageRating != null ? `${m.ageRating}+` : '—' },
+    { label: 'Budget', value: m.budget ? formatCurrency(m.budget) : '—' },
+    { label: 'Box office', value: m.feesWorld ? formatCurrency(m.feesWorld) : '—' },
   ]
   return (
     <div className={s.root}>
