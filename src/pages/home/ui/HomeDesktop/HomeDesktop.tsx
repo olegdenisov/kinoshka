@@ -1,3 +1,4 @@
+import { invalidateNewMovies, invalidateTopRatedMovies } from '@entities/movie'
 import { AsyncBoundary, Footer } from '@shared/ui'
 import { Header } from '@widgets/header'
 import { MovieRailSkeletonDesktop } from '@widgets/movie-rail'
@@ -16,16 +17,28 @@ export const HomeDesktop = () => {
       <Header activeNav='home' />
       <HeroSection />
       <div className={s.rails}>
-        <AsyncBoundary fallback={<MovieRailSkeletonDesktop />}>
+        <AsyncBoundary
+          fallback={<MovieRailSkeletonDesktop />}
+          onRetry={() => invalidateTopRatedMovies()}
+        >
           <PopularMoviesRail />
         </AsyncBoundary>
-        <AsyncBoundary fallback={<MovieRailSkeletonDesktop />}>
+        <AsyncBoundary
+          fallback={<MovieRailSkeletonDesktop />}
+          onRetry={() => invalidateNewMovies({ type: ['tv-series'] })}
+        >
           <TrandingSeriesRail />
         </AsyncBoundary>
-        <AsyncBoundary fallback={<MovieRailSkeletonDesktop />}>
+        <AsyncBoundary
+          fallback={<MovieRailSkeletonDesktop />}
+          onRetry={() => invalidateTopRatedMovies({ type: ['anime'] })}
+        >
           <TopAnimeRails />
         </AsyncBoundary>
-        <AsyncBoundary fallback={<MovieRailSkeletonDesktop />}>
+        <AsyncBoundary
+          fallback={<MovieRailSkeletonDesktop />}
+          onRetry={() => invalidateTopRatedMovies()}
+        >
           <PersonalRails />
         </AsyncBoundary>
       </div>
