@@ -205,11 +205,11 @@ export const invalidateMovieDetail = (id: number): void => {
 - Modify: `src/entities/movie/api/getMoviesPage.ts`
 - Modify: `src/entities/movie/api/getMoviesPage.test.ts`
 
-- [ ] экспортировать `invalidateMoviesPage(params: CatalogParams, page: number): void` по образцу из Technical Details
-- [ ] задокументировать комментарием принятое ограничение: инвалидируется только первый шаг курсора (детерминирован, не зависит от page) — доминирующий сценарий отказа (403 квоты) рвёт все шаги одинаково; сбой именно на промежуточном шаге при живом первом — редкий случай, ждёт `ERROR_CACHE_TTL_MS`
-- [ ] написать тест: rejected `getMoviesPage` → `invalidateMoviesPage` → повторный `getMoviesPage` с теми же параметрами делает новый сетевой запрос (MSW call-counter), а не повторяет тот же rejected-промис
-- [ ] написать тест: `invalidateMoviesPage` не задевает независимые записи `pageCache` для других страниц/параметров
-- [ ] запустить тесты — должны пройти перед задачей 3
+- [x] экспортировать `invalidateMoviesPage(params: CatalogParams, page: number): void` по образцу из Technical Details
+- [x] задокументировать комментарием принятое ограничение: инвалидируется только первый шаг курсора (детерминирован, не зависит от page) — доминирующий сценарий отказа (403 квоты) рвёт все шаги одинаково; сбой именно на промежуточном шаге при живом первом — редкий случай, ждёт `ERROR_CACHE_TTL_MS`
+- [x] написать тест: rejected `getMoviesPage` → `invalidateMoviesPage` → повторный `getMoviesPage` с теми же параметрами делает новый сетевой запрос (MSW call-counter), а не повторяет тот же rejected-промис
+- [x] написать тест: `invalidateMoviesPage` не задевает независимые записи `pageCache` для других страниц/параметров
+- [x] запустить тесты — должны пройти перед задачей 3
 
 ### Task 3: `onRetry` + защита от дабл-клика в `AsyncBoundary`
 

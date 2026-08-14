@@ -40,6 +40,15 @@ const importGetMoviesPage = async () => {
   return mod.getMoviesPage
 }
 
+const importGetMoviesPageWithInvalidate = async () => {
+  vi.resetModules()
+  const mod = await import('./getMoviesPage')
+  return {
+    getMoviesPage: mod.getMoviesPage,
+    invalidate: mod.invalidateMoviesPage,
+  }
+}
+
 beforeEach(() => {
   vi.stubEnv('DEV', true)
   sessionStorage.clear()
@@ -231,6 +240,65 @@ describe('getMoviesPage — ошибки', () => {
     const result = await getMoviesPage({}, 1)
     expect(result.movies).toEqual([movieNamed('Recovered')])
     expect(requests).toBe(2)
+  })
+})
+
+describe('invalidateMoviesPage', () => {
+  it('после rejected getMoviesPage → invalidate → повторный вызов с теми же параметрами реально идёт в сеть (не повторяет тот же rejected-промис)', async () => {
+    let requests = 0
+    server.use(
+      http.get(ENDPOINT, () => {
+        requests += 1
+        return HttpResponse.json(
+          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+          { status: 403 },
+        )
+      }),
+    )
+    const { getMoviesPage, invalidate } =
+      await importGetMoviesPageWithInvalidate()
+
+    await expect(getMoviesPage({}, 1)).rejects.toThrow()
+    expect(requests).toBe(1)
+
+    // Без invalidate — второй вызов в пределах ERROR_CACHE_TTL_MS отдал бы тот же
+    // rejected promise без нового запроса (см. тест выше на нижнем cooldown).
+    invalidate({}, 1)
+
+    server.use(
+      http.get(ENDPOINT, () => {
+        requests += 1
+        return HttpResponse.json({
+          docs: [doc({ name: 'Recovered' })],
+          limit: 10,
+          next: null,
+          hasNext: false,
+          hasPrev: false,
+          total: 5,
+        })
+      }),
+    )
+
+    const result = await getMoviesPage({}, 1)
+
+    expect(requests).toBe(2)
+    expect(result.movies).toEqual([movieNamed('Recovered')])
+  })
+
+  it('не задевает независимые записи pageCache для других страниц/параметров', async () => {
+    const counts = mockChain()
+    const { getMoviesPage, invalidate } =
+      await importGetMoviesPageWithInvalidate()
+
+    await getMoviesPage({}, 2)
+    expect(counts.requests).toBe(2)
+
+    invalidate({ genres: ['drama'] }, 1)
+
+    // page=2 для исходных params по-прежнему в кеше — повторный вызов без новых запросов
+    const page2Again = await getMoviesPage({}, 2)
+    expect(counts.requests).toBe(2)
+    expect(page2Again.movies).toEqual([movieNamed('Page2')])
   })
 })
 

@@ -162,3 +162,19 @@ export const getMoviesPage = (
 
   return entry.promise
 }
+
+// Точечная инвалидация для Retry (roadmap 1.6). Принятое ограничение: чистим
+// запись pageCache для (params, page) + первый шаг курсора (детерминирован,
+// cursor: undefined не зависит от целевой page) — доминирующий сценарий отказа,
+// 403 квоты демо-тарифа, рвёт все шаги одинаково, так что достаточно снять
+// cooldown с первого шага, чтобы walkToPage реально пошёл в сеть заново. Если
+// сбой был именно на промежуточном шаге (>1) при живом первом шаге — редкий
+// случай (нужен независимо упавший intermediate-запрос), тот шаг всё ещё ждёт
+// ERROR_CACHE_TTL_MS; не усложняем инвалидацию ради него.
+export const invalidateMoviesPage = (
+  params: CatalogParams,
+  page: number,
+): void => {
+  pageCache.delete(JSON.stringify({ params, page }))
+  cachedCursorStep.invalidate({ params, cursor: undefined })
+}
