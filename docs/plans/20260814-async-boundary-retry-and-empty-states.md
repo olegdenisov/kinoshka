@@ -289,10 +289,10 @@ export const invalidateMovieDetail = (id: number): void => {
 - Modify: `src/widgets/movie-rail/ui/MovieRailDesktop/MovieRailDesktop.tsx`
 - Create: `src/widgets/movie-rail/ui/MovieRailDesktop/MovieRailDesktop.test.tsx`
 
-- [ ] при `items.length === 0` рендерить `EmptyState` (заголовок + подзаголовок «В подборке пока пусто» / аналог, echo `title` рейла) вместо пустой `hide-scrollbar`-области; заголовок секции (`s.header`, ссылка на `/search`) остаётся видимым
-- [ ] написать тест: `items=[]` → рендерится `EmptyState`, карточки отсутствуют
-- [ ] написать тест: `items` непустой → рендерятся карточки, `EmptyState` отсутствует
-- [ ] запустить тесты — должны пройти перед задачей 8
+- [x] при `items.length === 0` рендерить `EmptyState` (заголовок + подзаголовок «В подборке пока пусто» / аналог, echo `title` рейла) вместо пустой `hide-scrollbar`-области; заголовок секции (`s.header`, ссылка на `/search`) остаётся видимым
+- [x] написать тест: `items=[]` → рендерится `EmptyState`, карточки отсутствуют
+- [x] написать тест: `items` непустой → рендерятся карточки, `EmptyState` отсутствует
+- [x] запустить тесты — должны пройти перед задачей 8
 
 ### Task 8: Проверка acceptance criteria
 
