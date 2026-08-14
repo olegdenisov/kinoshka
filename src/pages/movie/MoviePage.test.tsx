@@ -148,7 +148,7 @@ describe('MoviePage — /movie/1 happy path', () => {
 })
 
 describe('MoviePage — /movie/666 не найден (404)', () => {
-  it('рендерит ErrorState с not-found текстом и рабочей кнопкой retry (клик после cooldown повторяет запрос)', async () => {
+  it('рендерит ErrorState с not-found текстом и рабочей кнопкой retry (реальный повторный запрос без ожидания cooldown)', async () => {
     let requestCount = 0
     server.use(
       http.get('*/v1.5/movie/666', () => {
@@ -177,22 +177,54 @@ describe('MoviePage — /movie/666 не найден (404)', () => {
       name: 'Попробовать снова',
     })
 
-    vi.useFakeTimers()
-    try {
-      // Обходим error-cooldown (20с) в createCachedFetcher, чтобы клик реально ушёл в сеть.
-      await act(async () => {
-        vi.advanceTimersByTime(21_000)
-      })
-
-      await act(async () => {
-        fireEvent.click(retryButton)
-      })
-    } finally {
-      vi.useRealTimers()
-    }
+    // invalidateMovieDetail инвалидирует кэш-запись до reset(), поэтому клик реально
+    // уходит в сеть сразу, без ожидания ERROR_CACHE_TTL_MS (20с) cooldown.
+    await act(async () => {
+      fireEvent.click(retryButton)
+    })
 
     expect(await screen.findByText('Movie not found')).toBeInTheDocument()
     expect(requestCount).toBe(2)
+  })
+})
+
+describe('MoviePage — /movie/888 общая ошибка → Retry (Task 6, roadmap 1.6)', () => {
+  it('клик Retry делает реальный повторный запрос без ожидания 20с, рендерит данные', async () => {
+    let requestCount = 0
+    server.use(
+      http.get('*/v1.5/movie/888', () => {
+        requestCount++
+        return HttpResponse.json(
+          { statusCode: 500, message: 'Internal Server Error', error: 'error' },
+          { status: 500 },
+        )
+      }),
+    )
+    mockImages([])
+
+    await renderMoviePage('/movie/888')
+
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
+    expect(requestCount).toBe(1)
+
+    server.use(
+      http.get('*/v1.5/movie/888', () => {
+        requestCount++
+        return HttpResponse.json(movieDoc(888, { name: 'Recovered Movie' }))
+      }),
+    )
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
+    })
+
+    // Без реальной инвалидации кэша этот клик отдал бы тот же rejected-промис из
+    // ERROR_CACHE_TTL_MS cooldown (20с), и ErrorState остался бы на месте — сеть бы
+    // не была тронута (requestCount остался бы 1).
+    expect(requestCount).toBe(2)
+    expect(
+      (await screen.findAllByText('Recovered Movie')).length,
+    ).toBeGreaterThan(0)
   })
 })
 

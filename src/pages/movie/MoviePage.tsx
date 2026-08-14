@@ -1,4 +1,4 @@
-import { useMovieDetail } from '@entities/movie'
+import { invalidateMovieDetail, useMovieDetail } from '@entities/movie'
 import { ApiError } from '@shared/api'
 import { useViewport } from '@shared/lib'
 import { AsyncBoundary, ErrorState, type ErrorFallbackParams } from '@shared/ui'
@@ -57,6 +57,7 @@ export const MoviePage = () => {
     <AsyncBoundary
       errorFallback={movieErrorFallback}
       fallback={<MovieDetailSkeleton />}
+      onRetry={() => invalidateMovieDetail(numericId)}
     >
       <MovieDetailContent id={numericId} isMobile={isMobile} />
     </AsyncBoundary>

@@ -74,3 +74,13 @@ export const getMovieDetailBundle = (
 
 export const useMovieDetail = (id: number): MovieDetailBundle =>
   use(getMovieDetailBundle(id))
+
+/**
+ * Companion-инвалидация для Retry: инвалидирует обе части bundle
+ * (getMovieDetail/getMovieImages). bundleCache выше пересобирается сам,
+ * как только внутренние промисы сменят ссылку — см. докблок BundleCacheEntry.
+ */
+export const invalidateMovieDetail = (id: number): void => {
+  getMovieDetail.invalidate(id)
+  getMovieImages.invalidate(id)
+}

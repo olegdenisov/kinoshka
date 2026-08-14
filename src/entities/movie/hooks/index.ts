@@ -3,5 +3,5 @@ export {
   invalidateTopRatedMovies,
   useTopRatedMovies,
 } from './useTopRatedMovies'
-export { useMovieDetail } from './useMovieDetail'
+export { invalidateMovieDetail, useMovieDetail } from './useMovieDetail'
 export type { MovieDetailBundle } from './useMovieDetail'
