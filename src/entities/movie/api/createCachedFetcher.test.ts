@@ -287,3 +287,54 @@ describe('createCachedFetcher — generic R (не Movie[])', () => {
     expect(calls.count).toBe(1)
   })
 })
+
+describe('createCachedFetcher — invalidate/clear', () => {
+  it('invalidate(params) — следующий вызов реально бьёт fetcher, даже пока error-cooldown ещё свежий', async () => {
+    const { fetcher, calls } = errFetcher('Forbidden')
+    const get = createCachedFetcher('invalidate-ns-1', fetcher)
+
+    await expect(get({ q: 1 })).rejects.toThrow('Forbidden')
+    get.invalidate({ q: 1 })
+    await expect(get({ q: 1 })).rejects.toThrow('Forbidden')
+
+    expect(calls.count).toBe(2)
+  })
+
+  it('invalidate(params) — сбрасывает и sessionStorage-снапшот, не только in-memory', async () => {
+    const { fetcher, calls } = errFetcher('Forbidden')
+    const get = createCachedFetcher('invalidate-ns-2', fetcher)
+
+    await expect(get({ q: 1 })).rejects.toThrow('Forbidden')
+    get.invalidate({ q: 1 })
+
+    // «Перезагрузка» модуля — новый инстанс с тем же namespace читает только sessionStorage,
+    // так как его in-memory Map пуст с самого начала.
+    const reloaded = createCachedFetcher('invalidate-ns-2', fetcher)
+    await expect(reloaded({ q: 1 })).rejects.toThrow('Forbidden')
+
+    expect(calls.count).toBe(2)
+  })
+
+  it('invalidate — на несуществующих params — no-op, не бросает', async () => {
+    const { fetcher } = okFetcher()
+    const get = createCachedFetcher('invalidate-ns-3', fetcher)
+
+    expect(() => get.invalidate({ q: 999 })).not.toThrow()
+  })
+
+  it('clear() — сбрасывает весь namespace за один вызов (несколько разных params)', async () => {
+    // DEV=false — исключаем sessionStorage-снапшот из уравнения: clear() документированно
+    // трогает только in-memory Map (см. комментарий у clear в createCachedFetcher.ts).
+    vi.stubEnv('DEV', false)
+    const { fetcher, calls } = okFetcher()
+    const get = createCachedFetcher('clear-ns-1', fetcher)
+
+    await get({ q: 1 })
+    await get({ q: 2 })
+    get.clear()
+    await get({ q: 1 })
+    await get({ q: 2 })
+
+    expect(calls.count).toBe(4)
+  })
+})

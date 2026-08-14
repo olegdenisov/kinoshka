@@ -95,17 +95,24 @@ export const resetAllCachedFetchers = (): void => {
   allCaches.forEach(cache => cache.clear())
 }
 
+export type CachedFetcher<P, R> = ((params: P) => Promise<R>) & {
+  /** Точечно сбрасывает кэш (in-memory + sessionStorage-снапшот) для конкретных params. */
+  invalidate: (params: P) => void
+  /** Сбрасывает весь in-memory кэш namespace'а. sessionStorage-снапшоты не трогает. */
+  clear: () => void
+}
+
 // R по умолчанию — Movie[] (совместимость getMovies/getSearchMovies без правок сигнатур);
 // произвольный R (напр. {movies, totalPages}) — для search/cursor-фетчеров.
 export const createCachedFetcher = <P, R = Movie[]>(
   namespace: string,
   fetcher: (params: P) => Promise<R>,
-) => {
+): CachedFetcher<P, R> => {
   const cache = new Map<string, CacheEntry<R>>()
   allCaches.push(cache as Map<string, CacheEntry<unknown>>)
   const sessionCache = createSessionCache<R>(namespace)
 
-  return (params: P): Promise<R> => {
+  const fetcherFn = (params: P): Promise<R> => {
     clearUnfreshCache(cache)
 
     const key = JSON.stringify(params)
@@ -145,4 +152,13 @@ export const createCachedFetcher = <P, R = Movie[]>(
 
     return entry.promise
   }
+
+  return Object.assign(fetcherFn, {
+    invalidate: (params: P) => {
+      const key = JSON.stringify(params)
+      cache.delete(key)
+      sessionCache.remove(key)
+    },
+    clear: () => cache.clear(),
+  })
 }
