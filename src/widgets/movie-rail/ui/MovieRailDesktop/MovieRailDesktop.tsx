@@ -1,5 +1,6 @@
 import type { Movie } from '@entities/movie'
 import { Card } from '@entities/movie'
+import { EmptyState } from '@shared/ui'
 import { useRef } from 'react'
 import { Link } from 'react-router'
 
@@ -42,11 +43,18 @@ export const MovieRailDesktop = ({
         </div>
       </div>
 
-      <div ref={scrollRef} className={`hide-scrollbar ${s.scroll}`}>
-        {items.map(m => (
-          <Card key={m.id} movie={m} variant='compact' />
-        ))}
-      </div>
+      {items.length === 0 ? (
+        <EmptyState
+          title='В подборке пока пусто'
+          description={`Нет фильмов в разделе «${title}»`}
+        />
+      ) : (
+        <div ref={scrollRef} className={`hide-scrollbar ${s.scroll}`}>
+          {items.map(m => (
+            <Card key={m.id} movie={m} variant='compact' />
+          ))}
+        </div>
+      )}
     </section>
   )
 }
