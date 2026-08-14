@@ -88,4 +88,42 @@ describe('createSessionCache', () => {
 
     expect(search.get('key')).toBeUndefined()
   })
+
+  it('DEV=true — remove() удаляет ключ, повторный get() возвращает undefined', () => {
+    vi.stubEnv('DEV', true)
+    const cache = createSessionCache<number[]>('test')
+
+    cache.set('key', { data: [1, 2, 3], timestamp: 123, isError: false })
+    cache.remove('key')
+
+    expect(cache.get('key')).toBeUndefined()
+  })
+
+  it('DEV=false — remove() не бросает', () => {
+    vi.stubEnv('DEV', false)
+    const cache = createSessionCache<number[]>('test')
+
+    expect(() => cache.remove('key')).not.toThrow()
+  })
+
+  it('remove() на несуществующем ключе — не бросает', () => {
+    vi.stubEnv('DEV', true)
+    const cache = createSessionCache<number[]>('test')
+
+    expect(() => cache.remove('missing')).not.toThrow()
+  })
+
+  it('remove() — исключение из removeItem не бросает наружу', () => {
+    vi.stubEnv('DEV', true)
+    const cache = createSessionCache<number[]>('test')
+    const removeItemSpy = vi
+      .spyOn(Storage.prototype, 'removeItem')
+      .mockImplementation(() => {
+        throw new Error('boom')
+      })
+
+    expect(() => cache.remove('key')).not.toThrow()
+
+    removeItemSpy.mockRestore()
+  })
 })
