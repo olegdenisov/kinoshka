@@ -1,3 +1,4 @@
+import { filtersToParams } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
 import { AsyncBoundary } from '@shared/ui'
 import { act, render, screen } from '@testing-library/react'
@@ -298,5 +299,169 @@ describe('useMovieCatalog — смена page/sort/фильтров меняет
     const url2 = new URL(getRequest2()!.url)
     expect(url2.searchParams.getAll('sortField')).toEqual(['rating.kp'])
     expect(url2.searchParams.getAll('rating.kp')).toEqual(['8-10'])
+  })
+})
+
+describe('invalidateMovieCatalog — Task 5 (retry реально бьёт в сеть)', () => {
+  // Механика самого кэша (TTL/cooldown/sessionStorage, per-params изоляция) полностью
+  // покрыта createCachedFetcher.test.ts/getMoviesPage.test.ts. Здесь — только то, что
+  // invalidateMovieCatalog бьёт РОВНО по тому же кэш-ключу и той же ветке
+  // (trimmedQuery ? search : catalog), что использует сам useMovieCatalog выше (через
+  // getSearchMovies/getMoviesPage напрямую — see useTopRatedMovies.test.ts за тем же
+  // паттерном), — иначе Retry на /search молча продолжал бы отдавать старый
+  // rejected-промис из cooldown (ERROR_CACHE_TTL_MS).
+  const errorResponse = () =>
+    HttpResponse.json(
+      { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+      { status: 403 },
+    )
+
+  // Свежий модуль на каждый тест — оба фетчера кешируют промисы в module-scope Map.
+  const importModules = async () => {
+    vi.resetModules()
+    const [{ invalidateMovieCatalog }, { getSearchMovies, getMoviesPage }] =
+      await Promise.all([
+        import('./useMovieCatalog'),
+        import('@entities/movie'),
+      ])
+    return { invalidateMovieCatalog, getSearchMovies, getMoviesPage }
+  }
+
+  it('search-режим (непустой query): rejected getSearchMovies → invalidateMovieCatalog → повторный вызов реально идёт в сеть', async () => {
+    let requests = 0
+    server.use(
+      http.get(SEARCH_ENDPOINT, () => {
+        requests += 1
+        return errorResponse()
+      }),
+    )
+    const { invalidateMovieCatalog, getSearchMovies } = await importModules()
+
+    const params: MovieCatalogParams = {
+      query: 'matrix-retry',
+      filters: EMPTY_FILTERS,
+      sort: '',
+      page: 1,
+    }
+
+    await expect(
+      getSearchMovies({ query: 'matrix-retry', page: 1 }),
+    ).rejects.toThrow()
+    expect(requests).toBe(1)
+
+    invalidateMovieCatalog(params)
+
+    server.use(
+      http.get(SEARCH_ENDPOINT, () => {
+        requests += 1
+        return HttpResponse.json({
+          docs: [searchDoc('Recovered')],
+          total: 1,
+          page: 1,
+          pages: 1,
+          limit: 10,
+        })
+      }),
+    )
+
+    await getSearchMovies({ query: 'matrix-retry', page: 1 })
+    expect(requests).toBe(2)
+  })
+
+  it('catalog-режим (пустой query): rejected getMoviesPage → invalidateMovieCatalog → повторный вызов реально идёт в сеть', async () => {
+    let requests = 0
+    server.use(
+      http.get(CATALOG_ENDPOINT, () => {
+        requests += 1
+        return errorResponse()
+      }),
+    )
+    const { invalidateMovieCatalog, getMoviesPage } = await importModules()
+
+    const filters = { ...EMPTY_FILTERS, type: 'movie' as const }
+    const params: MovieCatalogParams = { query: '', filters, sort: '', page: 1 }
+    // Тот же filtersToParams(filters, sort), что invalidateMovieCatalog вызывает внутри
+    // себя — иначе тест мог бы пройти, даже если invalidate бьёт не по тому ключу.
+    const catalogParams = filtersToParams(filters, '')
+
+    await expect(getMoviesPage(catalogParams, 1)).rejects.toThrow()
+    expect(requests).toBe(1)
+
+    invalidateMovieCatalog(params)
+
+    server.use(
+      http.get(CATALOG_ENDPOINT, () => {
+        requests += 1
+        return HttpResponse.json({
+          docs: [catalogDoc('Recovered')],
+          limit: 10,
+          next: null,
+          hasNext: false,
+          hasPrev: false,
+          total: 1,
+        })
+      }),
+    )
+
+    await getMoviesPage(catalogParams, 1)
+    expect(requests).toBe(2)
+  })
+
+  it('invalidateMovieCatalog(search-params) не задевает независимую catalog-запись getMoviesPage', async () => {
+    server.use(
+      http.get(SEARCH_ENDPOINT, () =>
+        HttpResponse.json({
+          docs: [searchDoc('Search Hit')],
+          total: 1,
+          page: 1,
+          pages: 1,
+          limit: 10,
+        }),
+      ),
+      http.get(CATALOG_ENDPOINT, () =>
+        HttpResponse.json({
+          docs: [catalogDoc('Catalog Hit')],
+          limit: 10,
+          next: null,
+          hasNext: false,
+          hasPrev: false,
+          total: 1,
+        }),
+      ),
+    )
+    const { invalidateMovieCatalog, getSearchMovies, getMoviesPage } =
+      await importModules()
+
+    const searchParams: MovieCatalogParams = {
+      query: 'isolation-probe',
+      filters: EMPTY_FILTERS,
+      sort: '',
+      page: 1,
+    }
+
+    await getSearchMovies({ query: 'isolation-probe', page: 1 })
+    await getMoviesPage({}, 1)
+
+    let catalogRequests = 0
+    server.use(
+      http.get(CATALOG_ENDPOINT, () => {
+        catalogRequests += 1
+        return HttpResponse.json({
+          docs: [catalogDoc('Catalog Hit')],
+          limit: 10,
+          next: null,
+          hasNext: false,
+          hasPrev: false,
+          total: 1,
+        })
+      }),
+    )
+
+    invalidateMovieCatalog(searchParams)
+
+    // catalog-запись (пустые params) не задета invalidateMovieCatalog(searchParams) —
+    // из кэша, без сети.
+    await getMoviesPage({}, 1)
+    expect(catalogRequests).toBe(0)
   })
 })

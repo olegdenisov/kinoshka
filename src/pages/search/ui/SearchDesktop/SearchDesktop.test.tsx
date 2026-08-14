@@ -196,6 +196,90 @@ describe('SearchDesktop — ошибка фетчера (403/квота) дос�
   })
 })
 
+describe('SearchDesktop — Retry реально уходит в сеть (Task 5, roadmap 1.6)', () => {
+  it('search-режим: ошибка → клик Retry → новый MSW-запрос (не тот же rejected-промис), рендерятся данные', async () => {
+    let requests = 0
+    server.use(
+      http.get(SEARCH_ENDPOINT, () => {
+        requests += 1
+        return HttpResponse.json(
+          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+          { status: 403 },
+        )
+      }),
+    )
+
+    await renderSearchDesktop(['/search?q=retry-desktop-search-probe'])
+
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+    expect(requests).toBe(1)
+
+    server.use(
+      http.get(SEARCH_ENDPOINT, () => {
+        requests += 1
+        return HttpResponse.json({
+          docs: [searchDoc('Recovered After Retry', 901)],
+          total: 1,
+          page: 1,
+          pages: 1,
+          limit: 10,
+        })
+      }),
+    )
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
+    })
+
+    // Без реальной инвалидации кэша этот клик отдал бы тот же rejected-промис из
+    // ERROR_CACHE_TTL_MS cooldown, и ErrorState остался бы на месте — сеть бы не была
+    // тронута (requests остался бы 1).
+    expect(requests).toBe(2)
+    expect(await screen.findByText('Recovered After Retry')).toBeInTheDocument()
+  })
+
+  it('catalog-режим: ошибка → клик Retry → новый MSW-запрос, рендерятся данные', async () => {
+    let requests = 0
+    server.use(
+      http.get(CATALOG_ENDPOINT, () => {
+        requests += 1
+        return HttpResponse.json(
+          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+          { status: 403 },
+        )
+      }),
+    )
+
+    await renderSearchDesktop(['/search?genres=Drama&rating=6'])
+
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+    expect(requests).toBe(1)
+
+    server.use(
+      http.get(CATALOG_ENDPOINT, () => {
+        requests += 1
+        return HttpResponse.json({
+          docs: [catalogDoc('Recovered Catalog Movie', 902)],
+          limit: 10,
+          next: null,
+          hasNext: false,
+          hasPrev: false,
+          total: 1,
+        })
+      }),
+    )
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
+    })
+
+    expect(requests).toBe(2)
+    expect(
+      await screen.findByText('Recovered Catalog Movie'),
+    ).toBeInTheDocument()
+  })
+})
+
 describe('SearchDesktop — пустой результат', () => {
   it('показывает EmptyState с эхом запроса', async () => {
     mockSearch([])

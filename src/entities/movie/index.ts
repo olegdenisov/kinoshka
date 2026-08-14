@@ -9,7 +9,7 @@ export type {
   CrewMember,
 } from './model/types'
 export { CATALOG, ALL_GENRES } from './model/catalog'
-export { getMoviesPage } from './api/getMoviesPage'
+export { getMoviesPage, invalidateMoviesPage } from './api/getMoviesPage'
 export type { CatalogParams, CatalogPageResult } from './api/getMoviesPage'
 export { getSearchMovies } from './api/getSearchMovies'
 export type { SearchMoviesResult } from './api/getSearchMovies'
