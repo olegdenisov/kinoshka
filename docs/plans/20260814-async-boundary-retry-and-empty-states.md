@@ -259,12 +259,12 @@ export const invalidateMovieDetail = (id: number): void => {
 - Modify: `src/pages/search/ui/SearchDesktop/SearchDesktop.test.tsx`
 - Modify: `src/pages/search/ui/SearchMobile.test.tsx`
 
-- [ ] экспортировать `invalidateMovieCatalog({ query, filters, sort, page }: MovieCatalogParams): void` из `useMovieCatalog.ts` — та же ветка `trimmedQuery ? ... : ...`, что в самом хуке чтения: search-режим → `getSearchMovies.invalidate({ query: trimmedQuery, page })`, catalog-режим → `invalidateMoviesPage(filtersToParams(filters, sort), page)` (из Task 2)
-- [ ] `SearchDesktop.tsx`: `<AsyncBoundary onRetry={() => invalidateMovieCatalog({ query: deferredQuery, filters: deferredFilters, sort: deferredSort, page: deferredPage })} ...>`
-- [ ] `SearchMobile.tsx`: то же на его `AsyncBoundary`
-- [ ] написать тест на `invalidateMovieCatalog`: search-режим (непустой query) бьёт `getSearchMovies.invalidate`, catalog-режим (пустой query) бьёт `invalidateMoviesPage`
-- [ ] дополнить `SearchDesktop.test.tsx`/`SearchMobile.test.tsx` сценарием: ошибка → Retry → реальный повторный запрос (MSW call-counter), а не тот же rejected-промис
-- [ ] запустить тесты — должны пройти перед задачей 6
+- [x] экспортировать `invalidateMovieCatalog({ query, filters, sort, page }: MovieCatalogParams): void` из `useMovieCatalog.ts` — та же ветка `trimmedQuery ? ... : ...`, что в самом хуке чтения: search-режим → `getSearchMovies.invalidate({ query: trimmedQuery, page })`, catalog-режим → `invalidateMoviesPage(filtersToParams(filters, sort), page)` (из Task 2)
+- [x] `SearchDesktop.tsx`: `<AsyncBoundary onRetry={() => invalidateMovieCatalog({ query: deferredQuery, filters: deferredFilters, sort: deferredSort, page: deferredPage })} ...>`
+- [x] `SearchMobile.tsx`: то же на его `AsyncBoundary`
+- [x] написать тест на `invalidateMovieCatalog`: search-режим (непустой query) бьёт `getSearchMovies.invalidate`, catalog-режим (пустой query) бьёт `invalidateMoviesPage`
+- [x] дополнить `SearchDesktop.test.tsx`/`SearchMobile.test.tsx` сценарием: ошибка → Retry → реальный повторный запрос (MSW call-counter), а не тот же rejected-промис
+- [x] запустить тесты — должны пройти перед задачей 6
 
 ### Task 6: Реальный retry для `/movie/:id`
 

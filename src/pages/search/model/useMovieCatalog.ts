@@ -1,4 +1,8 @@
-import { getMoviesPage, getSearchMovies } from '@entities/movie'
+import {
+  getMoviesPage,
+  getSearchMovies,
+  invalidateMoviesPage,
+} from '@entities/movie'
 import type { Movie } from '@entities/movie'
 import { filtersToParams } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
@@ -48,4 +52,33 @@ export const useMovieCatalog = ({
     : use(getMoviesPage(filtersToParams(filters, sort), page))
 
   return { movies: result.movies, mode, totalPages: result.totalPages }
+}
+
+/**
+ * Companion-инвалидатор для Retry (roadmap 1.6, Task 5): та же ветка `trimmedQuery ? ... : ...`,
+ * что в самом хуке чтения выше — иначе retry молча бил бы не по тому кэш-ключу, что читает
+ * `useMovieCatalog`, и продолжал бы отдавать старый rejected-промис из cooldown
+ * (`ERROR_CACHE_TTL_MS`, см. `createCachedFetcher`/`getMoviesPage`).
+ *
+ * search-режим (непустой query) → `getSearchMovies.invalidate({ query, page })` — тот же
+ * `{ query: trimmedQuery, page }`, что уходит в `getSearchMovies(...)` выше.
+ * catalog-режим (пустой query) → `invalidateMoviesPage(filtersToParams(filters, sort), page)`
+ * (Task 2) — тот же `filtersToParams(filters, sort)`, что уходит в `getMoviesPage(...)` выше.
+ *
+ * Вызывается местом использования (`SearchDesktop`/`SearchMobile`, `AsyncBoundary.onRetry`)
+ * ДО `reset()`.
+ */
+export const invalidateMovieCatalog = ({
+  query,
+  filters,
+  sort,
+  page,
+}: MovieCatalogParams): void => {
+  const trimmedQuery = query.trim()
+
+  if (trimmedQuery) {
+    getSearchMovies.invalidate({ query: trimmedQuery, page })
+  } else {
+    invalidateMoviesPage(filtersToParams(filters, sort), page)
+  }
 }

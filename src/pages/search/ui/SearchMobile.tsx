@@ -22,7 +22,10 @@ import { useSearchParams } from 'react-router'
 
 import { buildPageRange, clampPage } from '../lib/buildPageRange'
 import { useCatalogUpdateStatus } from '../model/useCatalogUpdateStatus'
-import { useMovieCatalog } from '../model/useMovieCatalog'
+import {
+  invalidateMovieCatalog,
+  useMovieCatalog,
+} from '../model/useMovieCatalog'
 import { usePageSync } from '../model/usePageSync'
 
 type MobilePaginationProps = {
@@ -410,7 +413,17 @@ export const SearchMobile = () => {
         }}
         aria-busy={isUpdating}
       >
-        <AsyncBoundary fallback={<MobileResultsSkeleton />}>
+        <AsyncBoundary
+          fallback={<MobileResultsSkeleton />}
+          onRetry={() =>
+            invalidateMovieCatalog({
+              query: deferredQuery,
+              filters: deferredFilters,
+              sort: deferredSort,
+              page: deferredPage,
+            })
+          }
+        >
           <MobileSearchResults
             query={deferredQuery}
             filters={deferredFilters}

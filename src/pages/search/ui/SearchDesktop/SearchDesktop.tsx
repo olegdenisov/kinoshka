@@ -6,7 +6,10 @@ import { SearchSidebar } from '@widgets/search-sidebar'
 import { useSearchParams } from 'react-router'
 
 import { useCatalogUpdateStatus } from '../../model/useCatalogUpdateStatus'
-import { useMovieCatalog } from '../../model/useMovieCatalog'
+import {
+  invalidateMovieCatalog,
+  useMovieCatalog,
+} from '../../model/useMovieCatalog'
 import { usePageSync } from '../../model/usePageSync'
 import { Pagination } from '../Pagination'
 import { SearchControls } from '../SearchControls'
@@ -150,7 +153,17 @@ export const SearchDesktop = () => {
             className={`${s.resultsWrapper} ${isUpdating ? s.updating : ''}`}
             aria-busy={isUpdating}
           >
-            <AsyncBoundary fallback={<SearchResultSkeletonGrid />}>
+            <AsyncBoundary
+              fallback={<SearchResultSkeletonGrid />}
+              onRetry={() =>
+                invalidateMovieCatalog({
+                  query: deferredQuery,
+                  filters: deferredFilters,
+                  sort: deferredSort,
+                  page: deferredPage,
+                })
+              }
+            >
               <SearchResults
                 query={deferredQuery}
                 filters={deferredFilters}
