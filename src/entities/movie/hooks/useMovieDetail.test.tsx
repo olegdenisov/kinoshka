@@ -141,3 +141,51 @@ describe('getMovieDetailBundle — стабильность ссылки на п
     await first
   })
 })
+
+// Механика кэша (TTL/cooldown/sessionStorage) полностью покрыта createCachedFetcher.test.ts.
+// Здесь — только то, что invalidateMovieDetail бьёт РОВНО по обоим кэш-ключам
+// (getMovieDetail/getMovieImages), что использует getMovieDetailBundle — иначе Retry на
+// /movie/:id молча продолжал бы отдавать старый rejected-промис из cooldown.
+describe('invalidateMovieDetail', () => {
+  it('после rejected getMovieDetail(id) → invalidate → повторный вызов реально идёт в сеть', async () => {
+    let requests = 0
+    server.use(
+      http.get('*/v1.5/movie/4', () => {
+        requests += 1
+        return HttpResponse.json(
+          { statusCode: 500, message: 'error', error: 'error' },
+          { status: 500 },
+        )
+      }),
+    )
+    mockImages([])
+
+    vi.resetModules()
+    const { invalidateMovieDetail, getMovieDetailBundle: getBundle } =
+      await import('./useMovieDetail')
+
+    await expect(getBundle(4)).rejects.toThrow()
+    expect(requests).toBe(1)
+
+    invalidateMovieDetail(4)
+
+    server.use(
+      http.get('*/v1.5/movie/4', () => {
+        requests += 1
+        return HttpResponse.json(
+          movieDoc(4, { name: 'Recovered After Invalidate' }),
+        )
+      }),
+    )
+
+    const bundle = await getBundle(4)
+    expect(requests).toBe(2)
+    expect(bundle.detail.title).toBe('Recovered After Invalidate')
+  })
+
+  it('invalidate на несуществующем id — no-op, не бросает', async () => {
+    const { invalidateMovieDetail } = await import('./useMovieDetail')
+
+    expect(() => invalidateMovieDetail(999_999)).not.toThrow()
+  })
+})

@@ -275,12 +275,12 @@ export const invalidateMovieDetail = (id: number): void => {
 - Modify: `src/pages/movie/MoviePage.tsx`
 - Modify: `src/pages/movie/MoviePage.test.tsx`
 
-- [ ] экспортировать `invalidateMovieDetail(id: number): void` из `useMovieDetail.ts` (по образцу из Technical Details) — `bundleCache` пересоберётся сам, когда внутренние промисы `getMovieDetail`/`getMovieImages` сменят ссылку (существующий комментарий в файле уже предполагает этот механизм)
-- [ ] экспортировать `invalidateMovieDetail` из `hooks/index.ts` → `@entities/movie`
-- [ ] `MoviePage.tsx`: `<AsyncBoundary errorFallback={movieErrorFallback} fallback={<MovieDetailSkeleton />} onRetry={() => invalidateMovieDetail(numericId)}>`
-- [ ] обновить существующий 404-retry тест в `MoviePage.test.tsx` (план 1.5, Task 10) — убрать обход через `vi.useFakeTimers()` + `advanceTimersByTime(21_000)`, retry теперь реально бьёт в сеть без ожидания cooldown
-- [ ] написать тест: обычная (не 404) ошибка → Retry → реальный повторный запрос без ожидания 20с
-- [ ] запустить тесты — должны пройти перед задачей 7
+- [x] экспортировать `invalidateMovieDetail(id: number): void` из `useMovieDetail.ts` (по образцу из Technical Details) — `bundleCache` пересоберётся сам, когда внутренние промисы `getMovieDetail`/`getMovieImages` сменят ссылку (существующий комментарий в файле уже предполагает этот механизм)
+- [x] экспортировать `invalidateMovieDetail` из `hooks/index.ts` → `@entities/movie`
+- [x] `MoviePage.tsx`: `<AsyncBoundary errorFallback={movieErrorFallback} fallback={<MovieDetailSkeleton />} onRetry={() => invalidateMovieDetail(numericId)}>`
+- [x] обновить существующий 404-retry тест в `MoviePage.test.tsx` (план 1.5, Task 10) — убрать обход через `vi.useFakeTimers()` + `advanceTimersByTime(21_000)`, retry теперь реально бьёт в сеть без ожидания cooldown
+- [x] написать тест: обычная (не 404) ошибка → Retry → реальный повторный запрос без ожидания 20с
+- [x] запустить тесты — должны пройти перед задачей 7
 
 ### Task 7: `EmptyState` для рейлов `HomeDesktop`
 
