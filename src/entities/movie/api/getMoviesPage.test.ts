@@ -285,7 +285,7 @@ describe('invalidateMoviesPage', () => {
     expect(result.movies).toEqual([movieNamed('Recovered')])
   })
 
-  it('не задевает независимые записи pageCache для других страниц/параметров', async () => {
+  it('не задевает независимую запись pageCache для другой страницы (те же params)', async () => {
     const counts = mockChain()
     const { getMoviesPage, invalidate } =
       await importGetMoviesPageWithInvalidate()
@@ -293,7 +293,25 @@ describe('invalidateMoviesPage', () => {
     await getMoviesPage({}, 2)
     expect(counts.requests).toBe(2)
 
-    invalidate({ genres: ['drama'] }, 1)
+    // page=1, те же params — изолирует ось "страница"
+    invalidate({}, 1)
+
+    // page=2 для тех же params по-прежнему в кеше — повторный вызов без новых запросов
+    const page2Again = await getMoviesPage({}, 2)
+    expect(counts.requests).toBe(2)
+    expect(page2Again.movies).toEqual([movieNamed('Page2')])
+  })
+
+  it('не задевает независимую запись pageCache для других params (та же страница)', async () => {
+    const counts = mockChain()
+    const { getMoviesPage, invalidate } =
+      await importGetMoviesPageWithInvalidate()
+
+    await getMoviesPage({}, 2)
+    expect(counts.requests).toBe(2)
+
+    // та же page=2, другие params — изолирует ось "параметры"
+    invalidate({ 'genres.name': ['drama'] }, 2)
 
     // page=2 для исходных params по-прежнему в кеше — повторный вызов без новых запросов
     const page2Again = await getMoviesPage({}, 2)
