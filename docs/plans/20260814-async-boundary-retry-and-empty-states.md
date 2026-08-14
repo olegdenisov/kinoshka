@@ -53,7 +53,7 @@
 
 - `createCachedFetcher` возвращает не голую функцию, а функцию с довешенными `invalidate(params)`/`clear()` (`Object.assign`). `invalidate` удаляет запись из in-memory `Map` и из sessionStorage-снапшота (новый метод `SessionCache.remove`) — без этого точечная инвалидация неполна: `createCachedFetcher` при промахе in-memory кэша проверяет sessionStorage и, если снапшот там ещё «свежий» (в пределах `ERROR_CACHE_TTL_MS`), реплеит его вместо реального похода в сеть.
 - `getMoviesPage.ts` (курсорная эмуляция numbered-page) получает `invalidateMoviesPage(params, page)`: чистит свою запись `pageCache` для `{params, page}` + инвалидирует первый шаг курсора (`cachedCursorStep.invalidate({ params, cursor: undefined })`). Первый шаг детерминирован (не зависит от целевой страницы) и покрывает доминирующий сценарий отказа — 403 квоты демо-тарифа рвёт все шаги одинаково. Известное принятое ограничение: если сбой был именно на промежуточном шаге (>1) при живом первом шаге, тот шаг всё ещё ждёт `ERROR_CACHE_TTL_MS` — редкий случай (нужен frame независимо упавший intermediate-запрос), не стоит усложнения ради него.
-- `AsyncBoundary` получает `onRetry?: () => void`. Реальный `reset` из `ErrorBoundary` оборачивается: клик на Retry → `onRetry?.()` (инвалидация конкретного кэш-ключа конкретным местом использования) → `reset()` (снимает `hasError`, дети перерендериваются, `use()` внутри вызывает фетчер заново — уже без кэш-хита). Гвард на дабл-клик — `useRef`-флаг, сравнивающий `error`-ссылку между рендерами `errorFallback`: новая ошибка = новый цикл = гвард снят.
+- `AsyncBoundary` получает `onRetry?: () => void`. Реальный `reset` из `ErrorBoundary` оборачивается: клик на Retry → `onRetry?.()` (инвалидация конкретного кэш-ключа конкретным местом использования) → `reset()` (снимает `hasError`, дети перерендериваются, `use()` внутри вызывает фетчер заново — уже без кэш-хита). Гвард на дабл-клик — `useRef`-флаг (`isRetryingRef`), ставится в `true` синхронно перед вызовом `onRetry`/`reset` и снимается безусловно на каждом рендере `errorFallback` (не по сравнению `error`-ссылки между рендерами — см. сноску в конце секции про review-фикс, заменивший исходно спланированный `lastErrorRef`-гвард).
 - Три конкретных места подключают `onRetry` каждое своим способом:
   - **Home rails** (`getMovies`) — companion-экспорты `invalidateTopRatedMovies(params?)`/`invalidateNewMovies(params?)` рядом с `useTopRatedMovies`/`useNewMovies`, построенные из ТОЙ ЖЕ pure-функции параметров, что и сам хук (никакого дублирования формы параметров).
   - **Search** (`getSearchMovies`/`getMoviesPage` через `useMovieCatalog`) — `invalidateMovieCatalog(params)` в page-слое `src/pages/search/model/useMovieCatalog.ts`, та же ветка `query.trim()`, что и в самом хуке чтения.
@@ -109,6 +109,8 @@ export const invalidateMoviesPage = (params: CatalogParams, page: number): void 
 ```
 
 **`AsyncBoundary.tsx` — `onRetry` + гвард:**
+
+> **Снипет ниже устарел относительно фактической реализации.** Так задача была изначально спланирована (Task 3): гвард сравнивал `error !== lastErrorRef.current` по ссылке. Ревью после Task 9 нашло баг: реальные фетчеры (`createCachedFetcher`/`getMoviesPage`) кэшируют rejected-промис и на повторном retry могут вернуть тот же самый `Error`-объект по ссылке — тогда гвард никогда не переармировывался, и Retry становился нерабочим навсегда (не просто ждал `ERROR_CACHE_TTL_MS`). Финальная реализация убрала `lastErrorRef` целиком: `isRetryingRef.current` снимается безусловно на каждом рендере `errorFallback`, а защита от дабл-клика держится исключительно на синхронной установке `isRetryingRef.current = true` перед вызовом `onRetry`/`reset`. Актуальный код — в `src/shared/ui/AsyncBoundary/AsyncBoundary.tsx`.
 
 ```tsx
 type Props = {
@@ -218,14 +220,14 @@ export const invalidateMovieDetail = (id: number): void => {
 - Modify: `src/shared/ui/AsyncBoundary/AsyncBoundary.tsx`
 - Modify: `src/shared/ui/AsyncBoundary/AsyncBoundary.test.tsx`
 
-- [ ] добавить опциональный проп `onRetry?: () => void`
-- [ ] обернуть `reset`, передаваемый в `errorFallback`: `onRetry?.()` вызывается ДО реального `reset()`
-- [ ] гвард на повторные клики — `useRef`-флаг, снимается только когда `ErrorBoundary` ловит НОВУЮ ошибку (сравнение `error`-ссылки на каждый рендер `errorFallback`, по образцу из Technical Details)
-- [ ] существующие вызовы `AsyncBoundary` без `onRetry` — поведение не меняется (проп опционален, дефолт `undefined`)
-- [ ] написать тест: `onRetry` вызывается один раз перед `reset`
-- [ ] написать тест: два быстрых клика подряд на retry вызывают `onRetry`/`reset` только один раз
-- [ ] написать тест: после того как повторная попытка тоже упала с НОВОЙ ошибкой, retry снова рабочий (гвард переармирован)
-- [ ] запустить тесты — должны пройти перед задачей 4
+- [x] добавить опциональный проп `onRetry?: () => void`
+- [x] обернуть `reset`, передаваемый в `errorFallback`: `onRetry?.()` вызывается ДО реального `reset()`
+- [x] гвард на повторные клики — `useRef`-флаг (`isRetryingRef`), выставляется в `true` синхронно перед `onRetry`/`reset` (реальная защита от дабл-клика); флаг снимается безусловно на каждом рендере `errorFallback`, а не сравнением `error`-ссылки между рендерами, как изначально предполагалось в Technical Details — см. сноску там
+- [x] существующие вызовы `AsyncBoundary` без `onRetry` — поведение не меняется (проп опционален, дефолт `undefined`)
+- [x] написать тест: `onRetry` вызывается один раз перед `reset`
+- [x] написать тест: два быстрых клика подряд на retry вызывают `onRetry`/`reset` только один раз
+- [x] написать тест: после того как повторная попытка тоже упала с НОВОЙ ошибкой, retry снова рабочий (гвард переармирован)
+- [x] запустить тесты — должны пройти перед задачей 4
 
 ### Task 4: Реальный retry для рейлов `HomeDesktop`
 
