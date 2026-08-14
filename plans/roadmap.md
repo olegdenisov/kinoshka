@@ -260,10 +260,10 @@
 
 ### 1.6 Loading / Empty / Error везде
 
-- [ ] `AsyncBoundary` (из 0.2) обёрнут вокруг каждой async-секции.
-- [ ] Skeleton — для контентных страниц.
-- [ ] Spinner — для коротких операций.
-- [ ] Retry-кнопки реально дёргают повторный fetch.
+- [x] `AsyncBoundary` (из 0.2) обёрнут вокруг каждой async-секции — главная (`HomeDesktop`, 4 рейла), `/search` (`SearchDesktop`/`SearchMobile`), `/movie/:id` (`MoviePage`); `HomeMobile` вне скоупа (моковый `CATALOG` до фазы 2.5).
+- [x] Skeleton — для контентных страниц (`MovieRailSkeletonDesktop`, `SearchResultSkeletonGrid`/`MobileResultsSkeleton`, `MovieDetailSkeleton`).
+- [x] Spinner — для коротких операций.
+- [x] Retry-кнопки реально дёргают повторный fetch — `createCachedFetcher`/`getMoviesPage` получили точечный `invalidate`, `AsyncBoundary` получил `onRetry?: () => void` (вызывается до `reset()`, с гвардом от дабл-клика); подключено на всех трёх поверхностях (Home rails, `/search`, `/movie/:id`). Дополнительно: `MovieRailDesktop` теперь рендерит `EmptyState` при пустом результате. Детали: `docs/plans/20260814-async-boundary-retry-and-empty-states.md`.
 
 **Как лучше:** Skeleton > Spinner для контента — UX лучше (видно структуру до загрузки).
 

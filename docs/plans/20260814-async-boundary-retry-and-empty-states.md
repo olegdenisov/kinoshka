@@ -304,8 +304,8 @@ export const invalidateMovieDetail = (id: number): void => {
 
 ### Task 9: Обновление документации
 
-- [ ] отметить выполненные пункты 1.6 в `plans/roadmap.md`
-- [ ] в `AGENTS.md` — если раздел «Data state» или паттерн `AsyncBoundary`/`createCachedFetcher` упоминает старое поведение retry, обновить формулировку (retry теперь реально инвалидирует кэш, а не просто ждёт cooldown)
+- [x] отметить выполненные пункты 1.6 в `plans/roadmap.md`
+- [x] в `AGENTS.md` — если раздел «Data state» или паттерн `AsyncBoundary`/`createCachedFetcher` упоминает старое поведение retry, обновить формулировку (retry теперь реально инвалидирует кэш, а не просто ждёт cooldown)
 
 ## Post-Completion
 
