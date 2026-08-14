@@ -240,13 +240,13 @@ export const invalidateMovieDetail = (id: number): void => {
 - Modify: `src/pages/home/ui/HomeDesktop/HomeDesktop.tsx`
 - Create: `src/pages/home/ui/HomeDesktop/HomeDesktop.test.tsx`
 
-- [ ] `useTopRatedMovies.ts`: вынести параметры в `buildTopRatedParams(params?)`, использовать в хуке и в новом экспорте `invalidateTopRatedMovies(params?)` (по образцу из Technical Details)
-- [ ] `useNewMovies.ts`: аналогично — `buildNewMoviesParams(params?)` + `invalidateNewMovies(params?)`
-- [ ] экспортировать `invalidateTopRatedMovies`/`invalidateNewMovies` из `hooks/index.ts` (попадут в `@entities/movie` через существующий `export * from './hooks'`)
-- [ ] `HomeDesktop.tsx`: добавить `onRetry` на все 4 `AsyncBoundary`, с параметрами СОВПАДАЮЩИМИ с параметрами внутри соответствующего рейл-компонента: `PopularMoviesRail`/`PersonalRails` → `invalidateTopRatedMovies()`, `TopAnimeRails` → `invalidateTopRatedMovies({ type: ['anime'] })`, `TrandingSeriesRail` → `invalidateNewMovies({ type: ['tv-series'] })`
-- [ ] написать/дополнить тесты `invalidateTopRatedMovies`/`invalidateNewMovies` (MSW): после ошибки и вызова invalidate следующий `getMovies(...)`-вызов реально идёт в сеть
-- [ ] написать `HomeDesktop.test.tsx`: рейл с мокнутой 500-ошибкой → `ErrorState` с Retry → клик → новый MSW-запрос → рейл рендерит данные
-- [ ] запустить тесты — должны пройти перед задачей 5
+- [x] `useTopRatedMovies.ts`: вынести параметры в `buildTopRatedParams(params?)`, использовать в хуке и в новом экспорте `invalidateTopRatedMovies(params?)` (по образцу из Technical Details)
+- [x] `useNewMovies.ts`: аналогично — `buildNewMoviesParams(params?)` + `invalidateNewMovies(params?)`
+- [x] экспортировать `invalidateTopRatedMovies`/`invalidateNewMovies` из `hooks/index.ts` (попадут в `@entities/movie` через существующий `export * from './hooks'`)
+- [x] `HomeDesktop.tsx`: добавить `onRetry` на все 4 `AsyncBoundary`, с параметрами СОВПАДАЮЩИМИ с параметрами внутри соответствующего рейл-компонента: `PopularMoviesRail`/`PersonalRails` → `invalidateTopRatedMovies()`, `TopAnimeRails` → `invalidateTopRatedMovies({ type: ['anime'] })`, `TrandingSeriesRail` → `invalidateNewMovies({ type: ['tv-series'] })`
+- [x] написать/дополнить тесты `invalidateTopRatedMovies`/`invalidateNewMovies` (MSW): после ошибки и вызова invalidate следующий `getMovies(...)`-вызов реально идёт в сеть
+- [x] написать `HomeDesktop.test.tsx`: рейл с мокнутой 500-ошибкой → `ErrorState` с Retry → клик → новый MSW-запрос → рейл рендерит данные
+- [x] запустить тесты — должны пройти перед задачей 5
 
 ### Task 5: Реальный retry для `/search`
 
