@@ -80,4 +80,26 @@ describe('createStorageSlot', () => {
 
     expect(slot.get()).toEqual(fallback)
   })
+
+  it('Референциальная стабильность — get() === get() без изменений localStorage между вызовами', () => {
+    const slot = createStorageSlot('test', schema, [])
+    slot.set([1, 2, 3])
+
+    const first = slot.get()
+    const second = slot.get()
+
+    expect(first).toBe(second)
+  })
+
+  it('Инвалидация мемо — после set() следующий get() возвращает новое значение (не закэшированное старое)', () => {
+    const slot = createStorageSlot('test', schema, [])
+    slot.set([1, 2, 3])
+    const first = slot.get()
+
+    slot.set([4, 5, 6])
+    const second = slot.get()
+
+    expect(second).toEqual([4, 5, 6])
+    expect(second).not.toBe(first)
+  })
 })
