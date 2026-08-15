@@ -203,10 +203,10 @@
 - Modify: `src/pages/search/ui/SearchMobile.tsx`
 - Modify: существующие ассерты на жанры в `SearchMobile.test.tsx`
 
-- [ ] заменить инлайновый блок `<div>` с `ALL_GENRES.map(...)` (~строки 516-554) на `<GenreSelector selected={filters.genres} onToggle={toggleGenre} disabled={isSearchMode} />` (тот же гейтинг disabled-в-режиме-поиска, что и у остальной мобильной панели фильтров; без `AsyncBoundary`)
-- [ ] убрать теперь неиспользуемый импорт `ALL_GENRES` из `SearchMobile.tsx`
-- [ ] обновить ассерты на чипы жанров в `SearchMobile.test.tsx` (опираться на дефолтный MSW-хендлер справочника из `src/test/setup.ts`)
-- [ ] прогнать тесты — должны пройти перед задачей 8
+- [x] заменить инлайновый блок `<div>` с `ALL_GENRES.map(...)` (~строки 516-554) на `<GenreSelector selected={filters.genres} onToggle={toggleGenre} disabled={isSearchMode} />` (тот же гейтинг disabled-в-режиме-поиска, что и у остальной мобильной панели фильтров; без `AsyncBoundary`)
+- [x] убрать теперь неиспользуемый импорт `ALL_GENRES` из `SearchMobile.tsx`
+- [x] обновить ассерты на чипы жанров в `SearchMobile.test.tsx` (опираться на дефолтный MSW-хендлер справочника из `src/test/setup.ts`) — существующие ассерты уже опираются только на URL-driven active-filter лейблы (`Drama`/`Action` через identity-фолбэк `getGenreLabel`), не на захардкоженный список чипов, поэтому все 21 тестов файла прошли без изменений после замены на `GenreSelector`
+- [x] прогнать тесты — должны пройти перед задачей 8
 
 ### Task 8: Удалить ставший неиспользуемым `ALL_GENRES`
 

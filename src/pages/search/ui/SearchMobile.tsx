@@ -1,6 +1,7 @@
-import { MobileCard, ALL_GENRES } from '@entities/movie'
+import { MobileCard } from '@entities/movie'
 import {
   ActiveFilterChips,
+  GenreSelector,
   useFilterState,
   SORT_LABELS,
 } from '@features/catalog-filter'
@@ -526,31 +527,11 @@ export const SearchMobile = () => {
             >
               Genre
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {ALL_GENRES.map(g => (
-                <button
-                  type='button'
-                  key={g}
-                  onClick={() => toggleGenre(g)}
-                  style={{
-                    height: 34,
-                    padding: '0 14px',
-                    background: filters.genres.includes(g)
-                      ? 'rgba(209,142,95,0.15)'
-                      : 'rgba(184,173,171,0.04)',
-                    color: filters.genres.includes(g) ? '#D18E5F' : '#B8ADAB',
-                    border: `1px solid ${filters.genres.includes(g) ? 'rgba(209,142,95,0.35)' : 'rgba(184,173,171,0.1)'}`,
-                    borderRadius: 999,
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 12.5,
-                    fontWeight: 500,
-                  }}
-                >
-                  {g}
-                </button>
-              ))}
-            </div>
+            <GenreSelector
+              selected={filters.genres}
+              onToggle={toggleGenre}
+              disabled={isSearchMode}
+            />
           </div>
 
           <div>
