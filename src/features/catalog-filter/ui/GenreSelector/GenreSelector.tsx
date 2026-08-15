@@ -10,6 +10,15 @@ type GenreSelectorProps = {
   selected: string[]
   onToggle: (name: string) => void
   disabled?: boolean
+  /**
+   * Мобильный размер чипов (34px/pill-радиус вместо desktop 28px/4px), передаётся вызывающей
+   * стороной (`SearchMobile.tsx`) явно — тот же паттерн variant-класса, что и у
+   * `ActiveFilterChips`'s `compact`, вместо `@media` внутри собственного CSS-модуля: разметка
+   * уже гарантированно рендерится только на одном брейкпоинте за раз (см. `useViewport`/
+   * `SearchDesktop`/`SearchMobile`), так что медиа-запрос дублировал бы уже известную JS-сторону
+   * информацию.
+   */
+  compact?: boolean
 }
 
 /**
@@ -26,6 +35,7 @@ export const GenreSelector = ({
   selected,
   onToggle,
   disabled,
+  compact,
 }: GenreSelectorProps) => {
   const [showAll, setShowAll] = useState(false)
   const genres = useGenreDictionary()
@@ -42,8 +52,18 @@ export const GenreSelector = ({
 
   const availableDefaultGenres = genres.filter(g => defaultNames.has(g.name))
   const availableDefaultNames = new Set(availableDefaultGenres.map(g => g.name))
+  // Лейблы всех реально доступных (справочник/фолбэк) жанров — используется, чтобы не
+  // рендерить синтетический чип для legacy EN-значения (например ?genres=Drama из старых
+  // ссылок), если его лейбл совпадает с лейблом уже существующего в справочнике жанра
+  // (getGenreLabel('драма') тоже даёт 'Drama'): иначе получаются два визуально неотличимых
+  // чипа с текстом "Drama" — один активный (синтетический), другой нет.
+  const availableLabels = new Set(genres.map(g => getGenreLabel(g.name)))
   const missingSelectedGenres: Genre[] = selected
-    .filter(name => !availableDefaultNames.has(name))
+    .filter(
+      name =>
+        !availableDefaultNames.has(name) &&
+        !availableLabels.has(getGenreLabel(name)),
+    )
     .map(name => ({ name }))
 
   const defaultGenres = [...availableDefaultGenres, ...missingSelectedGenres]
@@ -65,7 +85,7 @@ export const GenreSelector = ({
               onClick={() => onToggle(genre.name)}
               disabled={disabled}
               aria-pressed={active}
-              className={`${s.chip} ${active ? s.chipActive : ''}`}
+              className={`${s.chip} ${compact ? s.chipCompact : ''} ${active ? s.chipActive : ''}`}
             >
               {getGenreLabel(genre.name)}
             </button>
@@ -76,7 +96,7 @@ export const GenreSelector = ({
         <button
           type='button'
           onClick={() => setShowAll(prev => !prev)}
-          className={s.toggle}
+          className={`${s.toggle} ${compact ? s.toggleCompact : ''}`}
         >
           {showAll ? 'Свернуть' : `Показать все (${restGenres.length})`}
         </button>

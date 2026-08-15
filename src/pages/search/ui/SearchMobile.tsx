@@ -531,6 +531,7 @@ export const SearchMobile = () => {
               selected={filters.genres}
               onToggle={toggleGenre}
               disabled={isSearchMode}
+              compact
             />
           </div>
 

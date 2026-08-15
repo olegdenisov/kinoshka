@@ -42,11 +42,14 @@ let inFlight: Promise<void> | null = null
 
 /**
  * Фоновое (не блокирующее рендер) обновление справочника жанров. Дедуплицирует параллельные
- * вызовы через `inFlight`. Если с последней неудачной попытки прошло меньше
+ * вызовы через `inFlight`. Если с последней попытки (успешной или нет) прошло меньше
  * `BACKGROUND_RETRY_COOLDOWN_MS` — no-op, сетевой запрос не уходит (защита от эндпоинта,
- * стабильно отдающего 403/500). Успех пишет `{ items, fetchedAt }` в localStorage-слот
- * (реактивно долетает до подписчиков useStorageSlot); неудача обновляет только in-memory
- * `lastAttemptAt`, существующий кэш не трогает.
+ * стабильно отдающего 403/500, **и** от бесконечного цикла при 200 OK с пустым `items`:
+ * `lastAttemptAt` ставится сразу при старте попытки, а не только в `.catch`, — иначе успешный
+ * ответ с `items: []` каждый раз обновляет `fetchedAt` в слоте, `useGenreDictionary`'s
+ * `useEffect` видит `items.length === 0` снова и без кулдауна тут же запускает новый фетч).
+ * Успех пишет `{ items, fetchedAt }` в localStorage-слот (реактивно долетает до подписчиков
+ * useStorageSlot); неудача помимо `lastAttemptAt` существующий кэш больше ничего не трогает.
  */
 export const refreshGenreDictionary = (): Promise<void> => {
   if (inFlight) {
@@ -57,6 +60,8 @@ export const refreshGenreDictionary = (): Promise<void> => {
     return Promise.resolve()
   }
 
+  lastAttemptAt = Date.now()
+
   inFlight = getGenreDictionary()
     .then(genres => {
       genreDictionarySlot.set({
@@ -65,7 +70,7 @@ export const refreshGenreDictionary = (): Promise<void> => {
       })
     })
     .catch(() => {
-      lastAttemptAt = Date.now()
+      // lastAttemptAt уже проставлен выше, до сетевого запроса
     })
     .finally(() => {
       inFlight = null

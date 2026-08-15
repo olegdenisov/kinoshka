@@ -96,6 +96,15 @@ beforeEach(() => {
   sessionStorage.clear()
 })
 
+// SearchDesktop renders GenreSelector, which fires a background (fire-and-forget)
+// useGenreDictionary() refresh on mount. Without waiting for it to settle here, that request
+// can resolve after the current test finishes (writing to localStorage/module state) — the
+// global afterEach in src/test/setup.ts only clears state *between* tests, not mid-flight — see
+// the same rationale in GenreSelector.test.tsx/useGenreDictionary.test.tsx.
+afterEach(async () => {
+  await new Promise(resolve => setTimeout(resolve, 0))
+})
+
 describe('SearchDesktop — режим search (?q задан)', () => {
   it('рендерит грид из search-эндпоинта и дизейблит сайдбар фильтров', async () => {
     mockSearch([searchDoc('Matrix Revolutions', 101)])
