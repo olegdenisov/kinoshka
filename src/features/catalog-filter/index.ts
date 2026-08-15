@@ -7,4 +7,5 @@ export {
   getFilterFromSearchParams,
   filtersToSearchParams,
   stripFilterAndSortParams,
+  EMPTY_FILTERS,
 } from './lib/searchParams'
