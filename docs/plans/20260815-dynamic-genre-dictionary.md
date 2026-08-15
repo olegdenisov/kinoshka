@@ -121,12 +121,12 @@
 - Create: `src/entities/movie/api/getGenreDictionary.test.ts`
 - Modify: `src/entities/movie/index.ts`
 
-- [ ] определить `Genre = { name: string }` в `genre.ts`
-- [ ] `getGenreDictionary()` в `getGenreDictionary.ts`: вызывает `apiClient.getV15DictionaryByType({ path: { type: 'genres' } })`, маппит `DictionaryDto.items` → `Genre[]` (`items.map(i => ({ name: i.name }))`)
-- [ ] экспортировать тип `Genre` из `src/entities/movie/index.ts` (публичное API слоя — `GenreSelector` в `@features/catalog-filter` обязан импортировать его оттуда, не из внутреннего пути)
-- [ ] написать тесты: успешный ответ корректно маппится `DictionaryItemDto[]` → `Genre[]`
-- [ ] написать тесты: ошибка API (например, замоканный 500/403 через MSW) реджектится и пробрасывается дальше (без проглатывания на этом уровне)
-- [ ] прогнать тесты — должны пройти перед задачей 3
+- [x] определить `Genre = { name: string }` в `genre.ts`
+- [x] `getGenreDictionary()` в `getGenreDictionary.ts`: вызывает `apiClient.getV15DictionaryByType({ path: { type: 'genres' } })`, маппит `DictionaryDto.items` → `Genre[]` (`items.map(i => ({ name: i.name }))`)
+- [x] экспортировать тип `Genre` из `src/entities/movie/index.ts` (публичное API слоя — `GenreSelector` в `@features/catalog-filter` обязан импортировать его оттуда, не из внутреннего пути)
+- [x] написать тесты: успешный ответ корректно маппится `DictionaryItemDto[]` → `Genre[]`
+- [x] написать тесты: ошибка API (например, замоканный 500/403 через MSW) реджектится и пробрасывается дальше (без проглатывания на этом уровне)
+- [x] прогнать тесты — должны пройти перед задачей 3
 
 ### Task 3: localStorage-кэш + не блокирующий рендер хук для справочника жанров
 
