@@ -18,9 +18,9 @@ type HeaderProps = {
 
 const navItems = [
   { key: 'home', label: 'Home', path: '/' },
-  { key: 'movies', label: 'Movies', path: '/search' },
-  { key: 'series', label: 'Series', path: '/search' },
-  { key: 'anime', label: 'Anime', path: '/search' },
+  { key: 'movies', label: 'Movies', path: '/search?type=movie' },
+  { key: 'series', label: 'Series', path: '/search?type=series' },
+  { key: 'anime', label: 'Anime', path: '/search?type=anime' },
 ]
 
 export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
@@ -135,7 +135,7 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
                   key={n.key}
                   label={n.label}
                   active={activeNav === n.key}
-                  onClick={() => navigate('/search')}
+                  onClick={() => navigate(n.path)}
                 />
               ))}
             </nav>
