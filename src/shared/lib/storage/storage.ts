@@ -53,10 +53,16 @@ export const createStorageSlot = <T>(
       localStorage.setItem(key, JSON.stringify(value))
       cachedRaw = null
       hasCached = false
-      emitter.dispatchEvent(new Event('change')) // уведомляем текущую вкладку
+      // Уведомляем текущую вкладку. emitter — один общий EventTarget на все слоты (см.
+      // модульную переменную выше), поэтому событие несёт key в detail — иначе set() на
+      // одном слоте будил бы подписчиков всех остальных слотов в том же таб (лишние
+      // ре-рендеры/срабатывания useSyncExternalStore на несвязанных ключах).
+      emitter.dispatchEvent(new CustomEvent('change', { detail: { key } }))
     },
     subscribe(callback) {
-      const localHandler = () => callback()
+      const localHandler = (e: Event) => {
+        if ((e as CustomEvent<{ key: string }>).detail.key === key) callback()
+      }
       const storageHandler = (e: StorageEvent) => {
         if (e.key === key) callback()
       }

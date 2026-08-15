@@ -33,4 +33,7 @@ export const useGenreDictionary = (): Genre[] => {
   return items.map(name => ({ name }))
 }
 
-export { invalidateGenreDictionary } from '../api/genreDictionaryCache'
+export {
+  invalidateGenreDictionary,
+  resetGenreDictionaryState,
+} from '../api/genreDictionaryCache'

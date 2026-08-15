@@ -81,6 +81,16 @@ describe('GenreSelector', () => {
     })
   })
 
+  it('legacy EN-жанр в selected, чей лейбл совпадает с реальным RU-жанром словаря, не даёт дублирующийся чип', async () => {
+    mockDictionary(['боевик', 'драма', 'триллер'])
+
+    render(<GenreSelector selected={['Drama']} onToggle={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: 'Drama' })).toHaveLength(1)
+    })
+  })
+
   it('«Показать все» раскрывает остальное и сворачивает обратно', async () => {
     mockDictionary([
       'боевик',

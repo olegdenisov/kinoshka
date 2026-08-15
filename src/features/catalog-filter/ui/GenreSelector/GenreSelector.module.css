@@ -48,17 +48,19 @@
   cursor: pointer;
 }
 
-/* Mobile sizing (SearchMobile) — matches the removed inline styles (height 34, fontSize 12.5,
-   pill radius) so switching to the shared component isn't a visual regression on mobile. */
-@media (max-width: 719px) {
-  .chip {
-    height: 34px;
-    padding: 0 14px;
-    border-radius: 999px;
-    font-size: 12.5px;
-  }
+/* Mobile sizing (SearchMobile, opted in via the `compact` prop) — matches the removed inline
+   styles (height 34, fontSize 12.5, pill radius) so switching to the shared component isn't a
+   visual regression on mobile. Explicit variant class rather than a `@media` query — same
+   pattern as `ActiveFilterChips`'s `compact` prop: only one of SearchDesktop/SearchMobile ever
+   mounts at a time (see `useViewport`), so the caller already knows which size it wants and a
+   media query would just re-derive information the JS side already has. */
+.chipCompact {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+}
 
-  .toggle {
-    font-size: 12.5px;
-  }
+.toggleCompact {
+  font-size: 12.5px;
 }

@@ -134,6 +134,22 @@ describe('refreshGenreDictionary — ошибка и cooldown', () => {
   })
 })
 
+describe('refreshGenreDictionary — успешный ответ с пустым items', () => {
+  it('не бьёт в кулдаун сразу и не даёт бесконечный цикл повторных запросов', async () => {
+    const calls = mockSuccess([])
+
+    await refreshGenreDictionary()
+    expect(genreDictionarySlot.get()).toEqual({ items: [], fetchedAt: now })
+
+    // items.length === 0 сразу после успешного (но пустого) ответа — без фикса lastAttemptAt
+    // на этом шаге второй вызов внутри того же тика/окна прошёл бы кулдаун-проверку заново
+    // (lastAttemptAt всё ещё 0) и снова ударил бы в сеть.
+    await refreshGenreDictionary()
+
+    expect(calls.count).toBe(1)
+  })
+})
+
 describe('invalidateGenreDictionary', () => {
   it('чистит слот — get() снова отдаёт fallback', async () => {
     mockSuccess(['драма'])

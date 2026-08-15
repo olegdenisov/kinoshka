@@ -81,6 +81,23 @@ describe('createStorageSlot', () => {
     expect(slot.get()).toEqual(fallback)
   })
 
+  it('Same-tab уведомление изолировано по key — set() на одном слоте не будит подписчика другого слота', () => {
+    const slotA = createStorageSlot('key-a', schema, [])
+    const slotB = createStorageSlot('key-b', schema, [])
+    const callbackA = vi.fn()
+    const callbackB = vi.fn()
+    const unsubA = slotA.subscribe(callbackA)
+    const unsubB = slotB.subscribe(callbackB)
+
+    slotA.set([1, 2, 3])
+
+    expect(callbackA).toHaveBeenCalledTimes(1)
+    expect(callbackB).not.toHaveBeenCalled()
+
+    unsubA()
+    unsubB()
+  })
+
   it('Референциальная стабильность — get() === get() без изменений localStorage между вызовами', () => {
     const slot = createStorageSlot('test', schema, [])
     slot.set([1, 2, 3])

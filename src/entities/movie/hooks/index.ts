@@ -7,5 +7,6 @@ export { invalidateMovieDetail, useMovieDetail } from './useMovieDetail'
 export type { MovieDetailBundle } from './useMovieDetail'
 export {
   invalidateGenreDictionary,
+  resetGenreDictionaryState,
   useGenreDictionary,
 } from './useGenreDictionary'

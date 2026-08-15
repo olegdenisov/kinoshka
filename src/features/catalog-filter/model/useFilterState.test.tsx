@@ -83,6 +83,15 @@ describe('useFilterState', () => {
     ])
   })
 
+  it('activeChips: жанр хранится как настоящее RU-название справочника — лейбл идёт через реальный RU→EN перевод getGenreLabel, а не identity-фолбэк', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search?genres=драма']),
+    })
+
+    const labels = result.current.activeChips.map(c => c.label)
+    expect(labels).toEqual(['Drama'])
+  })
+
   it('activeChips: только yearFrom задан (без yearTo) — лейбл не содержит "null"', () => {
     const { result } = renderHook(() => useFilterState(), {
       wrapper: wrapper(['/search?yearFrom=2020']),
