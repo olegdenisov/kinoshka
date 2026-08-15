@@ -128,7 +128,7 @@ export const SearchDesktop = () => {
 
   return (
     <div className={s.page}>
-      <Header variant='search' activeNav='search' />
+      <Header variant='search' activeNav={filters.type ?? 'search'} />
       <div className={s.layout}>
         <SearchSidebar
           filters={filters}
