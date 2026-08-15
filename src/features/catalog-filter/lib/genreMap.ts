@@ -1,26 +1,29 @@
 /**
- * UI-жанры (ALL_GENRES из @entities/movie/model/catalog.ts и локальной копии
- * в SearchSidebar.tsx) заведены на английском, а API (`genres.name`) ждёт
- * русские названия. Здесь — словарь EN→RU для маппинга перед запросом.
+ * Каноническое значение жанра фильтра — русское `name` из живого справочника
+ * API (`GET /v1.5/dictionary/genres`), ровно то, что ожидает параметр запроса
+ * `genres.name` (см. `filtersToParams.ts`). Здесь — словарь RU→EN для отображения
+ * английских лейблов чипов, инвертированный относительно прежнего EN→RU
+ * `GENRE_MAP` (маппинг перед запросом больше не нужен — жанр уже хранится
+ * на русском).
  *
- * Не все UI-жанры имеют устойчивый аналог в KP-справочнике жанров
- * (например 'Slice of Life') — для них toApiGenre возвращает undefined,
- * вызывающий код должен такие жанры отбрасывать (skip), а не падать.
+ * Не все жанры справочника имеют устойчивый английский аналог — для них
+ * `getGenreLabel` возвращает исходное русское название как фолбэк, а не
+ * бросает/пропускает.
  */
-export const GENRE_MAP: Record<string, string> = {
-  Action: 'боевик',
-  Drama: 'драма',
-  'Sci-Fi': 'фантастика',
-  Thriller: 'триллер',
-  Romance: 'мелодрама',
-  Horror: 'ужасы',
-  Mystery: 'детектив',
-  Documentary: 'документальный',
-  Historical: 'история',
-  Adventure: 'приключения',
-  Family: 'семейный',
-  Fantasy: 'фэнтези',
+export const GENRE_LABELS: Record<string, string> = {
+  боевик: 'Action',
+  драма: 'Drama',
+  фантастика: 'Sci-Fi',
+  триллер: 'Thriller',
+  мелодрама: 'Romance',
+  ужасы: 'Horror',
+  детектив: 'Mystery',
+  документальный: 'Documentary',
+  история: 'Historical',
+  приключения: 'Adventure',
+  семейный: 'Family',
+  фэнтези: 'Fantasy',
 }
 
-export const toApiGenre = (genre: string): string | undefined =>
-  GENRE_MAP[genre]
+export const getGenreLabel = (ruName: string): string =>
+  GENRE_LABELS[ruName] ?? ruName

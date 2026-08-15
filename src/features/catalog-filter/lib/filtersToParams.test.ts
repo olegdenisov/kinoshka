@@ -34,26 +34,18 @@ describe('filtersToParams', () => {
     expect(params.type).toBeUndefined()
   })
 
-  it('genres мапятся EN→RU в "genres.name"', () => {
+  it('genres (RU-названия справочника) проходят в "genres.name" без изменений', () => {
     const params = filtersToParams({
       ...EMPTY_FILTERS,
-      genres: ['Drama', 'Action'],
+      genres: ['драма', 'боевик'],
     })
     expect(params['genres.name']).toEqual(['драма', 'боевик'])
   })
 
-  it('неизвестный жанр (Slice of Life) отбрасывается, известные остаются', () => {
+  it('пустой список жанров → "genres.name" не пишем', () => {
     const params = filtersToParams({
       ...EMPTY_FILTERS,
-      genres: ['Drama', 'Slice of Life'],
-    })
-    expect(params['genres.name']).toEqual(['драма'])
-  })
-
-  it('все жанры неизвестны → "genres.name" не пишем', () => {
-    const params = filtersToParams({
-      ...EMPTY_FILTERS,
-      genres: ['Slice of Life'],
+      genres: [],
     })
     expect(params['genres.name']).toBeUndefined()
   })
@@ -104,7 +96,7 @@ describe('filtersToParams', () => {
   it('комбинация всех фильтров + sort собирается в один объект', () => {
     const filters: FilterState = {
       type: 'movie',
-      genres: ['Drama'],
+      genres: ['драма'],
       yearFrom: 2020,
       yearTo: 2024,
       rating: 6,

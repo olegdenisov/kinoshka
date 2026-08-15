@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router'
 
+import { getGenreLabel } from '../lib/genreMap'
 import {
   EMPTY_FILTERS,
   FILTER_URL_KEYS,
@@ -94,7 +95,10 @@ export const useFilterState = () => {
     })
   }
   filters.genres.forEach(g =>
-    activeChips.push({ label: g, onRemove: () => toggleGenre(g) }),
+    activeChips.push({
+      label: getGenreLabel(g),
+      onRemove: () => toggleGenre(g),
+    }),
   )
   if (filters.yearFrom || filters.yearTo) {
     // yearFrom/yearTo — независимые nullable-поля (валидный FilterState допускает только
