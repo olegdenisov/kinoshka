@@ -1,6 +1,13 @@
+import { ActiveFilterChips, useFilterState } from '@features/catalog-filter'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { act, useEffect } from 'react'
-import { MemoryRouter, useLocation, useNavigate } from 'react-router'
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from 'react-router'
 
 import { Header } from './Header'
 
@@ -161,5 +168,66 @@ describe('Header (variant="search")', () => {
     expect(
       screen.getByPlaceholderText('Search movies, series, anime…'),
     ).toHaveValue('')
+  })
+})
+
+/** Читает useFilterState() поверх текущего URL — проверяет, что после навигации по nav pill
+ * реально применился фильтр и chip, а не только сменился ?type в адресной строке. */
+const FilterProbe = () => {
+  const { filters, activeChips } = useFilterState()
+  return (
+    <>
+      <div data-testid='filter-type'>{filters.type ?? ''}</div>
+      <ActiveFilterChips chips={activeChips} />
+    </>
+  )
+}
+
+const SearchPage = () => (
+  <>
+    <Header variant='search' activeNav='search' />
+    <FilterProbe />
+  </>
+)
+
+describe('Header — nav pills синхронизируют ?type с фильтром/chips', () => {
+  const renderApp = (initialEntries: string[]) =>
+    render(
+      <MemoryRouter initialEntries={initialEntries}>
+        <Routes>
+          <Route path='/' element={<Header variant='default' />} />
+          <Route path='/search' element={<SearchPage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+  it.each([
+    ['Movies', 'movie'],
+    ['Series', 'series'],
+    ['Anime', 'anime'],
+  ])(
+    'клик по "%s" на главной → /search?type=%s, фильтр и chip применяются',
+    (label, type) => {
+      renderApp(['/'])
+
+      fireEvent.click(screen.getByRole('button', { name: label }))
+
+      expect(screen.getByTestId('filter-type')).toHaveTextContent(type)
+      // nav pill + chip — оба должны показывать один и тот же лейбл после применения фильтра.
+      expect(screen.getAllByText(label)).toHaveLength(2)
+    },
+  )
+
+  it('переключение Movies → Series на /search обновляет ?type и chip без переоткрытия страницы', () => {
+    renderApp(['/search?type=movie'])
+
+    expect(screen.getByTestId('filter-type')).toHaveTextContent('movie')
+    expect(screen.getAllByText('Movies')).toHaveLength(2) // nav pill + chip
+
+    fireEvent.click(screen.getByRole('button', { name: 'Series' }))
+
+    expect(screen.getByTestId('filter-type')).toHaveTextContent('series')
+    expect(screen.getAllByText('Series')).toHaveLength(2) // nav pill + chip
+    expect(screen.getAllByText('Movies')).toHaveLength(1) // только nav pill, chip снят
   })
 })

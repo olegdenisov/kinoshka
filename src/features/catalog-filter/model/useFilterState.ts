@@ -20,6 +20,13 @@ export type ActiveChip = {
   onRemove: () => void
 }
 
+/** UI type-фильтр → лейбл chip'а — те же подписи, что у Header nav pills и SearchSidebar. */
+const TYPE_LABELS: Record<string, string> = {
+  movie: 'Movies',
+  series: 'Series',
+  anime: 'Anime',
+}
+
 /**
  * URL — единственный источник истины для фильтров и сортировки (`?type`, `?genres`,
  * `?yearFrom`, `?yearTo`, `?rating`, `?sort`). Хук не хранит собственный стейт —
@@ -80,8 +87,7 @@ export const useFilterState = () => {
 
   const activeChips: ActiveChip[] = []
   if (filters.type) {
-    const label =
-      filters.type.charAt(0).toUpperCase() + filters.type.slice(1) + 's'
+    const label = TYPE_LABELS[filters.type] ?? filters.type
     activeChips.push({
       label,
       onRemove: () => setFilters(f => ({ ...f, type: null })),
