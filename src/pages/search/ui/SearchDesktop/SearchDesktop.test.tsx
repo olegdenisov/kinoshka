@@ -506,6 +506,25 @@ describe('SearchDesktop — синхронизация типа из hero-нав
   })
 })
 
+describe('SearchDesktop — nav pill в шапке подсвечивается по ?type (ревью-фикс: activeNav был захардкожен)', () => {
+  it('деплинк на /search?type=series подсвечивает "Series" в шапке, соседние типы и Home — нет', async () => {
+    mockCatalog([catalogDoc('Attack on Titan', 401)])
+
+    await renderSearchDesktop(['/search?type=series'])
+
+    const header = document.querySelector('header')!
+
+    const seriesBtn = within(header).getByRole('button', { name: 'Series' })
+    expect(seriesBtn.className).toMatch(/navPillActive/)
+
+    const moviesBtn = within(header).getByRole('button', { name: 'Movies' })
+    expect(moviesBtn.className).not.toMatch(/navPillActive/)
+
+    const animeBtn = within(header).getByRole('button', { name: 'Anime' })
+    expect(animeBtn.className).not.toMatch(/navPillActive/)
+  })
+})
+
 describe('SearchDesktop — a11y счётчика результатов', () => {
   it('счётчик результатов помечен aria-live="polite"', async () => {
     mockCatalog([catalogDoc('Oppenheimer', 301)])

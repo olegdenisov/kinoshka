@@ -18,7 +18,7 @@ type HeaderProps = {
 
 const navItems = [
   { key: 'home', label: 'Home', path: '/' },
-  { key: 'movies', label: 'Movies', path: '/search?type=movie' },
+  { key: 'movie', label: 'Movies', path: '/search?type=movie' },
   { key: 'series', label: 'Series', path: '/search?type=series' },
   { key: 'anime', label: 'Anime', path: '/search?type=anime' },
 ]
