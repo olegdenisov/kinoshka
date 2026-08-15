@@ -230,6 +230,8 @@
 
 - Modify: `src/widgets/header/ui/Header/Header.tsx` (экспортировать
   `QUERY_MIN_LENGTH`)
+- Modify: `src/widgets/header/ui/Header/index.tsx` (реэкспортировать
+  `QUERY_MIN_LENGTH` — промежуточный barrel, обнаружен в процессе)
 - Modify: `src/widgets/header/index.ts` (реэкспортировать
   `QUERY_MIN_LENGTH`)
 - Modify: `src/features/catalog-filter/index.ts` (реэкспортировать
@@ -237,42 +239,45 @@
 - Modify: `src/pages/home/ui/HeroSection/HeroSection.tsx`
 - Create: `src/pages/home/ui/HeroSection/HeroSection.test.tsx`
 
-- [ ] В `Header.tsx` добавить `export` к `QUERY_MIN_LENGTH`; в
+- [x] В `Header.tsx` добавить `export` к `QUERY_MIN_LENGTH`; в
       `src/widgets/header/index.ts` добавить `export { QUERY_MIN_LENGTH }
-      from './ui/Header'`
-- [ ] В `src/features/catalog-filter/index.ts` добавить `export {
+      from './ui/Header'` (также потребовалось прокинуть реэкспорт через
+      промежуточный `src/widgets/header/ui/Header/index.tsx`, который до
+      этого реэкспортировал только `Header` — иначе `QUERY_MIN_LENGTH`
+      приходил `undefined` через публичный API виджета)
+- [x] В `src/features/catalog-filter/index.ts` добавить `export {
       EMPTY_FILTERS } from './lib/searchParams'`
-- [ ] Импортировать `filtersToSearchParams`, `EMPTY_FILTERS` из
+- [x] Импортировать `filtersToSearchParams`, `EMPTY_FILTERS` из
       `@features/catalog-filter` и `QUERY_MIN_LENGTH` из `@widgets/header` в
       `HeroSection.tsx`
-- [ ] Обновить `CHIPS` до `{ key: null, label: 'Everything' }, { key:
+- [x] Обновить `CHIPS` до `{ key: null, label: 'Everything' }, { key:
       'movie', label: 'Movies' }, { key: 'series', label: 'Series' }, {
       key: 'anime', label: 'Anime' }`; поменять состояние `activeFilter` на
       `useState<FilterState['type']>(null)`; в `CHIPS.map` использовать
       `key={c.label}` вместо `key={c.key}` (значение `key` теперь может
       быть `null`)
-- [ ] Добавить функцию `handleSubmit`, которая собирает `URLSearchParams`
+- [x] Добавить функцию `handleSubmit`, которая собирает `URLSearchParams`
       через `filtersToSearchParams({ ...EMPTY_FILTERS, type: activeFilter })`,
       устанавливает `q` через `params.set('q', trimmed)` только если
       `q.trim().length >= QUERY_MIN_LENGTH`, и вызывает
       `navigate(params.toString() ? `/search?${params}` : '/search')`
-- [ ] Привязать `onKeyDown` поля (клавиша Enter) и `onClick` кнопки
+- [x] Привязать `onKeyDown` поля (клавиша Enter) и `onClick` кнопки
       "Search" к вызову `handleSubmit` (заменить текущие голые вызовы
       `navigate('/search')`)
-- [ ] Написать тест: ввод запроса длиной ≥ `QUERY_MIN_LENGTH` и нажатие
+- [x] Написать тест: ввод запроса длиной ≥ `QUERY_MIN_LENGTH` и нажатие
       Enter ведёт на `/search?q=<query>` (с trim)
-- [ ] Написать тест: выбор чипа типа (например "Movies") при пустом
+- [x] Написать тест: выбор чипа типа (например "Movies") при пустом
       запросе и клик по "Search" ведёт на `/search?type=movie`
-- [ ] Написать тест: заданы одновременно запрос (≥ `QUERY_MIN_LENGTH`) и
+- [x] Написать тест: заданы одновременно запрос (≥ `QUERY_MIN_LENGTH`) и
       чип типа — ведёт на `/search?type=<type>&q=<query>`
-- [ ] Написать тест: запрос короче `QUERY_MIN_LENGTH` (например 1 символ) +
+- [x] Написать тест: запрос короче `QUERY_MIN_LENGTH` (например 1 символ) +
       Enter — `q` не попадает в URL (переход на `/search` без `?q`, тот же
       гейт, что в `Header`, см. Контекст/Технические детали)
-- [ ] Написать тест: состояние по умолчанию (активен "Everything", пустой
+- [x] Написать тест: состояние по умолчанию (активен "Everything", пустой
       запрос) и клик по "Search" ведёт на `/search` без query-строки
       (граничный случай — пустой сабмит не должен давать лишний `?` или
       пустые параметры)
-- [ ] Прогнать тесты (`make test`) — должны пройти перед следующей задачей
+- [x] Прогнать тесты (`make test`) — должны пройти перед следующей задачей
 
 ### Task 2: Подтвердить синхронизацию фильтра типа в сайдбаре `/search`
 

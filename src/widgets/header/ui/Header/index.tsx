@@ -1,1 +1,1 @@
-export { Header } from './Header'
+export { Header, QUERY_MIN_LENGTH } from './Header'

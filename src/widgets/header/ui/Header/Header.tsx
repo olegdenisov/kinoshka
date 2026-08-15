@@ -9,7 +9,7 @@ import { NavPill } from '../NavPill'
 import s from './Header.module.css'
 
 const QUERY_DEBOUNCE_MS = 250
-const QUERY_MIN_LENGTH = 2
+export const QUERY_MIN_LENGTH = 2
 
 type HeaderProps = {
   variant?: 'default' | 'search'

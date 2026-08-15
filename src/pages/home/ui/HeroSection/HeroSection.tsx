@@ -1,12 +1,15 @@
+import { EMPTY_FILTERS, filtersToSearchParams } from '@features/catalog-filter'
+import type { FilterState } from '@features/catalog-filter'
 import { SearchIcon } from '@shared/ui'
+import { QUERY_MIN_LENGTH } from '@widgets/header'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import s from './HeroSection.module.css'
 
-const CHIPS = [
-  { key: 'all', label: 'Everything' },
-  { key: 'movies', label: 'Movies' },
+const CHIPS: { key: FilterState['type']; label: string }[] = [
+  { key: null, label: 'Everything' },
+  { key: 'movie', label: 'Movies' },
   { key: 'series', label: 'Series' },
   { key: 'anime', label: 'Anime' },
 ]
@@ -40,8 +43,22 @@ const Stat = ({ value, label }: StatProps) => (
 
 export const HeroSection = () => {
   const navigate = useNavigate()
-  const [activeFilter, setActiveFilter] = useState('all')
+  const [activeFilter, setActiveFilter] = useState<FilterState['type']>(null)
   const [q, setQ] = useState('')
+
+  const handleSubmit = () => {
+    const params = filtersToSearchParams({
+      ...EMPTY_FILTERS,
+      type: activeFilter,
+    })
+
+    const trimmed = q.trim()
+    if (trimmed.length >= QUERY_MIN_LENGTH) {
+      params.set('q', trimmed)
+    }
+
+    navigate(params.toString() ? `/search?${params}` : '/search')
+  }
 
   return (
     <section className={s.hero}>
@@ -74,15 +91,11 @@ export const HeroSection = () => {
             value={q}
             onChange={e => setQ(e.target.value)}
             onKeyDown={e => {
-              if (e.key === 'Enter') navigate('/search')
+              if (e.key === 'Enter') handleSubmit()
             }}
             placeholder='Try "films from 2024 rated 8+" or a title…'
           />
-          <button
-            type='button'
-            className={s.searchBtn}
-            onClick={() => navigate('/search')}
-          >
+          <button type='button' className={s.searchBtn} onClick={handleSubmit}>
             Search
           </button>
         </div>
@@ -90,7 +103,7 @@ export const HeroSection = () => {
         <div className={s.chips}>
           {CHIPS.map(c => (
             <Chip
-              key={c.key}
+              key={c.label}
               active={activeFilter === c.key}
               onClick={() => setActiveFilter(c.key)}
             >
