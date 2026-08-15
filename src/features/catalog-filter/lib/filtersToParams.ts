@@ -1,7 +1,6 @@
 import type { MovieControllerFindManyByQueryV15Data } from '@shared/api'
 
 import type { FilterState } from '../model/useFilterState'
-import { toApiGenre } from './genreMap'
 
 export type CatalogQueryParams = NonNullable<
   MovieControllerFindManyByQueryV15Data['query']
@@ -58,11 +57,8 @@ export const filtersToParams = (
     params.type = [apiType]
   }
 
-  const apiGenres = filters.genres
-    .map(toApiGenre)
-    .filter((genre): genre is string => Boolean(genre))
-  if (apiGenres.length > 0) {
-    params['genres.name'] = apiGenres
+  if (filters.genres.length > 0) {
+    params['genres.name'] = filters.genres
   }
 
   if (filters.yearFrom != null || filters.yearTo != null) {

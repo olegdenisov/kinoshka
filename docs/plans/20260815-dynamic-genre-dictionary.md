@@ -157,12 +157,12 @@
 - Modify: `src/features/catalog-filter/lib/filtersToParams.test.ts`
 - Modify: `src/features/catalog-filter/model/useFilterState.ts`
 
-- [ ] инвертировать `GENRE_MAP` → `GENRE_LABELS: Record<string, string>` (RU-название → EN-лейбл, те же 12 пар, в обратную сторону); заменить `toApiGenre` на `getGenreLabel(ruName: string): string`, возвращающий `GENRE_LABELS[ruName] ?? ruName`
-- [ ] `filtersToParams.ts`: убрать шаг `toApiGenre`/фильтрации неизвестных, установить `params['genres.name'] = filters.genres` напрямую, если список непустой
-- [ ] `useFilterState.ts`: лейбл active-чипа жанра теперь через `getGenreLabel(g)` вместо сырого хранимого значения
-- [ ] переписать `genreMap.test.ts` под новую RU→EN форму: убрать тест «все значения `ALL_GENRES` покрыты словарём» (инвариантa теряет смысл — `ALL_GENRES` удаляется в Task 8, словарь больше не обязан покрывать весь справочник), добавить кейсы `getGenreLabel`: известное RU-название → EN-лейбл; неизвестное RU-название → возвращается как есть
-- [ ] обновить `filtersToParams.test.ts` — убрать кейсы, проверяющие пропуск немаппленных жанров (больше не актуально), добавить кейс, подтверждающий, что RU-названия проходят без изменений
-- [ ] прогнать тесты — должны пройти перед задачей 5
+- [x] инвертировать `GENRE_MAP` → `GENRE_LABELS: Record<string, string>` (RU-название → EN-лейбл, те же 12 пар, в обратную сторону); заменить `toApiGenre` на `getGenreLabel(ruName: string): string`, возвращающий `GENRE_LABELS[ruName] ?? ruName`
+- [x] `filtersToParams.ts`: убрать шаг `toApiGenre`/фильтрации неизвестных, установить `params['genres.name'] = filters.genres` напрямую, если список непустой
+- [x] `useFilterState.ts`: лейбл active-чипа жанра теперь через `getGenreLabel(g)` вместо сырого хранимого значения
+- [x] переписать `genreMap.test.ts` под новую RU→EN форму: убрать тест «все значения `ALL_GENRES` покрыты словарём» (инвариантa теряет смысл — `ALL_GENRES` удаляется в Task 8, словарь больше не обязан покрывать весь справочник), добавить кейсы `getGenreLabel`: известное RU-название → EN-лейбл; неизвестное RU-название → возвращается как есть
+- [x] обновить `filtersToParams.test.ts` — убрать кейсы, проверяющие пропуск немаппленных жанров (больше не актуально), добавить кейс, подтверждающий, что RU-названия проходят без изменений
+- [x] прогнать тесты — должны пройти перед задачей 5
 
 ### Task 5: Компонент `GenreSelector` (шорт-лист + show-all, без Suspense)
 
