@@ -65,7 +65,7 @@ const mockSearch = (
         total: docs.length,
         page: 1,
         pages: 3,
-        limit: 10,
+        limit: 12,
         ...overrides,
       })
     }),
@@ -83,7 +83,7 @@ const mockCatalog = (
       request = req
       return HttpResponse.json({
         docs,
-        limit: 10,
+        limit: 12,
         next: null,
         hasNext: false,
         hasPrev: false,
@@ -359,7 +359,7 @@ describe('invalidateMovieCatalog — Task 5 (retry реально бьёт в с
           total: 1,
           page: 1,
           pages: 1,
-          limit: 10,
+          limit: 12,
         })
       }),
     )
@@ -394,7 +394,7 @@ describe('invalidateMovieCatalog — Task 5 (retry реально бьёт в с
         requests += 1
         return HttpResponse.json({
           docs: [catalogDoc('Recovered')],
-          limit: 10,
+          limit: 12,
           next: null,
           hasNext: false,
           hasPrev: false,
@@ -415,13 +415,13 @@ describe('invalidateMovieCatalog — Task 5 (retry реально бьёт в с
           total: 1,
           page: 1,
           pages: 1,
-          limit: 10,
+          limit: 12,
         }),
       ),
       http.get(CATALOG_ENDPOINT, () =>
         HttpResponse.json({
           docs: [catalogDoc('Catalog Hit')],
-          limit: 10,
+          limit: 12,
           next: null,
           hasNext: false,
           hasPrev: false,
@@ -448,7 +448,7 @@ describe('invalidateMovieCatalog — Task 5 (retry реально бьёт в с
         catalogRequests += 1
         return HttpResponse.json({
           docs: [catalogDoc('Catalog Hit')],
-          limit: 10,
+          limit: 12,
           next: null,
           hasNext: false,
           hasPrev: false,

@@ -85,7 +85,7 @@ const mockChain = (total = 25) => {
 
       return HttpResponse.json({
         docs: [doc({ name: step.name })],
-        limit: 10,
+        limit: 12,
         next: step.next,
         hasNext: step.next !== null,
         hasPrev: step.cursor !== undefined,
@@ -105,7 +105,7 @@ describe('getMoviesPage — page=1 (без курсора)', () => {
         request = req
         return HttpResponse.json({
           docs: [doc({ name: 'Page1' })],
-          limit: 10,
+          limit: 12,
           next: 'c2',
           hasNext: true,
           hasPrev: false,
@@ -159,7 +159,7 @@ describe('getMoviesPage — отсутствие next → пустой хвос�
         requests += 1
         return HttpResponse.json({
           docs: [doc({ name: 'Page1' })],
-          limit: 10,
+          limit: 12,
           next: null,
           hasNext: false,
           hasPrev: false,
@@ -224,7 +224,7 @@ describe('getMoviesPage — ошибки', () => {
         requests += 1
         return HttpResponse.json({
           docs: [doc({ name: 'Recovered' })],
-          limit: 10,
+          limit: 12,
           next: null,
           hasNext: false,
           hasPrev: false,
@@ -270,7 +270,7 @@ describe('invalidateMoviesPage', () => {
         requests += 1
         return HttpResponse.json({
           docs: [doc({ name: 'Recovered' })],
-          limit: 10,
+          limit: 12,
           next: null,
           hasNext: false,
           hasPrev: false,
@@ -344,13 +344,13 @@ describe('getMoviesPage — page-level промис-мемо', () => {
   })
 })
 
-describe('getMoviesPage — totalPages = min(10, ceil(total/10)) из withCount-total', () => {
+describe('getMoviesPage — totalPages = min(10, ceil(total/12)) из withCount-total', () => {
   const mockTotal = (total?: number) =>
     server.use(
       http.get(ENDPOINT, () =>
         HttpResponse.json({
           docs: [doc()],
-          limit: 10,
+          limit: 12,
           next: null,
           hasNext: false,
           hasPrev: false,
@@ -359,8 +359,8 @@ describe('getMoviesPage — totalPages = min(10, ceil(total/10)) из withCount-
       ),
     )
 
-  it('total=95 → totalPages=10 (уже на потолке)', async () => {
-    mockTotal(95)
+  it('total=115 → totalPages=10 (уже на потолке)', async () => {
+    mockTotal(115)
     const getMoviesPage = await importGetMoviesPage()
 
     expect((await getMoviesPage({}, 1)).totalPages).toBe(10)

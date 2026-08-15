@@ -48,7 +48,7 @@ const mockSuccess = (
         total: docs.length,
         page: 1,
         pages: 1,
-        limit: 10,
+        limit: 12,
         ...overrides,
       })
     }),
@@ -69,7 +69,7 @@ const mockForbidden = () => {
 }
 
 describe('getSearchMovies — запрос', () => {
-  it('уходит на /v1.5/movie/search с query, page и limit:10', async () => {
+  it('уходит на /v1.5/movie/search с query, page и limit:12', async () => {
     const getRequest = mockSuccess([doc()])
 
     await getSearchMovies({ query: 'matrix', page: 2 })
@@ -77,17 +77,17 @@ describe('getSearchMovies — запрос', () => {
     const url = new URL(getRequest()!.url)
     expect(url.searchParams.get('query')).toBe('matrix')
     expect(url.searchParams.get('page')).toBe('2')
-    expect(url.searchParams.get('limit')).toBe('10')
+    expect(url.searchParams.get('limit')).toBe('12')
   })
 
-  it('без page — параметр page не отправляется, limit:10 всё равно уходит', async () => {
+  it('без page — параметр page не отправляется, limit:12 всё равно уходит', async () => {
     const getRequest = mockSuccess([doc()])
 
     await getSearchMovies({ query: 'no-page' })
 
     const url = new URL(getRequest()!.url)
     expect(url.searchParams.has('page')).toBe(false)
-    expect(url.searchParams.get('limit')).toBe('10')
+    expect(url.searchParams.get('limit')).toBe('12')
   })
 
   it('403 — промис реджектится (isError-cooldown в фабрике)', async () => {
