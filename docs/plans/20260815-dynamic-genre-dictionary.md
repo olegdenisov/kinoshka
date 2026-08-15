@@ -190,12 +190,12 @@
 - Modify: `src/widgets/search-sidebar/ui/SearchSidebar/SearchSidebar.module.css`
 - Modify: существующие тесты, ссылающиеся на чипы жанров `SearchSidebar`/`SearchDesktop`
 
-- [ ] заменить блок `ALL_GENRES.map(...)` в `FilterGroup` «Genre» на `<GenreSelector selected={filters.genres} onToggle={onToggleGenre} disabled={disabled} />` (без обёртки в `AsyncBoundary` — хук синхронный)
-- [ ] удалить локальный компонент `GenreChip` и тип `GenreChipProps` из `SearchSidebar.tsx` (единственный потребитель — заменённый блок; иначе `noUnusedLocals` уронит `make typecheck`)
-- [ ] убрать теперь неиспользуемый импорт `ALL_GENRES`
-- [ ] убрать ставшие мёртвыми правила `.genreList`/`.genreChip`/`.genreChipActive` из `SearchSidebar.module.css`
-- [ ] обновить/заменить тесты `SearchDesktop`/`SearchSidebar`, проверяющие старый захардкоженный список чипов жанров (опираться на дефолтный MSW-хендлер справочника из `src/test/setup.ts`, Task 3)
-- [ ] прогнать тесты — должны пройти перед задачей 7
+- [x] заменить блок `ALL_GENRES.map(...)` в `FilterGroup` «Genre» на `<GenreSelector selected={filters.genres} onToggle={onToggleGenre} disabled={disabled} />` (без обёртки в `AsyncBoundary` — хук синхронный)
+- [x] удалить локальный компонент `GenreChip` и тип `GenreChipProps` из `SearchSidebar.tsx` (единственный потребитель — заменённый блок; иначе `noUnusedLocals` уронит `make typecheck`)
+- [x] убрать теперь неиспользуемый импорт `ALL_GENRES`
+- [x] убрать ставшие мёртвыми правила `.genreList`/`.genreChip`/`.genreChipActive` из `SearchSidebar.module.css`
+- [x] обновить/заменить тесты `SearchDesktop`/`SearchSidebar`, проверяющие старый захардкоженный список чипов жанров (опираться на дефолтный MSW-хендлер справочника из `src/test/setup.ts`, Task 3) — существующие ассерты в `SearchDesktop.test.tsx` (`getAllByRole('button', { name: /Action|Drama|Sci-Fi/ })`) уже проходят без изменений: `GenreSelector` синхронно рендерит `STATIC_FALLBACK_GENRES` (боевик/драма/... → EN-лейблы через `getGenreLabel`) на первом рендере, так что Action/Drama-кнопки присутствуют и корректно наследуют `disabled`
+- [x] прогнать тесты — должны пройти перед задачей 7
 
 ### Task 7: Подключить `GenreSelector` в `SearchMobile.tsx`, убрать старый инлайн-блок
 
