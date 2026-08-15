@@ -9,6 +9,7 @@ export type {
   CrewMember,
 } from './model/types'
 export type { Genre } from './model/genre'
+export { STATIC_FALLBACK_GENRES } from './model/genre'
 export { CATALOG, ALL_GENRES } from './model/catalog'
 export { getMoviesPage, invalidateMoviesPage } from './api/getMoviesPage'
 export type { CatalogParams, CatalogPageResult } from './api/getMoviesPage'

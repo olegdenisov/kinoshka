@@ -5,3 +5,7 @@ export {
 } from './useTopRatedMovies'
 export { invalidateMovieDetail, useMovieDetail } from './useMovieDetail'
 export type { MovieDetailBundle } from './useMovieDetail'
+export {
+  invalidateGenreDictionary,
+  useGenreDictionary,
+} from './useGenreDictionary'

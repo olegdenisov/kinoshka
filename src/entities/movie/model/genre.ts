@@ -5,3 +5,20 @@
 export type Genre = {
   name: string
 }
+
+// Статический шорт-лист из 6 самых ходовых жанров (боевик/драма/триллер/ужасы/фэнтези/
+// приключения) — используется в двух местах:
+//   1. `useGenreDictionary` (`../hooks/useGenreDictionary.ts`) — фолбэк-значение, пока
+//      localStorage-кэш пуст (до первой успешной загрузки справочника из API).
+//   2. `GenreSelector` (`@features/catalog-filter/ui/GenreSelector`) — дефолтный видимый
+//      набор чипов, объединяемый с уже выбранными жанрами.
+// Определён здесь (в `@entities/movie`), а не в `@features/catalog-filter`, потому что этот
+// слой не может импортировать вверх по FSD-иерархии — единый источник для обоих потребителей.
+export const STATIC_FALLBACK_GENRES: Genre[] = [
+  { name: 'боевик' },
+  { name: 'драма' },
+  { name: 'триллер' },
+  { name: 'ужасы' },
+  { name: 'фэнтези' },
+  { name: 'приключения' },
+]
