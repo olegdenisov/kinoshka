@@ -29,6 +29,25 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
   const [draft, setDraft] = useState(() => searchParams.get('q') ?? '')
   const debouncedDraft = useDebouncedValue(draft, QUERY_DEBOUNCE_MS)
   const urlQuery = searchParams.get('q') ?? ''
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // ⌘K/Ctrl+K подсказка рядом с полем поиска (см. searchHint ниже) была чисто визуальной —
+  // фокусирует инпут, только когда сам поисковый блок реально смонтирован (variant='search').
+  useEffect(() => {
+    if (variant !== 'search') {
+      return
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [variant])
   // Отслеживает последнее значение ?q, которое сам компонент записал в URL (или увидел на
   // старте). Нужен, чтобы отличить "мы сами только что записали ?q" (после debounce/×) от
   // "URL поменялся снаружи" (back/forward в пределах /search — без ремаунта компонента).
@@ -115,6 +134,7 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
             <div className={s.searchBox} role='search'>
               <SearchIcon />
               <input
+                ref={searchInputRef}
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
                 placeholder='Search movies, series, anime…'
