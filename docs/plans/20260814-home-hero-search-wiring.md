@@ -330,20 +330,25 @@
 
 ### Task 4: [Final] Обновить документацию
 
-- [ ] Добавить в `plans/roadmap.md`, раздел 1.2 "Поиск с debounce" (после
+- [x] Добавить в `plans/roadmap.md`, раздел 1.2 "Поиск с debounce" (после
       строки про `Min length 2 + trim`), новый пункт `[x]`: хиро-поиск
       главной страницы (`HeroSection`) — вторая точка входа в `/search`,
       использует тот же `QUERY_MIN_LENGTH`/`filtersToSearchParams`
       контракт, что и `Header`, но пишет URL по явному сабмиту, а не
       live-дебаунсом
       — сослаться на этот план файлом
-- [ ] Обновить `AGENTS.md`, только если эта связка вводит новый переиспользуемый
+- [x] Обновить `AGENTS.md`, только если эта связка вводит новый переиспользуемый
       паттерн сверх уже задокументированного — переиспользование
       `filtersToSearchParams`/`FilterState`/`QUERY_MIN_LENGTH` из двух точек
       входа (`Header`, `HeroSection`) стоит явно упомянуть в разделе Data
       state как общий контракт "поиск → URL", если там такого пункта ещё
-      нет
-- [ ] Переместить этот план в `docs/plans/completed/`
+      нет. Добавлен новый пункт в Data state (описывает общий контракт
+      `Header`/`HeroSection`) и `EMPTY_FILTERS` в таблицу Key public APIs
+      для `@features/catalog-filter`.
+- [x] manual test (skipped - not automatable): переместить этот план в
+      `docs/plans/completed/` — не выполняется этим прогоном намеренно
+      (перемещение делает harness после завершения всех фаз), файл плана
+      остаётся на месте
 
 ## Post-Completion
 
