@@ -487,6 +487,25 @@ describe('SearchDesktop — ошибка во время апдейта, не п
   })
 })
 
+describe('SearchDesktop — синхронизация типа из hero-навигации (browse-режим, ?type без ?q)', () => {
+  it('деплинк на /search?type=movie подсвечивает "Movies" в сайдбаре, соседние типы не активны', async () => {
+    mockCatalog([catalogDoc('Dune Part Two', 201)])
+
+    await renderSearchDesktop(['/search?type=movie'])
+
+    const sidebar = document.querySelector('aside')!
+
+    const moviesBtn = within(sidebar).getByRole('button', { name: /^Movies/ })
+    expect(moviesBtn.className).toMatch(/radioRowActive/)
+
+    const seriesBtn = within(sidebar).getByRole('button', { name: /^Series/ })
+    expect(seriesBtn.className).not.toMatch(/radioRowActive/)
+
+    const animeBtn = within(sidebar).getByRole('button', { name: /^Anime/ })
+    expect(animeBtn.className).not.toMatch(/radioRowActive/)
+  })
+})
+
 describe('SearchDesktop — a11y счётчика результатов', () => {
   it('счётчик результатов помечен aria-live="polite"', async () => {
     mockCatalog([catalogDoc('Oppenheimer', 301)])

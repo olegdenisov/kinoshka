@@ -290,20 +290,20 @@
 
 - Modify: `src/pages/search/ui/SearchDesktop/SearchDesktop.test.tsx`
 
-- [ ] Написать тест в `describe`-блоке рядом с существующими сценариями
+- [x] Написать тест в `describe`-блоке рядом с существующими сценариями
       сайдбара: `renderSearchDesktop(['/search?type=movie'])`, замокать
       каталожный эндпоинт через уже существующий в файле хелпер
       `mockCatalog([catalogDoc(...)])` (`onUnhandledRequest: 'error'` в MSW
       требует мока перед рендером)
-- [ ] Ассерт: `within(document.querySelector('aside')!).getByRole('button',
+- [x] Ассерт: `within(document.querySelector('aside')!).getByRole('button',
       { name: /^Movies/ })` — `className` матчит `/radioRowActive/`
       (прецедент class-based ассерта на активный элемент —
       `SearchDesktop.test.tsx:436`, `SearchDesktop.test.tsx:545` для
       обращения к кнопке типа в сайдбаре)
-- [ ] Ассерт: соседние кнопки "Series"/"Anime" в том же сайдбаре — `className`
+- [x] Ассерт: соседние кнопки "Series"/"Anime" в том же сайдбаре — `className`
       НЕ матчит `/radioRowActive/` (негативная проверка, что активен именно
       выбранный тип, а не все радио-кнопки разом)
-- [ ] Прогнать тесты (`make test`) — должны пройти перед следующей задачей
+- [x] Прогнать тесты (`make test`) — должны пройти перед следующей задачей
 
 ### Task 3: Проверить критерии приёмки
 
