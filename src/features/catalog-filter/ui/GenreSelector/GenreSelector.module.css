@@ -1,0 +1,64 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Desktop sizing (SearchSidebar) — matches the removed .genreChip/.genreChipActive rules. */
+.chip {
+  height: 28px;
+  padding: 0 10px;
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-faint);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 140ms;
+}
+
+.chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.chipActive {
+  background: var(--accent-warm-soft);
+  color: var(--accent-warm);
+  border-color: var(--accent-warm-border);
+}
+
+.toggle {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--accent-warm);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Mobile sizing (SearchMobile) — matches the removed inline styles (height 34, fontSize 12.5,
+   pill radius) so switching to the shared component isn't a visual regression on mobile. */
+@media (max-width: 719px) {
+  .chip {
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
+  }
+
+  .toggle {
+    font-size: 12.5px;
+  }
+}
