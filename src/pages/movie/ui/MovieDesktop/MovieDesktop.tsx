@@ -34,7 +34,7 @@ export const MovieDesktop = ({ movie, images }: MovieDesktopProps) => {
 
   return (
     <div className={s.root}>
-      <Header activeNav='movie' />
+      <Header />
       <MovieHero movie={movie} liked={liked} onLikedChange={setLiked} />
       <MovieTabsNav tabs={TABS} activeTab={tab} onTabChange={setTab} />
       <div className={s.tabContent}>

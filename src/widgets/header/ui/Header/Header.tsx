@@ -1,3 +1,5 @@
+import { EMPTY_FILTERS, filtersToSearchParams } from '@features/catalog-filter'
+import type { FilterState } from '@features/catalog-filter'
 import { useDebouncedValue } from '@shared/lib'
 import { SearchIcon, BellIcon, CloseIcon } from '@shared/ui'
 import { useEffect, useRef, useState } from 'react'
@@ -16,11 +18,16 @@ type HeaderProps = {
   activeNav?: string
 }
 
+/** Строим /search-URL через тот же контракт, что HeroSection (@features/catalog-filter), а не
+ * хардкодим ?type= вручную — так рефакторинг кодирования фильтра затронет и nav pills. */
+const searchPathForType = (type: FilterState['type']) =>
+  `/search?${filtersToSearchParams({ ...EMPTY_FILTERS, type })}`
+
 const navItems = [
   { key: 'home', label: 'Home', path: '/' },
-  { key: 'movie', label: 'Movies', path: '/search?type=movie' },
-  { key: 'series', label: 'Series', path: '/search?type=series' },
-  { key: 'anime', label: 'Anime', path: '/search?type=anime' },
+  { key: 'movie', label: 'Movies', path: searchPathForType('movie') },
+  { key: 'series', label: 'Series', path: searchPathForType('series') },
+  { key: 'anime', label: 'Anime', path: searchPathForType('anime') },
 ]
 
 export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
@@ -39,7 +46,9 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      // `e.code` — физическая клавиша (layout-независимая), не `e.key`: на нелатинской
+      // раскладке (например, кириллице) `e.key` для той же физической K даёт другой символ.
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyK') {
         e.preventDefault()
         searchInputRef.current?.focus()
       }
