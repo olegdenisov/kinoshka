@@ -171,6 +171,61 @@ describe('Header (variant="search")', () => {
   })
 })
 
+describe('Header — ⌘K/Ctrl+K фокусирует поле поиска (подсказка была чисто визуальной)', () => {
+  it('⌘K (metaKey) фокусирует инпут', () => {
+    renderHeader(['/search'])
+    const input = screen.getByPlaceholderText('Search movies, series, anime…')
+    expect(input).not.toHaveFocus()
+
+    fireEvent.keyDown(window, { key: 'k', metaKey: true })
+
+    expect(input).toHaveFocus()
+  })
+
+  it('Ctrl+K (не-Mac) тоже фокусирует инпут', () => {
+    renderHeader(['/search'])
+    const input = screen.getByPlaceholderText('Search movies, series, anime…')
+
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true })
+
+    expect(input).toHaveFocus()
+  })
+
+  it('preventDefault вызывается — браузерный шорткат по ⌘K не срабатывает поверх', () => {
+    renderHeader(['/search'])
+
+    const event = new KeyboardEvent('keydown', {
+      key: 'k',
+      metaKey: true,
+      cancelable: true,
+    })
+    window.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(true)
+  })
+
+  it('обычная "k" без modifier-клавиши не фокусирует инпут', () => {
+    renderHeader(['/search'])
+    const input = screen.getByPlaceholderText('Search movies, series, anime…')
+
+    fireEvent.keyDown(window, { key: 'k' })
+
+    expect(input).not.toHaveFocus()
+  })
+
+  it('вне variant="search" (инпута нет в DOM) — ⌘K не падает', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Header variant='default' />
+      </MemoryRouter>,
+    )
+
+    expect(() =>
+      fireEvent.keyDown(window, { key: 'k', metaKey: true }),
+    ).not.toThrow()
+  })
+})
+
 /** Читает useFilterState() поверх текущего URL — проверяет, что после навигации по nav pill
  * реально применился фильтр и chip, а не только сменился ?type в адресной строке. */
 const FilterProbe = () => {
