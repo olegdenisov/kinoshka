@@ -1,5 +1,5 @@
-import { ALL_GENRES } from '@entities/movie'
 import type { FilterState } from '@features/catalog-filter'
+import { GenreSelector } from '@features/catalog-filter'
 
 import s from './SearchSidebar.module.css'
 
@@ -56,24 +56,6 @@ const RadioRow = ({
   </button>
 )
 
-type GenreChipProps = {
-  label: string
-  active: boolean
-  disabled?: boolean
-  onClick: () => void
-}
-
-const GenreChip = ({ label, active, disabled, onClick }: GenreChipProps) => (
-  <button
-    type='button'
-    onClick={onClick}
-    disabled={disabled}
-    className={`${s.genreChip} ${active ? s.genreChipActive : ''}`}
-  >
-    {label}
-  </button>
-)
-
 export const SearchSidebar = ({
   filters,
   onFiltersChange,
@@ -103,17 +85,11 @@ export const SearchSidebar = ({
       </FilterGroup>
 
       <FilterGroup title='Genre'>
-        <div className={s.genreList}>
-          {ALL_GENRES.map(g => (
-            <GenreChip
-              key={g}
-              label={g}
-              active={filters.genres.includes(g)}
-              disabled={disabled}
-              onClick={() => onToggleGenre(g)}
-            />
-          ))}
-        </div>
+        <GenreSelector
+          selected={filters.genres}
+          onToggle={onToggleGenre}
+          disabled={disabled}
+        />
       </FilterGroup>
 
       <FilterGroup title='Year'>

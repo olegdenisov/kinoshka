@@ -110,33 +110,6 @@
   letter-spacing: 0.04em;
 }
 
-/* GenreChip */
-.genreList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.genreChip {
-  height: 28px;
-  padding: 0 10px;
-  background: var(--bg-chip);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-faint);
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 500;
-  transition: all 140ms;
-}
-
-.genreChipActive {
-  background: var(--accent-warm-soft);
-  color: var(--accent-warm);
-  border-color: var(--accent-warm-border);
-}
-
 /* Year range */
 .yearDisplay {
   display: flex;
