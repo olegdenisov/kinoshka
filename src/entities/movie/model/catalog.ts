@@ -182,19 +182,3 @@ export const CATALOG: Movie[] = [
     hue: 40,
   },
 ]
-
-export const ALL_GENRES = [
-  'Action',
-  'Drama',
-  'Sci-Fi',
-  'Thriller',
-  'Romance',
-  'Horror',
-  'Mystery',
-  'Documentary',
-  'Historical',
-  'Adventure',
-  'Family',
-  'Slice of Life',
-  'Fantasy',
-]

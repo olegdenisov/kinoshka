@@ -214,10 +214,10 @@
 - Modify: `src/entities/movie/model/catalog.ts`
 - Modify: `src/entities/movie/index.ts`
 
-- [ ] удалить экспорт `ALL_GENRES` из `catalog.ts` (сначала убедиться, что оставшихся ссылок нет — `grep -rn ALL_GENRES src`)
-- [ ] убрать `ALL_GENRES` из публичного API-экспорта `entities/movie/index.ts`
-- [ ] прогнать `make typecheck` — убедиться, что нигде не осталось повисших импортов
-- [ ] прогнать полный набор тестов — должен пройти перед задачей 9
+- [x] удалить экспорт `ALL_GENRES` из `catalog.ts` (сначала убедиться, что оставшихся ссылок нет — `grep -rn ALL_GENRES src`)
+- [x] убрать `ALL_GENRES` из публичного API-экспорта `entities/movie/index.ts`
+- [x] прогнать `make typecheck` — убедиться, что нигде не осталось повисших импортов
+- [x] прогнать полный набор тестов — должен пройти перед задачей 9
 
 ### Task 9: Проверка критериев приёмки
 
