@@ -29,7 +29,7 @@ const SORT_MAP: Record<string, { field: ApiSortField; type: string }> = {
 /** Лейблы сортировки в порядке отображения — единственный источник истины для UI (desktop `SortSelect`, mobile `BottomSheet`). */
 export const SORT_LABELS = Object.keys(SORT_MAP)
 
-const PAGE_LIMIT = 10
+const PAGE_LIMIT = 12
 
 /**
  * Границы года открытого диапазона, когда задан только `yearFrom` или только `yearTo`
@@ -45,7 +45,7 @@ const YEAR_RANGE_MAX = 2050
 /**
  * Чистая функция: FilterState (+опциональный лейбл сортировки) → query-параметры
  * для `getV15Movie` (каталог, без текстового поиска — Variant A).
- * Пустой фильтр без sort даёт минимальный `{ limit: 10 }`.
+ * Пустой фильтр без sort даёт минимальный `{ limit: 12 }`.
  */
 export const filtersToParams = (
   filters: FilterState,

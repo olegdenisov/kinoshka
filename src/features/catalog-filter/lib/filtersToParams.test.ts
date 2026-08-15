@@ -10,8 +10,8 @@ const EMPTY_FILTERS: FilterState = {
 }
 
 describe('filtersToParams', () => {
-  it('пустой фильтр без sort → { limit: 10 }', () => {
-    expect(filtersToParams(EMPTY_FILTERS)).toEqual({ limit: 10 })
+  it('пустой фильтр без sort → { limit: 12 }', () => {
+    expect(filtersToParams(EMPTY_FILTERS)).toEqual({ limit: 12 })
   })
 
   it('type "movie" → type: ["movie"]', () => {
@@ -112,7 +112,7 @@ describe('filtersToParams', () => {
     const params = filtersToParams(filters, 'Highest rated')
 
     expect(params).toEqual({
-      limit: 10,
+      limit: 12,
       type: ['movie'],
       'genres.name': ['драма'],
       year: ['2020-2024'],
