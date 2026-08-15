@@ -177,7 +177,7 @@ describe('Header — ⌘K/Ctrl+K фокусирует поле поиска (п�
     const input = screen.getByPlaceholderText('Search movies, series, anime…')
     expect(input).not.toHaveFocus()
 
-    fireEvent.keyDown(window, { key: 'k', metaKey: true })
+    fireEvent.keyDown(window, { code: 'KeyK', metaKey: true })
 
     expect(input).toHaveFocus()
   })
@@ -186,7 +186,16 @@ describe('Header — ⌘K/Ctrl+K фокусирует поле поиска (п�
     renderHeader(['/search'])
     const input = screen.getByPlaceholderText('Search movies, series, anime…')
 
-    fireEvent.keyDown(window, { key: 'k', ctrlKey: true })
+    fireEvent.keyDown(window, { code: 'KeyK', ctrlKey: true })
+
+    expect(input).toHaveFocus()
+  })
+
+  it('срабатывает по физической клавише (code) независимо от раскладки — кириллическая ЙЦУКЕН даёт key="л" на той же клавише', () => {
+    renderHeader(['/search'])
+    const input = screen.getByPlaceholderText('Search movies, series, anime…')
+
+    fireEvent.keyDown(window, { key: 'л', code: 'KeyK', metaKey: true })
 
     expect(input).toHaveFocus()
   })
@@ -195,7 +204,7 @@ describe('Header — ⌘K/Ctrl+K фокусирует поле поиска (п�
     renderHeader(['/search'])
 
     const event = new KeyboardEvent('keydown', {
-      key: 'k',
+      code: 'KeyK',
       metaKey: true,
       cancelable: true,
     })
@@ -204,11 +213,20 @@ describe('Header — ⌘K/Ctrl+K фокусирует поле поиска (п�
     expect(event.defaultPrevented).toBe(true)
   })
 
-  it('обычная "k" без modifier-клавиши не фокусирует инпут', () => {
+  it('обычная K без modifier-клавиши не фокусирует инпут', () => {
     renderHeader(['/search'])
     const input = screen.getByPlaceholderText('Search movies, series, anime…')
 
-    fireEvent.keyDown(window, { key: 'k' })
+    fireEvent.keyDown(window, { code: 'KeyK' })
+
+    expect(input).not.toHaveFocus()
+  })
+
+  it('⌘ с другой клавишей (не K) не фокусирует инпут', () => {
+    renderHeader(['/search'])
+    const input = screen.getByPlaceholderText('Search movies, series, anime…')
+
+    fireEvent.keyDown(window, { code: 'KeyJ', metaKey: true })
 
     expect(input).not.toHaveFocus()
   })
@@ -221,7 +239,7 @@ describe('Header — ⌘K/Ctrl+K фокусирует поле поиска (п�
     )
 
     expect(() =>
-      fireEvent.keyDown(window, { key: 'k', metaKey: true }),
+      fireEvent.keyDown(window, { code: 'KeyK', metaKey: true }),
     ).not.toThrow()
   })
 })
