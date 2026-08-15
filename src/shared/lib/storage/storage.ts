@@ -14,25 +14,45 @@ export const createStorageSlot = <T>(
   schema: z.ZodType<T>,
   fallback: T,
 ): StorageSlot<T> => {
+  // Мемо распарсенного значения по сырой строке из localStorage: get() —
+  // getSnapshot для useSyncExternalStore, который требует референциальной
+  // стабильности между вызовами без изменений в сторе (иначе React считает
+  // снапшот каждый раз новым → бесконечный ре-рендер + dev-варнинг).
+  let cachedRaw: string | null = null
+  let cachedValue: T = fallback
+  let hasCached = false
+
   return {
     get() {
-      try {
-        const raw = localStorage.getItem(key)
-        if (raw === null) {
-          return fallback
-        }
-        const parsed = schema.safeParse(JSON.parse(raw))
-
-        return parsed.success ? parsed.data : fallback
-      } catch {
+      const raw = localStorage.getItem(key)
+      if (raw === null) {
+        cachedRaw = null
+        hasCached = false
         return fallback
       }
+      if (hasCached && raw === cachedRaw) {
+        return cachedValue
+      }
+      try {
+        const parsed = schema.safeParse(JSON.parse(raw))
+        cachedValue = parsed.success ? parsed.data : fallback
+      } catch {
+        cachedValue = fallback
+      }
+      cachedRaw = raw
+      hasCached = true
+
+      return cachedValue
     },
     remove() {
       localStorage.removeItem(key)
+      cachedRaw = null
+      hasCached = false
     },
     set(value: T) {
       localStorage.setItem(key, JSON.stringify(value))
+      cachedRaw = null
+      hasCached = false
       emitter.dispatchEvent(new Event('change')) // уведомляем текущую вкладку
     },
     subscribe(callback) {
