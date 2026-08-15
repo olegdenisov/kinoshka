@@ -233,10 +233,10 @@
 
 ### Task 10: [Final] Обновить документацию
 
-- [ ] обновить раздел «Data state» в `AGENTS.md`: добавить пункт, документирующий справочник жанров как третью точку интеграции с живыми данными (эндпоинт-источник, localStorage-кэш с фоновым revalidate вместо блокирующего Suspense, паттерн `GenreSelector`/`useGenreDictionary`/`invalidateGenreDictionary`), в том же стиле, что и существующие пункты про домашние rails / search / movie-detail интеграции; явно отметить breaking change для legacy `?genres=`-ссылок (см. Technical Details)
-- [ ] обновить таблицу «Key public APIs» в `AGENTS.md`: заменить удалённую запись `ALL_GENRES` для `@entities/movie` на `Genre`, `useGenreDictionary()`, `invalidateGenreDictionary()`; добавить `GenreSelector` в строку `@features/catalog-filter`
-- [ ] упомянуть в `AGENTS.md` (или в докблоке `storage.ts`) фикс референциальной стабильности `createStorageSlot.get()` из Task 1 — следующий потребитель примитива не должен наступать на те же грабли
-- [ ] перенести этот план в `docs/plans/completed/`
+- [x] обновить раздел «Data state» в `AGENTS.md`: добавить пункт, документирующий справочник жанров как третью точку интеграции с живыми данными (эндпоинт-источник, localStorage-кэш с фоновым revalidate вместо блокирующего Suspense, паттерн `GenreSelector`/`useGenreDictionary`/`invalidateGenreDictionary`), в том же стиле, что и существующие пункты про домашние rails / search / movie-detail интеграции; явно отметить breaking change для legacy `?genres=`-ссылок (см. Technical Details) — также попутно исправлены две устаревшие ссылки на удалённый `ALL_GENRES` (`HomeMobile`/"Still mock data") и переписан пункт про EN→RU `toApiGenre`-маппинг под новую RU-каноническую схему
+- [x] обновить таблицу «Key public APIs» в `AGENTS.md`: заменить удалённую запись `ALL_GENRES` для `@entities/movie` на `Genre`, `STATIC_FALLBACK_GENRES`, `useGenreDictionary()`, `invalidateGenreDictionary()`; добавить `GenreSelector` в строку `@features/catalog-filter`
+- [x] упомянуть в `AGENTS.md` (или в докблоке `storage.ts`) фикс референциальной стабильности `createStorageSlot.get()` из Task 1 — следующий потребитель примитива не должен наступать на те же грабли — докблок `storage.ts` уже документировал фикс с Task 1; добавлено развёрнутое упоминание в `AGENTS.md` внутри нового пункта про справочник жанров (первый реальный потребитель примитива)
+- [x] перенести этот план в `docs/plans/completed/` (skipped - харнесс переносит план сам после завершения всех фаз; перенос вручную запрещён инструкцией исполнения)
 
 ## Post-Completion
 
