@@ -304,3 +304,42 @@ describe('Header — nav pills синхронизируют ?type с фильт�
     expect(screen.getAllByText('Movies')).toHaveLength(1) // только nav pill, chip снят
   })
 })
+
+describe('Header — пункт навигации Favorites', () => {
+  it('клик по "Favorites" ведёт на /favorites', () => {
+    let lastPathname = ''
+    const PathnameProbe = () => {
+      const { pathname } = useLocation()
+      useEffect(() => {
+        lastPathname = pathname
+      }, [pathname])
+      return null
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Header variant='default' />
+        <PathnameProbe />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Favorites' }))
+
+    expect(lastPathname).toBe('/favorites')
+  })
+
+  it('activeNav="favorites" подсвечивает пункт "Favorites" как активный', () => {
+    render(
+      <MemoryRouter initialEntries={['/favorites']}>
+        <Header variant='default' activeNav='favorites' />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Favorites' }).className).toMatch(
+      /navPillActive/,
+    )
+    expect(screen.getByRole('button', { name: 'Home' }).className).not.toMatch(
+      /navPillActive/,
+    )
+  })
+})

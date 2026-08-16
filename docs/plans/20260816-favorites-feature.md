@@ -109,11 +109,11 @@
 
 ### Task 6: Навигация к `/favorites` (roadmap 2.8, выполняется сразу)
 
-- [ ] `src/widgets/header/ui/Header/Header.tsx` — добавить пункт `{ key: 'favorites', label: 'Favorites', path: '/favorites' }` в `navItems`.
-- [ ] `src/widgets/mobile-chrome/ui/BottomNav/BottomNav.tsx` — у пункта `lists` заменить `path: null` на `path: '/favorites'`, убрать/адаптировать ветку `navItemDisabled`/click-guard именно для этого пункта (иконка `ListsIcon` уже подходит, label можно оставить как есть или переименовать в «Favorites» — на усмотрение при реализации, если ломает вёрстку/переводы).
-- [ ] написать тесты (успешные сценарии): клик по новому пункту в `Header`/`BottomNav` ведёт на `/favorites`, пункт подсвечивается как активный на этом роуте.
-- [ ] написать тесты для edge cases: `BottomNav` — остальные пункты с `path: null` (если такие ещё остались) по-прежнему задизейблены, регрессии нет.
-- [ ] прогнать тесты — все проходят перед Task 7.
+- [x] `src/widgets/header/ui/Header/Header.tsx` — добавить пункт `{ key: 'favorites', label: 'Favorites', path: '/favorites' }` в `navItems`.
+- [x] `src/widgets/mobile-chrome/ui/BottomNav/BottomNav.tsx` — у пункта `lists` заменить `path: null` на `path: '/favorites'`, убрать/адаптировать ветку `navItemDisabled`/click-guard именно для этого пункта (иконка `ListsIcon` уже подходит, label можно оставить как есть или переименовать в «Favorites» — на усмотрение при реализации, если ломает вёрстку/переводы).
+- [x] написать тесты (успешные сценарии): клик по новому пункту в `Header`/`BottomNav` ведёт на `/favorites`, пункт подсвечивается как активный на этом роуте.
+- [x] написать тесты для edge cases: `BottomNav` — остальные пункты с `path: null` (если такие ещё остались) по-прежнему задизейблены, регрессии нет.
+- [x] прогнать тесты — все проходят перед Task 7.
 
 ### Task 7: Верификация критериев приёмки и документация
 
