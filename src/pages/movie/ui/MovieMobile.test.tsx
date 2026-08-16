@@ -91,6 +91,21 @@ describe('MovieMobile — Similar titles', () => {
   })
 })
 
+describe('MovieMobile — избранное в related-секции', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('клик по сердечку карточки похожего фильма пишет его id в localStorage', async () => {
+    const user = userEvent.setup()
+    renderMovieMobile()
+
+    await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
+
+    expect(localStorage.getItem('kinoshka:favorites')).toBe(
+      `[${MOVIE.similarMovies[0].id}]`,
+    )
+  })
+})
+
 describe('MovieMobile — fallback-ветки при отсутствующих опциональных полях', () => {
   it('hero: criticScore отсутствует — рейтинг "—"', () => {
     renderMovieMobile(MOVIE_NO_OPTIONALS, [])

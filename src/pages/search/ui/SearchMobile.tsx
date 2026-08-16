@@ -6,6 +6,7 @@ import {
   SORT_LABELS,
 } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
+import { useFavorites } from '@features/favorites'
 import {
   AsyncBoundary,
   EmptyState,
@@ -166,6 +167,7 @@ const MobileSearchResults = ({
   onPageChange,
 }: MobileSearchResultsProps) => {
   const { movies, totalPages } = useMovieCatalog({ query, filters, sort, page })
+  const { isFavorite, toggle } = useFavorites()
 
   if (movies.length === 0) {
     return (
@@ -207,7 +209,12 @@ const MobileSearchResults = ({
         }}
       >
         {movies.map(m => (
-          <MobileCard key={m.id} movie={m} />
+          <MobileCard
+            key={m.id}
+            movie={m}
+            isFavorite={isFavorite(m.id)}
+            onToggleFavorite={toggle}
+          />
         ))}
       </div>
 

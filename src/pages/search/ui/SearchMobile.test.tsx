@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { useEffect } from 'react'
 import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
@@ -94,6 +95,7 @@ const renderSearchMobile = async (initialEntries: string[]) => {
 
 beforeEach(() => {
   sessionStorage.clear()
+  localStorage.clear()
 })
 
 // SearchMobile renders GenreSelector, which fires a background (fire-and-forget)
@@ -612,6 +614,22 @@ describe('SearchMobile — ошибка во время апдейта, не п�
     const busyNodeAfter = document.querySelector('[aria-busy]')!
     expect(busyNodeAfter).toHaveAttribute('aria-busy', 'false')
     expect(screen.queryByText('Updating…')).not.toBeInTheDocument()
+  })
+})
+
+describe('SearchMobile — избранное в гриде результатов', () => {
+  it('клик по сердечку карточки пишет id фильма в localStorage', async () => {
+    // rating=8 — уникальный для этого файла параметр фильтра, чтобы не столкнуться с
+    // кэшированным ответом другого теста по тому же ключу createCachedFetcher (см. комментарий
+    // у теста с rating=9 выше).
+    mockCatalog([catalogDoc('Oppenheimer', 801)])
+    const user = userEvent.setup()
+
+    await renderSearchMobile(['/search?rating=8'])
+
+    await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
+
+    expect(localStorage.getItem('kinoshka:favorites')).toBe('[801]')
   })
 })
 

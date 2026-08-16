@@ -87,15 +87,15 @@
 
 ### Task 4: Подключить сердечко во всех местах рендера карточек
 
-- [ ] `src/widgets/movie-rail/ui/MovieRailDesktop/MovieRailDesktop.tsx` — `const { isFavorite, toggle } = useFavorites()` (`@features/favorites`), прокинуть в каждый `<Card>`.
-- [ ] `src/widgets/movie-rail/ui/MovieRailMobile/MovieRailMobile.tsx` — то же для `<MobileCard>`.
-- [ ] `src/pages/movie/ui/RelatedMovies/RelatedMovies.tsx` — то же для `<Card>`.
-- [ ] `src/pages/movie/ui/MovieMobile.tsx` (related-секция, `<MobileCard>`) — то же.
-- [ ] `src/pages/search/ui/SearchResultsGrid/SearchResultsGrid.tsx` — то же для `<Card>`.
-- [ ] `src/pages/search/ui/SearchMobile.tsx` (грид результатов, `<MobileCard>`) — то же.
-- [ ] написать тесты (успешные сценарии): в каждом из затронутых компонентов клик по сердечку карточки действительно пишет id в `localStorage['kinoshka:favorites']` (достаточно 1-2 репрезентативных компонента с явной проверкой storage, остальные — проверка, что пропы `isFavorite`/`onToggleFavorite` прокинуты в `Card`/`MobileCard`).
-- [ ] написать тесты для edge cases: повторный клик по уже избранной карточке снимает избранное (toggle туда-обратно).
-- [ ] прогнать тесты — все проходят перед Task 5.
+- [x] `src/widgets/movie-rail/ui/MovieRailDesktop/MovieRailDesktop.tsx` — `const { isFavorite, toggle } = useFavorites()` (`@features/favorites`), прокинуть в каждый `<Card>`.
+- [x] `src/widgets/movie-rail/ui/MovieRailMobile/MovieRailMobile.tsx` — то же для `<MobileCard>`.
+- [x] `src/pages/movie/ui/RelatedMovies/RelatedMovies.tsx` — то же для `<Card>`.
+- [x] `src/pages/movie/ui/MovieMobile.tsx` (related-секция, `<MobileCard>`) — то же.
+- [x] `src/pages/search/ui/SearchResultsGrid/SearchResultsGrid.tsx` — то же для `<Card>`.
+- [x] `src/pages/search/ui/SearchMobile.tsx` (грид результатов, `<MobileCard>`) — то же.
+- [x] написать тесты (успешные сценарии): в каждом из затронутых компонентов клик по сердечку карточки действительно пишет id в `localStorage['kinoshka:favorites']` (достаточно 1-2 репрезентативных компонента с явной проверкой storage, остальные — проверка, что пропы `isFavorite`/`onToggleFavorite` прокинуты в `Card`/`MobileCard`).
+- [x] написать тесты для edge cases: повторный клик по уже избранной карточке снимает избранное (toggle туда-обратно).
+- [x] прогнать тесты — все проходят перед Task 5.
 
 ### Task 5: Страница `/favorites`
 

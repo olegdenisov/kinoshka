@@ -1,5 +1,6 @@
 import type { Movie } from '@entities/movie'
 import { Card } from '@entities/movie'
+import { useFavorites } from '@features/favorites'
 import { EmptyState } from '@shared/ui'
 import { useRef } from 'react'
 import { Link } from 'react-router'
@@ -20,6 +21,7 @@ export const MovieRailDesktop = ({
   items,
 }: MovieRailDesktopProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const { isFavorite, toggle } = useFavorites()
 
   const scroll = (dir: number) => {
     scrollRef.current?.scrollBy({ left: dir * 480, behavior: 'smooth' })
@@ -51,7 +53,13 @@ export const MovieRailDesktop = ({
       ) : (
         <div ref={scrollRef} className={`hide-scrollbar ${s.scroll}`}>
           {items.map(m => (
-            <Card key={m.id} movie={m} variant='compact' />
+            <Card
+              key={m.id}
+              movie={m}
+              variant='compact'
+              isFavorite={isFavorite(m.id)}
+              onToggleFavorite={toggle}
+            />
           ))}
         </div>
       )}
