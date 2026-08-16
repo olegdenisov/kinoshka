@@ -1,0 +1,41 @@
+import type { Movie } from '@entities/movie'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
+
+import { MovieRailMobile } from './MovieRailMobile'
+
+const makeMovie = (id: number): Movie => ({
+  id,
+  title: `Movie ${id}`,
+  poster: `https://example.com/poster-${id}.jpg`,
+  year: 2024,
+  rating: 7.5,
+  genre: ['Sci-Fi'],
+  runtime: '120 min',
+  hue: 20,
+  type: 'movie',
+})
+
+const renderRail = (items: Movie[]) =>
+  render(
+    <MemoryRouter>
+      <MovieRailMobile title='Popular' subtitle='Trending' items={items} />
+    </MemoryRouter>,
+  )
+
+beforeEach(() => localStorage.clear())
+
+describe('MovieRailMobile — избранное', () => {
+  it('карточка получает isFavorite/onToggleFavorite: клик по сердечку пишет id в localStorage', async () => {
+    const user = userEvent.setup()
+    renderRail([makeMovie(1)])
+
+    await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
+
+    expect(localStorage.getItem('kinoshka:favorites')).toBe('[1]')
+    expect(
+      screen.getByRole('button', { name: 'Remove from favorites' }),
+    ).toBeInTheDocument()
+  })
+})

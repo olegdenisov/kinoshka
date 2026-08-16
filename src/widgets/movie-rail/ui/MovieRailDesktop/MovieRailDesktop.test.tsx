@@ -1,5 +1,6 @@
 import type { Movie } from '@entities/movie'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
 import { MovieRailDesktop } from './MovieRailDesktop'
@@ -22,6 +23,8 @@ const renderRail = (items: Movie[]) =>
       <MovieRailDesktop title='Popular' subtitle='Trending' items={items} />
     </MemoryRouter>,
   )
+
+beforeEach(() => localStorage.clear())
 
 describe('MovieRailDesktop', () => {
   it('items=[] → рендерится EmptyState, карточки отсутствуют', () => {
@@ -49,5 +52,30 @@ describe('MovieRailDesktop', () => {
     expect(screen.getByText('Movie 1')).toBeInTheDocument()
     expect(screen.getByText('Movie 2')).toBeInTheDocument()
     expect(screen.queryByText('В подборке пока пусто')).not.toBeInTheDocument()
+  })
+})
+
+describe('MovieRailDesktop — избранное', () => {
+  it('клик по сердечку карточки пишет id фильма в localStorage', async () => {
+    const user = userEvent.setup()
+    renderRail([makeMovie(1)])
+
+    await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
+
+    expect(localStorage.getItem('kinoshka:favorites')).toBe('[1]')
+  })
+
+  it('повторный клик по уже избранной карточке снимает избранное (toggle туда-обратно)', async () => {
+    const user = userEvent.setup()
+    renderRail([makeMovie(1)])
+
+    await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
+    expect(localStorage.getItem('kinoshka:favorites')).toBe('[1]')
+
+    await user.click(
+      screen.getByRole('button', { name: 'Remove from favorites' }),
+    )
+
+    expect(localStorage.getItem('kinoshka:favorites')).toBe('[]')
   })
 })

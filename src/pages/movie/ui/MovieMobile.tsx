@@ -1,5 +1,6 @@
 import type { CastMember, MovieDetail, MovieImage } from '@entities/movie'
 import { Poster, MobileCard, formatCurrency } from '@entities/movie'
+import { useFavorites } from '@features/favorites'
 import { MobileHeader, BottomNav } from '@widgets/mobile-chrome'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -129,6 +130,7 @@ type MovieMobileProps = {
 
 export const MovieMobile = ({ movie, images }: MovieMobileProps) => {
   const navigate = useNavigate()
+  const { isFavorite, toggle } = useFavorites()
   const [tab, setTab] = useState('Overview')
   const [liked, setLiked] = useState<LikedState>({
     rate: false,
@@ -463,7 +465,12 @@ export const MovieMobile = ({ movie, images }: MovieMobileProps) => {
             }}
           >
             {related.map(x => (
-              <MobileCard key={x.id} movie={x} />
+              <MobileCard
+                key={x.id}
+                movie={x}
+                isFavorite={isFavorite(x.id)}
+                onToggleFavorite={toggle}
+              />
             ))}
           </div>
         </div>
