@@ -67,13 +67,13 @@
 
 ### Task 2: Батч-загрузка избранных фильмов
 
-- [ ] `src/entities/movie/api/getMoviesByIds.ts` — `fetchMoviesByIds(ids: number[]): Promise<Movie[]>` через `Promise.allSettled(ids.map(id => getMovieDetail(id)))`, фильтрует только `status === 'fulfilled'`, маппит в `Movie[]` (порядок — как во входном `ids`, отброшенные rejected-записи просто выпадают). Обернуть в `createCachedFetcher<number[], Movie[]>('favorite-movies', fetchMoviesByIds)`.
-- [ ] экспортировать `getMoviesByIds` из `src/entities/movie/index.ts`.
-- [ ] `src/features/favorites/model/useFavoriteMovies.ts` — `use(getMoviesByIds(ids))` (React 19 Suspense-хук, читает `ids` из `useFavorites()`), рассчитан на использование внутри `<AsyncBoundary>`.
-- [ ] дополнить `src/features/favorites/index.ts` экспортом `useFavoriteMovies`.
-- [ ] написать тесты для `getMoviesByIds` (успешные сценарии): MSW-мок `getV15MovieById` на несколько id → результат `Movie[]` в правильном порядке; пустой `ids` → `[]` без сетевого запроса (assert через MSW `onUnhandledRequest:'error'`, что хендлер не дёрнулся).
-- [ ] написать тесты для edge cases: один из id отвечает 404/ошибкой (`ApiError`) → он молча выпадает из результата, остальные id по-прежнему присутствуют (частичный отказ через `allSettled`); повторный вызов с тем же массивом id переиспользует закэшированный промис (по аналогии с `createCachedFetcher.test.ts`).
-- [ ] прогнать тесты — все проходят перед Task 3.
+- [x] `src/entities/movie/api/getMoviesByIds.ts` — `fetchMoviesByIds(ids: number[]): Promise<Movie[]>` через `Promise.allSettled(ids.map(id => getMovieDetail(id)))`, фильтрует только `status === 'fulfilled'`, маппит в `Movie[]` (порядок — как во входном `ids`, отброшенные rejected-записи просто выпадают). Обернуть в `createCachedFetcher<number[], Movie[]>('favorite-movies', fetchMoviesByIds)`.
+- [x] экспортировать `getMoviesByIds` из `src/entities/movie/index.ts`.
+- [x] `src/features/favorites/model/useFavoriteMovies.ts` — `use(getMoviesByIds(ids))` (React 19 Suspense-хук, читает `ids` из `useFavorites()`), рассчитан на использование внутри `<AsyncBoundary>`.
+- [x] дополнить `src/features/favorites/index.ts` экспортом `useFavoriteMovies`.
+- [x] написать тесты для `getMoviesByIds` (успешные сценарии): MSW-мок `getV15MovieById` на несколько id → результат `Movie[]` в правильном порядке; пустой `ids` → `[]` без сетевого запроса (assert через MSW `onUnhandledRequest:'error'`, что хендлер не дёрнулся).
+- [x] написать тесты для edge cases: один из id отвечает 404/ошибкой (`ApiError`) → он молча выпадает из результата, остальные id по-прежнему присутствуют (частичный отказ через `allSettled`); повторный вызов с тем же массивом id переиспользует закэшированный промис (по аналогии с `createCachedFetcher.test.ts`).
+- [x] прогнать тесты — все проходят перед Task 3.
 
 ### Task 3: Кнопка-сердечко в `Card` и `MobileCard`
 
