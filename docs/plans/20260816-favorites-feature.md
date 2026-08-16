@@ -117,12 +117,12 @@
 
 ### Task 7: Верификация критериев приёмки и документация
 
-- [ ] сверить каждый чекбокс roadmap 2.1 (`plans/roadmap.md`) с реализацией: `features/favorites/` с моделью `{ids}` — есть; хранение через `createStorageSlot` с zod — есть; `useFavorites()` + `toggle/add/remove/clear` — есть; `isFavorite(id)` — есть; `useFavoriteMovies()` через `Promise.allSettled` — есть; кнопка-сердечко в `Card` (и `MobileCard`) — есть; `/favorites` с пустым state — есть; edge case «удалённый контент (404)» — есть; edge case cross-tab sync — есть; edge case zod-fallback — есть.
-- [ ] прогнать полный набор тестов (`make test`).
-- [ ] прогнать линтер (`make lint`), исправить все замечания.
-- [ ] прогнать типы (`make typecheck`) и/или полную сборку (`make build`).
-- [ ] обновить `AGENTS.md`: добавить строку `@features/favorites` в таблицу «Key public APIs» (`useFavorites()`, `useFavoriteMovies()`), добавить `getMoviesByIds()` в строку `@entities/movie`, короткий абзац в разделе «Data state», что Favorites — client-only фича на `localStorage` (без API-эндпоинта), по аналогии с описанием genre dictionary.
-- [ ] в `plans/roadmap.md` отметить выполненные пункты 2.1 (и 2.8, если roadmap считает их отдельно) как `[x]`.
+- [x] сверить каждый чекбокс roadmap 2.1 (`plans/roadmap.md`) с реализацией: `features/favorites/` с моделью `{ids}` — есть; хранение через `createStorageSlot` с zod — есть; `useFavorites()` + `toggle/add/remove/clear` — есть; `isFavorite(id)` — есть; `useFavoriteMovies()` через `Promise.allSettled` — есть; кнопка-сердечко в `Card` (и `MobileCard`) — есть; `/favorites` с пустым state — есть; edge case «удалённый контент (404)» — есть; edge case cross-tab sync — есть; edge case zod-fallback — есть.
+- [x] прогнать полный набор тестов (`make test`).
+- [x] прогнать линтер (`make lint`), исправить все замечания.
+- [x] прогнать типы (`make typecheck`) и/или полную сборку (`make build`).
+- [x] обновить `AGENTS.md`: добавить строку `@features/favorites` в таблицу «Key public APIs» (`useFavorites()`, `useFavoriteMovies()`), добавить `getMoviesByIds()` в строку `@entities/movie`, короткий абзац в разделе «Data state», что Favorites — client-only фича на `localStorage` (без API-эндпоинта), по аналогии с описанием genre dictionary.
+- [x] в `plans/roadmap.md` отметить выполненные пункты 2.1 как `[x]` (2.8 остаётся открытым — покрывает ещё `/popular`/`/recommendations`, которых пока нет; добавлена ➕-заметка, что `/favorites` часть уже готова).
 
 ## Technical Details
 

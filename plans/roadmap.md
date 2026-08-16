@@ -274,16 +274,16 @@
 
 ### 2.1 Favorites ⭐
 
-- [ ] `features/favorites/` создан, модель `{ ids: number[] }`.
-- [ ] Хранение через `createStorageSlot` (0.4) с zod-схемой.
-- [ ] Хук `useFavorites()` + actions `toggle/add/remove/clear`.
-- [ ] Selector `isFavorite(id)`.
-- [ ] Хук `useFavoriteMovies()` подгружает данные по ID (`Promise.allSettled`).
-- [ ] Кнопка-сердечко в `entities/movie/ui/Card` — синхронный toggle (localStorage-запись мгновенна, `useOptimistic` тут не нужен — пользу он даст только когда favorites уедут на сервер, см. 5.4).
-- [ ] Страница `/favorites` с пустым state.
-- [ ] Edge case: удалённый контент (server 404) — фильтр fulfilled.
-- [ ] Edge case: cross-tab sync через `storage` event.
-- [ ] Edge case: zod-валидация при init, fallback на пустой массив.
+- [x] `features/favorites/` создан, модель `{ ids: number[] }`.
+- [x] Хранение через `createStorageSlot` (0.4) с zod-схемой.
+- [x] Хук `useFavorites()` + actions `toggle/add/remove/clear`.
+- [x] Selector `isFavorite(id)`.
+- [x] Хук `useFavoriteMovies()` подгружает данные по ID (`Promise.allSettled`).
+- [x] Кнопка-сердечко в `entities/movie/ui/Card` — синхронный toggle (localStorage-запись мгновенна, `useOptimistic` тут не нужен — пользу он даст только когда favorites уедут на сервер, см. 5.4). Реализовано также в `MobileCard` (паритет UX, см. `docs/plans/20260816-favorites-feature.md`).
+- [x] Страница `/favorites` с пустым state.
+- [x] Edge case: удалённый контент (server 404) — фильтр fulfilled.
+- [x] Edge case: cross-tab sync через `storage` event.
+- [x] Edge case: zod-валидация при init, fallback на пустой массив.
 
 **Как лучше:** только ID (как в плане). Подгрузка батчем + кэширование. С глобальным state (фаза 3) станет тривиально. `useOptimistic` особенно важен на медленной сети (фаза 5, когда favorites переедут на сервер) — UI не ждёт ответа.
 
@@ -347,7 +347,7 @@
 
 ### 2.8 Навигация к новым страницам
 
-- [ ] `/favorites`, `/popular`, `/recommendations` добавлены в `Header`/`BottomNav`.
+- [ ] `/favorites`, `/popular`, `/recommendations` добавлены в `Header`/`BottomNav`. ➕ `/favorites` уже сделано вместе с 2.1 (`docs/plans/20260816-favorites-feature.md`, Task 6); `/popular`/`/recommendations` ждут своих задач (2.3/2.4).
 
 **Как лучше:** делай это сразу по мере появления каждой страницы (2.1/2.3/2.4), а не отдельным проходом в конце — иначе часть ссылок забудется.
 
