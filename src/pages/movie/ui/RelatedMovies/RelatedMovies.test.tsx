@@ -38,4 +38,19 @@ describe('RelatedMovies — избранное', () => {
       screen.getByRole('button', { name: 'Remove from favorites' }),
     ).toBeInTheDocument()
   })
+
+  it('повторный клик снимает фильм из избранного', async () => {
+    const user = userEvent.setup()
+    renderRelated([makeMovie(1)])
+
+    await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Remove from favorites' }),
+    )
+
+    expect(localStorage.getItem('kinoshka:favorites')).toBe('[]')
+    expect(
+      screen.getByRole('button', { name: 'Add to favorites' }),
+    ).toBeInTheDocument()
+  })
 })

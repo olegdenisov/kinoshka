@@ -305,6 +305,18 @@ describe('Header — nav pills синхронизируют ?type с фильт�
   })
 })
 
+describe('Header (variant="search") — панель type-фильтров', () => {
+  it('содержит только Movies/Series/Anime — без Favorites', () => {
+    renderHeader(['/search'])
+
+    const pillsNav = screen.getByRole('search').nextElementSibling
+    expect(pillsNav).not.toBeNull()
+    expect(
+      Array.from(pillsNav!.querySelectorAll('button')).map(b => b.textContent),
+    ).toEqual(['Movies', 'Series', 'Anime'])
+  })
+})
+
 describe('Header — пункт навигации Favorites', () => {
   it('клик по "Favorites" ведёт на /favorites', () => {
     let lastPathname = ''

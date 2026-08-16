@@ -21,6 +21,15 @@ const FavoritesGrid = () => {
   const movies = useFavoriteMovies()
   const { isFavorite, toggle } = useFavorites()
 
+  if (movies.length === 0) {
+    return (
+      <EmptyState
+        title="Couldn't load your favorites"
+        description='Something went wrong loading your favorited movies. Try again later.'
+      />
+    )
+  }
+
   return (
     <div className={s.grid}>
       {movies.map(movie => (

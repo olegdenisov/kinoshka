@@ -1,4 +1,5 @@
 import { act, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
@@ -92,5 +93,59 @@ describe('FavoritesDesktop — частичный отказ (404)', () => {
 
     expect(await screen.findByText('Still Here')).toBeInTheDocument()
     expect(screen.queryByText('Movie 404')).not.toBeInTheDocument()
+  })
+})
+
+describe('FavoritesDesktop — полный отказ загрузки (все id 404)', () => {
+  it('показывает сообщение об ошибке загрузки, а не пустой грид', async () => {
+    setFavorites([404, 405])
+    mockMovieError(404, 404)
+    mockMovieError(405, 404)
+
+    await renderPage()
+
+    expect(
+      await screen.findByText("Couldn't load your favorites"),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('No favorites yet')).not.toBeInTheDocument()
+  })
+})
+
+describe('FavoritesDesktop — снятие с избранного на самой странице', () => {
+  it('клик по сердечку убирает карточку из грида, остальные остаются', async () => {
+    const user = userEvent.setup()
+    setFavorites([1, 2])
+    mockMovie(1, { name: 'First Favorite' })
+    mockMovie(2, { name: 'Second Favorite' })
+
+    await renderPage()
+
+    expect(await screen.findByText('First Favorite')).toBeInTheDocument()
+    expect(screen.getByText('Second Favorite')).toBeInTheDocument()
+
+    await act(async () => {
+      await user.click(
+        screen.getAllByRole('button', { name: 'Remove from favorites' })[0],
+      )
+    })
+
+    expect(screen.queryByText('First Favorite')).not.toBeInTheDocument()
+    expect(screen.getByText('Second Favorite')).toBeInTheDocument()
+  })
+
+  it('снятие последнего избранного показывает EmptyState', async () => {
+    const user = userEvent.setup()
+    setFavorites([1])
+    mockMovie(1, { name: 'Only Favorite' })
+
+    await renderPage()
+
+    expect(await screen.findByText('Only Favorite')).toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole('button', { name: 'Remove from favorites' }),
+    )
+
+    expect(await screen.findByText('No favorites yet')).toBeInTheDocument()
   })
 })
