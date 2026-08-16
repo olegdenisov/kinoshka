@@ -23,11 +23,15 @@ type HeaderProps = {
 const searchPathForType = (type: FilterState['type']) =>
   `/search?${filtersToSearchParams({ ...EMPTY_FILTERS, type })}`
 
-const navItems = [
-  { key: 'home', label: 'Home', path: '/' },
+const typeNavItems = [
   { key: 'movie', label: 'Movies', path: searchPathForType('movie') },
   { key: 'series', label: 'Series', path: searchPathForType('series') },
   { key: 'anime', label: 'Anime', path: searchPathForType('anime') },
+]
+
+const navItems = [
+  { key: 'home', label: 'Home', path: '/' },
+  ...typeNavItems,
   { key: 'favorites', label: 'Favorites', path: '/favorites' },
 ]
 
@@ -160,7 +164,7 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
               )}
             </div>
             <nav className={s.searchVariantNav}>
-              {navItems.slice(1).map(n => (
+              {typeNavItems.map(n => (
                 <NavPill
                   key={n.key}
                   label={n.label}

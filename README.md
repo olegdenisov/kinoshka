@@ -6,7 +6,7 @@
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
 [![Feature-Sliced Design](https://img.shields.io/badge/Architecture-FSD-blueviolet)](https://feature-sliced.design/)
 
-Каталог фильмов — SPA с лентой на главной, поиском, фильтрами и страницами фильмов (обзор, каст, медиа).
+Каталог фильмов — SPA с лентой на главной, поиском, фильтрами, страницами фильмов (обзор, каст, медиа) и списком избранного (хранится в localStorage браузера, без синхронизации между устройствами).
 
 ## Стек
 
@@ -44,7 +44,7 @@ src/
 ├── app/        # провайдеры, роутер, глобальные стили
 ├── pages/      # компоненты уровня роута
 ├── widgets/    # крупные переиспользуемые секции UI (header, mobile-chrome, movie-rail, search-sidebar)
-├── features/   # интерактивные фичи (catalog-filter)
+├── features/   # интерактивные фичи (catalog-filter, favorites)
 ├── entities/   # бизнес-объекты (movie — типы, данные, UI)
 └── shared/     # утилиты и примитивы (lib/, ui/)
 ```

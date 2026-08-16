@@ -98,7 +98,9 @@ describe('MovieMobile — избранное в related-секции', () => {
     const user = userEvent.setup()
     renderMovieMobile()
 
-    await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
+    await user.click(
+      screen.getAllByRole('button', { name: 'Add to favorites' })[0],
+    )
 
     expect(localStorage.getItem('kinoshka:favorites')).toBe(
       `[${MOVIE.similarMovies[0].id}]`,

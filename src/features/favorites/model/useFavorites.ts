@@ -18,16 +18,19 @@ export const useFavorites = (): UseFavoritesResult => {
     ids,
     isFavorite: id => ids.includes(id),
     add: id => {
-      if (!ids.includes(id)) {
-        setIds([...ids, id])
+      const current = favoritesSlot.get()
+      if (!current.includes(id)) {
+        setIds([...current, id])
       }
     },
-    remove: id => setIds(ids.filter(existingId => existingId !== id)),
+    remove: id =>
+      setIds(favoritesSlot.get().filter(existingId => existingId !== id)),
     toggle: id => {
+      const current = favoritesSlot.get()
       setIds(
-        ids.includes(id)
-          ? ids.filter(existingId => existingId !== id)
-          : [...ids, id],
+        current.includes(id)
+          ? current.filter(existingId => existingId !== id)
+          : [...current, id],
       )
     },
     clear: () => setIds([]),

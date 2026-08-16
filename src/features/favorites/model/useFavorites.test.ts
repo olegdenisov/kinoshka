@@ -1,6 +1,5 @@
 import { act, renderHook } from '@testing-library/react'
 
-import { favoritesSlot } from './favoritesStorage'
 import { useFavorites } from './useFavorites'
 
 beforeEach(() => localStorage.clear())
@@ -88,8 +87,11 @@ describe('useFavorites — edge cases', () => {
   it('cross-tab sync — StorageEvent с нужным key отражается в хуке', () => {
     const { result } = renderHook(() => useFavorites())
 
+    // Пишем напрямую в localStorage, минуя favoritesSlot.set() (который сам эмитит
+    // локальное 'change'-событие) — иначе ассерт проходит из-за локального эмиттера,
+    // а не из-за реального StorageEvent-листенера, который эмулирует другую вкладку.
     act(() => {
-      favoritesSlot.set([1, 2, 3])
+      localStorage.setItem('kinoshka:favorites', JSON.stringify([1, 2, 3]))
       window.dispatchEvent(
         new StorageEvent('storage', {
           key: 'kinoshka:favorites',
