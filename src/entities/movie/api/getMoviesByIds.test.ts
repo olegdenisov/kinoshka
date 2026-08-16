@@ -84,4 +84,36 @@ describe('getMoviesByIds — edge cases', () => {
     expect(first).toBe(second)
     await first
   })
+
+  it('все id отвечают 404 — резолвится в [], без реджекта', async () => {
+    mockError(501, 404, {
+      statusCode: 404,
+      message: 'Not found movie with id 501',
+      error: 'Not Found',
+    })
+    mockError(502, 404, {
+      statusCode: 404,
+      message: 'Not found movie with id 502',
+      error: 'Not Found',
+    })
+
+    const movies = await getMoviesByIds([501, 502])
+
+    expect(movies).toEqual([])
+  })
+
+  it('все id отвечают 5xx — реджектится (recoverable failure), не тихо резолвится в []', async () => {
+    mockError(601, 500, {
+      statusCode: 500,
+      message: 'Internal error',
+      error: 'Internal Server Error',
+    })
+    mockError(602, 500, {
+      statusCode: 500,
+      message: 'Internal error',
+      error: 'Internal Server Error',
+    })
+
+    await expect(getMoviesByIds([601, 602])).rejects.toThrow()
+  })
 })
