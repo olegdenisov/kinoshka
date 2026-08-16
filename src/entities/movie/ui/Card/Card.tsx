@@ -1,4 +1,4 @@
-import { StarIcon, PlusIcon, EyeIcon } from '@shared/ui'
+import { StarIcon, PlusIcon, EyeIcon, HeartIcon } from '@shared/ui'
 import { Link } from 'react-router'
 
 import type { Movie } from '../../model/types'
@@ -10,9 +10,16 @@ import s from './Card.module.css'
 type CardProps = {
   movie: Movie
   variant?: 'grid' | 'compact'
+  isFavorite?: boolean
+  onToggleFavorite?: (id: number) => void
 }
 
-export const Card = ({ movie, variant = 'grid' }: CardProps) => {
+export const Card = ({
+  movie,
+  variant = 'grid',
+  isFavorite,
+  onToggleFavorite,
+}: CardProps) => {
   return (
     <Link to={`/movie/${movie.id}`} className={s.card}>
       <div className={s.posterContainer}>
@@ -26,6 +33,17 @@ export const Card = ({ movie, variant = 'grid' }: CardProps) => {
           <CardBtn icon={<StarIcon size={10} />} label='Rate' />
           <CardBtn icon={<PlusIcon />} label='Add' />
           {variant === 'grid' && <CardBtn icon={<EyeIcon />} square />}
+          {onToggleFavorite && (
+            <CardBtn
+              icon={<HeartIcon size={10} filled={isFavorite} />}
+              active={isFavorite}
+              square
+              ariaLabel={
+                isFavorite ? 'Remove from favorites' : 'Add to favorites'
+              }
+              onClick={() => onToggleFavorite(movie.id)}
+            />
+          )}
         </div>
 
         <div className={s.ratingBadge}>

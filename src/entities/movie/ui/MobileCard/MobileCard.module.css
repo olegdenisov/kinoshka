@@ -29,6 +29,29 @@
   border: 1px solid var(--accent-rating-border);
 }
 
+.favoriteBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border-light);
+  background: rgba(15, 13, 17, 0.75);
+  backdrop-filter: blur(6px);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.favoriteBtnActive {
+  color: var(--accent-warm);
+  border-color: var(--accent-warm-border);
+  background: var(--accent-warm-soft);
+}
+
 .title {
   font-family: var(--font-display);
   font-size: 13px;

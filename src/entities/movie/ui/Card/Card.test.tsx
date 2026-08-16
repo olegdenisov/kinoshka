@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter, Routes, Route } from 'react-router'
 
 import type { Movie } from '../../model/types'
 import { Card } from './index'
@@ -15,10 +16,13 @@ const baseMovie: Movie = {
   year: 2024,
 }
 
-const renderCard = (movie: Movie) =>
+const renderCard = (
+  movie: Movie,
+  props?: { isFavorite?: boolean; onToggleFavorite?: (id: number) => void },
+) =>
   render(
     <MemoryRouter>
-      <Card movie={movie} />
+      <Card movie={movie} {...props} />
     </MemoryRouter>,
   )
 
@@ -67,5 +71,56 @@ describe('Card', () => {
     // Реальный постер есть → showLabel=false, "— poster —" и повторный заголовок-label не рендерятся.
     expect(screen.queryByText('— poster —')).not.toBeInTheDocument()
     expect(screen.getAllByText('Dune Part Two')).toHaveLength(1)
+  })
+
+  it('без onToggleFavorite сердечко не рендерится', () => {
+    renderCard(baseMovie)
+
+    expect(screen.queryByLabelText('Add to favorites')).not.toBeInTheDocument()
+    expect(
+      screen.queryByLabelText('Remove from favorites'),
+    ).not.toBeInTheDocument()
+  })
+
+  it('с onToggleFavorite — клик по сердечку вызывает колбэк с movie.id', async () => {
+    const user = userEvent.setup()
+    const onToggleFavorite = vi.fn()
+
+    renderCard(baseMovie, { onToggleFavorite })
+
+    await user.click(screen.getByLabelText('Add to favorites'))
+
+    expect(onToggleFavorite).toHaveBeenCalledWith(1)
+  })
+
+  it('isFavorite=true — сердечко рендерится в filled-состоянии (label "Remove from favorites")', () => {
+    renderCard(baseMovie, { isFavorite: true, onToggleFavorite: vi.fn() })
+
+    expect(screen.getByLabelText('Remove from favorites')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Add to favorites')).not.toBeInTheDocument()
+  })
+
+  it('клик по сердечку не триггерит переход по Link (location не меняется)', async () => {
+    const user = userEvent.setup()
+    const onToggleFavorite = vi.fn()
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route
+            path='/'
+            element={
+              <Card movie={baseMovie} onToggleFavorite={onToggleFavorite} />
+            }
+          />
+          <Route path='/movie/:id' element={<div>movie page</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByLabelText('Add to favorites'))
+
+    expect(onToggleFavorite).toHaveBeenCalledWith(1)
+    expect(screen.queryByText('movie page')).not.toBeInTheDocument()
   })
 })
