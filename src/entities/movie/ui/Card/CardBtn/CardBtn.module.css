@@ -29,3 +29,9 @@
   color: var(--bg-primary);
   border-color: transparent;
 }
+
+.btnActive {
+  background: var(--accent-warm-soft);
+  color: var(--accent-warm);
+  border-color: var(--accent-warm-border);
+}

@@ -77,13 +77,13 @@
 
 ### Task 3: Кнопка-сердечко в `Card` и `MobileCard`
 
-- [ ] `src/entities/movie/ui/Card/CardBtn/CardBtn.tsx` — добавить пропы `onClick?: (e: React.MouseEvent) => void`, `active?: boolean`; внутренний обработчик — `e => { e.stopPropagation(); onClick?.(e) }`; при `active` — модификатор класса (акцентный цвет из `--accent-warm`/`--accent-rating`, без хардкода hex).
-- [ ] `src/entities/movie/ui/Card/Card.tsx` — расширить `CardProps`: `isFavorite?: boolean; onToggleFavorite?: (id: number) => void`. Рендерить дополнительную `<CardBtn icon={<HeartIcon size={10} filled={isFavorite} />} active={isFavorite} onClick={() => onToggleFavorite?.(movie.id)} />` **только если** `onToggleFavorite` передан (иначе `Card` ведёт себя как раньше — без сердечка, обратная совместимость для мест, ещё не подключённых в Task 4).
-- [ ] `src/entities/movie/ui/MobileCard/MobileCard.tsx` — аналогично: `MobileCardProps` + `isFavorite?`/`onToggleFavorite?`, небольшая кнопка-оверлей поверх постера (top-right), с тем же guard `stopPropagation`/`preventDefault`, рендерится только если `onToggleFavorite` передан.
-- [ ] обновить `Card.module.css`/`CardBtn.module.css`/`MobileCard.module.css` под новое состояние (active/filled heart, позиционирование оверлея на мобильной карточке).
-- [ ] написать тесты для `Card`/`MobileCard` (успешные сценарии): без `onToggleFavorite` сердечко не рендерится (снапшот поведения не меняется); с `onToggleFavorite` — клик вызывает колбэк с `movie.id`, `isFavorite` меняет иконку на `filled`.
-- [ ] написать тесты для edge cases: клик по сердечку **не** триггерит переход по `Link` (навигация не происходит — проверить через `MemoryRouter`, что location не изменился после клика).
-- [ ] прогнать тесты — все проходят перед Task 4.
+- [x] `src/entities/movie/ui/Card/CardBtn/CardBtn.tsx` — добавить пропы `onClick?: (e: React.MouseEvent) => void`, `active?: boolean`; внутренний обработчик — `e => { e.stopPropagation(); onClick?.(e) }`; при `active` — модификатор класса (акцентный цвет из `--accent-warm`/`--accent-rating`, без хардкода hex).
+- [x] `src/entities/movie/ui/Card/Card.tsx` — расширить `CardProps`: `isFavorite?: boolean; onToggleFavorite?: (id: number) => void`. Рендерить дополнительную `<CardBtn icon={<HeartIcon size={10} filled={isFavorite} />} active={isFavorite} onClick={() => onToggleFavorite?.(movie.id)} />` **только если** `onToggleFavorite` передан (иначе `Card` ведёт себя как раньше — без сердечка, обратная совместимость для мест, ещё не подключённых в Task 4).
+- [x] `src/entities/movie/ui/MobileCard/MobileCard.tsx` — аналогично: `MobileCardProps` + `isFavorite?`/`onToggleFavorite?`, небольшая кнопка-оверлей поверх постера (top-right), с тем же guard `stopPropagation`/`preventDefault`, рендерится только если `onToggleFavorite` передан.
+- [x] обновить `Card.module.css`/`CardBtn.module.css`/`MobileCard.module.css` под новое состояние (active/filled heart, позиционирование оверлея на мобильной карточке).
+- [x] написать тесты для `Card`/`MobileCard` (успешные сценарии): без `onToggleFavorite` сердечко не рендерится (снапшот поведения не меняется); с `onToggleFavorite` — клик вызывает колбэк с `movie.id`, `isFavorite` меняет иконку на `filled`.
+- [x] написать тесты для edge cases: клик по сердечку **не** триггерит переход по `Link` (навигация не происходит — проверить через `MemoryRouter`, что location не изменился после клика).
+- [x] прогнать тесты — все проходят перед Task 4.
 
 ### Task 4: Подключить сердечко во всех местах рендера карточек
 
