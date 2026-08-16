@@ -20,7 +20,7 @@ export const BottomNav = ({ active }: BottomNavProps) => {
   }[] = [
     { key: 'home', label: 'Home', icon: HomeIcon, path: '/' },
     { key: 'search', label: 'Catalog', icon: SearchIcon, path: '/search' },
-    { key: 'lists', label: 'Lists', icon: ListsIcon, path: null },
+    { key: 'lists', label: 'Lists', icon: ListsIcon, path: '/favorites' },
     { key: 'profile', label: 'Profile', icon: ProfileIcon, path: null },
   ]
 

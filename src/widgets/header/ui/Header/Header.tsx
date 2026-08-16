@@ -28,6 +28,7 @@ const navItems = [
   { key: 'movie', label: 'Movies', path: searchPathForType('movie') },
   { key: 'series', label: 'Series', path: searchPathForType('series') },
   { key: 'anime', label: 'Anime', path: searchPathForType('anime') },
+  { key: 'favorites', label: 'Favorites', path: '/favorites' },
 ]
 
 export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
