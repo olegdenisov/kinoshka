@@ -99,13 +99,13 @@
 
 ### Task 5: Страница `/favorites`
 
-- [ ] `src/pages/favorites/index.tsx` — `export { FavoritesPage } from './FavoritesPage'`.
-- [ ] `src/pages/favorites/FavoritesPage.tsx` — диспетчер `useViewport().isMobile` → `FavoritesDesktop`/`FavoritesMobile` (по образцу `SearchPage.tsx`/`MoviePage.tsx`).
-- [ ] `src/pages/favorites/ui/FavoritesDesktop.tsx` и `.../FavoritesMobile.tsx` (или `.tsx`-файлы на корне страницы, как договорено паттерном `pages/search`) — если `ids.length === 0` (из `useFavorites()`) сразу рендерить `EmptyState` (без входа в Suspense/сеть); иначе — `<AsyncBoundary fallback={<Skeleton/>} onRetry={() => getMoviesByIds.invalidate(ids)} errorFallback={...}>` вокруг грида, использующего `useFavoriteMovies()` и рендерящего `Card`/`MobileCard` с `isFavorite`/`onToggleFavorite` (по образцу `SearchResultsGrid`/`SearchMobile`).
-- [ ] добавить роут `{ path: '/favorites', element: <FavoritesPage /> }` в `src/app/router.tsx`.
-- [ ] написать тесты (успешные сценарии): пустой список избранного → рендерится `EmptyState`; непустой список (MSW-мок нескольких id) → рендерятся карточки с данными.
-- [ ] написать тесты для edge cases: один из избранных id отвечает 404 — карточка для него не рендерится, остальные рендерятся (частичный успех); клик Retry в `errorFallback` реально переинвалидирует кэш и повторяет запрос (по образцу `MoviePage.test.tsx`).
-- [ ] прогнать тесты — все проходят перед Task 6.
+- [x] `src/pages/favorites/index.tsx` — `export { FavoritesPage } from './FavoritesPage'`.
+- [x] `src/pages/favorites/FavoritesPage.tsx` — диспетчер `useViewport().isMobile` → `FavoritesDesktop`/`FavoritesMobile` (по образцу `SearchPage.tsx`/`MoviePage.tsx`).
+- [x] `src/pages/favorites/ui/FavoritesDesktop.tsx` и `.../FavoritesMobile.tsx` (или `.tsx`-файлы на корне страницы, как договорено паттерном `pages/search`) — если `ids.length === 0` (из `useFavorites()`) сразу рендерить `EmptyState` (без входа в Suspense/сеть); иначе — `<AsyncBoundary fallback={<Skeleton/>} onRetry={() => getMoviesByIds.invalidate(ids)} errorFallback={...}>` вокруг грида, использующего `useFavoriteMovies()` и рендерящего `Card`/`MobileCard` с `isFavorite`/`onToggleFavorite` (по образцу `SearchResultsGrid`/`SearchMobile`).
+- [x] добавить роут `{ path: '/favorites', element: <FavoritesPage /> }` в `src/app/router.tsx`.
+- [x] написать тесты (успешные сценарии): пустой список избранного → рендерится `EmptyState`; непустой список (MSW-мок нескольких id) → рендерятся карточки с данными.
+- [x] написать тесты для edge cases: один из избранных id отвечает 404 — карточка для него не рендерится, остальные рендерятся (частичный успех); клик Retry в `errorFallback` реально переинвалидирует кэш и повторяет запрос (по образцу `MoviePage.test.tsx`).
+- [x] прогнать тесты — все проходят перед Task 6.
 
 ### Task 6: Навигация к `/favorites` (roadmap 2.8, выполняется сразу)
 

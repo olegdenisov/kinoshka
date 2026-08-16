@@ -1,0 +1,1 @@
+export { FavoritesDesktop } from './FavoritesDesktop'
