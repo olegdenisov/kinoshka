@@ -111,6 +111,21 @@ describe('FavoritesDesktop — полный отказ загрузки (все 
   })
 })
 
+describe('FavoritesDesktop — полный отказ загрузки (сетевая/5xx ошибка)', () => {
+  it('показывает error-фолбэк AsyncBoundary с Retry, а не EmptyState', async () => {
+    setFavorites([500, 501])
+    mockMovieError(500, 500)
+    mockMovieError(501, 500)
+
+    await renderPage()
+
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
+    expect(
+      screen.queryByText("Couldn't load your favorites"),
+    ).not.toBeInTheDocument()
+  })
+})
+
 describe('FavoritesDesktop — снятие с избранного на самой странице', () => {
   it('клик по сердечку убирает карточку из грида, остальные остаются', async () => {
     const user = userEvent.setup()

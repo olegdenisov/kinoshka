@@ -5,13 +5,14 @@ import { vi } from 'vitest'
 
 import { FavoritesDesktop } from './FavoritesDesktop'
 
-// Мокаем весь `getMoviesByIds` (а не MSW-эндпоинт), потому что `fetchMoviesByIds` внутри
-// `getMoviesByIds` строит результат через `Promise.allSettled` — реальная композиция никогда
-// не реджектится (упавшие id просто выпадают, см. getMoviesByIds.ts), так что настоящий
-// error/Retry-путь `AsyncBoundary` через MSW не воспроизвести. Мок ведёт себя как упрощённый
-// `createCachedFetcher`: кэширует промис по `JSON.stringify(ids)`, счётчик `fetchAttempts`
-// растёт только на реальный промах кэша — так тест проверяет именно то же самое свойство,
-// что и `MoviePage.test.tsx` для Retry: `invalidate` вызывается ДО повторного запроса.
+// Мокаем весь `getMoviesByIds` (а не MSW-эндпоинт) для точного контроля тайминга —
+// реальная композиция (см. getMoviesByIds.ts) тоже умеет реджектиться при полном отказе
+// (см. FavoritesDesktop.test.tsx — «полный отказ загрузки (сетевая/5xx ошибка)»), но здесь
+// нужно детерминированно проверить именно порядок вызовов invalidate→refetch, а не сам факт
+// реджекта. Мок ведёт себя как упрощённый `createCachedFetcher`: кэширует промис по
+// `JSON.stringify(ids)`, счётчик `fetchAttempts` растёт только на реальный промах кэша — так
+// тест проверяет то же самое свойство, что и `MoviePage.test.tsx` для Retry: `invalidate`
+// вызывается ДО повторного запроса.
 const { invalidate, getMoviesByIdsMock, getFetchAttempts } = vi.hoisted(() => {
   const cache = new Map<string, Promise<unknown>>()
   let fetchAttempts = 0
