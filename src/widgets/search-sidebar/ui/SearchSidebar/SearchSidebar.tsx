@@ -1,5 +1,5 @@
 import type { FilterState } from '@features/catalog-filter'
-import { GenreSelector } from '@features/catalog-filter'
+import { GenreSelector, YearRangeSlider } from '@features/catalog-filter'
 
 import s from './SearchSidebar.module.css'
 
@@ -93,17 +93,14 @@ export const SearchSidebar = ({
       </FilterGroup>
 
       <FilterGroup title='Year'>
-        <div>
-          <div className={s.yearDisplay}>
-            <span>{filters.yearFrom ?? '1970'}</span>
-            <span>{filters.yearTo ?? '2025'}</span>
-          </div>
-          <div className={s.rangeTrack}>
-            <div className={s.rangeFill} />
-            <div className={`${s.rangeThumb} ${s.rangeThumbLeft}`} />
-            <div className={`${s.rangeThumb} ${s.rangeThumbRight}`} />
-          </div>
-        </div>
+        <YearRangeSlider
+          yearFrom={filters.yearFrom}
+          yearTo={filters.yearTo}
+          onChange={(yearFrom, yearTo) =>
+            onFiltersChange({ ...filters, yearFrom, yearTo })
+          }
+          disabled={disabled}
+        />
       </FilterGroup>
 
       <FilterGroup title='Rating'>

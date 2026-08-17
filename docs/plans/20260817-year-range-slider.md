@@ -179,12 +179,12 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 - Изменить: `src/features/catalog-filter/index.ts`
 - Создать: `src/widgets/search-sidebar/ui/SearchSidebar/SearchSidebar.test.tsx`
 
-- [ ] экспортировать `YearRangeSlider` из `src/features/catalog-filter/index.ts`
-- [ ] заменить статичный блок Year в `SearchSidebar.tsx` на `<YearRangeSlider yearFrom={filters.yearFrom} yearTo={filters.yearTo} onChange={(yearFrom, yearTo) => onFiltersChange({ ...filters, yearFrom, yearTo })} disabled={disabled} />`
-- [ ] удалить ставшие неиспользуемыми классы `.yearDisplay`/`.rangeTrack`/`.rangeFill`/`.rangeThumb*` из `SearchSidebar.module.css`
-- [ ] написать тесты (новый файл): `SearchSidebar` рендерит `YearRangeSlider`, связанный с `filters.yearFrom`/`yearTo`, коммит drag вызывает `onFiltersChange` с обновлённым `FilterState` (остальные поля сохранены)
-- [ ] написать тесты: проп `disabled` пробрасывается в слайдер
-- [ ] прогнать тесты — должны проходить перед задачей 4
+- [x] экспортировать `YearRangeSlider` из `src/features/catalog-filter/index.ts`
+- [x] заменить статичный блок Year в `SearchSidebar.tsx` на `<YearRangeSlider yearFrom={filters.yearFrom} yearTo={filters.yearTo} onChange={(yearFrom, yearTo) => onFiltersChange({ ...filters, yearFrom, yearTo })} disabled={disabled} />`
+- [x] удалить ставшие неиспользуемыми классы `.yearDisplay`/`.rangeTrack`/`.rangeFill`/`.rangeThumb*` из `SearchSidebar.module.css`
+- [x] написать тесты (новый файл): `SearchSidebar` рендерит `YearRangeSlider`, связанный с `filters.yearFrom`/`yearTo`, коммит drag вызывает `onFiltersChange` с обновлённым `FilterState` (остальные поля сохранены)
+- [x] написать тесты: проп `disabled` пробрасывается в слайдер
+- [x] прогнать тесты — должны проходить перед задачей 4
 
 ### Task 4: Интегрировать в `SearchMobile`
 
