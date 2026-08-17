@@ -1,8 +1,8 @@
 .card {
   cursor: pointer;
   display: block;
-  text-decoration: none;
-  color: inherit;
+  position: relative;
+  isolation: isolate;
 }
 
 .posterWrapper {
@@ -44,6 +44,7 @@
   backdrop-filter: blur(6px);
   color: var(--text-primary);
   cursor: pointer;
+  z-index: 2;
 }
 
 .favoriteBtnActive {
@@ -53,6 +54,26 @@
 }
 
 .title {
+  text-decoration: none;
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.title:focus-visible {
+  outline: none;
+}
+
+.title:focus-visible::after {
+  outline: 2px solid var(--accent-warm);
+  border-radius: 6px;
+}
+
+.titleText {
   font-family: var(--font-display);
   font-size: 13px;
   font-weight: 500;

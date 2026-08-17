@@ -18,7 +18,7 @@ export const MobileCard = ({
   onToggleFavorite,
 }: MobileCardProps) => {
   return (
-    <Link to={`/movie/${movie.id}`} className={s.card}>
+    <div className={s.card}>
       <div className={s.posterWrapper}>
         <Poster movie={movie} showLabel={false} />
         <div className={s.rating}>
@@ -42,12 +42,14 @@ export const MobileCard = ({
           </button>
         )}
       </div>
-      <div className={s.title}>{movie.title}</div>
+      <Link to={`/movie/${movie.id}`} className={s.title}>
+        <span className={s.titleText}>{movie.title}</span>
+      </Link>
       <div className={s.meta}>
         <span>{movie.year ? movie.year : 'Unknown'}</span>
         <span className={s.metaDot}>·</span>
         <span>{movie.genre[0]}</span>
       </div>
-    </Link>
+    </div>
   )
 }

@@ -201,18 +201,18 @@
 - Modify: `src/entities/movie/ui/MobileCard/MobileCard.module.css`
 - Modify: `src/entities/movie/ui/MobileCard/MobileCard.test.tsx`
 
-- [ ] заменить внешний `<Link className={s.card}>` на `<div className={s.card}>` в `MobileCard.tsx`
-- [ ] обернуть `movie.title` в `<Link to={`/movie/${movie.id}`} className={s.title}><span className={s.titleText}>{movie.title}</span></Link>` вместо текущего `<div className={s.title}>{movie.title}</div>`
-- [ ] в `MobileCard.module.css`: добавить `.card { position: relative; isolation: isolate; }`, убрать `text-decoration`/`color` с `.card`
-- [ ] в `MobileCard.module.css`: перенести существующие line-clamp/типографику-свойства `.title` (`font-family`, `font-size`, `font-weight`, `color`, `letter-spacing`, `line-height`, `margin-bottom`, `overflow`, `display: -webkit-box`, `-webkit-line-clamp`, `-webkit-box-orient`) в новый класс `.titleText`; `.title` оставить только с `text-decoration: none;` (без `position`, без `color`)
-- [ ] в `MobileCard.module.css`: добавить `.title::after { content: ''; position: absolute; inset: 0; z-index: 1; }`
-- [ ] в `MobileCard.module.css`: добавить `.title:focus-visible { outline: none; }` и `.title:focus-visible::after { outline: 2px solid var(--accent-warm); border-radius: 6px; }`
-- [ ] в `MobileCard.module.css`: добавить `.favoriteBtn { z-index: 2; }`
-- [ ] добавить тест `expect(screen.getByRole('link', { name: movie.title })).toHaveAttribute('href', '/movie/1')` (такого теста в `MobileCard.test.tsx` сейчас нет)
-- [ ] написать новый тест: `const link = screen.getByRole('link'); expect(link.querySelectorAll('button')).toHaveLength(0)`
-- [ ] оставить/проверить существующий тест "клик по сердечку не триггерит переход" без `preventDefault`
-- [ ] запустить `make test` — все тесты `MobileCard.test.tsx` должны проходить
-- [ ] **ручная проверка в браузере (обязательна):** `make dev` на мобильном вьюпорте (< 720px), убедиться, что клик по постеру/рейтингу/пустой области ведёт на `/movie/:id`, клик по heart — нет; убедиться, что 2-строчный line-clamp заголовка визуально не сломался в Chrome и Safari (или хотя бы в Safari/WebKit-based браузере, если Safari недоступен — проверить в BrowserStack/аналоге); Tab-фокус рисует обводку вокруг всей карточки
+- [x] заменить внешний `<Link className={s.card}>` на `<div className={s.card}>` в `MobileCard.tsx`
+- [x] обернуть `movie.title` в `<Link to={`/movie/${movie.id}`} className={s.title}><span className={s.titleText}>{movie.title}</span></Link>` вместо текущего `<div className={s.title}>{movie.title}</div>`
+- [x] в `MobileCard.module.css`: добавить `.card { position: relative; isolation: isolate; }`, убрать `text-decoration`/`color` с `.card`
+- [x] в `MobileCard.module.css`: перенести существующие line-clamp/типографику-свойства `.title` (`font-family`, `font-size`, `font-weight`, `color`, `letter-spacing`, `line-height`, `margin-bottom`, `overflow`, `display: -webkit-box`, `-webkit-line-clamp`, `-webkit-box-orient`) в новый класс `.titleText`; `.title` оставить только с `text-decoration: none;` (без `position`, без `color`)
+- [x] в `MobileCard.module.css`: добавить `.title::after { content: ''; position: absolute; inset: 0; z-index: 1; }`
+- [x] в `MobileCard.module.css`: добавить `.title:focus-visible { outline: none; }` и `.title:focus-visible::after { outline: 2px solid var(--accent-warm); border-radius: 6px; }`
+- [x] в `MobileCard.module.css`: добавить `.favoriteBtn { z-index: 2; }`
+- [x] добавить тест `expect(screen.getByRole('link', { name: movie.title })).toHaveAttribute('href', '/movie/1')` (такого теста в `MobileCard.test.tsx` сейчас нет)
+- [x] написать новый тест: `const link = screen.getByRole('link'); expect(link.querySelectorAll('button')).toHaveLength(0)`
+- [x] оставить/проверить существующий тест "клик по сердечку не триггерит переход" без `preventDefault`
+- [x] запустить `make test` — все тесты `MobileCard.test.tsx` должны проходить
+- [x] manual test (skipped - not automatable): ручная проверка в браузере (мобильный вьюпорт < 720px, клик по постеру/рейтингу/heart, line-clamp визуально в Chrome/Safari, Tab-фокус) — требует `make dev` и визуальной проверки в реальном браузере, недоступно в этой среде
 
 ### Task 3: Убрать preventDefault-костыль из CardBtn и MobileCard, привести к единому виду
 

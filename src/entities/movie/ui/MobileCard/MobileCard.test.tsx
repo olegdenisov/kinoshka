@@ -70,6 +70,22 @@ describe('MobileCard', () => {
     expect(screen.queryByLabelText('Add to favorites')).not.toBeInTheDocument()
   })
 
+  it('ссылается на /movie/:id через accessible name заголовка', () => {
+    renderMobileCard(baseMovie)
+
+    expect(screen.getByRole('link', { name: baseMovie.title })).toHaveAttribute(
+      'href',
+      '/movie/1',
+    )
+  })
+
+  it('ни одна action-кнопка не находится внутри DOM-поддерева ссылки', () => {
+    renderMobileCard(baseMovie, { onToggleFavorite: vi.fn() })
+
+    const link = screen.getByRole('link')
+    expect(link.querySelectorAll('button')).toHaveLength(0)
+  })
+
   it('клик по сердечку не триггерит переход по Link (location не меняется)', async () => {
     const user = userEvent.setup()
     const onToggleFavorite = vi.fn()
