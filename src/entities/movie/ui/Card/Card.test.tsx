@@ -67,6 +67,17 @@ describe('Card', () => {
     expect(link.querySelectorAll('button')).toHaveLength(0)
   })
 
+  it('клавиатурный Tab-порядок: заголовок-ссылка достижима раньше action-кнопок', async () => {
+    const user = userEvent.setup()
+    renderCard(baseMovie, { onToggleFavorite: vi.fn() })
+
+    await user.tab()
+    expect(screen.getByRole('link', { name: baseMovie.title })).toHaveFocus()
+
+    await user.tab()
+    expect(screen.getAllByRole('button')[0]).toHaveFocus()
+  })
+
   it('без реального постера — показывает fallback-плейсхолдер Poster (label)', () => {
     renderCard(baseMovie)
 

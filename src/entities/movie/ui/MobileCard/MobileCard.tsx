@@ -19,6 +19,15 @@ export const MobileCard = ({
 }: MobileCardProps) => {
   return (
     <div className={s.card}>
+      {/*
+        DOM order is title-before-poster so the title Link is reachable via
+        Tab before the favorite button inside posterWrapper. Visual order
+        (poster on top) is restored purely via CSS `order` — see
+        MobileCard.module.css.
+      */}
+      <Link to={`/movie/${movie.id}`} className={s.title}>
+        <span className={s.titleText}>{movie.title}</span>
+      </Link>
       <div className={s.posterWrapper}>
         <Poster movie={movie} showLabel={false} />
         <div className={s.rating}>
@@ -32,18 +41,12 @@ export const MobileCard = ({
               isFavorite ? 'Remove from favorites' : 'Add to favorites'
             }
             className={`${s.favoriteBtn} ${isFavorite ? s.favoriteBtnActive : ''}`}
-            onClick={e => {
-              e.stopPropagation()
-              onToggleFavorite(movie.id)
-            }}
+            onClick={() => onToggleFavorite(movie.id)}
           >
             <HeartIcon size={13} filled={isFavorite} />
           </button>
         )}
       </div>
-      <Link to={`/movie/${movie.id}`} className={s.title}>
-        <span className={s.titleText}>{movie.title}</span>
-      </Link>
       <div className={s.meta}>
         <span>{movie.year ? movie.year : 'Unknown'}</span>
         <span className={s.metaDot}>·</span>

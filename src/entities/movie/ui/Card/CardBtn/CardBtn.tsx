@@ -21,10 +21,7 @@ export const CardBtn = ({
     <button
       type='button'
       aria-label={ariaLabel}
-      onClick={e => {
-        e.stopPropagation()
-        onClick?.(e)
-      }}
+      onClick={onClick}
       className={`${s.btn} ${square ? s.btnSquare : ''} ${active ? s.btnActive : ''}`}
     >
       {icon}
