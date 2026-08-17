@@ -702,4 +702,33 @@ describe('SearchMobile — YearRangeSlider в BottomSheet фильтров', () 
     // [YEAR_SLIDER_MIN, YEAR_SLIDER_MAX] целиком (совпадает только нижняя граница).
     expect(lastSearch).toContain(`yearTo=${new Date().getFullYear()}`)
   })
+
+  it('перетаскивание назад к полному диапазону очищает ?yearFrom/?yearTo из URL', async () => {
+    mockCatalog([catalogDoc('Oppenheimer', 305)])
+
+    await renderSearchMobile(['/search?yearFrom=1990&yearTo=2010'])
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    })
+
+    const fromInput = screen.getByRole('slider', { name: 'Year from' })
+    const toInput = screen.getByRole('slider', { name: 'Year to' })
+
+    await act(async () => {
+      fireEvent.change(fromInput, { target: { value: '1900' } })
+      fireEvent.mouseUp(fromInput)
+    })
+    expect(lastSearch).toContain('yearFrom=1900')
+
+    await act(async () => {
+      fireEvent.change(toInput, {
+        target: { value: String(new Date().getFullYear()) },
+      })
+      fireEvent.mouseUp(toInput)
+    })
+
+    expect(lastSearch).not.toContain('yearFrom=')
+    expect(lastSearch).not.toContain('yearTo=')
+  })
 })
