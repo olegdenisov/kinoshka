@@ -1,3 +1,4 @@
+import { hashHue } from '../lib/hashHue'
 import { mapDocToMovie, type MovieDocLike } from './mapDocToMovie'
 
 const doc = (overrides: Partial<MovieDocLike> = {}): MovieDocLike => ({
@@ -25,7 +26,7 @@ describe('mapDocToMovie — полностью заполненный doc', () =
       genre: ['drama'],
       runtime: '120',
       poster: 'https://example.com/poster.jpg',
-      hue: 0,
+      hue: hashHue(1),
     })
   })
 })
@@ -104,5 +105,9 @@ describe('mapDocToMovie — отсутствие постера/года/ост�
 
   it('id отсутствует — 0', () => {
     expect(mapDocToMovie(doc({ id: null })).id).toBe(0)
+  })
+
+  it('id отсутствует — hue считается от id-фолбэка 0', () => {
+    expect(mapDocToMovie(doc({ id: null })).hue).toBe(hashHue(0))
   })
 })

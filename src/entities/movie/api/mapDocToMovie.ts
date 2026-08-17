@@ -1,3 +1,4 @@
+import { hashHue } from '../lib/hashHue'
 import type { Movie, MovieType } from '../model/types'
 
 // Общая форма doc-элемента, покрывающая и `getV15Movie` (`MovieDtoV14`),
@@ -27,5 +28,5 @@ export const mapDocToMovie = (doc: MovieDocLike): Movie => ({
   genre: (doc.genres?.map(genre => genre.name) ?? []) as Movie['genre'],
   runtime: String(doc.movieLength ?? 0),
   poster: doc.poster?.previewUrl ?? '',
-  hue: 0,
+  hue: hashHue(doc.id ?? 0),
 })
