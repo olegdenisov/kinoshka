@@ -164,12 +164,12 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 - Изменить: `src/features/catalog-filter/ui/YearRangeSlider/YearRangeSlider.module.css`
 - Изменить: `src/features/catalog-filter/ui/YearRangeSlider/YearRangeSlider.test.tsx`
 
-- [ ] перенести визуал `.rangeTrack`/`.rangeFill` из `SearchSidebar.module.css` в новый модуль, ширина/позиция заливки вычисляется из `(value - min) / (max - min) * 100%` через inline `style`
-- [ ] стилизовать оба `<input type="range">` как полностью прозрачные оверлеи (`appearance: none`, прозрачные псевдоэлементы трека, `pointer-events: none` на input, `pointer-events: auto` + видимый ползунок только на `::-webkit-slider-thumb`/`::-moz-range-thumb`)
-- [ ] добавить класс варианта `compact` (18px ползунок, соответствует текущему inline-размеру `SearchMobile`, против 12px на desktop), применяется при заданном пропе `compact`
-- [ ] использовать дизайн-токены (`--accent-warm`, `--text-primary`, `--border-subtle`) вместо хардкоженных hex, заменяя сырые цвета, сейчас захардкоженные в inline-стилях `SearchMobile.tsx`
-- [ ] написать/обновить тесты: проп `compact` применяет compact-класс к корневому элементу
-- [ ] прогнать тесты — должны проходить перед задачей 3
+- [x] перенести визуал `.rangeTrack`/`.rangeFill` из `SearchSidebar.module.css` в новый модуль, ширина/позиция заливки вычисляется из `(value - min) / (max - min) * 100%` через inline `style`
+- [x] стилизовать оба `<input type="range">` как полностью прозрачные оверлеи (`appearance: none`, прозрачные псевдоэлементы трека, `pointer-events: none` на input, `pointer-events: auto` + видимый ползунок только на `::-webkit-slider-thumb`/`::-moz-range-thumb`)
+- [x] добавить класс варианта `compact` (18px ползунок, соответствует текущему inline-размеру `SearchMobile`, против 12px на desktop), применяется при заданном пропе `compact`
+- [x] использовать дизайн-токены (`--accent-warm`, `--text-primary`, `--border-subtle`) вместо хардкоженных hex, заменяя сырые цвета, сейчас захардкоженные в inline-стилях `SearchMobile.tsx`
+- [x] написать/обновить тесты: проп `compact` применяет compact-класс к корневому элементу
+- [x] прогнать тесты — должны проходить перед задачей 3
 
 ### Task 3: Интегрировать в `SearchSidebar` (desktop)
 

@@ -120,4 +120,28 @@ describe('YearRangeSlider', () => {
     expect(screen.getByRole('slider', { name: 'Year from' })).toBeDisabled()
     expect(screen.getByRole('slider', { name: 'Year to' })).toBeDisabled()
   })
+
+  it('проп compact применяет compact-класс к корневому элементу', () => {
+    const { container } = render(
+      <YearRangeSlider
+        yearFrom={2010}
+        yearTo={2020}
+        onChange={vi.fn()}
+        compact
+      />,
+    )
+
+    expect(container.firstChild).toHaveProperty('className')
+    expect((container.firstChild as HTMLElement).className).toMatch(/compact/)
+  })
+
+  it('без пропа compact компонент рендерится без compact-класса', () => {
+    const { container } = render(
+      <YearRangeSlider yearFrom={2010} yearTo={2020} onChange={vi.fn()} />,
+    )
+
+    expect((container.firstChild as HTMLElement).className).not.toMatch(
+      /compact/,
+    )
+  })
 })
