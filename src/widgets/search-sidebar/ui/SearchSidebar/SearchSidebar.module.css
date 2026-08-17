@@ -110,53 +110,6 @@
   letter-spacing: 0.04em;
 }
 
-/* Year range */
-.yearDisplay {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-secondary);
-  letter-spacing: 0.04em;
-  margin-bottom: 10px;
-}
-
-.rangeTrack {
-  position: relative;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--border-subtle);
-}
-
-.rangeFill {
-  position: absolute;
-  left: 60%;
-  right: 5%;
-  top: 0;
-  bottom: 0;
-  background: var(--accent-warm);
-  border-radius: 2px;
-}
-
-.rangeThumb {
-  position: absolute;
-  top: -4px;
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  background: var(--text-primary);
-  border: 2px solid var(--accent-warm);
-  transform: translateX(-50%);
-}
-
-.rangeThumbLeft {
-  left: 60%;
-}
-
-.rangeThumbRight {
-  left: 95%;
-}
-
 /* Rating */
 .ratingList {
   display: flex;
