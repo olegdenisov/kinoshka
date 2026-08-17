@@ -1,0 +1,50 @@
+/* Базовая структура — визуальная полировка (прозрачные оверлеи, pointer-events, compact-вариант,
+   дизайн-токены) добавляется в Task 2. */
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.yearDisplay {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.sliderWrap {
+  position: relative;
+  height: 12px;
+}
+
+.track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-subtle);
+  transform: translateY(-50%);
+}
+
+.fill {
+  position: absolute;
+  top: 50%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent-warm);
+  transform: translateY(-50%);
+}
+
+.input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  margin: 0;
+}

@@ -139,19 +139,24 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 - Создать: `src/features/catalog-filter/ui/YearRangeSlider/YearRangeSlider.module.css`
 - Создать: `src/features/catalog-filter/ui/YearRangeSlider/index.tsx`
 - Создать: `src/features/catalog-filter/ui/YearRangeSlider/YearRangeSlider.test.tsx`
+- Создать (отклонение от плана, продиктованное lint'ом): `src/features/catalog-filter/ui/YearRangeSlider/yearRangeBounds.ts` —
+  `YEAR_SLIDER_MIN`/`YEAR_SLIDER_MAX` вынесены сюда из `YearRangeSlider.tsx`, потому что
+  `react/only-export-components` (`allowConstantExport`) пропускает только литеральные константы
+  в файле компонента, а `YEAR_SLIDER_MAX = new Date().getFullYear()` — не литерал; `oxlint
+  --deny-warnings` падал на этой строке. Оба значения по-прежнему реэкспортируются из `index.tsx`.
 
-- [ ] создать `YearRangeSlider.tsx`: пропы `{ yearFrom: number | null; yearTo: number | null; onChange: (yearFrom: number | null, yearTo: number | null) => void; disabled?: boolean; compact?: boolean }`, локальный `useState<[number, number]>`, зеркалящий `[yearFrom ?? YEAR_SLIDER_MIN, yearTo ?? YEAR_SLIDER_MAX]`, пересинхронизируется через `useEffect` при изменении пропов
-- [ ] отрендерить два `<input type="range">`, cross-linked через `min`/`max` (`max` у from-input = текущее значение `to`, `min` у to-input = текущее значение `from`), чтобы браузер не давал ползункам пересекаться; обновлять локальный стейт на `onChange` каждого input
-- [ ] коммит родителю: по `onMouseUp`/`onTouchEnd`/`onKeyUp` (оба input) вызывать `props.onChange(from, to)`, переводя `[YEAR_SLIDER_MIN, YEAR_SLIDER_MAX]` (нетронутый полный диапазон) в `(null, null)`
-- [ ] добавить `aria-label` ("Year from" / "Year to") на каждый input; учитывать проп `disabled` на обоих input
-- [ ] создать `index.tsx` с реэкспортом
-- [ ] написать тесты: рендерится с range-input'ами, помеченными `aria-label`, с корректными начальными значениями (из пропов и из `null`/`null`, дающего дефолт — полный диапазон)
-- [ ] написать тесты: перетаскивание (fireEvent.change) "from"-input за значение "to" ограничено cross-linked атрибутом `max` (проверять сам атрибут, поскольку jsdom не соблюдает нативный клэмпинг range)
-- [ ] написать тесты: `onChange` НЕ вызывается на промежуточных событиях `change`, но вызывается один раз на `mouseup`/`touchend` с закоммиченными значениями
-- [ ] написать тесты: `onChange` также вызывается на `keyup` (коммит по клавиатуре, без участия `mouseup`/`touchend`)
-- [ ] написать тесты: коммит обратно к полному дефолтному диапазону вызывает `onChange(null, null)`
-- [ ] написать тесты: проп `disabled` дизейблит оба input
-- [ ] прогнать тесты — должны проходить перед задачей 2
+- [x] создать `YearRangeSlider.tsx`: пропы `{ yearFrom: number | null; yearTo: number | null; onChange: (yearFrom: number | null, yearTo: number | null) => void; disabled?: boolean; compact?: boolean }`, локальный `useState<[number, number]>`, зеркалящий `[yearFrom ?? YEAR_SLIDER_MIN, yearTo ?? YEAR_SLIDER_MAX]`, пересинхронизируется через `useEffect` при изменении пропов
+- [x] отрендерить два `<input type="range">`, cross-linked через `min`/`max` (`max` у from-input = текущее значение `to`, `min` у to-input = текущее значение `from`), чтобы браузер не давал ползункам пересекаться; обновлять локальный стейт на `onChange` каждого input
+- [x] коммит родителю: по `onMouseUp`/`onTouchEnd`/`onKeyUp` (оба input) вызывать `props.onChange(from, to)`, переводя `[YEAR_SLIDER_MIN, YEAR_SLIDER_MAX]` (нетронутый полный диапазон) в `(null, null)`
+- [x] добавить `aria-label` ("Year from" / "Year to") на каждый input; учитывать проп `disabled` на обоих input
+- [x] создать `index.tsx` с реэкспортом
+- [x] написать тесты: рендерится с range-input'ами, помеченными `aria-label`, с корректными начальными значениями (из пропов и из `null`/`null`, дающего дефолт — полный диапазон)
+- [x] написать тесты: перетаскивание (fireEvent.change) "from"-input за значение "to" ограничено cross-linked атрибутом `max` (проверять сам атрибут, поскольку jsdom не соблюдает нативный клэмпинг range)
+- [x] написать тесты: `onChange` НЕ вызывается на промежуточных событиях `change`, но вызывается один раз на `mouseup`/`touchend` с закоммиченными значениями
+- [x] написать тесты: `onChange` также вызывается на `keyup` (коммит по клавиатуре, без участия `mouseup`/`touchend`)
+- [x] написать тесты: коммит обратно к полному дефолтному диапазону вызывает `onChange(null, null)`
+- [x] написать тесты: проп `disabled` дизейблит оба input
+- [x] прогнать тесты — должны проходить перед задачей 2
 
 ### Task 2: Стилизовать `YearRangeSlider` (desktop + compact-вариант для мобильной версии)
 
