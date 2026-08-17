@@ -135,6 +135,8 @@ import { useFilterState } from '@features/catalog-filter'
 import { Header } from '@widgets/header/ui/Header'
 ```
 
+**Stretched-link pattern (`Card`/`MobileCard`):** to avoid nesting interactive elements (`<button>` inside `<a>`, invalid HTML and bad for a11y/keyboard nav), the card's outer container is a plain `<div>` and the `react-router` `<Link>` wraps only the title text, giving it a real accessible name. The link gets a `::after` pseudo-element (`position: absolute; inset: 0`) that stretches its hit-area over the whole card via `position: relative` on the container; action buttons stay DOM siblings of the link (not descendants) with a higher `z-index` so they still receive clicks. Follow this pattern for any future card-like component that combines a primary navigation target with secondary action buttons.
+
 ## Styles
 
 All styles use **CSS Modules** (`ComponentName.module.css`). Import as `import s from './ComponentName.module.css'` and apply via `className={s.className}`.
