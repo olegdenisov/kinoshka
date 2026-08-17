@@ -21,7 +21,7 @@ export const Card = ({
   onToggleFavorite,
 }: CardProps) => {
   return (
-    <Link to={`/movie/${movie.id}`} className={s.card}>
+    <div className={s.card}>
       <div className={s.posterContainer}>
         <div className={s.posterWrapper}>
           <Poster movie={movie} showLabel={!movie.poster} />
@@ -55,13 +55,15 @@ export const Card = ({
       </div>
 
       <div className={s.info}>
-        <div className={s.title}>{movie.title}</div>
+        <Link to={`/movie/${movie.id}`} className={s.title}>
+          {movie.title}
+        </Link>
         <div className={s.meta}>
           <span>{movie.year ? movie.year : 'Unknown'}</span>
           <span className={s.metaDot}>·</span>
           <span>{movie.genre[0]}</span>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }

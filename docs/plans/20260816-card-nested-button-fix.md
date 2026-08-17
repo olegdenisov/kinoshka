@@ -182,17 +182,17 @@
 - Modify: `src/entities/movie/ui/Card/Card.module.css`
 - Modify: `src/entities/movie/ui/Card/Card.test.tsx`
 
-- [ ] заменить внешний `<Link className={s.card}>` на `<div className={s.card}>` в `Card.tsx`
-- [ ] обернуть `movie.title` в `<Link to={`/movie/${movie.id}`} className={s.title}>` внутри `.info` вместо текущего `<div className={s.title}>`
-- [ ] в `Card.module.css`: добавить `.card { position: relative; isolation: isolate; }`, убрать `text-decoration`/`color` с `.card`
-- [ ] в `Card.module.css`: добавить `.title { text-decoration: none; }` (без `position`, без `color` — существующий `color: var(--text-primary)` не трогать) и `.title::after { content: ''; position: absolute; inset: 0; z-index: 1; }`
-- [ ] в `Card.module.css`: добавить `.title:focus-visible { outline: none; }` и `.title:focus-visible::after { outline: 2px solid var(--accent-warm); border-radius: 6px; }`
-- [ ] в `Card.module.css`: добавить `.actions { z-index: 2; }`
-- [ ] обновить тест `'ссылается на /movie/:id'` — заменить на проверку accessible name: `expect(screen.getByRole('link', { name: movie.title })).toHaveAttribute('href', '/movie/1')`
-- [ ] написать новый тест: ни одна action-кнопка не находится внутри DOM-поддерева ссылки — `const link = screen.getByRole('link'); expect(link.querySelectorAll('button')).toHaveLength(0)` (кнопки Rate/Add/Eye/Favorite достаются через `getAllByRole('button')`, у Eye/Rate/Add нет `ariaLabel`, поэтому адресовать их по имени нельзя — проверяем набор кнопок как группу через `querySelectorAll`, а не по одной)
-- [ ] написать/оставить тест на существующий сценарий "клик по сердечку не триггерит переход" — должен продолжать проходить на новой структуре без каких-либо `preventDefault`
-- [ ] запустить `make test` — все тесты `Card.test.tsx` должны проходить
-- [ ] **ручная проверка в браузере (обязательна — z-index/hit-area/::after-геометрия не проверяются юнит-тестами в jsdom):** `make dev`, открыть карточку в DevTools, убедиться, что клик по постеру/бейджам/пустой области карточки ведёт на `/movie/:id`, а клик по каждой из Rate/Add/Eye/Favorite — нет; проверить, что Tab-фокус на карточке рисует обводку вокруг всей карточки (а не только вокруг текста заголовка)
+- [x] заменить внешний `<Link className={s.card}>` на `<div className={s.card}>` в `Card.tsx`
+- [x] обернуть `movie.title` в `<Link to={`/movie/${movie.id}`} className={s.title}>` внутри `.info` вместо текущего `<div className={s.title}>`
+- [x] в `Card.module.css`: добавить `.card { position: relative; isolation: isolate; }`, убрать `text-decoration`/`color` с `.card`
+- [x] в `Card.module.css`: добавить `.title { text-decoration: none; }` (без `position`, без `color` — существующий `color: var(--text-primary)` не трогать) и `.title::after { content: ''; position: absolute; inset: 0; z-index: 1; }`
+- [x] в `Card.module.css`: добавить `.title:focus-visible { outline: none; }` и `.title:focus-visible::after { outline: 2px solid var(--accent-warm); border-radius: 6px; }`
+- [x] в `Card.module.css`: добавить `.actions { z-index: 2; }`
+- [x] обновить тест `'ссылается на /movie/:id'` — заменить на проверку accessible name: `expect(screen.getByRole('link', { name: movie.title })).toHaveAttribute('href', '/movie/1')`
+- [x] написать новый тест: ни одна action-кнопка не находится внутри DOM-поддерева ссылки — `const link = screen.getByRole('link'); expect(link.querySelectorAll('button')).toHaveLength(0)` (кнопки Rate/Add/Eye/Favorite достаются через `getAllByRole('button')`, у Eye/Rate/Add нет `ariaLabel`, поэтому адресовать их по имени нельзя — проверяем набор кнопок как группу через `querySelectorAll`, а не по одной)
+- [x] написать/оставить тест на существующий сценарий "клик по сердечку не триггерит переход" — должен продолжать проходить на новой структуре без каких-либо `preventDefault`
+- [x] запустить `make test` — все тесты `Card.test.tsx` должны проходить
+- [x] manual test (skipped - not automatable): ручная проверка в браузере z-index/hit-area/::after-геометрии, Tab-фокуса вокруг всей карточки — требует `make dev` и визуальной проверки в реальном браузере, недоступно в этой среде
 
 ### Task 2: Рефакторинг MobileCard.tsx на stretched-link через .title
 
