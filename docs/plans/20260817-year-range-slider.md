@@ -205,8 +205,8 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 
 ### Task 6: [Финал] Обновить документацию
 
-- [ ] добавить `YearRangeSlider` в строку `@features/catalog-filter` таблицы "Key public APIs" в `AGENTS.md`
-- [ ] перенести этот план в `docs/plans/completed/`
+- [x] добавить `YearRangeSlider` в строку `@features/catalog-filter` таблицы "Key public APIs" в `AGENTS.md`
+- [x] перенести этот план в `docs/plans/completed/` (skipped - harness moves the plan after all phases finish, not this task)
 
 ## После завершения
 
