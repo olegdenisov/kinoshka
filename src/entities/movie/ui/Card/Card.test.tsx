@@ -53,7 +53,18 @@ describe('Card', () => {
   it('ссылается на /movie/:id', () => {
     renderCard(baseMovie)
 
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/movie/1')
+    expect(screen.getByRole('link', { name: baseMovie.title })).toHaveAttribute(
+      'href',
+      '/movie/1',
+    )
+  })
+
+  it('ссылка не содержит вложенных <button> (валидный HTML, нет вложенного interactive-content)', () => {
+    renderCard(baseMovie, { isFavorite: false, onToggleFavorite: vi.fn() })
+
+    const link = screen.getByRole('link')
+
+    expect(link.querySelectorAll('button')).toHaveLength(0)
   })
 
   it('без реального постера — показывает fallback-плейсхолдер Poster (label)', () => {
