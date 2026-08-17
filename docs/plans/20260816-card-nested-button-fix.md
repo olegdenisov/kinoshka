@@ -239,9 +239,9 @@
 
 ### Task 5: [Final] Обновить документацию
 
-- [ ] добавить 2-3 предложения в конец раздела "Component structure" в `AGENTS.md` про паттерн stretched-link, используемый в `Card`/`MobileCard`: ссылка оборачивает только текст заголовка (реальный accessible name), `::after` с `position:absolute; inset:0` на этой ссылке растягивает hit-area на весь контейнер (`position:relative` на нём), action-кнопки — соседи ссылки с более высоким `z-index`, а не её потомки
-- [ ] проверить, нужно ли обновление README.md (вероятно нет — внутренний рефакторинг компонента)
-- [ ] переместить этот файл в `docs/plans/completed/`
+- [x] добавить 2-3 предложения в конец раздела "Component structure" в `AGENTS.md` про паттерн stretched-link, используемый в `Card`/`MobileCard`: ссылка оборачивает только текст заголовка (реальный accessible name), `::after` с `position:absolute; inset:0` на этой ссылке растягивает hit-area на весь контейнер (`position:relative` на нём), action-кнопки — соседи ссылки с более высоким `z-index`, а не её потомки
+- [x] проверить, нужно ли обновление README.md — не требуется: README.md описывает высокоуровневый стек/команды/архитектуру/конвенции, не касается внутренней разметки Card/MobileCard или Link/button-вложенности, изменений не вносилось
+- [x] переместить этот файл в `docs/plans/completed/` (skipped - harness/orchestrator performs this move after all phases finish, per run constraints; not done here to avoid breaking later review/finalize/stats phases that read this file path)
 
 ## Post-Completion
 
