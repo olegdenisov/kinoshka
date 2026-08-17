@@ -664,3 +664,42 @@ describe('SearchMobile — существующий BottomSheet фильтров
     expect(lastSearch).toContain('sort=Newest')
   })
 })
+
+describe('SearchMobile — YearRangeSlider в BottomSheet фильтров', () => {
+  it('рендерится в BottomSheet фильтров, значения читаются из ?yearFrom/?yearTo', async () => {
+    mockCatalog([catalogDoc('Oppenheimer', 303)])
+
+    await renderSearchMobile(['/search?yearFrom=1990&yearTo=2010'])
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    })
+
+    expect(screen.getByRole('slider', { name: 'Year from' })).toHaveValue(
+      '1990',
+    )
+    expect(screen.getByRole('slider', { name: 'Year to' })).toHaveValue('2010')
+  })
+
+  it('коммит drag обновляет filters/URL так же, как это делают кнопки Rating', async () => {
+    mockCatalog([catalogDoc('Oppenheimer', 304)])
+
+    await renderSearchMobile(['/search'])
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    })
+
+    const fromInput = screen.getByRole('slider', { name: 'Year from' })
+    await act(async () => {
+      fireEvent.change(fromInput, { target: { value: '1995' } })
+      fireEvent.mouseUp(fromInput)
+    })
+
+    expect(lastSearch).toContain('yearFrom=1995')
+    // "to"-ползунок не тронут — коммитится текущее (дефолтное, YEAR_SLIDER_MAX) значение,
+    // а не null, поскольку пара после коммита не равна полному дефолтному диапазону
+    // [YEAR_SLIDER_MIN, YEAR_SLIDER_MAX] целиком (совпадает только нижняя граница).
+    expect(lastSearch).toContain(`yearTo=${new Date().getFullYear()}`)
+  })
+})
