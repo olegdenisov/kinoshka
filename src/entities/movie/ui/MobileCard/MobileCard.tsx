@@ -33,7 +33,6 @@ export const MobileCard = ({
             }
             className={`${s.favoriteBtn} ${isFavorite ? s.favoriteBtnActive : ''}`}
             onClick={e => {
-              e.preventDefault()
               e.stopPropagation()
               onToggleFavorite(movie.id)
             }}

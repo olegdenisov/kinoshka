@@ -221,11 +221,11 @@
 - Modify: `src/entities/movie/ui/Card/CardBtn/CardBtn.test.tsx`
 - Modify: `src/entities/movie/ui/MobileCard/MobileCard.tsx` (обработчик favorite-кнопки)
 
-- [ ] в `CardBtn.tsx` убрать `e.preventDefault()` из `onClick`, `e.stopPropagation()` оставить без изменений
-- [ ] убрать `e.preventDefault()` из обработчика favorite-кнопки в `MobileCard.tsx` (он там есть — см. Context), `e.stopPropagation()` оставить без изменений
-- [ ] удалить из `CardBtn.test.tsx` тест `'клик внутри Link не триггерит переход (preventDefault/stopPropagation)'` — он тестировал именно старый обходной путь синтетическим оборачиванием `CardBtn` в `<a>`, что больше не отражает реальную структуру приложения
-- [ ] убедиться, что остальные тесты `CardBtn.test.tsx` (`active`, `ariaLabel`, `onClick вызывается по клику`) не завязаны на удалённое поведение и продолжают проходить
-- [ ] запустить `make test` — все тесты `CardBtn.test.tsx` должны проходить
+- [x] в `CardBtn.tsx` убрать `e.preventDefault()` из `onClick`, `e.stopPropagation()` оставить без изменений
+- [x] убрать `e.preventDefault()` из обработчика favorite-кнопки в `MobileCard.tsx` (он там есть — см. Context), `e.stopPropagation()` оставить без изменений
+- [x] удалить из `CardBtn.test.tsx` тест `'клик внутри Link не триггерит переход (preventDefault/stopPropagation)'` — он тестировал именно старый обходной путь синтетическим оборачиванием `CardBtn` в `<a>`, что больше не отражает реальную структуру приложения
+- [x] убедиться, что остальные тесты `CardBtn.test.tsx` (`active`, `ariaLabel`, `onClick вызывается по клику`) не завязаны на удалённое поведение и продолжают проходить
+- [x] запустить `make test` — все тесты `CardBtn.test.tsx` должны проходить
 
 ### Task 4: Проверка на всех вызывающих местах и полный прогон
 

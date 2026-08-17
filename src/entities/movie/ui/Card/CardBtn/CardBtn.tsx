@@ -22,7 +22,6 @@ export const CardBtn = ({
       type='button'
       aria-label={ariaLabel}
       onClick={e => {
-        e.preventDefault()
         e.stopPropagation()
         onClick?.(e)
       }}
