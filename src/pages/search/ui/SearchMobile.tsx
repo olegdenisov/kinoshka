@@ -2,6 +2,7 @@ import { MobileCard } from '@entities/movie'
 import {
   ActiveFilterChips,
   GenreSelector,
+  YearRangeSlider,
   useFilterState,
   SORT_LABELS,
 } from '@features/catalog-filter'
@@ -555,68 +556,14 @@ export const SearchMobile = () => {
             >
               Year
             </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontFamily: 'var(--font-mono)',
-                fontSize: 12,
-                color: '#F2F0EF',
-                letterSpacing: '0.04em',
-                marginBottom: 10,
-              }}
-            >
-              <span>{filters.yearFrom ?? '1970'}</span>
-              <span>{filters.yearTo ?? '2025'}</span>
-            </div>
-            <div
-              style={{
-                position: 'relative',
-                height: 6,
-                borderRadius: 3,
-                background: 'rgba(184,173,171,0.1)',
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '60%',
-                  right: '5%',
-                  top: 0,
-                  bottom: 0,
-                  background: '#D18E5F',
-                  borderRadius: 3,
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '60%',
-                  top: -6,
-                  width: 18,
-                  height: 18,
-                  borderRadius: 999,
-                  background: '#F2F0EF',
-                  border: '2px solid #D18E5F',
-                  transform: 'translateX(-50%)',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '95%',
-                  top: -6,
-                  width: 18,
-                  height: 18,
-                  borderRadius: 999,
-                  background: '#F2F0EF',
-                  border: '2px solid #D18E5F',
-                  transform: 'translateX(-50%)',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
-                }}
-              />
-            </div>
+            <YearRangeSlider
+              yearFrom={filters.yearFrom}
+              yearTo={filters.yearTo}
+              onChange={(yearFrom, yearTo) =>
+                setFilters({ ...filters, yearFrom, yearTo })
+              }
+              compact
+            />
           </div>
 
           <div>

@@ -192,9 +192,9 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 - Изменить: `src/pages/search/ui/SearchMobile.tsx`
 - Изменить: `src/pages/search/ui/SearchMobile.test.tsx`
 
-- [ ] заменить inline-стилевой блок Year (строки ~545–620) в `SearchMobile.tsx` на `<YearRangeSlider yearFrom={filters.yearFrom} yearTo={filters.yearTo} onChange={(yearFrom, yearTo) => setFilters({ ...filters, yearFrom, yearTo })} compact />`
-- [ ] написать/обновить тесты в `SearchMobile.test.tsx`: слайдер Year рендерится, коммит drag обновляет filters/URL так же, как это делают существующие кнопки Rating
-- [ ] прогнать тесты — должны проходить перед задачей 5
+- [x] заменить inline-стилевой блок Year (строки ~545–620) в `SearchMobile.tsx` на `<YearRangeSlider yearFrom={filters.yearFrom} yearTo={filters.yearTo} onChange={(yearFrom, yearTo) => setFilters({ ...filters, yearFrom, yearTo })} compact />`
+- [x] написать/обновить тесты в `SearchMobile.test.tsx`: слайдер Year рендерится, коммит drag обновляет filters/URL так же, как это делают существующие кнопки Rating
+- [x] прогнать тесты — должны проходить перед задачей 5
 
 ### Task 5: Проверить критерии приёмки
 
