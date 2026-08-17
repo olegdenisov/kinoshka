@@ -56,7 +56,8 @@
   transition: all 220ms;
 }
 
-.card:hover .actions {
+.card:hover .actions,
+.actions:focus-within {
   opacity: 1;
   transform: translateY(0);
 }
