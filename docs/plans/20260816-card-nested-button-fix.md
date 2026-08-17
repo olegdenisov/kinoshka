@@ -232,10 +232,10 @@
 **Files:**
 - (без изменений кода — только верификация)
 
-- [ ] `make dev`, вручную открыть каждое из 8 вызывающих мест (home rails desktop/mobile, `/search` grid и mobile, `/favorites` desktop и mobile, movie detail related movies) и проверить: клик по постеру/заголовку/бейджам ведёт на `/movie/:id`; клик по каждой action-кнопке (Rate/Add/Eye/Favorite/heart) НЕ ведёт на `/movie/:id` и не теряет свой собственный `onClick`-эффект (избранное переключается); `variant='compact'` (используется в `MovieRailDesktop`) рендерит на одну кнопку меньше (без Eye), но z-index/hit-area работают так же, как в `variant='grid'`
-- [ ] проверить клавиатурную навигацию Tab: фокус последовательно проходит через ссылку карточки и через каждую видимую по hover/focus action-кнопку в естественном DOM-порядке, без "провалов"/дублей; обводка фокуса на ссылке покрывает всю карточку
-- [ ] запустить `make check` (lint + build) — без ошибок
-- [ ] запустить `make test` — весь набор тестов проходит
+- [x] manual test (skipped - not automatable): `make dev`, вручную открыть каждое из 8 вызывающих мест (home rails desktop/mobile, `/search` grid и mobile, `/favorites` desktop и mobile, movie detail related movies) и проверить клик по постеру/заголовку/бейджам/action-кнопкам — требует браузера, недоступно в этой среде. Вместо этого верифицирован исходный код всех 8 мест (`MovieMobile.tsx`, `RelatedMovies.tsx`, `FavoritesMobile.tsx`, `FavoritesDesktop.tsx`, `SearchResultsGrid.tsx`, `SearchMobile.tsx`, `MovieRailMobile.tsx`, `MovieRailDesktop.tsx`) — все 8 по-прежнему передают `movie`/`isFavorite`/`onToggleFavorite` без изменений; `MovieRailDesktop.tsx:59` подтверждён `variant='compact'`, и `Card.tsx:35` (`{variant === 'grid' && <CardBtn icon={<EyeIcon />} square />}`) показывает, что compact лишь опускает Eye-кнопку, структура/z-index-слои идентичны variant='grid'
+- [x] manual test (skipped - not automatable): проверка клавиатурной навигации Tab и обводки фокуса в браузере — требует визуальной проверки, недоступно в этой среде
+- [x] запустить `make check` (lint + build) — `pnpm lint` (oxlint) чисто, `tsc -b && vite build` проходит без ошибок. `make check` также запускает `format-check` (oxfmt), который падает на 6 markdown-файлах (`AGENTS.md`, `docs/plans/*.md`) — подтверждено сравнением с `main` (`b1fe538`): эти файлы побайтово идентичны версии на `main` и падают на форматтере уже там, т.е. это предсуществующая проблема, не связанная с изменениями Card/MobileCard/CardBtn в этом плане
+- [x] запустить `make test` — весь набор тестов проходит: 474 теста, 54 файла, все зелёные
 
 ### Task 5: [Final] Обновить документацию
 
