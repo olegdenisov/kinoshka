@@ -562,6 +562,7 @@ export const SearchMobile = () => {
               onChange={(yearFrom, yearTo) =>
                 setFilters({ ...filters, yearFrom, yearTo })
               }
+              disabled={isSearchMode}
               compact
             />
           </div>

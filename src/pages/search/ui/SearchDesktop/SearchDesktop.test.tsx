@@ -581,6 +581,33 @@ describe('SearchDesktop — пагинация: клик пишет ?page', () =
   })
 })
 
+describe('SearchDesktop — YearRangeSlider в сайдбаре', () => {
+  it('перетаскивание назад к полному диапазону очищает ?yearFrom/?yearTo из URL', async () => {
+    mockCatalog([catalogDoc('Oppenheimer', 305)])
+
+    await renderSearchDesktop(['/search?yearFrom=1990&yearTo=2010'])
+
+    const fromInput = screen.getByRole('slider', { name: 'Year from' })
+    const toInput = screen.getByRole('slider', { name: 'Year to' })
+
+    await act(async () => {
+      fireEvent.change(fromInput, { target: { value: '1900' } })
+      fireEvent.mouseUp(fromInput)
+    })
+    expect(lastSearch).toContain('yearFrom=1900')
+
+    await act(async () => {
+      fireEvent.change(toInput, {
+        target: { value: String(new Date().getFullYear()) },
+      })
+      fireEvent.mouseUp(toInput)
+    })
+
+    expect(lastSearch).not.toContain('yearFrom=')
+    expect(lastSearch).not.toContain('yearTo=')
+  })
+})
+
 describe('SearchDesktop — пагинация: сброс ?page на 1 при смене q/фильтров', () => {
   it('смена фильтра сбрасывает ?page на 1', async () => {
     mockCatalog([catalogDoc('Dune Part Two', 201)], { total: 50 })
