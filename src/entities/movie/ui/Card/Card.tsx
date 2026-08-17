@@ -22,6 +22,23 @@ export const Card = ({
 }: CardProps) => {
   return (
     <div className={s.card}>
+      {/*
+        DOM order is intentionally info-before-poster so the title Link is
+        reachable via Tab before the (unlabeled) action buttons inside
+        posterContainer. Visual order (poster on top) is restored purely via
+        CSS `order` on .info — see Card.module.css.
+      */}
+      <div className={s.info}>
+        <Link to={`/movie/${movie.id}`} className={s.title}>
+          {movie.title}
+        </Link>
+        <div className={s.meta}>
+          <span>{movie.year ? movie.year : 'Unknown'}</span>
+          <span className={s.metaDot}>·</span>
+          <span>{movie.genre[0]}</span>
+        </div>
+      </div>
+
       <div className={s.posterContainer}>
         <div className={s.posterWrapper}>
           <Poster movie={movie} showLabel={!movie.poster} />
@@ -52,17 +69,6 @@ export const Card = ({
         </div>
 
         <div className={s.typeBadge}>{movie.type}</div>
-      </div>
-
-      <div className={s.info}>
-        <Link to={`/movie/${movie.id}`} className={s.title}>
-          {movie.title}
-        </Link>
-        <div className={s.meta}>
-          <span>{movie.year ? movie.year : 'Unknown'}</span>
-          <span className={s.metaDot}>·</span>
-          <span>{movie.genre[0]}</span>
-        </div>
       </div>
     </div>
   )

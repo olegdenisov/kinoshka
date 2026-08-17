@@ -1,6 +1,7 @@
 .card {
   cursor: pointer;
-  display: block;
+  display: flex;
+  flex-direction: column;
   position: relative;
   isolation: isolate;
 }
@@ -8,6 +9,9 @@
 .posterWrapper {
   position: relative;
   margin-bottom: 8px;
+  /* DOM order is title-before-poster (see MobileCard.tsx) for Tab order;
+     order:0 (default) keeps the poster first visually. */
+  order: 0;
 }
 
 .rating {
@@ -54,7 +58,11 @@
 }
 
 .title {
+  display: block;
   text-decoration: none;
+  /* restores visual position between poster and meta despite coming first
+     in DOM order (see .posterWrapper/.meta order comments above/below) */
+  order: 1;
 }
 
 .title::after {
@@ -95,6 +103,7 @@
   display: flex;
   gap: 6px;
   align-items: center;
+  order: 2;
 }
 
 .metaDot {

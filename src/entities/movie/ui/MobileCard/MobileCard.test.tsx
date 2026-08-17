@@ -86,6 +86,17 @@ describe('MobileCard', () => {
     expect(link.querySelectorAll('button')).toHaveLength(0)
   })
 
+  it('клавиатурный Tab-порядок: заголовок-ссылка достижима раньше favorite-кнопки', async () => {
+    const user = userEvent.setup()
+    renderMobileCard(baseMovie, { onToggleFavorite: vi.fn() })
+
+    await user.tab()
+    expect(screen.getByRole('link', { name: baseMovie.title })).toHaveFocus()
+
+    await user.tab()
+    expect(screen.getByRole('button')).toHaveFocus()
+  })
+
   it('клик по сердечку не триггерит переход по Link (location не меняется)', async () => {
     const user = userEvent.setup()
     const onToggleFavorite = vi.fn()
