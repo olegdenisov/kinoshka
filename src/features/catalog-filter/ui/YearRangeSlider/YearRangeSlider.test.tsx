@@ -24,6 +24,26 @@ describe('YearRangeSlider', () => {
     expect(to).toHaveValue(String(YEAR_SLIDER_MAX))
   })
 
+  it('deep-link только с yearFrom (yearTo: null) рендерит асимметричную позицию — to упирается в YEAR_SLIDER_MAX', () => {
+    render(<YearRangeSlider yearFrom={2015} yearTo={null} onChange={vi.fn()} />)
+
+    expect(screen.getByRole('slider', { name: 'Year from' })).toHaveValue(
+      '2015',
+    )
+    expect(screen.getByRole('slider', { name: 'Year to' })).toHaveValue(
+      String(YEAR_SLIDER_MAX),
+    )
+  })
+
+  it('deep-link только с yearTo (yearFrom: null) рендерит асимметричную позицию — from упирается в YEAR_SLIDER_MIN', () => {
+    render(<YearRangeSlider yearFrom={null} yearTo={1995} onChange={vi.fn()} />)
+
+    expect(screen.getByRole('slider', { name: 'Year from' })).toHaveValue(
+      String(YEAR_SLIDER_MIN),
+    )
+    expect(screen.getByRole('slider', { name: 'Year to' })).toHaveValue('1995')
+  })
+
   it('cross-linked атрибуты: max у "from" = текущее значение "to", min у "to" = текущее значение "from"', () => {
     render(<YearRangeSlider yearFrom={2010} yearTo={2020} onChange={vi.fn()} />)
 

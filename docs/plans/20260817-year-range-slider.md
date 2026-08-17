@@ -198,10 +198,10 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 
 ### Task 5: Проверить критерии приёмки
 
-- [ ] проверить, что все требования из Обзора реализованы (интерактивный двухползунковый слайдер годов на desktop и mobile, встроен в существующий пайплайн `FilterState`/URL/API)
-- [ ] проверить edge-кейсы: полный диапазон → `(null, null)`, ползунки не пересекаются, состояние `disabled`, deep-link только с `yearFrom` или только с `yearTo` (асимметричная позиция слайдера) корректно рендерится
-- [ ] прогнать полный набор тестов: `make test`
-- [ ] прогнать `make check` (lint + build)
+- [x] проверить, что все требования из Обзора реализованы (интерактивный двухползунковый слайдер годов на desktop и mobile, встроен в существующий пайплайн `FilterState`/URL/API) — подтверждено чтением кода: `YearRangeSlider` подключён в `SearchSidebar.tsx` (desktop) и `SearchMobile.tsx` (mobile, `compact`), оба через `filters.yearFrom`/`yearTo` → `onFiltersChange`/`setFilters`, URL уже читает/пишет эти поля через `getFilterFromSearchParams`/`filtersToSearchParams` без изменений
+- [x] проверить edge-кейсы: полный диапазон → `(null, null)` (тест "коммит обратно к полному дефолтному диапазону"), ползунки не пересекаются (cross-linked `min`/`max` + тест), состояние `disabled` (тест на обоих input + `SearchSidebar.test.tsx`), deep-link только с `yearFrom` или только с `yearTo` (асимметричная позиция слайдера) корректно рендерится — не было отдельного теста на этот кейс, добавлены два новых теста в `YearRangeSlider.test.tsx`
+- [x] прогнать полный набор тестов: `make test` — 498/498 passed
+- [x] прогнать `make check` (lint + build) — `lint` и `build` (tsc -b + vite build) проходят чисто; `format-check` падает, но это pre-existing состояние baseline-ветки до Task 5 (проверено через `git stash`), затрагивает только `AGENTS.md`/`docs/plans/completed/*.md` — файлы вне скоупа этой задачи, не трогались Tasks 1-4 и не относятся к `YearRangeSlider`
 
 ### Task 6: [Финал] Обновить документацию
 
