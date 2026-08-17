@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
+import { hashHue } from '../lib/hashHue'
 
 // Механика кэша (дедупликация, TTL, cooldown, sessionStorage) шагов-курсоров покрыта
 // в createCachedFetcher.test.ts. Здесь — специфика getMoviesPage: обход next 1..N,
@@ -29,7 +30,7 @@ const movieNamed = (name: string) => ({
   genre: ['drama'],
   runtime: '120',
   poster: 'https://example.com/poster.jpg',
-  hue: 0,
+  hue: hashHue(1),
 })
 
 // Свежий модуль на каждый тест — сбрасывает in-memory кэш шагов и page-level кэш,

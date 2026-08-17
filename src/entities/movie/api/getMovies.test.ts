@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
+import { hashHue } from '../lib/hashHue'
 
 // Механика кэша (дедупликация, TTL, cooldown, sessionStorage) покрыта в createCachedFetcher.test.ts.
 // Здесь — только getMovies-специфика: маппинг docs-элемента в Movie.
@@ -28,7 +29,7 @@ const expectedMovie = {
   genre: ['drama'],
   runtime: '120',
   poster: 'https://example.com/poster.jpg',
-  hue: 0,
+  hue: hashHue(1),
 }
 
 const mockSuccess = (docs = [doc()]) => {

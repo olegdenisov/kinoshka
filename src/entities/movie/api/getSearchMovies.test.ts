@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
+import { hashHue } from '../lib/hashHue'
 import { getSearchMovies } from './getSearchMovies'
 
 const ENDPOINT = '*/v1.5/movie/search'
@@ -31,7 +32,7 @@ const expectedMovie = {
   genre: ['drama'],
   runtime: '120',
   poster: 'https://example.com/poster.jpg',
-  hue: 0,
+  hue: hashHue(1),
 }
 
 const mockSuccess = (

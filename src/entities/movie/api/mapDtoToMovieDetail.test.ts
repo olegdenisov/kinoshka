@@ -1,5 +1,6 @@
 import type { MovieDtoV14 } from '@shared/api'
 
+import { hashHue } from '../lib/hashHue'
 import { isCast, isCrew, mapDtoToMovieDetail } from './mapDtoToMovieDetail'
 
 const doc = (overrides: Partial<MovieDtoV14> = {}): MovieDtoV14 => ({
@@ -62,7 +63,7 @@ describe('mapDtoToMovieDetail — полностью заполненный doc'
       genre: ['drama'],
       runtime: '120',
       poster: 'https://example.com/poster.jpg',
-      hue: 0,
+      hue: hashHue(1),
       tagline: "Some stories don't resolve.",
       synopsis: 'Full synopsis text.',
       shortSynopsis: 'Short synopsis.',
@@ -98,7 +99,7 @@ describe('mapDtoToMovieDetail — полностью заполненный doc'
           genre: [],
           runtime: '0',
           poster: '',
-          hue: 0,
+          hue: hashHue(2),
         },
       ],
     })
