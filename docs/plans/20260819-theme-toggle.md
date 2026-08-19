@@ -117,9 +117,9 @@ Toggle размещается в обоих Header-компонентах (`Head
 - Create: `src/features/theme/lib/resolveTheme.ts`
 - Create: `src/features/theme/lib/resolveTheme.test.ts`
 
-- [ ] `resolveTheme(theme: Theme, prefersDark: boolean): 'light' | 'dark'` — `system` резолвится через `prefersDark`, `light`/`dark` возвращаются как есть
-- [ ] написать тесты для всех трёх входных `theme` × обоих `prefersDark`
-- [ ] run tests — должны пройти перед Task 4
+- [x] `resolveTheme(theme: Theme, prefersDark: boolean): 'light' | 'dark'` — `system` резолвится через `prefersDark`, `light`/`dark` возвращаются как есть
+- [x] написать тесты для всех трёх входных `theme` × обоих `prefersDark`
+- [x] run tests — должны пройти перед Task 4
 
 ### Task 4: `useTheme()` хук + стаб `matchMedia` в тестовом окружении
 
