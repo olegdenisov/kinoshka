@@ -1,0 +1,1 @@
+export { FavoritesMobile } from './FavoritesMobile'
