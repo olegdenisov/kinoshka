@@ -90,12 +90,12 @@ Toggle размещается в обоих Header-компонентах (`Head
 
 - Modify: `src/app/styles/global.css`
 
-- [ ] Добавить блок `:root[data-theme='light'] { ... }` с полным набором light-эквивалентов всех переменных из текущего `:root` (bg-\*, text-\*, accent-\*, border-\*, overlay-backdrop, bg-glass\*, shadow-color; `avatar-gradient` — по вкусу)
-- [ ] Добавить `color-scheme: dark` в безусловный `:root` и `color-scheme: light` в `:root[data-theme='light']`
-- [ ] Проверить контраст текст/фон по ключевым парам (`--text-primary`/`--bg-primary`, `--text-secondary`/`--bg-secondary`) на соответствие WCAG AA (≥ 4.5:1)
-- [ ] Убедиться, что текущий безусловный `:root {}` (dark) не тронут — визуальный диф dark-темы должен быть нулевым
-- [ ] Тесты не требуются (чистый CSS, нет логики) — проверка визуально в Task 5 (no-FOUC) и Task 13
-- [ ] `make lint`/`make build` — чисто
+- [x] Добавить блок `:root[data-theme='light'] { ... }` с полным набором light-эквивалентов всех переменных из текущего `:root` (bg-\*, text-\*, accent-\*, border-\*, overlay-backdrop, bg-glass\*, shadow-color; `avatar-gradient` — по вкусу)
+- [x] Добавить `color-scheme: dark` в безусловный `:root` и `color-scheme: light` в `:root[data-theme='light']`
+- [x] Проверить контраст текст/фон по ключевым парам (`--text-primary`/`--bg-primary`, `--text-secondary`/`--bg-secondary`) на соответствие WCAG AA (≥ 4.5:1)
+- [x] Убедиться, что текущий безусловный `:root {}` (dark) не тронут — визуальный диф dark-темы должен быть нулевым
+- [x] Тесты не требуются (чистый CSS, нет логики) — проверка визуально в Task 5 (no-FOUC) и Task 13
+- [x] `make lint`/`make build` — чисто
 
 ### Task 2: `themeStorage` — модель хранения темы
 
