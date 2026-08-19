@@ -42,8 +42,17 @@ const renderHeader = (initialEntries: string[]) => {
   )
 }
 
-beforeEach(() => vi.useFakeTimers())
-afterEach(() => vi.useRealTimers())
+beforeEach(() => {
+  vi.useFakeTimers()
+  localStorage.clear()
+})
+afterEach(() => {
+  vi.useRealTimers()
+  // ThemeToggle (рендерится в Header безусловно, см. Task 7) применяет data-theme на
+  // document.documentElement — jsdom document общий между тестами файла, сбрасываем, чтобы
+  // тема, выставленная одним тестом, не утекала в следующий (см. ThemeToggle.test.tsx).
+  document.documentElement.removeAttribute('data-theme')
+})
 
 describe('Header (variant="search")', () => {
   it('role="search" на контейнере поиска', () => {
@@ -353,5 +362,32 @@ describe('Header — пункт навигации Favorites', () => {
     expect(screen.getByRole('button', { name: 'Home' }).className).not.toMatch(
       /navPillActive/,
     )
+  })
+})
+
+describe('Header — переключатель темы (ThemeToggle)', () => {
+  it('кнопка-тоггл темы присутствует в actions', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Header variant='default' />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('button', { name: /theme/i })).toBeInTheDocument()
+  })
+
+  it('клик по тогглу меняет document.documentElement.dataset.theme', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Header variant='default' />
+      </MemoryRouter>,
+    )
+
+    const toggle = screen.getByRole('button', { name: /theme/i })
+    const themeBefore = document.documentElement.dataset.theme
+
+    fireEvent.click(toggle)
+
+    expect(document.documentElement.dataset.theme).not.toBe(themeBefore)
   })
 })
