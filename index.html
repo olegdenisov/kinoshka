@@ -11,6 +11,30 @@
       href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <script>
+      ;(function () {
+        try {
+          var raw = localStorage.getItem('kinoshka:theme')
+          var theme = raw === null ? 'system' : JSON.parse(raw)
+          var resolved
+          if (theme === 'light' || theme === 'dark') {
+            resolved = theme
+          } else {
+            resolved = window.matchMedia('(prefers-color-scheme: dark)')
+              .matches
+              ? 'dark'
+              : 'light'
+          }
+          document.documentElement.setAttribute('data-theme', resolved)
+        } catch (e) {
+          var fallback = window.matchMedia('(prefers-color-scheme: dark)')
+            .matches
+            ? 'dark'
+            : 'light'
+          document.documentElement.setAttribute('data-theme', fallback)
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
