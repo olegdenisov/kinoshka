@@ -14,4 +14,18 @@ describe('formatCurrency', () => {
   it('value: 0 — форматирует как "0", а не как falsy-пропуск', () => {
     expect(formatCurrency({ value: 0, currency: '$' })).toBe('0 $')
   })
+
+  it('ru-RU — разделитель тысяч с учётом языка', () => {
+    const expectedNumber = new Intl.NumberFormat('ru-RU').format(4800000)
+
+    expect(formatCurrency({ value: 4800000, currency: '$' }, 'ru-RU')).toBe(
+      `${expectedNumber} $`,
+    )
+  })
+
+  it('без явной locale — использует navigator.language', () => {
+    expect(formatCurrency({ value: 4800000, currency: '$' })).toBe(
+      '4,800,000 $',
+    )
+  })
 })

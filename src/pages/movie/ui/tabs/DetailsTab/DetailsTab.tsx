@@ -1,5 +1,5 @@
 import type { MovieDetail } from '@entities/movie'
-import { formatCurrency } from '@entities/movie'
+import { formatCurrency, formatDate } from '@entities/movie'
 
 import s from './DetailsTab.module.css'
 
@@ -9,7 +9,10 @@ type DetailsTabProps = {
 
 export const DetailsTab = ({ m }: DetailsTabProps) => {
   const rows = [
-    { label: 'Release date', value: m.premiereWorld ?? '—' },
+    {
+      label: 'Release date',
+      value: m.premiereWorld ? formatDate(m.premiereWorld) : '—',
+    },
     {
       label: 'Country',
       value: m.countries.length > 0 ? m.countries.join(' · ') : '—',
