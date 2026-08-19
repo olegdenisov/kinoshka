@@ -3,8 +3,11 @@ type CurrencyAmount = {
   currency: string
 }
 
-export const formatCurrency = ({ value, currency }: CurrencyAmount): string => {
-  const formattedValue = new Intl.NumberFormat('en-US').format(value)
+export const formatCurrency = (
+  { value, currency }: CurrencyAmount,
+  locale: string = navigator.language,
+): string => {
+  const formattedValue = new Intl.NumberFormat(locale).format(value)
 
   return currency ? `${formattedValue} ${currency}` : formattedValue
 }

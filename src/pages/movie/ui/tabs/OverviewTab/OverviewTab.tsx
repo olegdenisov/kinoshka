@@ -1,5 +1,7 @@
 import type { MovieDetail } from '@entities/movie'
 
+import { groupCrewByProfession } from '../../../lib/groupCrewByProfession'
+
 import s from './OverviewTab.module.css'
 
 type SectionHeadProps = React.PropsWithChildren
@@ -53,14 +55,8 @@ export const OverviewTab = ({ m }: OverviewTabProps) => {
         </div>
 
         <div className={s.crew}>
-          {m.crew.map(c => (
-            // ключ — не просто c.id: один человек может встречаться в persons несколько раз
-            // с разными профессиями (напр. и режиссёр, и сценарист) — id одинаковый.
-            <MetaRow
-              key={`${c.id}-${c.profession}`}
-              label={c.profession}
-              value={c.name}
-            />
+          {groupCrewByProfession(m.crew).map(({ profession, names }) => (
+            <MetaRow key={profession} label={profession} value={names} />
           ))}
         </div>
       </div>

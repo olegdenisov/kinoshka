@@ -70,7 +70,7 @@ describe('MovieMobile — Details', () => {
 
     await user.click(screen.getByRole('button', { name: 'Details' }))
 
-    expect(screen.getByText('2024-03-14')).toBeInTheDocument()
+    expect(screen.getByText('March 14, 2024')).toBeInTheDocument()
     expect(screen.getByText('16+')).toBeInTheDocument()
     expect(screen.getByText('4,800,000 $')).toBeInTheDocument()
     expect(screen.getByText('12,300,000 $')).toBeInTheDocument()

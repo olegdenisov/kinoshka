@@ -1,5 +1,5 @@
 import type { CastMember, MovieDetail, MovieImage } from '@entities/movie'
-import { Poster, MobileCard, formatCurrency } from '@entities/movie'
+import { Poster, MobileCard, formatCurrency, formatDate } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { MobileHeader, BottomNav } from '@widgets/mobile-chrome'
 import { useState } from 'react'
@@ -873,7 +873,10 @@ type MobileDetailsContentProps = {
 
 const MobileDetailsContent = ({ m }: MobileDetailsContentProps) => {
   const rows = [
-    { label: 'Release date', value: m.premiereWorld ?? '—' },
+    {
+      label: 'Release date',
+      value: m.premiereWorld ? formatDate(m.premiereWorld) : '—',
+    },
     {
       label: 'Country',
       value: m.countries.length > 0 ? m.countries.join(' · ') : '—',
