@@ -243,13 +243,13 @@ Toggle размещается в обоих Header-компонентах (`Head
 - Create: `src/pages/home/ui/HomeMobile/index.tsx`
 - Delete: `src/pages/home/ui/HomeMobile.tsx`
 
-- [ ] Перенести компонент в директорию, импорт в `HomePage.tsx` не меняется
-- [ ] Перенести все `style={{...}}` в `HomeMobile.module.css`; хардкод-хексы/rgba, включая `#0F0D11`/`#D18E5F` в градиенте и цветах фильтра-чипов, → соответствующие `var(--...)`
-- [ ] Динамические значения (если есть) — оставить инлайн `style`
-- [ ] Визуально сверить рендер dark до/после (идентично)
-- [ ] Тест-файла для `HomeMobile` нет — не добавлять новый (вне скоупа 2.2)
-- [ ] Визуально проверить light-режим
-- [ ] run `make test` — не должно быть регрессий перед Task 11
+- [x] Перенести компонент в директорию, импорт в `HomePage.tsx` не меняется
+- [x] Перенести все `style={{...}}` в `HomeMobile.module.css`; хардкод-хексы/rgba, включая `#0F0D11`/`#D18E5F` в градиенте и цветах фильтра-чипов, → соответствующие `var(--...)` (`#0F0D11` → `var(--bg-primary)`, `#F2F0EF` → `var(--text-primary)`, `#D18E5F` → `var(--accent-warm)`, `#B8ADAB` → `var(--text-secondary)`, `#5A5059` → `var(--text-faint)`, `#18161B` → `var(--bg-secondary)`, `rgba(24,22,27,0.7)`/`rgba(24,22,27,0.6)` → `var(--bg-glass)` (same decision as `HeroSection.module.css` `.badge`/`.chip`, used as precedent — see Task 8), `rgba(184,173,171,0.12)`/`rgba(184,173,171,0.15)` → `var(--border-light)`/`var(--border-soft)`, `rgba(209,142,95,0.15)` → `var(--accent-warm-soft)`, `rgba(209,142,95,0.18)` → `var(--accent-warm-glow)`, `rgba(209,142,95,0.35)` → `var(--accent-warm-border)`); active-chip conditional inline style replaced with `${s.chip} ${active ? s.chipActive : ''}` template-literal class toggling per project convention (`## Styles` in AGENTS.md) instead of carrying the conditional into inline `style`
+- [x] Динамические значения (если есть) — оставить инлайн `style` — не найдено ни одного динамического/вычисляемого значения (высоты, transform по скроллу и т.п.); всё было статическим и полностью перенесено в CSS-модуль
+- [x] Визуально сверить рендер dark до/после (идентично) — manual test (skipped - not automatable, нет браузера); проверено построчным сравнением: каждый класс в `HomeMobile.module.css` — точная копия соответствующего `style={{...}}` (значения/единицы не менялись), хардкод-хексы/rgba заменены на `var(--...)`, которые в dark (безусловный `:root`) резолвятся в те же самые исходные hex/rgba-значения
+- [x] Тест-файла для `HomeMobile` нет — не добавлять новый (вне скоупа 2.2)
+- [x] Визуально проверить light-режим — manual test (skipped - not automatable, нет браузера); все использованные токены уже определены в `:root[data-theme='light']` (Task 1), включая `--bg-glass`/`--accent-warm-soft`/`--accent-warm-border`, поэтому компонент корректно отреагирует на смену темы
+- [x] run `make test` — не должно быть регрессий перед Task 11 — `make test` (544/544, 64 файла), `make lint`, `make typecheck`, `make build` все прошли чисто
 
 ### Task 11: Миграция `SearchMobile` в `Component/index.tsx` + CSS-модуль
 
