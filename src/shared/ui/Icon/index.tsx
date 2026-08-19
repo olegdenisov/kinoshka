@@ -16,4 +16,6 @@ export {
   FilterIcon,
   PlayIcon,
   CheckIcon,
+  SunIcon,
+  MoonIcon,
 } from './Icon'

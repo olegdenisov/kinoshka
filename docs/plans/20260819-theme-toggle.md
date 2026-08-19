@@ -171,14 +171,14 @@ Toggle размещается в обоих Header-компонентах (`Head
 - Create: `src/features/theme/ui/ThemeToggle/ThemeToggle.test.tsx`
 - Modify: `src/features/theme/index.ts`
 
-- [ ] `SunIcon`/`MoonIcon` в `Icon.tsx` по паттерну существующих иконок, экспорт из `index.tsx`
-- [ ] Перенести `IconButton` из `src/widgets/header/ui/IconButton/` в `src/shared/ui/IconButton/` без изменений содержимого (уже theme-agnostic), экспортировать из `src/shared/ui/index.ts`
-- [ ] Обновить 4 импорта `IconButton` в `Header.tsx` на `@shared/ui`, удалить старую директорию
-- [ ] `ThemeToggle` — использует `useTheme()`, рендерит `IconButton` (`@shared/ui`) с `SunIcon`/`MoonIcon` по `resolvedTheme`, `aria-label` меняется на «Switch to light/dark theme»
-- [ ] Экспортировать `ThemeToggle` из `features/theme/index.ts`
-- [ ] написать тесты: клик переключает `document.documentElement.dataset.theme`, `aria-label` синхронизирован с текущей темой
-- [ ] `Header.test.tsx` — прогнать без изменений (импорт `IconButton` сменился, публичное поведение Header — нет); должен остаться зелёным
-- [ ] run tests — должны пройти перед Task 7
+- [x] `SunIcon`/`MoonIcon` в `Icon.tsx` по паттерну существующих иконок, экспорт из `index.tsx`
+- [x] Перенести `IconButton` из `src/widgets/header/ui/IconButton/` в `src/shared/ui/IconButton/` без изменений содержимого (уже theme-agnostic), экспортировать из `src/shared/ui/index.ts`
+- [x] Обновить 4 импорта `IconButton` в `Header.tsx` на `@shared/ui`, удалить старую директорию
+- [x] `ThemeToggle` — использует `useTheme()`, рендерит `IconButton` (`@shared/ui`) с `SunIcon`/`MoonIcon` по `resolvedTheme`, `aria-label` меняется на «Switch to light/dark theme»
+- [x] Экспортировать `ThemeToggle` из `features/theme/index.ts`
+- [x] написать тесты: клик переключает `document.documentElement.dataset.theme`, `aria-label` синхронизирован с текущей темой
+- [x] `Header.test.tsx` — прогнать без изменений (импорт `IconButton` сменился, публичное поведение Header — нет); должен остаться зелёным
+- [x] run tests — должны пройти перед Task 7
 
 ### Task 7: Встроить `ThemeToggle` в `Header` и `MobileHeader`
 

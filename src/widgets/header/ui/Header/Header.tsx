@@ -1,11 +1,10 @@
 import { EMPTY_FILTERS, filtersToSearchParams } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
 import { useDebouncedValue } from '@shared/lib'
-import { SearchIcon, BellIcon, CloseIcon } from '@shared/ui'
+import { SearchIcon, BellIcon, CloseIcon, IconButton } from '@shared/ui'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 
-import { IconButton } from '../IconButton'
 import { NavPill } from '../NavPill'
 
 import s from './Header.module.css'

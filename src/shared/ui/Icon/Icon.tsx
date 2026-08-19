@@ -205,6 +205,29 @@ export const PlayIcon = ({ size = 22 }: IconProps) => (
   </svg>
 )
 
+export const SunIcon = ({ size = 15 }: IconProps) => (
+  <svg width={size} height={size} viewBox='0 0 24 24' fill='none'>
+    <circle cx='12' cy='12' r='4.5' stroke='currentColor' strokeWidth='1.6' />
+    <path
+      d='M12 2.5v2.5M12 19v2.5M4.5 12H2M22 12h-2.5M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8'
+      stroke='currentColor'
+      strokeWidth='1.6'
+      strokeLinecap='round'
+    />
+  </svg>
+)
+
+export const MoonIcon = ({ size = 15 }: IconProps) => (
+  <svg width={size} height={size} viewBox='0 0 24 24' fill='none'>
+    <path
+      d='M20.5 14.5a8.5 8.5 0 1 1-9-11 7 7 0 0 0 9 11Z'
+      stroke='currentColor'
+      strokeWidth='1.6'
+      strokeLinejoin='round'
+    />
+  </svg>
+)
+
 export const CheckIcon = ({ size = 16 }: IconProps) => (
   <svg width={size} height={size} viewBox='0 0 24 24' fill='none'>
     <path
