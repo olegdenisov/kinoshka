@@ -279,14 +279,14 @@ Toggle размещается в обоих Header-компонентах (`Head
 - Move: `src/pages/movie/ui/MovieMobile.test.tsx` → `src/pages/movie/ui/MovieMobile/MovieMobile.test.tsx`
 - Delete: `src/pages/movie/ui/MovieMobile.tsx`
 
-- [ ] Перенести компонент в директорию, импорт в `MoviePage.tsx` не меняется
-- [ ] Перенести все статические `style={{...}}` в `MovieMobile.module.css` (935 строк, 60+ вхождений хардкода — разбить по секциям компонента: overview/cast/details/media-таб)
-- [ ] **Градиенты с `movie.hue` (строки ~194, ~204 в исходном файле)**: динамическая часть передаётся через CSS custom property (`style={{ '--hue': movie.hue }}` на элементе), сам градиент (включая ранее хардкоженный `#0F0D11`/`rgba(15,13,17,...)`) переносится в `.module.css` как `background: radial-gradient(..., oklch(0.32 0.1 var(--hue) / 0.6), transparent 70%), ..., var(--bg-primary)` — хардкод-хекс исчезает, `hue` остаётся динамическим
-- [ ] Прочие динамические значения (если есть, напр. связанные с активной вкладкой/скроллом) — оставить инлайн `style`
-- [ ] Визуально сверить рендер dark до/после (идентично) по всем четырём табам (Overview/Cast/Details/Media)
-- [ ] `MovieMobile.test.tsx` — прогнать без изменений содержимого, должен остаться зелёным
-- [ ] Визуально проверить light-режим по всем табам, включая градиент-плейсхолдер без постера
-- [ ] run tests — должны пройти перед Task 13
+- [x] Перенести компонент в директорию, импорт в `MoviePage.tsx` не меняется
+- [x] Перенести все статические `style={{...}}` в `MovieMobile.module.css` (935 строк, 60+ вхождений хардкода — разбить по секциям компонента: overview/cast/details/media-таб)
+- [x] **Градиенты с `movie.hue` (строки ~194, ~204 в исходном файле)**: динамическая часть передаётся через CSS custom property (`style={{ '--hue': movie.hue }}` на элементе), сам градиент (включая ранее хардкоженный `#0F0D11`/`rgba(15,13,17,...)`) переносится в `.module.css` как `background: radial-gradient(..., oklch(0.32 0.1 var(--hue) / 0.6), transparent 70%), ..., var(--bg-primary)` — хардкод-хекс исчезает, `hue` остаётся динамическим
+- [x] Прочие динамические значения (если есть, напр. связанные с активной вкладкой/скроллом) — оставить инлайн `style`
+- [x] Визуально сверить рендер dark до/после (идентично) по всем четырём табам (Overview/Cast/Details/Media) (skipped - no browser available, reasoned from code)
+- [x] `MovieMobile.test.tsx` — прогнать без изменений содержимого, должен остаться зелёным
+- [x] Визуально проверить light-режим по всем табам, включая градиент-плейсхолдер без постера (skipped - no browser available, reasoned from code)
+- [x] run tests — должны пройти перед Task 13
 
 ### Task 13: Verify acceptance criteria
 
