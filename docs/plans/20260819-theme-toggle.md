@@ -129,15 +129,15 @@ Toggle размещается в обоих Header-компонентах (`Head
 - Create: `src/features/theme/model/useTheme.test.tsx`
 - Modify: `src/test/setup.ts`
 
-- [ ] Добавить глобальный стаб `window.matchMedia` в `src/test/setup.ts` (jsdom не предоставляет его вообще — без стаба любой тест, монтирующий `useTheme`/`ThemeToggle`, упадёт с `matchMedia is not a function`); стаб возвращает объект с `matches`, `addEventListener`/`removeEventListener` (не no-op — конкретные тесты `useTheme` должны уметь вручную вызвать сохранённый listener, чтобы симулировать смену системной темы)
-- [ ] `useStorageSlot(themeSlot)` для чтения/записи `theme`
-- [ ] `prefersDark` через `window.matchMedia('(prefers-color-scheme: dark)')`, подписка на `change` в `useEffect` с отпиской в cleanup
-- [ ] `resolvedTheme = resolveTheme(theme, prefersDark)` (Task 3)
-- [ ] `useEffect`, применяющий `document.documentElement.setAttribute('data-theme', resolvedTheme)` при каждом изменении `resolvedTheme`
-- [ ] `toggleTheme()` — переключает по текущему `resolvedTheme` (`dark` → `setTheme('light')`, и наоборот); `setTheme(next: Theme)` — прямая установка, используется и извне, и самим `toggleTheme`
-- [ ] написать тесты: persist в localStorage, применение `data-theme` на `document.documentElement`, `toggleTheme` из обоих resolved-состояний, реакция на симулированное `change`-событие `matchMedia` при `theme === 'system'`
-- [ ] тесты сбрасывают `document.documentElement.removeAttribute('data-theme')` в `afterEach` (jsdom `document` общий между тестами файла)
-- [ ] run tests — должны пройти перед Task 5
+- [x] Добавить глобальный стаб `window.matchMedia` в `src/test/setup.ts` (jsdom не предоставляет его вообще — без стаба любой тест, монтирующий `useTheme`/`ThemeToggle`, упадёт с `matchMedia is not a function`); стаб возвращает объект с `matches`, `addEventListener`/`removeEventListener` (не no-op — конкретные тесты `useTheme` должны уметь вручную вызвать сохранённый listener, чтобы симулировать смену системной темы)
+- [x] `useStorageSlot(themeSlot)` для чтения/записи `theme`
+- [x] `prefersDark` через `window.matchMedia('(prefers-color-scheme: dark)')`, подписка на `change` в `useEffect` с отпиской в cleanup
+- [x] `resolvedTheme = resolveTheme(theme, prefersDark)` (Task 3)
+- [x] `useEffect`, применяющий `document.documentElement.setAttribute('data-theme', resolvedTheme)` при каждом изменении `resolvedTheme`
+- [x] `toggleTheme()` — переключает по текущему `resolvedTheme` (`dark` → `setTheme('light')`, и наоборот); `setTheme(next: Theme)` — прямая установка, используется и извне, и самим `toggleTheme`
+- [x] написать тесты: persist в localStorage, применение `data-theme` на `document.documentElement`, `toggleTheme` из обоих resolved-состояний, реакция на симулированное `change`-событие `matchMedia` при `theme === 'system'`
+- [x] тесты сбрасывают `document.documentElement.removeAttribute('data-theme')` в `afterEach` (jsdom `document` общий между тестами файла)
+- [x] run tests — должны пройти перед Task 5
 
 ### Task 5: Публичный API `features/theme` + no-FOUC script
 
