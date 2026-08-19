@@ -5,7 +5,44 @@ import {
 } from '@entities/movie'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll } from 'vitest'
+import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+
+// window.matchMedia — jsdom does not implement it at all (docs/plans/20260819-theme-toggle.md,
+// Task 4). useTheme() calls `window.matchMedia('(prefers-color-scheme: dark)')` unconditionally,
+// so without this stub every test that mounts a component using useTheme()/ThemeToggle would
+// throw "window.matchMedia is not a function". Listeners are stored per query string (not
+// no-op'd) so a test can retrieve `addEventListener.mock.calls` / reassign `window.matchMedia`
+// itself and invoke the stored 'change' listener directly to simulate a system theme change —
+// see useTheme.test.tsx for the per-test override pattern (this global stub only guarantees
+// `matches: false` and a working subscribe/unsubscribe by default).
+const mediaQueryListeners = new Map<
+  string,
+  Set<(event: MediaQueryListEvent) => void>
+>()
+
+window.matchMedia = vi.fn().mockImplementation((query: string) => {
+  const listeners =
+    mediaQueryListeners.get(query) ??
+    new Set<(event: MediaQueryListEvent) => void>()
+  mediaQueryListeners.set(query, listeners)
+
+  return {
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(
+      (type: string, listener: (event: MediaQueryListEvent) => void) => {
+        if (type === 'change') listeners.add(listener)
+      },
+    ),
+    removeEventListener: vi.fn(
+      (type: string, listener: (event: MediaQueryListEvent) => void) => {
+        if (type === 'change') listeners.delete(listener)
+      },
+    ),
+    dispatchEvent: vi.fn(),
+  } as unknown as MediaQueryList
+})
 
 // Дефолтный MSW-хендлер для справочника жанров (Task 3, docs/plans/20260815-dynamic-genre-
 // dictionary.md) — без него любой тест, рендерящий SearchDesktop/SearchSidebar/SearchMobile
