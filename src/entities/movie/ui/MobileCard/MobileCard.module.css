@@ -23,7 +23,8 @@
   gap: 3px;
   padding: 3px 6px 3px 5px;
   border-radius: 3px;
-  background: rgba(15, 13, 17, 0.75);
+  /* UI-chrome badge, same pattern as Card.module.css's ratingBadge/typeBadge */
+  background: var(--bg-glass);
   backdrop-filter: blur(6px);
   font-family: var(--font-mono);
   font-size: 9.5px;
@@ -44,7 +45,8 @@
   height: 26px;
   border-radius: 50%;
   border: 1px solid var(--border-light);
-  background: rgba(15, 13, 17, 0.75);
+  /* UI-chrome badge, same pattern as Card.module.css's ratingBadge/typeBadge */
+  background: var(--bg-glass);
   backdrop-filter: blur(6px);
   color: var(--text-primary);
   cursor: pointer;

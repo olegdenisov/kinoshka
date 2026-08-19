@@ -25,6 +25,8 @@
 .backdropOverlay {
   position: absolute;
   inset: 0;
+  /* намеренно не тонируется — скрим над постером/backdrop, нужен для
+     контраста независимо от темы */
   background: linear-gradient(
     180deg,
     rgba(15, 13, 17, 0.3) 0%,
