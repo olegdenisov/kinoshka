@@ -310,13 +310,13 @@ Toggle размещается в обоих Header-компонентах (`Head
 - Delete: `src/index.css` (мёртвый неиспользуемый Vite-темплейт с собственным `color-scheme`/`prefers-color-scheme`, не импортируется нигде)
 - Move: `docs/plans/20260819-theme-toggle.md` → `docs/plans/completed/`
 
-- [ ] `AGENTS.md`, секция `## Responsive pattern`: убрать утверждение «`HomeMobile`, `SearchMobile`, `MovieMobile` — flat `.tsx` файлы без CSS-модуля» (после этой задачи все четыре следуют обычному паттерну `Component/index.tsx` + `Component.module.css`)
-- [ ] `AGENTS.md`, `## Key public APIs`: добавить `@features/theme` (`useTheme()`, `Theme`, `ThemeToggle`), добавить `IconButton` в строку `@shared/ui` (перенесён из `widgets/header`)
-- [ ] `AGENTS.md`, секция `## Data state`: упомянуть `kinoshka:theme` рядом с `kinoshka:favorites`/`kinoshka:genres` в списке localStorage-ключей через `createStorageSlot`
-- [ ] `AGENTS.md`: добавить короткую заметку по паттерну темизации (аналогично существующим заметкам про stretched-link/dual-thumb slider) — `data-theme` на `<html>` + переопределение токенов + no-FOUC inline script; новый CSS всегда через `var(--token)`, никогда хардкод-хекс
-- [ ] Удалить `src/index.css`, убедиться что нигде не было ссылок (уже проверено на этапе planning — `grep` пуст)
-- [ ] Обновить `Прогресс (живой трекер)` и чек-боксы пункта 2.2 в `plans/roadmap.md` (все строки 2.2 → `[x]`)
-- [ ] Переместить этот файл в `docs/plans/completed/`
+- [x] `AGENTS.md`, секция `## Responsive pattern`: убрать утверждение «`HomeMobile`, `SearchMobile`, `MovieMobile` — flat `.tsx` файлы без CSS-модуля» (после этой задачи все четыре следуют обычному паттерну `Component/index.tsx` + `Component.module.css`)
+- [x] `AGENTS.md`, `## Key public APIs`: добавить `@features/theme` (`useTheme()`, `Theme`, `ThemeToggle`), добавить `IconButton` в строку `@shared/ui` (перенесён из `widgets/header`)
+- [x] `AGENTS.md`, секция `## Data state`: упомянуть `kinoshka:theme` рядом с `kinoshka:favorites`/`kinoshka:genres` в списке localStorage-ключей через `createStorageSlot`
+- [x] `AGENTS.md`: добавить короткую заметку по паттерну темизации (аналогично существующим заметкам про stretched-link/dual-thumb slider) — `data-theme` на `<html>` + переопределение токенов + no-FOUC inline script; новый CSS всегда через `var(--token)`, никогда хардкод-хекс
+- [x] Удалить `src/index.css`, убедиться что нигде не было ссылок (уже проверено на этапе planning — `grep` пуст) — повторно проверено (`grep -rn "index.css" index.html src` — пусто) перед удалением, файл удалён
+- [x] Обновить `Прогресс (живой трекер)` и чек-боксы пункта 2.2 в `plans/roadmap.md` (все строки 2.2 → `[x]`) — все 7 строк 2.2 переведены в `[x]`; верхнеуровневый трекер «Прогресс (живой трекер)» отслеживает только гранулярность целых фаз (`- [ ] **Phase 2** — Advanced-фичи...`), не под-пунктов — оставлен как есть, т.к. Phase 2 целиком ещё не завершена (только 2.2 из неё)
+- [x] Переместить этот файл в `docs/plans/completed/` (skipped - orchestrator moves the plan file after all phases complete)
 
 ## Post-Completion
 

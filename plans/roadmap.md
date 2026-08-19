@@ -294,13 +294,13 @@
 
 ### 2.2 Theme toggle 🌙
 
-- [ ] Спроектировать светлую палитру (текущие токены — dark-only, `#0F0D11` и тёплый акцент механически не переносятся).
-- [ ] Светлые токены `:root[data-theme="light"] { ... }` в `global.css`.
-- [ ] `features/theme/`, модель `'light' | 'dark' | 'system'`.
-- [ ] `useTheme()` — атрибут `data-theme` на `<html>`, слушает `prefers-color-scheme` если `system`.
-- [ ] Persist в localStorage.
-- [ ] Toggle-кнопка в `Header`.
-- [ ] Нет FOUC (применять тему до первого рендера, inline `<script>` в `index.html`).
+- [x] Спроектировать светлую палитру (текущие токены — dark-only, `#0F0D11` и тёплый акцент механически не переносятся).
+- [x] Светлые токены `:root[data-theme="light"] { ... }` в `global.css`.
+- [x] `features/theme/`, модель `'light' | 'dark' | 'system'`.
+- [x] `useTheme()` — атрибут `data-theme` на `<html>`, слушает `prefers-color-scheme` если `system`.
+- [x] Persist в localStorage.
+- [x] Toggle-кнопка в `Header`.
+- [x] Нет FOUC (применять тему до первого рендера, inline `<script>` в `index.html`).
 
 **Как лучше:** один атрибут на `<html>` + CSS-переменные = O(1) переключение без re-render всего дерева. FOUC решается inline-скриптом в `<head>` ДО `<body>`: читает localStorage, ставит `data-theme` синхронно. Скрипт минимальный (10 строк) — embed прямо в `index.html`.
 
