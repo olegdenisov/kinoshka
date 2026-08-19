@@ -16,6 +16,7 @@
    `SearchSidebar` (desktop) и `SearchMobile.tsx` (отдельная задублированная инлайн-вёрстка).
 
 Этот план:
+
 - Загружает справочник жанров из живого API (`GET /v1.5/dictionary/genres`), кэширует его в
   `localStorage` (жанры меняются редко) через уже готовый примитив `createStorageSlot`
   (`@shared/lib`, реализован, но пока нигде не используется в реальном коде — и содержит баг,
@@ -103,6 +104,7 @@
 ### Task 1: Починить референциальную стабильность `createStorageSlot.get()`
 
 **Files:**
+
 - Modify: `src/shared/lib/storage/storage.ts`
 - Modify: `src/shared/lib/storage/storage.test.ts`
 
@@ -116,6 +118,7 @@
 ### Task 2: API-вызов справочника жанров + тип `Genre`
 
 **Files:**
+
 - Create: `src/entities/movie/model/genre.ts`
 - Create: `src/entities/movie/api/getGenreDictionary.ts`
 - Create: `src/entities/movie/api/getGenreDictionary.test.ts`
@@ -131,6 +134,7 @@
 ### Task 3: localStorage-кэш + не блокирующий рендер хук для справочника жанров
 
 **Files:**
+
 - Create: `src/entities/movie/api/genreDictionaryCache.ts`
 - Create: `src/entities/movie/api/genreDictionaryCache.test.ts`
 - Create: `src/entities/movie/hooks/useGenreDictionary.ts`
@@ -151,6 +155,7 @@
 ### Task 4: Инвертировать `genreMap.ts` в RU→EN лейблы, упростить `filtersToParams.ts` и лейблы active-чипов
 
 **Files:**
+
 - Modify: `src/features/catalog-filter/lib/genreMap.ts`
 - Modify: `src/features/catalog-filter/lib/genreMap.test.ts`
 - Modify: `src/features/catalog-filter/lib/filtersToParams.ts`
@@ -167,6 +172,7 @@
 ### Task 5: Компонент `GenreSelector` (шорт-лист + show-all, без Suspense)
 
 **Files:**
+
 - Create: `src/features/catalog-filter/ui/GenreSelector/GenreSelector.tsx`
 - Create: `src/features/catalog-filter/ui/GenreSelector/index.tsx`
 - Create: `src/features/catalog-filter/ui/GenreSelector/GenreSelector.module.css`
@@ -186,6 +192,7 @@
 ### Task 6: Подключить `GenreSelector` в `SearchSidebar` (desktop)
 
 **Files:**
+
 - Modify: `src/widgets/search-sidebar/ui/SearchSidebar/SearchSidebar.tsx`
 - Modify: `src/widgets/search-sidebar/ui/SearchSidebar/SearchSidebar.module.css`
 - Modify: существующие тесты, ссылающиеся на чипы жанров `SearchSidebar`/`SearchDesktop`
@@ -200,6 +207,7 @@
 ### Task 7: Подключить `GenreSelector` в `SearchMobile.tsx`, убрать старый инлайн-блок
 
 **Files:**
+
 - Modify: `src/pages/search/ui/SearchMobile.tsx`
 - Modify: существующие ассерты на жанры в `SearchMobile.test.tsx`
 
@@ -211,6 +219,7 @@
 ### Task 8: Удалить ставший неиспользуемым `ALL_GENRES`
 
 **Files:**
+
 - Modify: `src/entities/movie/model/catalog.ts`
 - Modify: `src/entities/movie/index.ts`
 
@@ -241,5 +250,6 @@
 ## Post-Completion
 
 **Ручная проверка** (в проекте нет Playwright/e2e-сьюта — см. команды в AGENTS.md, `make test` — только Vitest):
+
 - Визуальная проверка `GenreSelector` на обоих брейкпоинтах (desktop `SearchSidebar` и mobile `SearchMobile`, граница 720px, по `useViewport`) — перенос чипов по строкам, переключатель «Показать все», состояния active/selected, состояние disabled в режиме текстового поиска (Variant A), совпадение размеров чипов с текущим видом на каждом брейкпоинте.
 - Ручная проверка через DevTools (сеть offline/эндпоинт 403): фильтр жанров остаётся функциональным на статическом шорт-листе, без зависаний/бесконечных ре-рендеров.

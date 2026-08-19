@@ -40,7 +40,7 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
   `compact?: boolean` для мобильного варианта размера чипов вместо внутреннего `@media`-запроса
   (оба call site никогда не рендерятся одновременно, см. `useViewport`). `YearRangeSlider`
   повторяет ту же структуру директории (`ui/YearRangeSlider/{index.tsx, YearRangeSlider.tsx,
-  YearRangeSlider.module.css, YearRangeSlider.test.tsx}`) и тот же паттерн пропа `compact`.
+YearRangeSlider.module.css, YearRangeSlider.test.tsx}`) и тот же паттерн пропа `compact`.
 - **Тестов пока нет** ни на секцию Year в `SearchSidebar` (файла тестов вообще нет), ни в
   `SearchMobile.test.tsx` — новые тесты аддитивны, ничего не мигрируют.
 
@@ -66,6 +66,7 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 
 **Механика двух ползунков — два перекрывающихся нативных input, а не самописный pointer-drag:**
 два `<input type="range">`, абсолютно наложенных друг на друга на одном треке.
+
 - "from"-input: `min={YEAR_SLIDER_MIN}`, `max={currentTo}` (cross-linked на живое значение другого
   ползунка).
 - "to"-input: `min={currentFrom}`, `max={YEAR_SLIDER_MAX}`.
@@ -75,6 +76,7 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
   range на нативных input (в противовес самописному слайдеру на pointer-событиях), и она даёт
   нативную клавиатурную поддержку (стрелки), фокус и семантику для скринридеров бесплатно — в
   проекте нет библиотеки для drag/жестов, так что это ещё и вариант с наименьшим объёмом кода.
+
 - У каждого input `pointer-events: none` целиком, кроме собственного псевдоэлемента-ползунка
   (`::-webkit-slider-thumb` / `::-moz-range-thumb` получают `pointer-events: auto`), так что оба
   ползунка остаются независимо перетаскиваемыми даже при полном наложении input'ов. Нативный трек
@@ -135,6 +137,7 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 ### Task 1: Собрать компонент `YearRangeSlider` с двумя перекрывающимися range-input'ами
 
 **Файлы:**
+
 - Создать: `src/features/catalog-filter/ui/YearRangeSlider/YearRangeSlider.tsx`
 - Создать: `src/features/catalog-filter/ui/YearRangeSlider/YearRangeSlider.module.css`
 - Создать: `src/features/catalog-filter/ui/YearRangeSlider/index.tsx`
@@ -143,7 +146,7 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
   `YEAR_SLIDER_MIN`/`YEAR_SLIDER_MAX` вынесены сюда из `YearRangeSlider.tsx`, потому что
   `react/only-export-components` (`allowConstantExport`) пропускает только литеральные константы
   в файле компонента, а `YEAR_SLIDER_MAX = new Date().getFullYear()` — не литерал; `oxlint
-  --deny-warnings` падал на этой строке. Оба значения по-прежнему реэкспортируются из `index.tsx`.
+--deny-warnings` падал на этой строке. Оба значения по-прежнему реэкспортируются из `index.tsx`.
 
 - [x] создать `YearRangeSlider.tsx`: пропы `{ yearFrom: number | null; yearTo: number | null; onChange: (yearFrom: number | null, yearTo: number | null) => void; disabled?: boolean; compact?: boolean }`, локальный `useState<[number, number]>`, зеркалящий `[yearFrom ?? YEAR_SLIDER_MIN, yearTo ?? YEAR_SLIDER_MAX]`, пересинхронизируется через `useEffect` при изменении пропов
 - [x] отрендерить два `<input type="range">`, cross-linked через `min`/`max` (`max` у from-input = текущее значение `to`, `min` у to-input = текущее значение `from`), чтобы браузер не давал ползункам пересекаться; обновлять локальный стейт на `onChange` каждого input
@@ -161,6 +164,7 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 ### Task 2: Стилизовать `YearRangeSlider` (desktop + compact-вариант для мобильной версии)
 
 **Файлы:**
+
 - Изменить: `src/features/catalog-filter/ui/YearRangeSlider/YearRangeSlider.module.css`
 - Изменить: `src/features/catalog-filter/ui/YearRangeSlider/YearRangeSlider.test.tsx`
 
@@ -174,6 +178,7 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 ### Task 3: Интегрировать в `SearchSidebar` (desktop)
 
 **Файлы:**
+
 - Изменить: `src/widgets/search-sidebar/ui/SearchSidebar/SearchSidebar.tsx`
 - Изменить: `src/widgets/search-sidebar/ui/SearchSidebar/SearchSidebar.module.css`
 - Изменить: `src/features/catalog-filter/index.ts`
@@ -189,6 +194,7 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 ### Task 4: Интегрировать в `SearchMobile`
 
 **Файлы:**
+
 - Изменить: `src/pages/search/ui/SearchMobile.tsx`
 - Изменить: `src/pages/search/ui/SearchMobile.test.tsx`
 
@@ -211,6 +217,7 @@ drag, без связи с `filters.yearFrom`/`filters.yearTo`. Взаимоде
 ## После завершения
 
 **Ручная проверка:**
+
 - перетащить оба ползунка мышью и тачем (мобильный viewport) в реальном браузере — убедиться в
   плавном визуальном отслеживании во время drag и в единственном закоммиченном обновлении
   URL/сети по отпусканию

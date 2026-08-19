@@ -439,7 +439,11 @@
 .castPhotoFallback {
   aspect-ratio: 1;
   border-radius: 999px;
-  background: linear-gradient(145deg, oklch(0.35 0.06 220), oklch(0.15 0.03 240));
+  background: linear-gradient(
+    145deg,
+    oklch(0.35 0.06 220),
+    oklch(0.15 0.03 240)
+  );
   border: 1px solid var(--border-subtle);
 }
 
