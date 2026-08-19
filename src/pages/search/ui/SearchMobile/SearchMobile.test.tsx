@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { useEffect } from 'react'
 import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
 
-import { server } from '../../../test/setup'
+import { server } from '../../../../test/setup'
 import { SearchMobile } from './SearchMobile'
 
 /** Читает текущую строку query из роутера — способ проверить, что запись в URL реально произошла. */
@@ -564,7 +564,7 @@ describe('SearchMobile — displayPage держит подсветку MobilePag
     expect(busyNode).toHaveAttribute('aria-busy', 'true')
 
     const activeBtn = screen.getByRole('button', { name: '2' })
-    expect(activeBtn.style.background).toBe('rgba(209, 142, 95, 0.15)')
+    expect(activeBtn.className).toMatch(/pageBtnActive/)
 
     resolvePending(
       HttpResponse.json({
