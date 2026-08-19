@@ -65,7 +65,9 @@
   gap: 10px;
   padding: 6px 12px 6px 8px;
   border-radius: 999px;
-  background: rgba(24, 22, 27, 0.7);
+  /* UI-chrome pill (not a photo scrim) — text color already tracks the
+     theme, so the background must too or contrast breaks in light mode */
+  background: var(--bg-glass);
   border: 1px solid var(--border-light);
   font-family: var(--font-mono);
   font-size: 10.5px;
@@ -182,7 +184,8 @@
 .chip {
   height: 32px;
   padding: 0 14px;
-  background: rgba(24, 22, 27, 0.6);
+  /* UI-chrome pill (not a photo scrim) — see .badge comment above */
+  background: var(--bg-glass);
   color: var(--text-primary);
   border: 1px solid var(--border-light);
   border-radius: 999px;
