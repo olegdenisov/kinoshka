@@ -1,0 +1,1 @@
+export { MovieMobile } from './MovieMobile'

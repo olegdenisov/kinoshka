@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
-import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../testFixtures'
+import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
 import { MovieMobile } from './MovieMobile'
 
 const renderMovieMobile = (
