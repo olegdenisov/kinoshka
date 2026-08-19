@@ -178,6 +178,7 @@
 ### Task 1: Рефакторинг Card.tsx на stretched-link через .title
 
 **Files:**
+
 - Modify: `src/entities/movie/ui/Card/Card.tsx`
 - Modify: `src/entities/movie/ui/Card/Card.module.css`
 - Modify: `src/entities/movie/ui/Card/Card.test.tsx`
@@ -197,6 +198,7 @@
 ### Task 2: Рефакторинг MobileCard.tsx на stretched-link через .title
 
 **Files:**
+
 - Modify: `src/entities/movie/ui/MobileCard/MobileCard.tsx`
 - Modify: `src/entities/movie/ui/MobileCard/MobileCard.module.css`
 - Modify: `src/entities/movie/ui/MobileCard/MobileCard.test.tsx`
@@ -217,6 +219,7 @@
 ### Task 3: Убрать preventDefault-костыль из CardBtn и MobileCard, привести к единому виду
 
 **Files:**
+
 - Modify: `src/entities/movie/ui/Card/CardBtn/CardBtn.tsx`
 - Modify: `src/entities/movie/ui/Card/CardBtn/CardBtn.test.tsx`
 - Modify: `src/entities/movie/ui/MobileCard/MobileCard.tsx` (обработчик favorite-кнопки)
@@ -231,6 +234,7 @@
 ### Task 4: Проверка на всех вызывающих местах и полный прогон
 
 **Files:**
+
 - (без изменений кода — только верификация)
 
 - [x] manual test (skipped - not automatable): `make dev`, вручную открыть каждое из 8 вызывающих мест (home rails desktop/mobile, `/search` grid и mobile, `/favorites` desktop и mobile, movie detail related movies) и проверить клик по постеру/заголовку/бейджам/action-кнопкам — требует браузера, недоступно в этой среде. Вместо этого верифицирован исходный код всех 8 мест (`MovieMobile.tsx`, `RelatedMovies.tsx`, `FavoritesMobile.tsx`, `FavoritesDesktop.tsx`, `SearchResultsGrid.tsx`, `SearchMobile.tsx`, `MovieRailMobile.tsx`, `MovieRailDesktop.tsx`) — все 8 по-прежнему передают `movie`/`isFavorite`/`onToggleFavorite` без изменений; `MovieRailDesktop.tsx:59` подтверждён `variant='compact'`, и `Card.tsx:35` (`{variant === 'grid' && <CardBtn icon={<EyeIcon />} square />}`) показывает, что compact лишь опускает Eye-кнопку, структура/z-index-слои идентичны variant='grid'
@@ -247,6 +251,7 @@
 ## Post-Completion
 
 **Ручная проверка** (обязательно перед мёржем, т.к. это a11y/HTML-валидность фикс; основные хиты по DOM-структуре и hit-area уже проверяются внутри Task 1/2 — здесь финальный сквозной проход по всем местам использования):
+
 - проверка в браузерном DevTools / HTML-валидаторе, что в отрендеренном дереве карточки нет `<button>` внутри `<a>` ни в одном из 8 мест использования
 - проверка скринридером (VoiceOver на macOS) — карточка объявляется одной ссылкой с названием фильма (а не всем текстовым содержимым карточки), action-кнопки объявляются отдельно как кнопки со своими `aria-label`
 - визуальная регрессия hover-состояния `.actions` (десктоп, `variant='grid'` и `variant='compact'` — отличаются только набором кнопок, не layout'ом) и favorite-кнопки (мобильный)

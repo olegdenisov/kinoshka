@@ -75,7 +75,9 @@ export const createCachedFetcher = <P, R = Movie[]>(
   fetcher: (params: P) => Promise<R>,
 ): CachedFetcher<P, R> => {
   // ...существующий cache/sessionCache...
-  const fetcherFn = (params: P): Promise<R> => { /* без изменений */ }
+  const fetcherFn = (params: P): Promise<R> => {
+    /* без изменений */
+  }
 
   return Object.assign(fetcherFn, {
     invalidate: (params: P) => {
@@ -102,7 +104,10 @@ export type SessionCache<T> = {
 **`getMoviesPage.ts` — точечная инвалидация:**
 
 ```ts
-export const invalidateMoviesPage = (params: CatalogParams, page: number): void => {
+export const invalidateMoviesPage = (
+  params: CatalogParams,
+  page: number,
+): void => {
   pageCache.delete(JSON.stringify({ params, page }))
   cachedCursorStep.invalidate({ params, cursor: undefined })
 }
@@ -120,7 +125,12 @@ type Props = {
   onRetry?: () => void
 }
 
-export function AsyncBoundary({ children, fallback = <Spinner />, errorFallback = defaultErrorFallback, onRetry }: Props) {
+export function AsyncBoundary({
+  children,
+  fallback = <Spinner />,
+  errorFallback = defaultErrorFallback,
+  onRetry,
+}: Props) {
   const isRetryingRef = useRef(false)
   const lastErrorRef = useRef<Error | null>(null)
 
