@@ -104,11 +104,11 @@ Toggle размещается в обоих Header-компонентах (`Head
 - Create: `src/features/theme/model/themeStorage.ts`
 - Create: `src/features/theme/model/themeStorage.test.ts`
 
-- [ ] `createStorageSlot('kinoshka:theme', z.enum(['light', 'dark', 'system']), 'system')` — по образцу `src/features/favorites/model/favoritesStorage.ts`
-- [ ] Экспортировать `Theme` тип (`'light' | 'dark' | 'system'`)
-- [ ] написать тесты: валидное значение читается корректно
-- [ ] написать тесты: невалидное значение (не входящее в enum) / битый JSON → fallback `'system'`
-- [ ] run tests — должны пройти перед Task 3
+- [x] `createStorageSlot('kinoshka:theme', z.enum(['light', 'dark', 'system']), 'system')` — по образцу `src/features/favorites/model/favoritesStorage.ts`
+- [x] Экспортировать `Theme` тип (`'light' | 'dark' | 'system'`)
+- [x] написать тесты: валидное значение читается корректно
+- [x] написать тесты: невалидное значение (не входящее в enum) / битый JSON → fallback `'system'`
+- [x] run tests — должны пройти перед Task 3
 
 ### Task 3: `resolveTheme` — чистая функция вычисления эффективной темы
 
