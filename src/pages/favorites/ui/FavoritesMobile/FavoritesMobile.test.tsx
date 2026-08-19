@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
-import { server } from '../../../test/setup'
+import { server } from '../../../../test/setup'
 import { FavoritesMobile } from './FavoritesMobile'
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
