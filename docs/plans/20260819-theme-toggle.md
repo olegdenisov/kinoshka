@@ -261,13 +261,13 @@ Toggle размещается в обоих Header-компонентах (`Head
 - Move: `src/pages/search/ui/SearchMobile.test.tsx` → `src/pages/search/ui/SearchMobile/SearchMobile.test.tsx`
 - Delete: `src/pages/search/ui/SearchMobile.tsx`
 
-- [ ] Перенести компонент в директорию, импорт в `SearchPage.tsx` не меняется
-- [ ] Перенести все `style={{...}}` в `SearchMobile.module.css` (40+ вхождений хардкода), все хардкод-значения → `var(--...)`
-- [ ] Динамические значения (если есть, напр. связанные с drawer-анимацией фильтров) — оставить инлайн `style`
-- [ ] **`SearchMobile.test.tsx:567`** — переписать `expect(activeBtn.style.background).toBe('rgba(209, 142, 95, 0.15)')` на проверку класса (`expect(activeBtn.className).toMatch(/active/)`) или `aria-current`/`aria-pressed`, сохраняя смысл проверки «активная кнопка визуально выделена» — это единственный найденный тест, ассертящий инлайн-стиль, и он перестанет проходить буквально после переноса на класс
-- [ ] Визуально сверить рендер dark до/после (идентично)
-- [ ] Визуально проверить light-режим, включая drawer-фильтры и результаты поиска
-- [ ] run tests — должны пройти перед Task 12
+- [x] Перенести компонент в директорию, импорт в `SearchPage.tsx` не меняется
+- [x] Перенести все `style={{...}}` в `SearchMobile.module.css` (40+ вхождений хардкода), все хардкод-значения → `var(--...)`
+- [x] Динамические значения (если есть, напр. связанные с drawer-анимацией фильтров) — оставить инлайн `style` — не найдено ни одного: все `style={{...}}` были статическими или бинарными (active/disabled/isUpdating), последние переведены на условные CSS-классы (`${s.x} ${cond ? s.xActive : ''}`, `:disabled` псевдокласс) по конвенции проекта, а не оставлены инлайном
+- [x] **`SearchMobile.test.tsx:567`** — переписано `expect(activeBtn.style.background).toBe('rgba(209, 142, 95, 0.15)')` → `expect(activeBtn.className).toMatch(/pageBtnActive/)`, по образцу уже существующего `Pagination.test.tsx` (`expect(activeBtn.className).toMatch(/btnActive/)`), сохраняя смысл проверки «активная кнопка страницы визуально выделена»
+- [x] Визуально сверить рендер dark до/после (идентично) — manual test (skipped - not automatable, нет браузера); проверено построчным сравнением: каждый класс в `SearchMobile.module.css` — точная копия соответствующего `style={{...}}`/условного тернарника из старого файла, хардкод-хексы/rgba заменены на `var(--...)`, которые в dark (безусловный `:root`) резолвятся в те же самые исходные hex/rgba-значения
+- [x] Визуально проверить light-режим, включая drawer-фильтры и результаты поиска — manual test (skipped - not automatable, нет браузера); все использованные токены уже определены в `:root[data-theme='light']` (Task 1), включая `--bg-glass`/`--bg-glass-heavy`/`--bg-chip`/`--accent-warm-soft`/`--accent-warm-border`, поэтому компонент корректно отреагирует на смену темы
+- [x] run tests — должны пройти перед Task 12 — `make test` (544/544, 64 файла), `make lint`, `make typecheck`, `make build` все прошли чисто
 
 ### Task 12: Миграция `MovieMobile` в `Component/index.tsx` + CSS-модуль, включая динамические градиенты
 
