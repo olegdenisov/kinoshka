@@ -190,11 +190,11 @@ Toggle размещается в обоих Header-компонентах (`Head
 - Modify/Create: `src/widgets/mobile-chrome/ui/MobileHeader/MobileHeader.test.tsx` (создать, если такого файла ещё нет)
 - Modify: `src/widgets/header/index.ts`, `src/widgets/mobile-chrome/index.ts` (если требуется реэкспорт)
 
-- [ ] `Header.tsx`: `ThemeToggle` в `s.actions`, рядом с `IconButton`(Bell)
-- [ ] `MobileHeader.tsx`: `ThemeToggle` в подходящем месте разметки (рядом с avatar/иконками)
-- [ ] Тест на наличие кнопки-тоггла (`getByRole('button', { name: /theme/i })`) в обоих header-компонентах
-- [ ] написать/обновить тесты — успешный рендер с toggle, клик меняет `document.documentElement.dataset.theme`
-- [ ] run tests — должны пройти перед Task 8
+- [x] `Header.tsx`: `ThemeToggle` в `s.actions`, рядом с `IconButton`(Bell)
+- [x] `MobileHeader.tsx`: `ThemeToggle` в подходящем месте разметки (рядом с avatar/иконками)
+- [x] Тест на наличие кнопки-тоггла (`getByRole('button', { name: /theme/i })`) в обоих header-компонентах
+- [x] написать/обновить тесты — успешный рендер с toggle, клик меняет `document.documentElement.dataset.theme`
+- [x] run tests — должны пройти перед Task 8
 
 ### Task 8: Аудит и токенизация хардкод-цветов в существующих CSS-модулях
 

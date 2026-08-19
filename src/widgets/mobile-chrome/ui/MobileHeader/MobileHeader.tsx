@@ -1,3 +1,4 @@
+import { ThemeToggle } from '@features/theme'
 import { SearchIcon, ChevronLeftIcon } from '@shared/ui'
 import { useNavigate } from 'react-router'
 
@@ -49,6 +50,7 @@ export const MobileHeader = ({
           </button>
         )}
 
+        <ThemeToggle />
         {rightAction ?? <div className={s.avatar}>AV</div>}
       </div>
     </header>

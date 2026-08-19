@@ -1,5 +1,6 @@
 import { EMPTY_FILTERS, filtersToSearchParams } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
+import { ThemeToggle } from '@features/theme'
 import { useDebouncedValue } from '@shared/lib'
 import { SearchIcon, BellIcon, CloseIcon, IconButton } from '@shared/ui'
 import { useEffect, useRef, useState } from 'react'
@@ -196,6 +197,7 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
             <BellIcon />
             <span className={s.notificationDot} />
           </IconButton>
+          <ThemeToggle />
           <div className={s.avatar}>AV</div>
         </div>
       </div>
