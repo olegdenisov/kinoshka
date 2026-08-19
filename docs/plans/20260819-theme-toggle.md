@@ -146,12 +146,12 @@ Toggle размещается в обоих Header-компонентах (`Head
 - Create: `src/features/theme/index.ts`
 - Modify: `index.html`
 
-- [ ] `index.ts` экспортирует `useTheme`, `Theme` (по паттерну `@features/favorites`)
-- [ ] Inline `<script>` в `<head>` `index.html`, **до** `<div id="root">`: читает `localStorage.getItem('kinoshka:theme')`, **`JSON.parse`** значение (хранится в кавычках, см. Context/Solution Overview), валидирует вручную (без импорта zod), при `'system'`/отсутствии/невалидном значении — `matchMedia('(prefers-color-scheme: dark)').matches`
-- [ ] Весь скрипт в `try/catch`; **fallback при исключении — тоже через `matchMedia(...).matches`**, не захардкоженный `'dark'` (см. обоснование в Solution Overview)
-- [ ] Ставит `document.documentElement.setAttribute('data-theme', ...)` синхронно
-- [ ] Тест не применим напрямую (inline script вне Vitest/jsdom-пайплайна) — ручная проверка в Task 13, включая случай сохранённого `light` на ОС с тёмной темой (JSON-обёрнутое значение)
-- [ ] run `make test` — не должно быть регрессий
+- [x] `index.ts` экспортирует `useTheme`, `Theme` (по паттерну `@features/favorites`)
+- [x] Inline `<script>` в `<head>` `index.html`, **до** `<div id="root">`: читает `localStorage.getItem('kinoshka:theme')`, **`JSON.parse`** значение (хранится в кавычках, см. Context/Solution Overview), валидирует вручную (без импорта zod), при `'system'`/отсутствии/невалидном значении — `matchMedia('(prefers-color-scheme: dark)').matches`
+- [x] Весь скрипт в `try/catch`; **fallback при исключении — тоже через `matchMedia(...).matches`**, не захардкоженный `'dark'` (см. обоснование в Solution Overview)
+- [x] Ставит `document.documentElement.setAttribute('data-theme', ...)` синхронно
+- [x] Тест не применим напрямую (inline script вне Vitest/jsdom-пайплайна, skipped - not automatable) — ручная проверка в Task 13, включая случай сохранённого `light` на ОС с тёмной темой (JSON-обёрнутое значение)
+- [x] run `make test` — не должно быть регрессий
 
 ### Task 6: `SunIcon`/`MoonIcon`, перенос `IconButton` в `@shared/ui`, `ThemeToggle`
 
