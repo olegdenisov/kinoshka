@@ -37,6 +37,8 @@
   --bg-glass: rgba(15, 13, 17, 0.72);
   --bg-glass-strong: rgba(15, 13, 17, 0.8);
   --bg-glass-heavy: rgba(15, 13, 17, 0.85);
+  --bg-glass-secondary: rgba(24, 22, 27, 0.6);
+  --bg-glass-secondary-strong: rgba(24, 22, 27, 0.7);
 
   --accent-warm-glow: rgba(209, 142, 95, 0.18);
   --accent-warm-shadow: rgba(209, 142, 95, 0.3);
@@ -62,17 +64,17 @@
 
   --text-primary: #221a16;
   --text-secondary: #5c4f49;
-  --text-muted: #8a7b73;
+  --text-muted: #61544e;
   --text-faint: #b0a29a;
   --text-disabled: #d3c7bf;
 
   --accent-warm: #9c5a30;
   --accent-warm-hover: #7f4726;
-  --accent-warm-tint: rgba(209, 142, 95, 0.12);
-  --accent-warm-soft: rgba(209, 142, 95, 0.15);
-  --accent-warm-border: rgba(209, 142, 95, 0.35);
+  --accent-warm-tint: rgba(156, 90, 48, 0.12);
+  --accent-warm-soft: rgba(156, 90, 48, 0.15);
+  --accent-warm-border: rgba(156, 90, 48, 0.35);
   --accent-cool: #1f7a8c;
-  --accent-rating: #b8863a;
+  --accent-rating: #89642b;
 
   --border-faint: rgba(64, 52, 46, 0.08);
   --border-soft: rgba(64, 52, 46, 0.15);
@@ -87,6 +89,8 @@
   --bg-glass: rgba(247, 243, 239, 0.72);
   --bg-glass-strong: rgba(247, 243, 239, 0.8);
   --bg-glass-heavy: rgba(247, 243, 239, 0.85);
+  --bg-glass-secondary: rgba(238, 231, 224, 0.6);
+  --bg-glass-secondary-strong: rgba(238, 231, 224, 0.7);
 
   --accent-warm-glow: rgba(156, 90, 48, 0.18);
   --accent-warm-shadow: rgba(156, 90, 48, 0.3);
@@ -122,7 +126,7 @@ body {
 }
 
 ::selection {
-  background: rgba(209, 142, 95, 0.35);
+  background: var(--accent-warm-border);
   color: var(--text-primary);
 }
 

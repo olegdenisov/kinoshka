@@ -52,7 +52,7 @@
   padding: 5px 10px 5px 7px;
   border-radius: 999px;
   /* UI-chrome pill (not a photo scrim) — must track theme */
-  background: var(--bg-glass);
+  background: var(--bg-glass-secondary-strong);
   border: 1px solid var(--border-light);
   font-family: var(--font-mono);
   font-size: 9.5px;
@@ -119,7 +119,7 @@
   height: 32px;
   padding: 0 14px;
   /* UI-chrome pill (not a photo scrim) — see .badge comment above */
-  background: var(--bg-glass);
+  background: var(--bg-glass-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border-light);
   border-radius: 999px;

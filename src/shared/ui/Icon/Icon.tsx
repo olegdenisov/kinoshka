@@ -13,8 +13,8 @@ export const StarIcon = ({ size = 11, filled = true }: IconProps) => (
   >
     <path
       d='M12 2.5 L14.9 8.8 L21.8 9.6 L16.6 14.3 L18.1 21.1 L12 17.6 L5.9 21.1 L7.4 14.3 L2.2 9.6 L9.1 8.8 Z'
-      fill={filled ? '#E6B86A' : 'none'}
-      stroke={filled ? 'none' : 'rgba(242,240,239,0.8)'}
+      fill={filled ? 'currentColor' : 'none'}
+      stroke={filled ? 'none' : 'currentColor'}
       strokeWidth='1.5'
     />
   </svg>
@@ -232,7 +232,7 @@ export const CheckIcon = ({ size = 16 }: IconProps) => (
   <svg width={size} height={size} viewBox='0 0 24 24' fill='none'>
     <path
       d='m5 12 5 5 9-11'
-      stroke='#D18E5F'
+      stroke='currentColor'
       strokeWidth='2'
       strokeLinecap='round'
       strokeLinejoin='round'

@@ -103,8 +103,13 @@ beforeEach(() => {
 // can resolve after the current test finishes (writing to localStorage/module state) — the
 // global afterEach in src/test/setup.ts only clears state *between* tests, not mid-flight — see
 // the same rationale in GenreSelector.test.tsx/useGenreDictionary.test.tsx.
+//
+// SearchMobile также безусловно монтирует MobileHeader → ThemeToggle, который выставляет
+// data-theme на document.documentElement — сбрасываем, чтобы значение не утекало в следующий
+// тест (см. useTheme.test.tsx).
 afterEach(async () => {
   await new Promise(resolve => setTimeout(resolve, 0))
+  document.documentElement.removeAttribute('data-theme')
 })
 
 describe('SearchMobile — режим search (?q задан)', () => {

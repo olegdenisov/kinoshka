@@ -41,10 +41,11 @@ describe('MobileHeader', () => {
     )
 
     const toggle = screen.getByRole('button', { name: /theme/i })
-    const themeBefore = document.documentElement.dataset.theme
 
     fireEvent.click(toggle)
 
-    expect(document.documentElement.dataset.theme).not.toBe(themeBefore)
+    // Global matchMedia stub (src/test/setup.ts) defaults matches: false → theme === 'system'
+    // (localStorage empty) resolves to 'light' on mount, so one click flips it to 'dark'.
+    expect(document.documentElement.dataset.theme).toBe('dark')
   })
 })

@@ -911,7 +911,7 @@
 
 - [ ] Сердечко → reload → сохранено.
 - [ ] Очистка localStorage → реакция в UI.
-- [ ] Theme reload-persist + cross-tab sync.
+- [x] Theme reload-persist + cross-tab sync.
 - [ ] `/popular` отображает данные из endpoint.
 - [ ] 3-5 favorites → `/recommendations` показывает релевантные.
 - [ ] <720px → mobile-варианты страниц.

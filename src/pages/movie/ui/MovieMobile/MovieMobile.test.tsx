@@ -16,6 +16,13 @@ const renderMovieMobile = (
     </MemoryRouter>,
   )
 
+// MovieMobile безусловно монтирует MobileHeader → ThemeToggle, который выставляет data-theme на
+// document.documentElement — сбрасываем, чтобы значение не утекало в следующий тест (см.
+// useTheme.test.tsx).
+afterEach(() => {
+  document.documentElement.removeAttribute('data-theme')
+})
+
 describe('MovieMobile — hero', () => {
   it('показывает tagline и рейтинги из movie', () => {
     renderMovieMobile()
