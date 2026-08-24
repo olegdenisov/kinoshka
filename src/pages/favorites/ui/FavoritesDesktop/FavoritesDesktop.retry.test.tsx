@@ -71,6 +71,13 @@ beforeEach(() => {
   invalidate.mockClear()
 })
 
+afterEach(() => {
+  // FavoritesDesktop renders Header, whose ThemeToggle applies data-theme on
+  // document.documentElement — jsdom document общий между тестами файла, сбрасываем, чтобы
+  // тема, выставленная одним тестом, не утекала в следующий (см. Header.test.tsx).
+  document.documentElement.removeAttribute('data-theme')
+})
+
 describe('FavoritesDesktop — Retry реально переинвалидирует кэш и повторяет запрос', () => {
   it('клик Retry вызывает invalidate и повторно запрашивает данные', async () => {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify([1]))

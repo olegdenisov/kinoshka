@@ -1,8 +1,7 @@
-/* Poster styling overlays (grain/highlight/label) below are a fixed
-   "poster material" look layered over either the real poster photo or the
-   generated oklch-hue placeholder (see Poster.tsx) — намеренно не
-   тонируется: consistent poster stylization independent of the app theme,
-   same as the poster placeholder itself. */
+/* Оверлеи стилизации постера (grain/highlight/label) ниже — фиксированный вид "материала
+   постера" поверх либо реального фото постера, либо сгенерированного oklch-hue плейсхолдера
+   (см. Poster.tsx) — намеренно не тонируется: консистентная стилизация постера не зависит
+   от темы приложения, как и сам плейсхолдер постера. */
 .poster {
   border-radius: 6px;
   position: relative;

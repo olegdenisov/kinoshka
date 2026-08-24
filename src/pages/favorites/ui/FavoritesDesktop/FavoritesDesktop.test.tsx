@@ -62,6 +62,13 @@ beforeEach(() => {
   sessionStorage.clear()
 })
 
+afterEach(() => {
+  // FavoritesDesktop renders Header, whose ThemeToggle applies data-theme on
+  // document.documentElement — jsdom document общий между тестами файла, сбрасываем, чтобы
+  // тема, выставленная одним тестом, не утекала в следующий (см. Header.test.tsx).
+  document.documentElement.removeAttribute('data-theme')
+})
+
 describe('FavoritesDesktop — пустой список избранного', () => {
   it('рендерит EmptyState без сетевых запросов', async () => {
     await renderPage()

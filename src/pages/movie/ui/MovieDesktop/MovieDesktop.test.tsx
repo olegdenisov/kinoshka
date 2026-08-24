@@ -16,6 +16,13 @@ const renderMovieDesktop = (
     </MemoryRouter>,
   )
 
+afterEach(() => {
+  // MovieDesktop renders Header, whose ThemeToggle applies data-theme on
+  // document.documentElement — jsdom document общий между тестами файла, сбрасываем, чтобы
+  // тема, выставленная одним тестом, не утекала в следующий (см. Header.test.tsx).
+  document.documentElement.removeAttribute('data-theme')
+})
+
 describe('MovieDesktop — Overview (дефолтный таб)', () => {
   it('показывает tagline, синопсис-тизер, рейтинги и жанры из movie', () => {
     renderMovieDesktop()

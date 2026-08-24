@@ -103,6 +103,10 @@ beforeEach(() => {
 // the same rationale in GenreSelector.test.tsx/useGenreDictionary.test.tsx.
 afterEach(async () => {
   await new Promise(resolve => setTimeout(resolve, 0))
+  // SearchDesktop renders Header, whose ThemeToggle applies data-theme on
+  // document.documentElement — jsdom document общий между тестами файла, сбрасываем, чтобы
+  // тема, выставленная одним тестом, не утекала в следующий (см. Header.test.tsx).
+  document.documentElement.removeAttribute('data-theme')
 })
 
 describe('SearchDesktop — режим search (?q задан)', () => {

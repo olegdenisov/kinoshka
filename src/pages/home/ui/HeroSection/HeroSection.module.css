@@ -67,7 +67,7 @@
   border-radius: 999px;
   /* UI-chrome pill (not a photo scrim) — text color already tracks the
      theme, so the background must too or contrast breaks in light mode */
-  background: var(--bg-glass);
+  background: var(--bg-glass-secondary-strong);
   border: 1px solid var(--border-light);
   font-family: var(--font-mono);
   font-size: 10.5px;
@@ -185,7 +185,7 @@
   height: 32px;
   padding: 0 14px;
   /* UI-chrome pill (not a photo scrim) — see .badge comment above */
-  background: var(--bg-glass);
+  background: var(--bg-glass-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border-light);
   border-radius: 999px;

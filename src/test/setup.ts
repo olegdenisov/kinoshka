@@ -7,14 +7,14 @@ import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
-// window.matchMedia — jsdom does not implement it at all (docs/plans/20260819-theme-toggle.md,
-// Task 4). useTheme() calls `window.matchMedia('(prefers-color-scheme: dark)')` unconditionally,
-// so without this stub every test that mounts a component using useTheme()/ThemeToggle would
-// throw "window.matchMedia is not a function". Listeners are stored per query string (not
-// no-op'd) so a test can retrieve `addEventListener.mock.calls` / reassign `window.matchMedia`
-// itself and invoke the stored 'change' listener directly to simulate a system theme change —
-// see useTheme.test.tsx for the per-test override pattern (this global stub only guarantees
-// `matches: false` and a working subscribe/unsubscribe by default).
+// window.matchMedia — jsdom вообще не реализует этот API (docs/plans/20260819-theme-toggle.md,
+// Task 4). useTheme() безусловно вызывает `window.matchMedia('(prefers-color-scheme: dark)')`,
+// так что без этого стаба любой тест, монтирующий компонент с useTheme()/ThemeToggle, упал бы с
+// "window.matchMedia is not a function". Слушатели хранятся по строке запроса (а не заглушены
+// no-op'ом), чтобы тест мог получить `addEventListener.mock.calls` / переопределить
+// `window.matchMedia` самостоятельно и вызвать сохранённый 'change'-слушатель напрямую, эмулируя
+// смену системной темы — см. паттерн переопределения в useTheme.test.tsx (этот глобальный стаб
+// по умолчанию гарантирует только `matches: false` и рабочую подписку/отписку).
 const mediaQueryListeners = new Map<
   string,
   Set<(event: MediaQueryListEvent) => void>

@@ -25,12 +25,16 @@
 .backdropOverlay {
   position: absolute;
   inset: 0;
-  /* намеренно не тонируется — скрим над постером/backdrop, нужен для
-     контраста независимо от темы */
+  /* Scrim over the backdrop photo — stays theme-reactive so the
+     theme-reactive text painted on top of it (.heading/.tagline/.ratings/
+     .synopsis etc.) keeps sufficient contrast in both themes; stops are
+     built from var(--bg-primary) via color-mix instead of a hardcoded
+     #0F0D11/rgba(15,13,17,...) — see MovieMobile.module.css .heroScrim for
+     the identical pattern. */
   background: linear-gradient(
     180deg,
-    rgba(15, 13, 17, 0.3) 0%,
-    rgba(15, 13, 17, 0.7) 60%,
+    color-mix(in srgb, var(--bg-primary) 30%, transparent) 0%,
+    color-mix(in srgb, var(--bg-primary) 70%, transparent) 60%,
     var(--bg-primary) 100%
   );
 }

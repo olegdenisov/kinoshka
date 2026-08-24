@@ -62,6 +62,13 @@ beforeEach(() => {
   sessionStorage.clear()
 })
 
+// FavoritesMobile безусловно монтирует MobileHeader → ThemeToggle, который выставляет data-theme
+// на document.documentElement — сбрасываем, чтобы значение не утекало в следующий тест (см.
+// useTheme.test.tsx).
+afterEach(() => {
+  document.documentElement.removeAttribute('data-theme')
+})
+
 describe('FavoritesMobile — пустой список избранного', () => {
   it('рендерит EmptyState без сетевых запросов', async () => {
     await renderPage()

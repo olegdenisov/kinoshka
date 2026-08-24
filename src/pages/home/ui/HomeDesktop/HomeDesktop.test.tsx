@@ -69,6 +69,10 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks()
   vi.unstubAllEnvs()
+  // HomeDesktop renders Header, whose ThemeToggle applies data-theme on
+  // document.documentElement — jsdom document общий между тестами файла, сбрасываем, чтобы
+  // тема, выставленная одним тестом, не утекала в следующий (см. Header.test.tsx).
+  document.documentElement.removeAttribute('data-theme')
 })
 
 describe('HomeDesktop — реальный retry для рейлов', () => {
