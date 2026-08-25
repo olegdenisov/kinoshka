@@ -239,11 +239,11 @@
 - Modify: `src/widgets/header/ui/Header/Header.tsx`
 - Modify: `src/widgets/header/ui/Header/Header.test.tsx`
 
-- [ ] добавить роут `{ path: '/popular', element: <PopularPage /> }` в `router.tsx`.
-- [ ] `Header.tsx`: добавить пункт `{ key: 'popular', label: 'Popular', path: '/popular' }` в `navItems` (после `favorites`).
-- [ ] написать тест в `Header.test.tsx`: клик по «Popular» ведёт на `/popular`; `activeNav='popular'` подсвечивает пункт (по образцу существующих тестов «пункт навигации Favorites»).
-- [ ] проверить, что тест `variant='search'` — «содержит только Movies/Series/Anime — без Favorites» (`Header.test.tsx:318`) не задет (он проверяет отдельный под-нав `typeNavItems`, не общий `navItems`).
-- [ ] run tests — must pass before task 13.
+- [x] добавить роут `{ path: '/popular', element: <PopularPage /> }` в `router.tsx`.
+- [x] `Header.tsx`: добавить пункт `{ key: 'popular', label: 'Popular', path: '/popular' }` в `navItems` (после `favorites`).
+- [x] написать тест в `Header.test.tsx`: клик по «Popular» ведёт на `/popular`; `activeNav='popular'` подсвечивает пункт (по образцу существующих тестов «пункт навигации Favorites»).
+- [x] проверить, что тест `variant='search'` — «содержит только Movies/Series/Anime — без Favorites» (`Header.test.tsx:318`) не задет (он проверяет отдельный под-нав `typeNavItems`, не общий `navItems`).
+- [x] run tests — must pass before task 13.
 
 ### Task 13: Verify acceptance criteria
 

@@ -33,6 +33,7 @@ const navItems = [
   { key: 'home', label: 'Home', path: '/' },
   ...typeNavItems,
   { key: 'favorites', label: 'Favorites', path: '/favorites' },
+  { key: 'popular', label: 'Popular', path: '/popular' },
 ]
 
 export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
