@@ -128,4 +128,33 @@ describe('usePopularMovies', () => {
     await getPopularMovies(params)
     expect(requests).toBe(2)
   })
+
+  it('домашний rail и страница /popular шарят один сетевой запрос', async () => {
+    let requests = 0
+    server.use(
+      http.get(ENDPOINT, () => {
+        requests += 1
+        return successResponse([listItem()])
+      }),
+    )
+    const { usePopularMovies } = await importModules()
+
+    const Probe = () => {
+      usePopularMovies()
+      return null
+    }
+
+    await act(async () => {
+      render(
+        createElement(
+          Suspense,
+          { fallback: 'loading' },
+          createElement(Probe),
+          createElement(Probe),
+        ),
+      )
+    })
+
+    expect(requests).toBe(1)
+  })
 })
