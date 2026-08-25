@@ -226,10 +226,10 @@
 - Create: `src/pages/popular/ui/PopularMobile/PopularMobile.test.tsx`
 - Modify: `src/pages/popular/PopularPage.tsx`
 
-- [ ] `PopularMobile`: `MobileHeader title='Popular'` + сетка `MobileCard` (`rankBadge`, `isFavorite`/`onToggleFavorite`) внутри `AsyncBoundary`, `BottomNav active='popular'` (типизировано с Task 8) — структура 1:1 с `FavoritesMobile.tsx`.
-- [ ] подключить `PopularMobile` в `PopularPage.tsx`.
-- [ ] написать тест: аналогично `FavoritesMobile.test.tsx` — успешная загрузка, retry, пустой список.
-- [ ] run tests && typecheck — must pass before task 12.
+- [x] `PopularMobile`: `MobileHeader title='Popular'` + сетка `MobileCard` (`rankBadge`, `isFavorite`/`onToggleFavorite`) внутри `AsyncBoundary`, `BottomNav active='popular'` (типизировано с Task 8) — структура 1:1 с `FavoritesMobile.tsx`.
+- [x] подключить `PopularMobile` в `PopularPage.tsx`.
+- [x] написать тест: аналогично `FavoritesMobile.test.tsx` — успешная загрузка, retry, пустой список.
+- [x] run tests && typecheck — must pass before task 12.
 
 ### Task 12: Роутинг и навигация в `Header`
 
