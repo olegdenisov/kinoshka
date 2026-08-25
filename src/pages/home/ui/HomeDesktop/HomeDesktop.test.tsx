@@ -6,11 +6,14 @@ import { server } from '../../../../test/setup'
 import { HomeDesktop } from './HomeDesktop'
 
 // Реальный retry (roadmap 1.6): рейл падает → ErrorState с Retry → клик реально бьёт
-// в сеть заново (invalidateTopRatedMovies из hooks/index.ts), а не просто перерисовывает
-// тот же rejected-промис из cooldown. Только TopAnimeRails (единственный рейл с уникальным
-// ключом query — rating.kp + type=anime, никто другой его не делит) мокается падающим,
-// чтобы у теста была ровно одна ErrorState-инстанция для клика.
-const ENDPOINT = '*/v1.5/movie'
+// в сеть заново (invalidateTopRatedMovies/invalidatePopularMovies из hooks/index.ts), а не
+// просто перерисовывает тот же rejected-промис из cooldown. Только TopAnimeRails (единственный
+// рейл на /v1.5/movie с уникальным ключом query — rating.kp + type=anime, никто другой его не
+// делит) мокается падающим, чтобы у теста была ровно одна ErrorState-инстанция для клика.
+const MOVIE_ENDPOINT = '*/v1.5/movie'
+// PopularMoviesRail (Task 9) больше не делит эндпоинт/кэш с PersonalRails — теперь он
+// на отдельном курируемом списке /v1.5/list/{slug} (usePopularMovies() → getPopularMovies).
+const LIST_ENDPOINT = '*/v1.5/list/:slug'
 
 const doc = (overrides: Record<string, unknown> = {}) => ({
   id: 1,
@@ -33,14 +36,52 @@ const errorResponse = () =>
     { status: 500 },
   )
 
+const popularListItem = (overrides: Record<string, unknown> = {}) => ({
+  position: 1,
+  positionDiff: 2,
+  rating: 8.1,
+  votes: 1000,
+  movie: {
+    id: 1,
+    name: 'Popular Movie',
+    year: 2024,
+    movieLength: 120,
+    poster: { previewUrl: 'https://example.com/poster.jpg' },
+    rating: { kp: 8.1 },
+  },
+  ...overrides,
+})
+
+const popularListSuccessResponse = (docs: Record<string, unknown>[]) =>
+  HttpResponse.json({
+    name: 'Popular',
+    slug: 'popular',
+    movies: {
+      docs,
+      limit: 10,
+      next: null,
+      prev: null,
+      hasNext: false,
+      hasPrev: false,
+    },
+  })
+
+const popularListErrorResponse = () =>
+  HttpResponse.json(
+    { statusCode: 500, message: 'boom', error: 'Internal Server Error' },
+    { status: 500 },
+  )
+
 /** Единственный рейл с уникальным ключом query (rating.kp + type=anime) падает изначально
  * (первый запрос), остальные три рейла всегда успешны. После первого запроса TopAnimeRails
- * тоже начинает отвечать успехом — реальный второй запрос (после invalidate) его получит. */
+ * тоже начинает отвечать успехом — реальный второй запрос (после invalidate) его получит.
+ * PopularMoviesRail мокается отдельным успешным хендлером на LIST_ENDPOINT — он больше не
+ * делит эндпоинт с остальными тремя рейлами (все они на MOVIE_ENDPOINT). */
 const mockMovies = () => {
   const requestsByKind = { topAnime: 0, other: 0 }
 
   server.use(
-    http.get(ENDPOINT, ({ request }) => {
+    http.get(MOVIE_ENDPOINT, ({ request }) => {
       const url = new URL(request.url)
       const hasRatingKp = url.searchParams.has('rating.kp')
       const type = url.searchParams.get('type')
@@ -56,6 +97,9 @@ const mockMovies = () => {
       requestsByKind.other += 1
       return successResponse([doc({ id: 1, name: 'Other Movie' })])
     }),
+    http.get(LIST_ENDPOINT, () =>
+      popularListSuccessResponse([popularListItem()]),
+    ),
   )
 
   return requestsByKind
@@ -106,23 +150,41 @@ describe('HomeDesktop — реальный retry для рейлов', () => {
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
   })
 
-  it('PopularMoviesRail и PersonalRails делят один ключ кэша getMovies (useTopRatedMovies() без параметров) — падают одновременно на ОДНОМ сетевом запросе; retry на одном чинит его без второго запроса; второй рейл остаётся с ошибкой, пока его retry не нажат отдельно — тогда он тоже реально восстанавливается (принятое ограничение: invalidate() безусловный, так что независимый клик на уже-свежую запись всё равно бьёт в сеть заново, см. HomeDesktop.tsx onRetry)', async () => {
-    const requestsByKind = { sharedTopRated: 0, other: 0 }
+  it('PopularMoviesRail (/v1.5/list/popular) и PersonalRails (/v1.5/movie, rating.kp без type) — независимые эндпоинты/кэши, падают и восстанавливаются раздельным retry, не влияя друг на друга', async () => {
+    const requestsByKind = { popularList: 0, sharedTopRated: 0, other: 0 }
 
     server.use(
-      http.get(ENDPOINT, ({ request }) => {
+      http.get(LIST_ENDPOINT, () => {
+        requestsByKind.popularList += 1
+        if (requestsByKind.popularList === 1) {
+          return popularListErrorResponse()
+        }
+        return popularListSuccessResponse([
+          popularListItem({
+            movie: {
+              id: 42,
+              name: 'Popular Recovered',
+              year: 2024,
+              movieLength: 120,
+              poster: { previewUrl: 'https://example.com/poster.jpg' },
+              rating: { kp: 8.1 },
+            },
+          }),
+        ])
+      }),
+      http.get(MOVIE_ENDPOINT, ({ request }) => {
         const url = new URL(request.url)
         const hasRatingKp = url.searchParams.has('rating.kp')
         const hasType = url.searchParams.has('type')
 
-        // rating.kp без type — общий ключ PopularMoviesRail/PersonalRails
-        // (invalidateTopRatedMovies() без параметров у обоих).
+        // rating.kp без type — теперь исключительно PersonalRails (PopularMoviesRail
+        // переехал на LIST_ENDPOINT в Task 9).
         if (hasRatingKp && !hasType) {
           requestsByKind.sharedTopRated += 1
           if (requestsByKind.sharedTopRated === 1) {
             return errorResponse()
           }
-          return successResponse([doc({ id: 42, name: 'Shared Recovered' })])
+          return successResponse([doc({ id: 43, name: 'Personal Recovered' })])
         }
 
         requestsByKind.other += 1
@@ -138,47 +200,45 @@ describe('HomeDesktop — реальный retry для рейлов', () => {
       )
     })
 
-    // Общий кэш-ключ -> ОДИН сетевой запрос обслуживает оба рейла, оба падают
-    // одновременно (доминирующий сценарий отказа из плана — общая квота 403/500).
+    // Раздельные кэш-ключи/эндпоинты -> два независимых сетевых запроса, оба падают.
+    expect(requestsByKind.popularList).toBe(1)
     expect(requestsByKind.sharedTopRated).toBe(1)
     expect(screen.getAllByText('Something went wrong')).toHaveLength(2)
 
     const retryButtons = screen.getAllByText('Попробовать снова')
     expect(retryButtons).toHaveLength(2)
 
-    // Клик по retry только ОДНОГО из двух рейлов.
+    // Клик по retry только PopularMoviesRail (первый рейл в DOM-порядке HomeDesktop).
     await act(async () => {
       fireEvent.click(retryButtons[0])
     })
 
-    // Реальный новый запрос произошёл ровно один раз.
-    expect(requestsByKind.sharedTopRated).toBe(2)
-    // Один рейл восстановился; второй — независимый ErrorBoundary — всё ещё
-    // показывает ошибку, пока его retry не нажат отдельно.
-    expect(screen.getAllByText('Shared Recovered')).toHaveLength(1)
+    expect(requestsByKind.popularList).toBe(2)
+    // PersonalRails никак не задет retry-ем PopularMoviesRail — раздельные кэши.
+    expect(requestsByKind.sharedTopRated).toBe(1)
+    expect(screen.getByText('Popular Recovered')).toBeInTheDocument()
     expect(screen.getAllByText('Something went wrong')).toHaveLength(1)
 
-    // Клик по retry оставшегося рейла — независимый ErrorBoundary, свой
-    // onRetry/invalidate вызывается заново. invalidate() безусловно чистит
-    // запись кэша (даже уже свежую/успешную — так и задумано, см.
-    // createCachedFetcher.test.ts), так что это приводит к ЕЩЁ ОДНОМУ реальному
-    // запросу — принятая цена за то, что каждый рейл со своим ErrorBoundary
-    // восстанавливается независимо, без межинстансовой координации гварда.
+    // Клик по retry оставшегося рейла (PersonalRails).
     const remainingRetryButton = screen.getByText('Попробовать снова')
 
     await act(async () => {
       fireEvent.click(remainingRetryButton)
     })
 
-    expect(requestsByKind.sharedTopRated).toBe(3)
+    expect(requestsByKind.sharedTopRated).toBe(2)
+    expect(requestsByKind.popularList).toBe(2)
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
-    expect(screen.getAllByText('Shared Recovered')).toHaveLength(2)
+    expect(screen.getByText('Personal Recovered')).toBeInTheDocument()
   })
 
   it('без ошибок все 4 рейла рендерят данные, EmptyState/ErrorState отсутствуют', async () => {
     server.use(
-      http.get(ENDPOINT, () =>
+      http.get(MOVIE_ENDPOINT, () =>
         successResponse([doc({ id: 1, name: 'Any Movie' })]),
+      ),
+      http.get(LIST_ENDPOINT, () =>
+        popularListSuccessResponse([popularListItem()]),
       ),
     )
 
@@ -192,5 +252,6 @@ describe('HomeDesktop — реальный retry для рейлов', () => {
 
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
     expect(screen.getAllByText('Any Movie').length).toBeGreaterThan(0)
+    expect(screen.getByText('Popular Movie')).toBeInTheDocument()
   })
 })

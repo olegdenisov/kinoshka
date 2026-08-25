@@ -197,10 +197,10 @@
 - Modify: `src/pages/home/ui/HomeDesktop/HomeDesktop.tsx`
 - Modify: `src/pages/home/ui/HomeDesktop/HomeDesktop.test.tsx`
 
-- [ ] `PopularMoviesRail` вызывает `usePopularMovies()` вместо `useTopRatedMovies()`, передаёт `href='/popular'` в `MovieRailDesktop`.
-- [ ] `HomeDesktop.tsx`: `onRetry` для рейла `PopularMoviesRail` меняется на `() => invalidatePopularMovies()` (сейчас — `invalidateTopRatedMovies()`, которая после этой задачи используется только `PersonalRails`).
-- [ ] обновить `HomeDesktop.test.tsx`: тест «PopularMoviesRail и PersonalRails делят один ключ кэша `getMovies`» больше не верен для `PopularMoviesRail` (теперь у него отдельный эндпоинт `/v1.5/list/popular`, не `/v1.5/movie`) — переписать сценарий: `PopularMoviesRail` мокается через отдельный MSW-хендлер `GET */v1.5/list/:slug`, `PersonalRails` остаётся на общем `/v1.5/movie`-моке; проверить, что оба рейла и их independent retry по-прежнему работают корректно по отдельности.
-- [ ] run tests — must pass before task 10.
+- [x] `PopularMoviesRail` вызывает `usePopularMovies()` вместо `useTopRatedMovies()`, передаёт `href='/popular'` в `MovieRailDesktop`.
+- [x] `HomeDesktop.tsx`: `onRetry` для рейла `PopularMoviesRail` меняется на `() => invalidatePopularMovies()` (сейчас — `invalidateTopRatedMovies()`, которая после этой задачи используется только `PersonalRails`).
+- [x] обновить `HomeDesktop.test.tsx`: тест «PopularMoviesRail и PersonalRails делят один ключ кэша `getMovies`» больше не верен для `PopularMoviesRail` (теперь у него отдельный эндпоинт `/v1.5/list/popular`, не `/v1.5/movie`) — переписать сценарий: `PopularMoviesRail` мокается через отдельный MSW-хендлер `GET */v1.5/list/:slug`, `PersonalRails` остаётся на общем `/v1.5/movie`-моке; проверить, что оба рейла и их independent retry по-прежнему работают корректно по отдельности.
+- [x] run tests — must pass before task 10.
 
 ### Task 10: Страница `/popular` — `PopularDesktop`
 
