@@ -20,7 +20,7 @@ export const PopularBadge = ({ position, positionDiff }: PopularBadgeProps) => {
     : `Position ${position}`
 
   return (
-    <div className={s.badge} aria-label={label}>
+    <div className={s.badge} role='img' aria-label={label}>
       <span>#{position}</span>
       {hasDiff && (
         <span className={s.diff}>{formatDiff(positionDiff as number)}</span>

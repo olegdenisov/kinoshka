@@ -29,8 +29,8 @@ const PopularGrid = () => {
   if (movies.length === 0) {
     return (
       <EmptyState
-        title="Couldn't load popular movies"
-        description='Something went wrong loading this week’s popular movies. Try again later.'
+        title='No popular movies right now'
+        description="This week's popular list is empty. Check back later."
       />
     )
   }

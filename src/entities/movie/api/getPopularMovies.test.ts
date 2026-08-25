@@ -105,6 +105,31 @@ describe('getPopularMovies — success', () => {
 
     expect(result).toEqual([])
   })
+
+  it('отправляет query.limit ровно тем значением, что передано в параметрах', async () => {
+    let receivedLimit: string | null = null
+    server.use(
+      http.get(ENDPOINT, ({ request }) => {
+        receivedLimit = new URL(request.url).searchParams.get('limit')
+        return HttpResponse.json({
+          name: 'Popular',
+          slug: 'popular',
+          movies: {
+            docs: [],
+            limit: 5,
+            next: null,
+            prev: null,
+            hasNext: false,
+            hasPrev: false,
+          },
+        })
+      }),
+    )
+
+    await getPopularMovies({ slug: 'popular-limit-check', limit: 5 })
+
+    expect(receivedLimit).toBe('5')
+  })
 })
 
 describe('getPopularMovies — ошибки', () => {
