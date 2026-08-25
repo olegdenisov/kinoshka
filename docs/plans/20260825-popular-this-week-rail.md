@@ -151,14 +151,14 @@
 - Modify: `src/entities/movie/ui/MobileCard/MobileCard.module.css`
 - Modify: `src/entities/movie/ui/MobileCard/MobileCard.test.tsx`
 
-- [ ] `Card`/`MobileCard` получают необязательный проп `rankBadge?: ReactNode`, рендерится только когда передан (`undefined` по умолчанию → нулевое изменение для всех существующих вызовов).
-- [ ] `Card.module.css`: **не** размещать `rankBadge` на `bottom` (там `.actions`, `z-index:2`, перекроет бейдж по hover) — сгруппировать `.ratingBadge` и `rankBadge` в общий flex-ряд в верхнем левом углу (`top:10px; left:10px; display:flex; gap:6px`), сохранив исходный pill-стиль `.ratingBadge`.
-- [ ] `MobileCard.module.css`: `.rankBadge { position: absolute; bottom: 8px; left: 8px; ... }` — нижний край свободен (верхние углы заняты `.rating`/`.favoriteBtn`), консистентно по паддингам/шрифту с `.rating`.
-- [ ] regression-фикс (независимо от `rankBadge`, для обоих компонентов): не рендерить `.metaDot`-разделитель, когда `movie.genre[0]` пусто/отсутствует — сейчас при пустом `genre` рендерится висящая точка без текста после неё (актуально для popular-списка, где `genre: []`).
-- [ ] написать тест: `Card`/`MobileCard` без `rankBadge` — узел бейджа отсутствует в DOM (regression-guard).
-- [ ] написать тест: `Card`/`MobileCard` с `rankBadge={<span>#1</span>}` — узел рендерится и не перекрыт `.actions` (для `Card` — проверить, что `rankBadge` не имеет тех же координат, что `.actions`, т.е. фактически лежит в верхнем блоке).
-- [ ] написать тест: `Card`/`MobileCard` с `movie.genre = []` — `.metaDot` не рендерится, нет висящего разделителя.
-- [ ] run tests — must pass before task 7.
+- [x] `Card`/`MobileCard` получают необязательный проп `rankBadge?: ReactNode`, рендерится только когда передан (`undefined` по умолчанию → нулевое изменение для всех существующих вызовов).
+- [x] `Card.module.css`: **не** размещать `rankBadge` на `bottom` (там `.actions`, `z-index:2`, перекроет бейдж по hover) — сгруппировать `.ratingBadge` и `rankBadge` в общий flex-ряд в верхнем левом углу (`top:10px; left:10px; display:flex; gap:6px`), сохранив исходный pill-стиль `.ratingBadge`.
+- [x] `MobileCard.module.css`: `.rankBadge { position: absolute; bottom: 8px; left: 8px; ... }` — нижний край свободен (верхние углы заняты `.rating`/`.favoriteBtn`), консистентно по паддингам/шрифту с `.rating`.
+- [x] regression-фикс (независимо от `rankBadge`, для обоих компонентов): не рендерить `.metaDot`-разделитель, когда `movie.genre[0]` пусто/отсутствует — сейчас при пустом `genre` рендерится висящая точка без текста после неё (актуально для popular-списка, где `genre: []`).
+- [x] написать тест: `Card`/`MobileCard` без `rankBadge` — узел бейджа отсутствует в DOM (regression-guard).
+- [x] написать тест: `Card`/`MobileCard` с `rankBadge={<span>#1</span>}` — узел рендерится и не перекрыт `.actions` (для `Card` — проверить, что `rankBadge` не имеет тех же координат, что `.actions`, т.е. фактически лежит в верхнем блоке).
+- [x] написать тест: `Card`/`MobileCard` с `movie.genre = []` — `.metaDot` не рендерится, нет висящего разделителя.
+- [x] run tests — must pass before task 7.
 
 ### Task 7: `MovieRailDesktop` — поддержка `PopularMovie[]`, rank-бейджей и кастомного `href`
 

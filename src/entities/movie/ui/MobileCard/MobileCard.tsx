@@ -1,4 +1,5 @@
 import { StarIcon, HeartIcon } from '@shared/ui'
+import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 
 import type { Movie } from '../../model/types'
@@ -10,12 +11,14 @@ type MobileCardProps = {
   movie: Movie
   isFavorite?: boolean
   onToggleFavorite?: (id: number) => void
+  rankBadge?: ReactNode
 }
 
 export const MobileCard = ({
   movie,
   isFavorite,
   onToggleFavorite,
+  rankBadge,
 }: MobileCardProps) => {
   return (
     <div className={s.card}>
@@ -46,11 +49,16 @@ export const MobileCard = ({
             <HeartIcon size={13} filled={isFavorite} />
           </button>
         )}
+        {rankBadge && <div className={s.rankBadge}>{rankBadge}</div>}
       </div>
       <div className={s.meta}>
         <span>{movie.year ? movie.year : 'Unknown'}</span>
-        <span className={s.metaDot}>·</span>
-        <span>{movie.genre[0]}</span>
+        {movie.genre[0] && (
+          <>
+            <span className={s.metaDot}>·</span>
+            <span>{movie.genre[0]}</span>
+          </>
+        )}
       </div>
     </div>
   )
