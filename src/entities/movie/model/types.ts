@@ -30,6 +30,11 @@ export type CrewMember = {
   profession: string
 }
 
+export type PopularMovie = Movie & {
+  position: number
+  positionDiff?: number | null
+}
+
 export type MovieDetail = Movie & {
   tagline: string
   synopsis: string
