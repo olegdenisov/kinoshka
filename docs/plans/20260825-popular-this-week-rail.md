@@ -212,10 +212,10 @@
 - Create: `src/pages/popular/ui/PopularDesktop/PopularDesktop.module.css`
 - Create: `src/pages/popular/ui/PopularDesktop/PopularDesktop.test.tsx`
 
-- [ ] `PopularPage.tsx` — `useViewport()` → `PopularDesktop`/`PopularMobile` (второй появится в Task 11), по образцу `FavoritesPage.tsx`.
-- [ ] `PopularDesktop`: `Header activeNav='popular'` + сетка `Card` (`variant='grid'`, `rankBadge={<PopularBadge position={m.position} positionDiff={m.positionDiff} />}`, `isFavorite`/`onToggleFavorite` из `useFavorites()`) внутри `AsyncBoundary` (skeleton-грид + `onRetry={() => invalidatePopularMovies()}`), заголовок страницы, `EmptyState` при пустом списке — структура 1:1 с `FavoritesDesktop.tsx`.
-- [ ] написать тест: успешная загрузка рендерит карточки с rank-бейджами; retry реально бьёт в сеть заново (по образцу `FavoritesDesktop.retry.test.tsx`/`HomeDesktop.test.tsx`); пустой список → `EmptyState`.
-- [ ] run tests — must pass before task 11.
+- [x] `PopularPage.tsx` — `useViewport()` → `PopularDesktop`/`PopularMobile` (второй появится в Task 11), по образцу `FavoritesPage.tsx`.
+- [x] `PopularDesktop`: `Header activeNav='popular'` + сетка `Card` (`variant='grid'`, `rankBadge={<PopularBadge position={m.position} positionDiff={m.positionDiff} />}`, `isFavorite`/`onToggleFavorite` из `useFavorites()`) внутри `AsyncBoundary` (skeleton-грид + `onRetry={() => invalidatePopularMovies()}`), заголовок страницы, `EmptyState` при пустом списке — структура 1:1 с `FavoritesDesktop.tsx`.
+- [x] написать тест: успешная загрузка рендерит карточки с rank-бейджами; retry реально бьёт в сеть заново (по образцу `FavoritesDesktop.retry.test.tsx`/`HomeDesktop.test.tsx`); пустой список → `EmptyState`.
+- [x] run tests — must pass before task 11.
 
 ### Task 11: Страница `/popular` — `PopularMobile`
 
