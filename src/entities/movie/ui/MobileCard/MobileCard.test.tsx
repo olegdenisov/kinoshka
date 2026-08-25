@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { MemoryRouter, Routes, Route } from 'react-router'
 
 import type { Movie } from '../../model/types'
@@ -18,7 +19,11 @@ const baseMovie: Movie = {
 
 const renderMobileCard = (
   movie: Movie,
-  props?: { isFavorite?: boolean; onToggleFavorite?: (id: number) => void },
+  props?: {
+    isFavorite?: boolean
+    onToggleFavorite?: (id: number) => void
+    rankBadge?: ReactNode
+  },
 ) =>
   render(
     <MemoryRouter>
@@ -122,5 +127,23 @@ describe('MobileCard', () => {
 
     expect(onToggleFavorite).toHaveBeenCalledWith(1)
     expect(screen.queryByText('movie page')).not.toBeInTheDocument()
+  })
+
+  it('без rankBadge узел бейджа не рендерится (regression-guard)', () => {
+    renderMobileCard(baseMovie)
+
+    expect(screen.queryByText('#1')).not.toBeInTheDocument()
+  })
+
+  it('с rankBadge — узел рендерится', () => {
+    renderMobileCard(baseMovie, { rankBadge: <span>#1</span> })
+
+    expect(screen.getByText('#1')).toBeInTheDocument()
+  })
+
+  it('movie.genre = [] — .metaDot не рендерится, нет висящего разделителя', () => {
+    renderMobileCard({ ...baseMovie, genre: [] })
+
+    expect(screen.queryByText('·')).not.toBeInTheDocument()
   })
 })

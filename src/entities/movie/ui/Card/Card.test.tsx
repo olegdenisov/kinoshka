@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { MemoryRouter, Routes, Route } from 'react-router'
 
 import type { Movie } from '../../model/types'
@@ -18,7 +19,11 @@ const baseMovie: Movie = {
 
 const renderCard = (
   movie: Movie,
-  props?: { isFavorite?: boolean; onToggleFavorite?: (id: number) => void },
+  props?: {
+    isFavorite?: boolean
+    onToggleFavorite?: (id: number) => void
+    rankBadge?: ReactNode
+  },
 ) =>
   render(
     <MemoryRouter>
@@ -144,5 +149,31 @@ describe('Card', () => {
 
     expect(onToggleFavorite).toHaveBeenCalledWith(1)
     expect(screen.queryByText('movie page')).not.toBeInTheDocument()
+  })
+
+  it('без rankBadge узел бейджа не рендерится (regression-guard)', () => {
+    renderCard(baseMovie)
+
+    expect(screen.queryByText('#1')).not.toBeInTheDocument()
+  })
+
+  it('с rankBadge — узел рендерится в верхнем блоке, не в .actions', () => {
+    renderCard(baseMovie, { rankBadge: <span>#1</span> })
+
+    const badge = screen.getByText('#1')
+    expect(badge).toBeInTheDocument()
+
+    // .actions содержит только action-кнопки (Rate/Add/...); rankBadge
+    // должен лежать вне этого контейнера — сгруппирован с ratingBadge сверху.
+    const actionButtons = screen.getAllByRole('button')
+    for (const btn of actionButtons) {
+      expect(btn.contains(badge)).toBe(false)
+    }
+  })
+
+  it('movie.genre = [] — .metaDot не рендерится, нет висящего разделителя', () => {
+    renderCard({ ...baseMovie, genre: [] })
+
+    expect(screen.queryByText('·')).not.toBeInTheDocument()
   })
 })

@@ -53,6 +53,12 @@
   z-index: 2;
 }
 
+.rankBadge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+}
+
 .favoriteBtnActive {
   color: var(--accent-warm);
   border-color: var(--accent-warm-border);
