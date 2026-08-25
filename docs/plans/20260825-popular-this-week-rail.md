@@ -133,12 +133,12 @@
 - Create: `src/entities/movie/ui/PopularBadge/PopularBadge.test.tsx`
 - Modify: `src/entities/movie/index.ts`
 
-- [ ] `PopularBadge({ position, positionDiff }: { position: number; positionDiff?: number | null })` — рендерит `#{position}`; если `positionDiff` — ненулевое число, дополнительно рендерит знаковое значение (`+2`/`−2`) без интерпретирующей стрелки/цвета (см. Technical Details — направление не резолвится в этой задаче).
-- [ ] добавить `aria-label` с текстовым описанием (например, `Позиция 3` или `Позиция 3, изменение +2`), не полагаясь только на визуальные глифы/цвет для передачи смысла.
-- [ ] стилизация через `var(--...)`-токены (никаких новых hex-цветов — success/danger токенов в `global.css` нет).
-- [ ] экспортировать `PopularBadge` из `@entities/movie` (`src/entities/movie/index.ts`).
-- [ ] написать тест: рендерит `#{position}`; с `positionDiff` — видно знаковое число; без `positionDiff`/`0` — знаковое число не рендерится; `aria-label` присутствует и корректен во всех случаях.
-- [ ] run tests — must pass before task 6.
+- [x] `PopularBadge({ position, positionDiff }: { position: number; positionDiff?: number | null })` — рендерит `#{position}`; если `positionDiff` — ненулевое число, дополнительно рендерит знаковое значение (`+2`/`−2`) без интерпретирующей стрелки/цвета (см. Technical Details — направление не резолвится в этой задаче).
+- [x] добавить `aria-label` с текстовым описанием (например, `Позиция 3` или `Позиция 3, изменение +2`), не полагаясь только на визуальные глифы/цвет для передачи смысла.
+- [x] стилизация через `var(--...)`-токены (никаких новых hex-цветов — success/danger токенов в `global.css` нет).
+- [x] экспортировать `PopularBadge` из `@entities/movie` (`src/entities/movie/index.ts`).
+- [x] написать тест: рендерит `#{position}`; с `positionDiff` — видно знаковое число; без `positionDiff`/`0` — знаковое число не рендерится; `aria-label` присутствует и корректен во всех случаях.
+- [x] run tests — must pass before task 6.
 
 ### Task 6: `Card`/`MobileCard` — слот `rankBadge` для оверлея
 

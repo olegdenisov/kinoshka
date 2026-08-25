@@ -1,0 +1,1 @@
+export { PopularBadge } from './PopularBadge'
