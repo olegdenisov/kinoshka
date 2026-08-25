@@ -310,11 +310,11 @@
 - Theme switching no-FOUC pattern: https://www.joshwcomeau.com/react/dark-mode/
 - color-scheme CSS property: https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme
 
-### 2.3 Popular this week 🔥
+### 2.3 Popular this week 🔥 — done, см. `docs/plans/20260825-popular-this-week-rail.md`
 
-- [ ] Endpoint `getV14ListBySlug({ path: { slug: 'top10-week' } })` (или аналогичный — проверь slug в spec).
-- [ ] Rail на главной + страница `/popular`.
-- [ ] Кэш на 24h (при появлении Query-tool в фазе 3 — `staleTime: 24h`).
+- [x] Endpoint `getV14ListBySlug({ path: { slug: 'top10-week' } })` (или аналогичный — проверь slug в spec). Реальный slug — `popular`, не `top10-week`: `GET /v1.5/list/top10-week` возвращает 404, `GET /v1.5/list/popular` — 200 (`getV15ListBySlug`, не `getV14`).
+- [x] Rail на главной + страница `/popular`.
+- [x] Кэш на 24h (при появлении Query-tool в фазе 3 — `staleTime: 24h`). Реализовано через кастомный `ttlMs` в `createCachedFetcher` (без Query-tool) — 24h в проде работает как in-memory кэш на время SPA-сессии, не переживает reload (persist в `sessionStorage` — только DEV, см. AGENTS.md).
 
 **Как лучше:** агрессивный кэш — popular меняется редко.
 

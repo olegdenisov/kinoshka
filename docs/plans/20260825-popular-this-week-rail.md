@@ -259,9 +259,9 @@
 
 ### Task 14: [Final] Обновить документацию
 
-- [ ] обновить `AGENTS.md`: добавить пункт в раздел «Data state» о четвёртой live-data интеграции (`/popular`, slug `popular`, `PopularMovie`, кастомный TTL в `createCachedFetcher`, отсутствие `type`/`genres` у `MovieInListDto` и принятый accepted-default) — по образцу существующих булитов про genre dictionary/search/movie-detail. Явно указать, что 24h TTL в проде — это in-memory кэш на время сессии (persist в sessionStorage — только DEV).
-- [ ] отметить пункт 2.3 в `plans/roadmap.md` как выполненный (`- [x]`) по всем его чекбоксам, с уточнением реального slug (`popular`, не `top10-week`) в комментарии рядом.
-- [ ] переместить этот файл в `docs/plans/completed/`.
+- [x] обновить `AGENTS.md`: добавить пункт в раздел «Data state» о четвёртой live-data интеграции (`/popular`, slug `popular`, `PopularMovie`, кастомный TTL в `createCachedFetcher`, отсутствие `type`/`genres` у `MovieInListDto` и принятый accepted-default) — по образцу существующих булитов про genre dictionary/search/movie-detail. Явно указать, что 24h TTL в проде — это in-memory кэш на время сессии (persist в sessionStorage — только DEV).
+- [x] отметить пункт 2.3 в `plans/roadmap.md` как выполненный (`- [x]`) по всем его чекбоксам, с уточнением реального slug (`popular`, не `top10-week`) в комментарии рядом.
+- [x] переместить этот файл в `docs/plans/completed/` (skipped — оркестратор перемещает файл плана после завершения всех фаз; файл не перемещён/переименован/удалён этим шагом).
 
 ## Post-Completion
 
