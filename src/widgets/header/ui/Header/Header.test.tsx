@@ -365,6 +365,45 @@ describe('Header — пункт навигации Favorites', () => {
   })
 })
 
+describe('Header — пункт навигации Popular', () => {
+  it('клик по "Popular" ведёт на /popular', () => {
+    let lastPathname = ''
+    const PathnameProbe = () => {
+      const { pathname } = useLocation()
+      useEffect(() => {
+        lastPathname = pathname
+      }, [pathname])
+      return null
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Header variant='default' />
+        <PathnameProbe />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Popular' }))
+
+    expect(lastPathname).toBe('/popular')
+  })
+
+  it('activeNav="popular" подсвечивает пункт "Popular" как активный', () => {
+    render(
+      <MemoryRouter initialEntries={['/popular']}>
+        <Header variant='default' activeNav='popular' />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Popular' }).className).toMatch(
+      /navPillActive/,
+    )
+    expect(screen.getByRole('button', { name: 'Home' }).className).not.toMatch(
+      /navPillActive/,
+    )
+  })
+})
+
 describe('Header — переключатель темы (ThemeToggle)', () => {
   it('кнопка-тоггл темы присутствует в actions', () => {
     render(
