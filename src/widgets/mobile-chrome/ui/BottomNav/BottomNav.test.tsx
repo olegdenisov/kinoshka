@@ -4,7 +4,9 @@ import { MemoryRouter, useLocation } from 'react-router'
 
 import { BottomNav } from './BottomNav'
 
-const renderWithProbe = (active: 'home' | 'search' | 'lists' | 'profile') => {
+const renderWithProbe = (
+  active: 'home' | 'search' | 'lists' | 'popular' | 'profile',
+) => {
   let lastPathname = ''
   const PathnameProbe = () => {
     const { pathname } = useLocation()
@@ -52,5 +54,32 @@ describe('BottomNav — навигация к /favorites (пункт "Lists")', 
     fireEvent.click(profileBtn)
 
     expect(getPathname()).toBe('/')
+  })
+})
+
+describe('BottomNav — навигация к /popular (пункт "Popular")', () => {
+  it('клик по "Popular" ведёт на /popular', () => {
+    const { getPathname } = renderWithProbe('home')
+
+    fireEvent.click(screen.getByRole('button', { name: /Popular/ }))
+
+    expect(getPathname()).toBe('/popular')
+  })
+
+  it('пункт "Popular" подсвечивается активным на /popular', () => {
+    renderWithProbe('popular')
+
+    expect(screen.getByRole('button', { name: /Popular/ }).className).toMatch(
+      /navItemActive/,
+    )
+  })
+
+  it('5 колонок — существующие пункты (в т.ч. задизейбленный "Profile") не задеты', () => {
+    renderWithProbe('home')
+
+    expect(screen.getAllByRole('button')).toHaveLength(5)
+    expect(screen.getByRole('button', { name: /Profile/ }).className).toMatch(
+      /navItemDisabled/,
+    )
   })
 })

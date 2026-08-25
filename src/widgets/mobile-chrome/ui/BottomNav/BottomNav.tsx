@@ -1,9 +1,15 @@
-import { HomeIcon, SearchIcon, ListsIcon, ProfileIcon } from '@shared/ui'
+import {
+  HomeIcon,
+  SearchIcon,
+  ListsIcon,
+  TrendingIcon,
+  ProfileIcon,
+} from '@shared/ui'
 import { useNavigate } from 'react-router'
 
 import s from './BottomNav.module.css'
 
-type NavKey = 'home' | 'search' | 'lists' | 'profile'
+type NavKey = 'home' | 'search' | 'lists' | 'popular' | 'profile'
 
 type BottomNavProps = {
   active: NavKey
@@ -21,6 +27,7 @@ export const BottomNav = ({ active }: BottomNavProps) => {
     { key: 'home', label: 'Home', icon: HomeIcon, path: '/' },
     { key: 'search', label: 'Catalog', icon: SearchIcon, path: '/search' },
     { key: 'lists', label: 'Lists', icon: ListsIcon, path: '/favorites' },
+    { key: 'popular', label: 'Popular', icon: TrendingIcon, path: '/popular' },
     { key: 'profile', label: 'Profile', icon: ProfileIcon, path: null },
   ]
 
