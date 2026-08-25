@@ -228,6 +228,26 @@ export const MoonIcon = ({ size = 15 }: IconProps) => (
   </svg>
 )
 
+export const TrendingIcon = ({ size = 20, filled = false }: IconProps) => (
+  <svg width={size} height={size} viewBox='0 0 24 24' fill='none'>
+    <path
+      d='M3 17l6-6 4 4 8-9'
+      stroke='currentColor'
+      strokeWidth='1.8'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
+    <path
+      d='M15 6h6v6'
+      stroke='currentColor'
+      strokeWidth='1.8'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
+    {filled && <circle cx='3' cy='17' r='1.2' fill='currentColor' />}
+  </svg>
+)
+
 export const CheckIcon = ({ size = 16 }: IconProps) => (
   <svg width={size} height={size} viewBox='0 0 24 24' fill='none'>
     <path
