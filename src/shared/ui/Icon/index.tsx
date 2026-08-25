@@ -18,4 +18,5 @@ export {
   CheckIcon,
   SunIcon,
   MoonIcon,
+  TrendingIcon,
 } from './Icon'

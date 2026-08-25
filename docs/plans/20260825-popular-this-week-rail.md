@@ -182,12 +182,12 @@
 - Modify: `src/widgets/mobile-chrome/ui/BottomNav/BottomNav.module.css`
 - Modify: `src/widgets/mobile-chrome/ui/BottomNav/BottomNav.test.tsx`
 
-- [ ] расширить `NavKey` до `'home' | 'search' | 'lists' | 'popular' | 'profile'`.
-- [ ] добавить пункт `{ key: 'popular', label: 'Popular', icon: TrendingIcon, path: '/popular' }` в `items` (после `lists`, перед `profile` — заглушка без назначения остаётся последней).
-- [ ] `BottomNav.module.css`: `.grid { grid-template-columns: repeat(4, 1fr); }` → `repeat(5, 1fr)`.
-- [ ] обновить тип `active` в `renderWithProbe` (`BottomNav.test.tsx`) — добавить `'popular'`.
-- [ ] написать тест: клик по «Popular» ведёт на `/popular`; `active='popular'` подсвечивает пункт активным. Существующий тест на `Profile` (`path: null`, задизейблен) — без изменений по смыслу, проверить, что он всё ещё проходит с 5 колонками.
-- [ ] run tests — must pass before task 9. **Эта задача должна завершиться раньше Task 11** (страница `PopularMobile` использует `<BottomNav active='popular' />`, что типизируется только после этой задачи).
+- [x] расширить `NavKey` до `'home' | 'search' | 'lists' | 'popular' | 'profile'`.
+- [x] добавить пункт `{ key: 'popular', label: 'Popular', icon: TrendingIcon, path: '/popular' }` в `items` (после `lists`, перед `profile` — заглушка без назначения остаётся последней).
+- [x] `BottomNav.module.css`: `.grid { grid-template-columns: repeat(4, 1fr); }` → `repeat(5, 1fr)`.
+- [x] обновить тип `active` в `renderWithProbe` (`BottomNav.test.tsx`) — добавить `'popular'`.
+- [x] написать тест: клик по «Popular» ведёт на `/popular`; `active='popular'` подсвечивает пункт активным. Существующий тест на `Profile` (`path: null`, задизейблен) — без изменений по смыслу, проверить, что он всё ещё проходит с 5 колонками.
+- [x] run tests — must pass before task 9. **Эта задача должна завершиться раньше Task 11** (страница `PopularMobile` использует `<BottomNav active='popular' />`, что типизируется только после этой задачи).
 
 ### Task 9: `PopularMoviesRail` — переключить на реальные данные
 
