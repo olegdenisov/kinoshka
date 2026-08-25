@@ -1,6 +1,7 @@
 export { Card } from './ui/Card'
 export { MobileCard } from './ui/MobileCard'
 export { Poster } from './ui/Poster'
+export { PopularBadge } from './ui/PopularBadge'
 export type {
   Movie,
   MovieDetail,
