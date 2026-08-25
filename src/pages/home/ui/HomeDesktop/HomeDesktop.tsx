@@ -1,4 +1,8 @@
-import { invalidateNewMovies, invalidateTopRatedMovies } from '@entities/movie'
+import {
+  invalidateNewMovies,
+  invalidatePopularMovies,
+  invalidateTopRatedMovies,
+} from '@entities/movie'
 import { AsyncBoundary, Footer } from '@shared/ui'
 import { Header } from '@widgets/header'
 import { MovieRailSkeletonDesktop } from '@widgets/movie-rail'
@@ -19,7 +23,7 @@ export const HomeDesktop = () => {
       <div className={s.rails}>
         <AsyncBoundary
           fallback={<MovieRailSkeletonDesktop />}
-          onRetry={() => invalidateTopRatedMovies()}
+          onRetry={() => invalidatePopularMovies()}
         >
           <PopularMoviesRail />
         </AsyncBoundary>
