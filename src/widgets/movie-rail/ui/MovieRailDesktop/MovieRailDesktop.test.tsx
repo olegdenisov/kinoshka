@@ -1,4 +1,4 @@
-import type { Movie } from '@entities/movie'
+import type { Movie, PopularMovie } from '@entities/movie'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
@@ -17,10 +17,21 @@ const makeMovie = (id: number): Movie => ({
   type: 'movie',
 })
 
-const renderRail = (items: Movie[]) =>
+const makePopularMovie = (id: number, position: number): PopularMovie => ({
+  ...makeMovie(id),
+  position,
+  positionDiff: null,
+})
+
+const renderRail = (items: (Movie | PopularMovie)[], href?: string) =>
   render(
     <MemoryRouter>
-      <MovieRailDesktop title='Popular' subtitle='Trending' items={items} />
+      <MovieRailDesktop
+        title='Popular'
+        subtitle='Trending'
+        items={items}
+        href={href}
+      />
     </MemoryRouter>,
   )
 
@@ -77,5 +88,40 @@ describe('MovieRailDesktop — избранное', () => {
     )
 
     expect(localStorage.getItem('kinoshka:favorites')).toBe('[]')
+  })
+})
+
+describe('MovieRailDesktop — PopularMovie[] и rank-бейджи', () => {
+  it('рейл с PopularMovie[] рендерит PopularBadge внутри карточек', () => {
+    renderRail([makePopularMovie(1, 3), makePopularMovie(2, 7)])
+
+    expect(screen.getByLabelText('Position 3')).toBeInTheDocument()
+    expect(screen.getByLabelText('Position 7')).toBeInTheDocument()
+  })
+
+  it('рейл с обычным Movie[] не рендерит PopularBadge', () => {
+    renderRail([makeMovie(1), makeMovie(2)])
+
+    expect(screen.queryByLabelText(/^Position \d/)).not.toBeInTheDocument()
+  })
+})
+
+describe('MovieRailDesktop — href заголовка', () => {
+  it('с явным href="/popular" заголовок ведёт на /popular', () => {
+    renderRail([makeMovie(1)], '/popular')
+
+    expect(screen.getByRole('link', { name: /Popular/ })).toHaveAttribute(
+      'href',
+      '/popular',
+    )
+  })
+
+  it('без href заголовок ведёт на /search (дефолт)', () => {
+    renderRail([makeMovie(1)])
+
+    expect(screen.getByRole('link', { name: /Popular/ })).toHaveAttribute(
+      'href',
+      '/search',
+    )
   })
 })

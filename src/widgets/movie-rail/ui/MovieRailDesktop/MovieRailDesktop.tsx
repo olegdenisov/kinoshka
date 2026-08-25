@@ -1,5 +1,5 @@
-import type { Movie } from '@entities/movie'
-import { Card } from '@entities/movie'
+import type { Movie, PopularMovie } from '@entities/movie'
+import { Card, PopularBadge } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { EmptyState } from '@shared/ui'
 import { useRef } from 'react'
@@ -12,13 +12,15 @@ import s from './MovieRailDesktop.module.css'
 type MovieRailDesktopProps = {
   title: string
   subtitle: string
-  items: Movie[]
+  items: (Movie | PopularMovie)[]
+  href?: string
 }
 
 export const MovieRailDesktop = ({
   title,
   subtitle,
   items,
+  href = '/search',
 }: MovieRailDesktopProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const { isFavorite, toggle } = useFavorites()
@@ -33,7 +35,7 @@ export const MovieRailDesktop = ({
         <div className={s.titleGroup}>
           <div className={s.subtitle}>{subtitle}</div>
           <h2 className={s.title}>
-            <Link to='/search' className={s.titleLink}>
+            <Link to={href} className={s.titleLink}>
               {title}
               <span className={s.titleArrow}>→</span>
             </Link>
@@ -59,6 +61,14 @@ export const MovieRailDesktop = ({
               variant='compact'
               isFavorite={isFavorite(m.id)}
               onToggleFavorite={toggle}
+              rankBadge={
+                'position' in m ? (
+                  <PopularBadge
+                    position={m.position}
+                    positionDiff={m.positionDiff}
+                  />
+                ) : undefined
+              }
             />
           ))}
         </div>
