@@ -98,6 +98,50 @@ describe('createCachedFetcher — in-memory кэш', () => {
   })
 })
 
+describe('createCachedFetcher — кастомный options.ttlMs', () => {
+  it('кастомный ttlMs (24ч) — запись остаётся свежей у порога', async () => {
+    const CUSTOM_TTL_MS = 24 * 60 * 60 * 1000
+    const { fetcher, calls } = okFetcher()
+    const get = createCachedFetcher('ttl-ns-1', fetcher, {
+      ttlMs: CUSTOM_TTL_MS,
+    })
+
+    await get({ q: 1 })
+    now += CUSTOM_TTL_MS - 1
+    await get({ q: 1 })
+
+    expect(calls.count).toBe(1)
+  })
+
+  it('кастомный ttlMs (24ч) — устаревает после порога', async () => {
+    const CUSTOM_TTL_MS = 24 * 60 * 60 * 1000
+    const { fetcher, calls } = okFetcher()
+    const get = createCachedFetcher('ttl-ns-2', fetcher, {
+      ttlMs: CUSTOM_TTL_MS,
+    })
+
+    await get({ q: 1 })
+    now += CUSTOM_TTL_MS + 1
+    await get({ q: 1 })
+
+    expect(calls.count).toBe(2)
+  })
+
+  it('без options — поведение TTL не отличается от текущего (regression-guard)', async () => {
+    const { fetcher, calls } = okFetcher()
+    const get = createCachedFetcher('ttl-ns-3', fetcher)
+
+    await get({ q: 1 })
+    now += CACHE_TTL_MS - 1
+    await get({ q: 1 })
+    expect(calls.count).toBe(1)
+
+    now += 2
+    await get({ q: 1 })
+    expect(calls.count).toBe(2)
+  })
+})
+
 describe('createCachedFetcher — cooldown при ошибке', () => {
   it('Fetcher бросает — промис реджектится реальным сообщением', async () => {
     const { fetcher } = errFetcher('Forbidden')
