@@ -167,12 +167,12 @@
 - Modify: `src/widgets/movie-rail/ui/MovieRailDesktop/MovieRailDesktop.tsx`
 - Modify: `src/widgets/movie-rail/ui/MovieRailDesktop/MovieRailDesktop.test.tsx`
 
-- [ ] `items` типизируется как `(Movie | PopularMovie)[]`; при рендере `Card` — `rankBadge={'position' in m ? <PopularBadge position={m.position} positionDiff={m.positionDiff} /> : undefined}`.
-- [ ] добавить необязательный проп `href?: string` (дефолт `'/search'`), использовать в `<Link to={href}>` вместо захардкоженного `/search`.
-- [ ] поведение для обычных `Movie[]` и дефолтного `href` (3 существующих рейла) не меняется.
-- [ ] написать тест: рейл с `PopularMovie[]` рендерит `PopularBadge` внутри карточек; рейл с обычным `Movie[]` — не рендерит.
-- [ ] написать тест: заголовок рейла со явным `href='/popular'` ведёт на `/popular`; без `href` — на `/search` (regression-guard дефолта).
-- [ ] run tests — must pass before task 8.
+- [x] `items` типизируется как `(Movie | PopularMovie)[]`; при рендере `Card` — `rankBadge={'position' in m ? <PopularBadge position={m.position} positionDiff={m.positionDiff} /> : undefined}`.
+- [x] добавить необязательный проп `href?: string` (дефолт `'/search'`), использовать в `<Link to={href}>` вместо захардкоженного `/search`.
+- [x] поведение для обычных `Movie[]` и дефолтного `href` (3 существующих рейла) не меняется.
+- [x] написать тест: рейл с `PopularMovie[]` рендерит `PopularBadge` внутри карточек; рейл с обычным `Movie[]` — не рендерит.
+- [x] написать тест: заголовок рейла со явным `href='/popular'` ведёт на `/popular`; без `href` — на `/search` (regression-guard дефолта).
+- [x] run tests — must pass before task 8.
 
 ### Task 8: `BottomNav` — 5-й слот «Popular»
 
