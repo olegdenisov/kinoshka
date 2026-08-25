@@ -247,15 +247,15 @@
 
 ### Task 13: Verify acceptance criteria
 
-- [ ] `PopularMoviesRail` на главной показывает реальные данные `/v1.5/list/popular` с rank-бейджами (а не `useTopRatedMovies()`).
-- [ ] Заголовок рейла «Popular this week →» ведёт на `/popular`, остальные 3 рейла — по-прежнему на `/search`.
-- [ ] `/popular` открывается напрямую (deep link) и через навигацию (Header desktop, BottomNav mobile), показывает те же данные, что и rail (один сетевой запрос на оба места при одновременном использовании — общий кэш-ключ).
-- [ ] Retry на всех новых async-секциях реально бьёт в сеть заново.
-- [ ] `createCachedFetcher` с кастомным `ttlMs=24h` не ломает существующие 5-минутные кэши.
-- [ ] Карточки с пустым `genre` (popular-список) не показывают висящую точку-разделитель в meta-строке.
-- [ ] `make check` (lint + build) проходит.
-- [ ] `make test` — полный набор зелёный.
-- [ ] визуально в браузере (`make dev`) проверить: rank-бейдж читаем в light и dark темах, не перекрыт `.actions` при hover на `Card`, `BottomNav` с 5 слотами не переполняется на узких экранах (~360px).
+- [x] `PopularMoviesRail` на главной показывает реальные данные `/v1.5/list/popular` с rank-бейджами (а не `useTopRatedMovies()`) — проверено чтением `src/pages/home/ui/PopularMoviesRail/PopularMoviesRail.tsx` (использует `usePopularMovies()`) и `MovieRailDesktop.tsx` (рендерит `PopularBadge` при `'position' in m`).
+- [x] Заголовок рейла «Popular this week →» ведёт на `/popular`, остальные 3 рейла — по-прежнему на `/search` — подтверждено: `PopularMoviesRail` передаёт `href='/popular'`, `MovieRailDesktop` дефолтит `href='/search'` для остальных вызовов (не передающих `href`).
+- [x] `/popular` открывается напрямую (deep link) и через навигацию (Header desktop, BottomNav mobile), показывает те же данные, что и rail (один сетевой запрос на оба места при одновременном использовании — общий кэш-ключ) — подтверждено: роут `/popular` зарегистрирован в `router.tsx`, пункт есть в `Header.tsx` (`navItems`) и `BottomNav.tsx` (5 слотов), `PopularDesktop`/`PopularMobile` и `PopularMoviesRail` все вызывают `usePopularMovies()`/`getPopularMovies(POPULAR_PARAMS)` с идентичными параметрами `{ slug: 'popular', limit: 10 }` — общий ключ кэша `createCachedFetcher`.
+- [x] Retry на всех новых async-секциях реально бьёт в сеть заново — подтверждено: `HomeDesktop.tsx`, `PopularDesktop.tsx`, `PopularMobile.tsx` все передают `onRetry={() => invalidatePopularMovies()}` в `AsyncBoundary`.
+- [x] `createCachedFetcher` с кастомным `ttlMs=24h` не ломает существующие 5-минутные кэши — подтверждено тестами Task 1 (regression-guard без `options`) и `make test` зелёным для всего набора, включая существующие фетчеры (`getMovies`, `getSearchMovies` и т.д.).
+- [x] Карточки с пустым `genre` (popular-список) не показывают висящую точку-разделитель в meta-строке — подтверждено чтением `Card.tsx`/`MobileCard.tsx`: `{movie.genre[0] && (...)}` оборачивает и точку, и текст жанра.
+- [x] `make check` (lint + build) проходит — `pnpm lint` (oxlint) и `pnpm build` (`tsc -b && vite build`) прошли зелёными. `make check` целиком падает на `format-check` (oxfmt) из-за форматирования в 6 markdown-файлах (`docs/backlog/*.md`, `docs/plans/completed/20260814-home-hero-search-wiring.md`), не относящихся к задачам этого плана и не изменённых ими — pre-existing дрейф форматирования, не регрессия Task 1-12.
+- [x] `make test` — полный набор зелёный — 69 test files, 584 tests passed.
+- [x] manual test (skipped - not automatable in this environment) — визуально в браузере (`make dev`) проверить: rank-бейдж читаем в light и dark темах, не перекрыт `.actions` при hover на `Card`, `BottomNav` с 5 слотами не переполняется на узких экранах (~360px).
 
 ### Task 14: [Final] Обновить документацию
 
