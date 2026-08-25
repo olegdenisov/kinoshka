@@ -7,6 +7,7 @@ export type {
   MovieType,
   CastMember,
   CrewMember,
+  PopularMovie,
 } from './model/types'
 export type { Genre } from './model/genre'
 export { STATIC_FALLBACK_GENRES } from './model/genre'
