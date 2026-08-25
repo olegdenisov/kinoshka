@@ -6,7 +6,7 @@
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
 [![Feature-Sliced Design](https://img.shields.io/badge/Architecture-FSD-blueviolet)](https://feature-sliced.design/)
 
-Каталог фильмов — SPA с лентой на главной, поиском, фильтрами, страницами фильмов (обзор, каст, медиа) и списком избранного (хранится в localStorage браузера, без синхронизации между устройствами).
+Каталог фильмов — SPA с лентой на главной, поиском, фильтрами, страницами фильмов (обзор, каст, медиа), списком избранного (хранится в localStorage браузера, без синхронизации между устройствами) и разделом «Popular this week» (`/popular`) с позициями фильмов в рейтинге и их изменением.
 
 ## Стек
 

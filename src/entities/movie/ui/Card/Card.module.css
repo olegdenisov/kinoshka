@@ -63,10 +63,17 @@
 }
 
 .topBadges {
+  /* No z-index here on purpose: an explicit z-index equal to .title::after's
+     (both 1) would tie-break by DOM order in the shared .card stacking
+     context (isolation: isolate) and paint .topBadges above the stretched
+     link overlay, turning this corner into a dead click zone that no longer
+     navigates to the movie. Staying at the implicit z-index:auto keeps it
+     painted per flex order-modified document order (posterContainer before
+     info), which puts .title::after back on top, same as the pre-existing
+     unwrapped .ratingBadge behavior. */
   position: absolute;
   top: 10px;
   left: 10px;
-  z-index: 1;
   display: flex;
   align-items: center;
   gap: 6px;

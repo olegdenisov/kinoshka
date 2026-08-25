@@ -109,7 +109,7 @@ describe('PopularMobile — пустой список', () => {
     await renderPage()
 
     expect(
-      await screen.findByText("Couldn't load popular movies"),
+      await screen.findByText('No popular movies right now'),
     ).toBeInTheDocument()
   })
 })
