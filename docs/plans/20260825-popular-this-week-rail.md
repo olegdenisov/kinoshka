@@ -87,15 +87,15 @@
 - Create: `src/entities/movie/api/getPopularMovies.test.ts`
 - Modify: `src/entities/movie/model/types.ts`
 
-- [ ] добавить тип `PopularMovie = Movie & { position: number; positionDiff?: number | null }` в `model/types.ts`.
-- [ ] `getPopularMovies.ts`: `RequestParams = { slug: string; limit: number }`; `fetchPopularMovies` вызывает `apiClient.getV15ListBySlug({ path: { slug: params.slug }, query: { limit: params.limit } })`.
-- [ ] сузить тип ответа так же, как `getMovieDetail.ts:10` — `if ('statusCode' in response.data) throw new ApiError(response.data.message, response.data.statusCode)` перед доступом к `response.data.movies`.
-- [ ] замапить `response.data.movies.docs` в `PopularMovie[]` через `mapDocToMovie(item.movie)` + `{ position: item.position, positionDiff: item.positionDiff }`.
-- [ ] обернуть в `createCachedFetcher<{ slug: string; limit: number }, PopularMovie[]>('popularMovies', fetchPopularMovies, { ttlMs: 24 * 60 * 60 * 1000 })`.
-- [ ] написать тест (MSW-хендлер `GET */v1.5/list/:slug`): успешный ответ мапится в `PopularMovie[]` с корректными `position`/`positionDiff`, включая элемент без `type`/`genres` в исходном DTO (проверить дефолты `mapDocToMovie` — `type: 'movie'`, `genre: []`).
-- [ ] написать тест: пустой список (`movies.docs: []`) → `[]`, не падает.
-- [ ] написать тест: 403/404-ответ (`statusCode` в теле) → бросает `ApiError` с соответствующим `status` (не падает на попытке прочитать `.movies` из error-DTO).
-- [ ] run tests && typecheck — must pass before task 3.
+- [x] добавить тип `PopularMovie = Movie & { position: number; positionDiff?: number | null }` в `model/types.ts`.
+- [x] `getPopularMovies.ts`: `RequestParams = { slug: string; limit: number }`; `fetchPopularMovies` вызывает `apiClient.getV15ListBySlug({ path: { slug: params.slug }, query: { limit: params.limit } })`.
+- [x] сузить тип ответа так же, как `getMovieDetail.ts:10` — `if ('statusCode' in response.data) throw new ApiError(response.data.message, response.data.statusCode)` перед доступом к `response.data.movies`.
+- [x] замапить `response.data.movies.docs` в `PopularMovie[]` через `mapDocToMovie(item.movie)` + `{ position: item.position, positionDiff: item.positionDiff }`.
+- [x] обернуть в `createCachedFetcher<{ slug: string; limit: number }, PopularMovie[]>('popularMovies', fetchPopularMovies, { ttlMs: 24 * 60 * 60 * 1000 })`.
+- [x] написать тест (MSW-хендлер `GET */v1.5/list/:slug`): успешный ответ мапится в `PopularMovie[]` с корректными `position`/`positionDiff`, включая элемент без `type`/`genres` в исходном DTO (проверить дефолты `mapDocToMovie` — `type: 'movie'`, `genre: []`).
+- [x] написать тест: пустой список (`movies.docs: []`) → `[]`, не падает.
+- [x] написать тест: 403/404-ответ (`statusCode` в теле) → бросает `ApiError` с соответствующим `status` (не падает на попытке прочитать `.movies` из error-DTO).
+- [x] run tests && typecheck — must pass before task 3.
 
 ### Task 3: `usePopularMovies()` хук + публичный API `@entities/movie`
 
