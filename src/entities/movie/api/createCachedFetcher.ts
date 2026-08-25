@@ -11,15 +11,18 @@ type CacheEntry<R> = {
 const CACHE_TTL_MS = 5 * 60 * 1000 // без изменений
 const ERROR_CACHE_TTL_MS = 20 * 1000 // cooldown перед повторным запросом
 
-const isFresh = (timestamp: number, isError: boolean) => {
-  const ttl = isError ? ERROR_CACHE_TTL_MS : CACHE_TTL_MS
+const isFresh = (timestamp: number, isError: boolean, dataTtlMs: number) => {
+  const ttl = isError ? ERROR_CACHE_TTL_MS : dataTtlMs
 
   return Date.now() - timestamp < ttl
 }
 
-const clearUnfreshCache = <R>(cache: Map<string, CacheEntry<R>>) => {
+const clearUnfreshCache = <R>(
+  cache: Map<string, CacheEntry<R>>,
+  dataTtlMs: number,
+) => {
   cache.forEach((entry, key) => {
-    if (!isFresh(entry.timestamp, entry.isError)) {
+    if (!isFresh(entry.timestamp, entry.isError, dataTtlMs)) {
       cache.delete(key)
     }
   })
@@ -107,24 +110,26 @@ export type CachedFetcher<P, R> = ((params: P) => Promise<R>) & {
 export const createCachedFetcher = <P, R = Movie[]>(
   namespace: string,
   fetcher: (params: P) => Promise<R>,
+  options?: { ttlMs?: number },
 ): CachedFetcher<P, R> => {
+  const dataTtlMs = options?.ttlMs ?? CACHE_TTL_MS
   const cache = new Map<string, CacheEntry<R>>()
   allCaches.push(cache as Map<string, CacheEntry<unknown>>)
   const sessionCache = createSessionCache<R>(namespace)
 
   const fetcherFn = (params: P): Promise<R> => {
-    clearUnfreshCache(cache)
+    clearUnfreshCache(cache, dataTtlMs)
 
     const key = JSON.stringify(params)
     const cached = cache.get(key)
 
-    if (cached && isFresh(cached.timestamp, cached.isError)) {
+    if (cached && isFresh(cached.timestamp, cached.isError, dataTtlMs)) {
       return cached.promise
     }
 
     const snapshot = sessionCache.get(key)
 
-    if (snapshot && isFresh(snapshot.timestamp, snapshot.isError)) {
+    if (snapshot && isFresh(snapshot.timestamp, snapshot.isError, dataTtlMs)) {
       const entry: CacheEntry<R> = {
         promise: snapshot.isError
           ? Promise.reject(

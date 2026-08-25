@@ -71,13 +71,13 @@
 - Modify: `src/entities/movie/api/createCachedFetcher.ts`
 - Modify: `src/entities/movie/api/createCachedFetcher.test.ts`
 
-- [ ] Добавить необязательный третий параметр `options?: { ttlMs?: number }` в `createCachedFetcher<P, R>`.
-- [ ] `isFresh` принимает явный `ttlMs` аргументом вместо чтения захардкоженной константы для успешных записей; `ERROR_CACHE_TTL_MS` для `isError`-записей остаётся неизменным (кулдаун ошибок — не то же самое, что свежесть данных).
-- [ ] `clearUnfreshCache`, in-memory cache-hit проверка и sessionStorage-snapshot проверка внутри `fetcherFn` используют один и тот же вычисленный `dataTtlMs = options?.ttlMs ?? CACHE_TTL_MS`.
-- [ ] Без `options` поведение бинарно идентично текущему (дефолт 5 минут) — не трогать существующие вызовы (`getMovies`, `getSearchMovies`, `getMoviesPage`, `getMoviesByIds`, `getMovieDetail`).
-- [ ] написать тест: кастомный `ttlMs` (например, 24ч) — запись остаётся свежей у порога, устаревает после него (`vi.useFakeTimers()`/`vi.advanceTimersByTime`, как в существующих тестах файла).
-- [ ] написать тест: без `options` поведение TTL не отличается от текущего (regression-guard).
-- [ ] run tests — must pass before task 2.
+- [x] Добавить необязательный третий параметр `options?: { ttlMs?: number }` в `createCachedFetcher<P, R>`.
+- [x] `isFresh` принимает явный `ttlMs` аргументом вместо чтения захардкоженной константы для успешных записей; `ERROR_CACHE_TTL_MS` для `isError`-записей остаётся неизменным (кулдаун ошибок — не то же самое, что свежесть данных).
+- [x] `clearUnfreshCache`, in-memory cache-hit проверка и sessionStorage-snapshot проверка внутри `fetcherFn` используют один и тот же вычисленный `dataTtlMs = options?.ttlMs ?? CACHE_TTL_MS`.
+- [x] Без `options` поведение бинарно идентично текущему (дефолт 5 минут) — не трогать существующие вызовы (`getMovies`, `getSearchMovies`, `getMoviesPage`, `getMoviesByIds`, `getMovieDetail`).
+- [x] написать тест: кастомный `ttlMs` (например, 24ч) — запись остаётся свежей у порога, устаревает после него (`vi.useFakeTimers()`/`vi.advanceTimersByTime`, как в существующих тестах файла).
+- [x] написать тест: без `options` поведение TTL не отличается от текущего (regression-guard).
+- [x] run tests — must pass before task 2.
 
 ### Task 2: `getPopularMovies` — обёртка над `/v1.5/list/{slug}`
 
