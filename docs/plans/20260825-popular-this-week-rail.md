@@ -106,12 +106,12 @@
 - Modify: `src/entities/movie/hooks/index.ts`
 - Modify: `src/entities/movie/index.ts`
 
-- [ ] `usePopularMovies()` — `use(getPopularMovies({ slug: 'popular', limit: 10 }))` внутри Suspense, по образцу `useTopRatedMovies`.
-- [ ] `invalidatePopularMovies` — companion-инвалидация для Retry, объявлена **в этом же файле** (`usePopularMovies.ts`), с теми же параметрами `{ slug: 'popular', limit: 10 }` — по конвенции `invalidateTopRatedMovies` (живёт рядом с хуком, а не в `api/`-файле).
-- [ ] реэкспортировать `usePopularMovies`, `invalidatePopularMovies` из `hooks/index.ts`.
-- [ ] добавить тип `PopularMovie` в экспорт `src/entities/movie/index.ts` рядом с `Movie`/`MovieDetail`.
-- [ ] написать тест `usePopularMovies.test.ts` (MSW + Suspense-обёртка, по образцу `useTopRatedMovies.test.ts`): хук отдаёт замапленные данные с `position`.
-- [ ] run tests — must pass before task 4.
+- [x] `usePopularMovies()` — `use(getPopularMovies({ slug: 'popular', limit: 10 }))` внутри Suspense, по образцу `useTopRatedMovies`.
+- [x] `invalidatePopularMovies` — companion-инвалидация для Retry, объявлена **в этом же файле** (`usePopularMovies.ts`), с теми же параметрами `{ slug: 'popular', limit: 10 }` — по конвенции `invalidateTopRatedMovies` (живёт рядом с хуком, а не в `api/`-файле).
+- [x] реэкспортировать `usePopularMovies`, `invalidatePopularMovies` из `hooks/index.ts`.
+- [x] добавить тип `PopularMovie` в экспорт `src/entities/movie/index.ts` рядом с `Movie`/`MovieDetail`.
+- [x] написать тест `usePopularMovies.test.ts` (MSW + Suspense-обёртка, по образцу `useTopRatedMovies.test.ts`): хук отдаёт замапленные данные с `position`.
+- [x] run tests — must pass before task 4.
 
 ### Task 4: `TrendingIcon` — иконка для навигации к «Popular»
 
