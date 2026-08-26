@@ -96,7 +96,7 @@ Import the client via `@shared/api`.
 Pages and widgets ship paired `*Desktop` / `*Mobile` components. The `useViewport` hook (`src/shared/lib/viewport/useViewport.ts`) drives which variant renders. Follow this pattern when adding new page or widget components.
 
 - Mobile breakpoint: **720px** (`MOBILE_BREAKPOINT` in `useViewport.ts`)
-- `HomeMobile`, `SearchMobile`, `MovieMobile`, `FavoritesMobile`, `PopularMobile` follow the standard `Component/{Component.tsx, Component.module.css, index.tsx}` directory pattern (see [Component structure](#component-structure)) — no longer flat `.tsx` files with inline styles. They compose the `mobile-chrome` (`MobileHeader`, `BottomNav`) and `movie-rail` widgets.
+- `HomeMobile`, `SearchMobile`, `MovieMobile`, `FavoritesMobile`, `PopularMobile`, `RecommendationsMobile` follow the standard `Component/{Component.tsx, Component.module.css, index.tsx}` directory pattern (see [Component structure](#component-structure)) — no longer flat `.tsx` files with inline styles. They compose the `mobile-chrome` (`MobileHeader`, `BottomNav`) and `movie-rail` widgets.
 
 ## Component structure
 

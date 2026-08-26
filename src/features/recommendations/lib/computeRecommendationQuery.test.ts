@@ -128,4 +128,27 @@ describe('computeRecommendationQuery', () => {
 
     expect(params).not.toHaveProperty('limit')
   })
+
+  it('результат никогда не содержит поле type', () => {
+    const favorites = [
+      movie({ id: 1, rating: 7, genre: ['драма'], type: 'cartoon' }),
+    ]
+
+    const params = computeRecommendationQuery(favorites)
+
+    expect(params).not.toHaveProperty('type')
+  })
+
+  it('дубликат жанра внутри genre одного избранного фильма учитывается дважды при подсчёте частоты', () => {
+    const favorites = [
+      movie({ id: 1, genre: ['драма', 'драма', 'комедия'] }),
+      movie({ id: 2, genre: ['комедия'] }),
+    ]
+
+    const params = computeRecommendationQuery(favorites)
+
+    // драма: 2 (из-за дубликата внутри одного фильма), комедия: 2 — при равенстве
+    // порядок по первому появлению жанра ставит "драма" раньше "комедия"
+    expect(params?.['genres.name']).toEqual(['драма', 'комедия'])
+  })
 })
