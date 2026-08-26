@@ -215,11 +215,11 @@ export const invalidateRecommendations = (ids: number[]): void => {
 - Create: `src/pages/recommendations/RecommendationsPage.test.tsx`
 - Modify: `src/app/router.tsx`
 
-- [ ] `RecommendationsPage` — `useViewport().isMobile` переключает `RecommendationsDesktop`/`RecommendationsMobile`, паттерн `PopularPage.tsx`
-- [ ] `index.tsx` — `export { RecommendationsPage } from './RecommendationsPage'`
-- [ ] добавить `{ path: '/recommendations', element: <RecommendationsPage /> }` в `src/app/router.tsx` (после `/popular`)
-- [ ] написать smoke-тест переключения `Desktop`/`Mobile` по замоканному `useViewport`
-- [ ] прогнать `make test` — должны проходить
+- [x] `RecommendationsPage` — `useViewport().isMobile` переключает `RecommendationsDesktop`/`RecommendationsMobile`, паттерн `PopularPage.tsx`
+- [x] `index.tsx` — `export { RecommendationsPage } from './RecommendationsPage'`
+- [x] добавить `{ path: '/recommendations', element: <RecommendationsPage /> }` в `src/app/router.tsx` (после `/popular`)
+- [x] написать smoke-тест переключения `Desktop`/`Mobile` по замоканному `useViewport`
+- [x] прогнать `make test` — должны проходить
 
 ### Task 7: Verify acceptance criteria
 
