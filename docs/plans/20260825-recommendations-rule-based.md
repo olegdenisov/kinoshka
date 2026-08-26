@@ -182,13 +182,13 @@ export const invalidateRecommendations = (ids: number[]): void => {
 - Create: `src/pages/recommendations/ui/RecommendationsDesktop/index.tsx`
 - Create: `src/pages/recommendations/ui/RecommendationsDesktop/RecommendationsDesktop.test.tsx`
 
-- [ ] `useFavorites().ids.length === 0` → `EmptyState` (title: «No favorites yet», description: «Add movies you like to get recommendations» — согласовано по тону с `FavoritesDesktop.tsx`) без сетевого запроса — гейт до `AsyncBoundary`, паттерн `FavoritesDesktop.tsx`
-- [ ] иначе `<AsyncBoundary fallback={<Skeleton-грид>} onRetry={() => invalidateRecommendations(ids)}>` вокруг внутреннего `RecommendationsGrid` (companion-инвалидатор из Task 2, не голый `getMoviesByIds.invalidate`)
-- [ ] `RecommendationsGrid`: `useRecommendedMovies()` → `null` рендерит `EmptyState` (title: «Couldn't load your favorites», тот же текст, что в `FavoritesDesktop.tsx`), `[]` рендерит `EmptyState` (title: «Nothing to recommend yet», description: «Add a few more favorites to help us find matches»), иначе грид `Card` (`variant='grid'`, БЕЗ `isFavorite`/`onToggleFavorite` — см. Technical Details) — паттерн `PopularDesktop.tsx`/`FavoritesDesktop.tsx`
-- [ ] `<Header activeNav='recommendations' />` + заголовок «Recommended for you»
-- [ ] написать тесты: `ids.length === 0` → empty-state рендерится без единого сетевого вызова; успешный кейс — MSW-хендлер перехватывает `request.url` и подтверждает, что фактический запрос содержит `id=!<favoriteId>` (а не просто проверяет состав ответа); `useRecommendedMovies` возвращает `null`/`[]` → соответствующий `EmptyState`; клик по Retry в error-состоянии вызывает `invalidateRecommendations`, а не только инвалидацию favorites
-- [ ] использовать `vi.resetModules()`/уникальные id на тест для изоляции `pageCache` (см. Testing Strategy)
-- [ ] прогнать `make test` — должны проходить
+- [x] `useFavorites().ids.length === 0` → `EmptyState` (title: «No favorites yet», description: «Add movies you like to get recommendations» — согласовано по тону с `FavoritesDesktop.tsx`) без сетевого запроса — гейт до `AsyncBoundary`, паттерн `FavoritesDesktop.tsx`
+- [x] иначе `<AsyncBoundary fallback={<Skeleton-грид>} onRetry={() => invalidateRecommendations(ids)}>` вокруг внутреннего `RecommendationsGrid` (companion-инвалидатор из Task 2, не голый `getMoviesByIds.invalidate`)
+- [x] `RecommendationsGrid`: `useRecommendedMovies()` → `null` рендерит `EmptyState` (title: «Couldn't load your favorites», тот же текст, что в `FavoritesDesktop.tsx`), `[]` рендерит `EmptyState` (title: «Nothing to recommend yet», description: «Add a few more favorites to help us find matches»), иначе грид `Card` (`variant='grid'`, БЕЗ `isFavorite`/`onToggleFavorite` — см. Technical Details) — паттерн `PopularDesktop.tsx`/`FavoritesDesktop.tsx`
+- [x] `<Header activeNav='recommendations' />` + заголовок «Recommended for you»
+- [x] написать тесты: `ids.length === 0` → empty-state рендерится без единого сетевого вызова; успешный кейс — MSW-хендлер перехватывает `request.url` и подтверждает, что фактический запрос содержит `id=!<favoriteId>` (а не просто проверяет состав ответа); `useRecommendedMovies` возвращает `null`/`[]` → соответствующий `EmptyState`; клик по Retry в error-состоянии вызывает `invalidateRecommendations`, а не только инвалидацию favorites
+- [x] использовать `vi.resetModules()`/уникальные id на тест для изоляции `pageCache` (см. Testing Strategy) — использованы уникальные наборы favorite id на тест (601/602, 801/802, 603/604, 605/606), как в `FavoritesDesktop.test.tsx`/`PopularDesktop.test.tsx`
+- [x] прогнать `make test` — должны проходить
 
 ### Task 5: `RecommendationsMobile`
 
