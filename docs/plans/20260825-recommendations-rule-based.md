@@ -133,11 +133,11 @@ export const invalidateRecommendations = (ids: number[]): void => {
 - Create: `src/features/recommendations/lib/computeRecommendationQuery.test.ts`
 - Create: `src/features/recommendations/index.ts`
 
-- [ ] создать `computeRecommendationQuery(favorites: Movie[]): NonNullable<CatalogParams> | null` в `src/features/recommendations/lib/computeRecommendationQuery.ts` по формуле из Technical Details (топ-3 жанра, `avg − 1` с клампом снизу в 0, `id: ['!<id>', ...]`, `sortField: ['rating.kp'], sortType: ['-1']`, БЕЗ `limit`)
-- [ ] экспортировать `computeRecommendationQuery` из `src/features/recommendations/index.ts` (публичный API среза — `import { computeRecommendationQuery } from '@features/recommendations'`)
-- [ ] написать тесты: топ-3 жанра по частоте среди >3 уникальных жанров; средний рейтинг с буфером −1 (в т.ч. кламп к 0 при низком среднем); `id` содержит `!<id>` для каждого избранного; `sortField`/`sortType` присутствуют всегда; пустой `favorites` → `null`
-- [ ] написать тесты на edge cases: фильм без жанров/с `rating: 0` не ломает подсчёт (пропускается, а не считается за 0); все избранные фильмы без рейтинга → `rating.kp` не добавляется в результат; все избранные фильмы без жанров → `genres.name` не добавляется; результат никогда не содержит поле `limit`
-- [ ] прогнать `make test` — должны проходить
+- [x] создать `computeRecommendationQuery(favorites: Movie[]): NonNullable<CatalogParams> | null` в `src/features/recommendations/lib/computeRecommendationQuery.ts` по формуле из Technical Details (топ-3 жанра, `avg − 1` с клампом снизу в 0, `id: ['!<id>', ...]`, `sortField: ['rating.kp'], sortType: ['-1']`, БЕЗ `limit`)
+- [x] экспортировать `computeRecommendationQuery` из `src/features/recommendations/index.ts` (публичный API среза — `import { computeRecommendationQuery } from '@features/recommendations'`)
+- [x] написать тесты: топ-3 жанра по частоте среди >3 уникальных жанров; средний рейтинг с буфером −1 (в т.ч. кламп к 0 при низком среднем); `id` содержит `!<id>` для каждого избранного; `sortField`/`sortType` присутствуют всегда; пустой `favorites` → `null`
+- [x] написать тесты на edge cases: фильм без жанров/с `rating: 0` не ломает подсчёт (пропускается, а не считается за 0); все избранные фильмы без рейтинга → `rating.kp` не добавляется в результат; все избранные фильмы без жанров → `genres.name` не добавляется; результат никогда не содержит поле `limit`
+- [x] прогнать `make test` — должны проходить
 
 ### Task 2: Page-model facade `useRecommendedMovies` + инвалидатор
 
