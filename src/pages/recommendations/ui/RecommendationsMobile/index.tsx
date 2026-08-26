@@ -1,0 +1,1 @@
+export { RecommendationsMobile } from './RecommendationsMobile'
