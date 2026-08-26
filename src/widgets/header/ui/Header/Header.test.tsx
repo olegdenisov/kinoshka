@@ -404,6 +404,45 @@ describe('Header — пункт навигации Popular', () => {
   })
 })
 
+describe('Header — пункт навигации Picks', () => {
+  it('клик по "Picks" ведёт на /recommendations', () => {
+    let lastPathname = ''
+    const PathnameProbe = () => {
+      const { pathname } = useLocation()
+      useEffect(() => {
+        lastPathname = pathname
+      }, [pathname])
+      return null
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Header variant='default' />
+        <PathnameProbe />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Picks' }))
+
+    expect(lastPathname).toBe('/recommendations')
+  })
+
+  it('activeNav="recommendations" подсвечивает пункт "Picks" как активный', () => {
+    render(
+      <MemoryRouter initialEntries={['/recommendations']}>
+        <Header variant='default' activeNav='recommendations' />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Picks' }).className).toMatch(
+      /navPillActive/,
+    )
+    expect(screen.getByRole('button', { name: 'Home' }).className).not.toMatch(
+      /navPillActive/,
+    )
+  })
+})
+
 describe('Header — переключатель темы (ThemeToggle)', () => {
   it('кнопка-тоггл темы присутствует в actions', () => {
     render(

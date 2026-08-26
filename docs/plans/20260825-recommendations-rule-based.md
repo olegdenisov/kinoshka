@@ -166,12 +166,12 @@ export const invalidateRecommendations = (ids: number[]): void => {
 - Modify: `src/widgets/mobile-chrome/ui/BottomNav/BottomNav.module.css`
 - Modify: `src/widgets/mobile-chrome/ui/BottomNav/BottomNav.test.tsx`
 
-- [ ] добавить `{ key: 'recommendations', label: 'Picks', path: '/recommendations' }` в `navItems` в `Header.tsx` (после `popular`); однословный лейбл — сознательно, см. следующий пункт
-- [ ] расширить `NavKey` в `BottomNav.tsx` до `'home' | 'search' | 'lists' | 'popular' | 'recommendations' | 'profile'`; добавить пункт `{ key: 'recommendations', label: 'Picks', icon: StarIcon, path: '/recommendations' }` между `popular` и `profile`; импортировать `StarIcon` из `@shared/ui`. Лейбл — одно слово (`Picks`, не «For You»): `.navLabel` в `BottomNav.module.css` — 9.5px моно, uppercase, `letter-spacing: 0.1em`, без `white-space: nowrap`; при 6 колонках на 320-360px viewport на пункт остаётся ~44-50px, двухсловный лейбл перенесётся на вторую строку и изменит высоту нав-бара
-- [ ] `BottomNav.module.css`: `.grid { grid-template-columns: repeat(5, 1fr) }` → `repeat(6, 1fr)`; добавить `.navLabel { white-space: nowrap }` (защита от переноса при длинных лейблах в целом, не только для нового пункта) — решение расширить сетку (а не заменить `profile`-заглушку) зафиксировано в Q&A выше
-- [ ] обновить `BottomNav.test.tsx`: `renderWithProbe`-union добавляет `'recommendations'`; тест "5 колонок" переименовать/переписать на "6 колонок" (`toHaveLength(6)`); добавить тесты клика/active-подсветки пункта "Picks" → `/recommendations`
-- [ ] обновить/добавить `Header.test.tsx`: по образцу `describe('Header — пункт навигации Popular', ...)` — новый `describe('Header — пункт навигации Picks', ...)` с тестами клика (`/recommendations`) и активной подсветки при `activeNav='recommendations'`
-- [ ] прогнать `make test` и `make typecheck` — должны проходить
+- [x] добавить `{ key: 'recommendations', label: 'Picks', path: '/recommendations' }` в `navItems` в `Header.tsx` (после `popular`); однословный лейбл — сознательно, см. следующий пункт
+- [x] расширить `NavKey` в `BottomNav.tsx` до `'home' | 'search' | 'lists' | 'popular' | 'recommendations' | 'profile'`; добавить пункт `{ key: 'recommendations', label: 'Picks', icon: StarIcon, path: '/recommendations' }` между `popular` и `profile`; импортировать `StarIcon` из `@shared/ui`. Лейбл — одно слово (`Picks`, не «For You»): `.navLabel` в `BottomNav.module.css` — 9.5px моно, uppercase, `letter-spacing: 0.1em`, без `white-space: nowrap`; при 6 колонках на 320-360px viewport на пункт остаётся ~44-50px, двухсловный лейбл перенесётся на вторую строку и изменит высоту нав-бара
+- [x] `BottomNav.module.css`: `.grid { grid-template-columns: repeat(5, 1fr) }` → `repeat(6, 1fr)`; добавить `.navLabel { white-space: nowrap }` (защита от переноса при длинных лейблах в целом, не только для нового пункта) — решение расширить сетку (а не заменить `profile`-заглушку) зафиксировано в Q&A выше
+- [x] обновить `BottomNav.test.tsx`: `renderWithProbe`-union добавляет `'recommendations'`; тест "5 колонок" переименовать/переписать на "6 колонок" (`toHaveLength(6)`); добавить тесты клика/active-подсветки пункта "Picks" → `/recommendations`
+- [x] обновить/добавить `Header.test.tsx`: по образцу `describe('Header — пункт навигации Popular', ...)` — новый `describe('Header — пункт навигации Picks', ...)` с тестами клика (`/recommendations`) и активной подсветки при `activeNav='recommendations'`
+- [x] прогнать `make test` и `make typecheck` — должны проходить
 
 ### Task 4: `RecommendationsDesktop`
 

@@ -34,6 +34,7 @@ const navItems = [
   ...typeNavItems,
   { key: 'favorites', label: 'Favorites', path: '/favorites' },
   { key: 'popular', label: 'Popular', path: '/popular' },
+  { key: 'recommendations', label: 'Picks', path: '/recommendations' },
 ]
 
 export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
