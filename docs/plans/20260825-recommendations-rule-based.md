@@ -199,12 +199,12 @@ export const invalidateRecommendations = (ids: number[]): void => {
 - Create: `src/pages/recommendations/ui/RecommendationsMobile/index.tsx`
 - Create: `src/pages/recommendations/ui/RecommendationsMobile/RecommendationsMobile.test.tsx`
 
-- [ ] зеркалит `RecommendationsDesktop` (Task 4), но с `MobileCard` (без `variant`, без `isFavorite`/`onToggleFavorite`), `<MobileHeader title='Recommended for you' />` + `<BottomNav active='recommendations' />` — паттерн `PopularMobile.tsx`/`FavoritesMobile.tsx`
-- [ ] переиспользовать `useRecommendedMovies()`/`invalidateRecommendations()`/`useFavorites()` из `src/pages/recommendations/model/` — никакой отдельной data-логики для mobile (см. roadmap 2.5 "Как лучше")
-- [ ] те же три состояния, что в Desktop: gate по `ids.length===0`, `null`/`[]` от хука, тот же текст EmptyState
-- [ ] написать тесты: те же сценарии, что в Task 4 (включая MSW-проверку query-параметров и Retry → `invalidateRecommendations`), применительно к `MobileCard`/`BottomNav`
-- [ ] использовать `vi.resetModules()`/уникальные id на тест для изоляции `pageCache`
-- [ ] прогнать `make test` — должны проходить
+- [x] зеркалит `RecommendationsDesktop` (Task 4), но с `MobileCard` (без `variant`, без `isFavorite`/`onToggleFavorite`), `<MobileHeader title='Recommended for you' />` + `<BottomNav active='recommendations' />` — паттерн `PopularMobile.tsx`/`FavoritesMobile.tsx`
+- [x] переиспользовать `useRecommendedMovies()`/`invalidateRecommendations()`/`useFavorites()` из `src/pages/recommendations/model/` — никакой отдельной data-логики для mobile (см. roadmap 2.5 "Как лучше")
+- [x] те же три состояния, что в Desktop: gate по `ids.length===0`, `null`/`[]` от хука, тот же текст EmptyState
+- [x] написать тесты: те же сценарии, что в Task 4 (включая MSW-проверку query-параметров и Retry → `invalidateRecommendations`), применительно к `MobileCard`/`BottomNav`
+- [x] использовать `vi.resetModules()`/уникальные id на тест для изоляции `pageCache` — использованы уникальные наборы favorite id на тест (601/602, 801/802, 603/604, 605/606), как в `RecommendationsDesktop.test.tsx`
+- [x] прогнать `make test` — должны проходить
 
 ### Task 6: `RecommendationsPage` + роутинг
 
