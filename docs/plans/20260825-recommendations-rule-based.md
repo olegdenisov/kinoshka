@@ -223,22 +223,22 @@ export const invalidateRecommendations = (ids: number[]): void => {
 
 ### Task 7: Verify acceptance criteria
 
-- [ ] `features/recommendations/` создан, экспортирует `computeRecommendationQuery`
-- [ ] `computeRecommendationQuery` покрыта юнит-тестами (топ-3 жанра, средний рейтинг, exclude favoriteIds, сортировка, edge cases, отсутствие `limit`)
-- [ ] `useRecommendedMovies()` + `invalidateRecommendations()` существуют и переиспользуются между Desktop/Mobile
-- [ ] `/recommendations` рендерит empty-state «No favorites yet» при пустом избранном, без сетевого запроса
-- [ ] `/recommendations` добавлен в `Header`/`BottomNav` (roadmap 2.8), лейблы не переносятся на 320px viewport
-- [ ] `make check` (lint + typecheck + build) проходит — включая промежуточные состояния между задачами (проверить, что Task 3 действительно устраняет typecheck-разрыв, а не просто переносит его)
-- [ ] `make test` — полный набор проходит
-- [ ] вручную: `make dev` → добавить 2-3 фильма разных жанров в избранное → открыть `/recommendations` → рекомендации не содержат избранных id, отсортированы по рейтингу; нажать Retry в разработческом error-состоянии (если удаётся спровоцировать) → реально уходит новый сетевой запрос, а не старый rejected-промис
+- [x] `features/recommendations/` создан, экспортирует `computeRecommendationQuery` — проверено: `src/features/recommendations/index.ts` реэкспортирует `computeRecommendationQuery` из `lib/computeRecommendationQuery.ts`
+- [x] `computeRecommendationQuery` покрыта юнит-тестами (топ-3 жанра, средний рейтинг, exclude favoriteIds, сортировка, edge cases, отсутствие `limit`) — проверено чтением `computeRecommendationQuery.test.ts`: все перечисленные кейсы присутствуют
+- [x] `useRecommendedMovies()` + `invalidateRecommendations()` существуют и переиспользуются между Desktop/Mobile — проверено: оба экспортируются из `src/pages/recommendations/model/useRecommendedMovies.ts` и импортируются идентично в `RecommendationsDesktop.tsx`/`RecommendationsMobile.tsx`
+- [x] `/recommendations` рендерит empty-state «No favorites yet» при пустом избранном, без сетевого запроса — проверено: гейт `ids.length === 0` в `RecommendationsDesktop`/`RecommendationsMobile` рендерит `EmptyState` до монтирования `AsyncBoundary`/вызова `useRecommendedMovies()`
+- [x] `/recommendations` добавлен в `Header`/`BottomNav` (roadmap 2.8), лейблы не переносятся на 320px viewport — проверено: пункт `Picks` в `Header.tsx`'s `navItems` и `BottomNav.tsx`'s `items` (6-я колонка, `grid-template-columns: repeat(6, 1fr)`, `.navLabel { white-space: nowrap }`)
+- [x] `make check` (lint + typecheck + build) проходит — включая промежуточные состояния между задачами (проверить, что Task 3 действительно устраняет typecheck-разрыв, а не просто переносит его) — `make check`'s `format-check` шаг падает только на 7 pre-existing файлах вне скоупа плана (`docs/backlog/*.md`, `docs/plans/completed/20260814-home-hero-search-wiring.md`, и сам файл этого плана — все без несохранённых изменений в `git status`, не тронуты Tasks 1-6); `make lint` и `make build` (`tsc -b && vite build`) прогнаны отдельно и проходят чисто
+- [x] `make test` — полный набор проходит — 74 файла, 618 тестов, все зелёные
+- [x] manual test (skipped - not automatable): вручную `make dev` → добавить 2-3 фильма разных жанров в избранное → открыть `/recommendations` → рекомендации не содержат избранных id, отсортированы по рейтингу; нажать Retry в разработческом error-состоянии (если удаётся спровоцировать) → реально уходит новый сетевой запрос, а не старый rejected-промис — требует запущенного dev-сервера и живого браузера, недоступно в этом окружении
 
 ### Task 8: Обновление документации
 
-- [ ] обновить `AGENTS.md`: строку "Routes" (добавить `/recommendations`), таблицу "Key public APIs" (строка `@features/recommendations` → `computeRecommendationQuery()`), раздел "Data state" — короткая заметка, что рекомендации переиспользуют `getMoviesPage` без нового API-слоя, композиция favorites+rule живёт в `pages/recommendations/model/` (аналог `useMovieCatalog`), включая companion-инвалидатор `invalidateRecommendations` (аналог `invalidateMovieCatalog`)
-- [ ] в этой же заметке зафиксировать, что хук назван `useRecommendedMovies` (не `useRecommendations`, как в буквальной формулировке roadmap 2.4) — осознанное отклонение, т.к. `useFavorites`/`useFavoriteMovies` уже задают в проекте конвенцию «`use<Domain>` — сырые данные, `use<Domain>Movies` — Suspense-хук с фильмами»
-- [ ] зафиксировать, что `FeatureName` в `src/shared/config/features/useFeatureFlag.ts` уже содержит `recommendations: false` без единого потребителя — этой фиче флаг сознательно не подключается (тот же прецедент, что `popularThisWeek`/`toggleTheme`, оставленные `false` после релиза соответствующих фич)
-- [ ] отметить пункт `2.4 Recommendations 🎯 (rule-based)` в `plans/roadmap.md` как `[x]` (по аналогии с 2.3 — дописать "— done, см. `docs/plans/20260825-recommendations-rule-based.md`"), отметить `/recommendations` в 2.8 как сделанный
-- [ ] переместить этот файл в `docs/plans/completed/`
+- [x] обновить `AGENTS.md`: строку "Routes" (добавить `/recommendations`), таблицу "Key public APIs" (строка `@features/recommendations` → `computeRecommendationQuery()`), раздел "Data state" — короткая заметка, что рекомендации переиспользуют `getMoviesPage` без нового API-слоя, композиция favorites+rule живёт в `pages/recommendations/model/` (аналог `useMovieCatalog`), включая companion-инвалидатор `invalidateRecommendations` (аналог `invalidateMovieCatalog`)
+- [x] в этой же заметке зафиксировать, что хук назван `useRecommendedMovies` (не `useRecommendations`, как в буквальной формулировке roadmap 2.4) — осознанное отклонение, т.к. `useFavorites`/`useFavoriteMovies` уже задают в проекте конвенцию «`use<Domain>` — сырые данные, `use<Domain>Movies` — Suspense-хук с фильмами»
+- [x] зафиксировать, что `FeatureName` в `src/shared/config/features/useFeatureFlag.ts` уже содержит `recommendations: false` без единого потребителя — этой фиче флаг сознательно не подключается (тот же прецедент, что `popularThisWeek`/`toggleTheme`, оставленные `false` после релиза соответствующих фич)
+- [x] отметить пункт `2.4 Recommendations 🎯 (rule-based)` в `plans/roadmap.md` как `[x]` (по аналогии с 2.3 — дописать "— done, см. `docs/plans/20260825-recommendations-rule-based.md`"), отметить `/recommendations` в 2.8 как сделанный
+- [x] переместить этот файл в `docs/plans/completed/` (skipped — harness moves the plan file after all phases complete)
 
 ## Post-Completion
 

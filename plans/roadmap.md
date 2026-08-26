@@ -318,13 +318,13 @@
 
 **Как лучше:** агрессивный кэш — popular меняется редко.
 
-### 2.4 Recommendations 🎯 (rule-based)
+### 2.4 Recommendations 🎯 (rule-based) — done, см. `docs/plans/20260825-recommendations-rule-based.md`
 
-- [ ] `features/recommendations/` создан.
-- [ ] Pure-функция `computeRecommendationQuery(favorites): Query` — топ-3 жанра + средний рейтинг, exclude favoriteIds.
-- [ ] Юнит-тесты на pure rule.
-- [ ] Хук `useRecommendations()`.
-- [ ] Страница `/recommendations` с empty-state «добавь в избранное».
+- [x] `features/recommendations/` создан.
+- [x] Pure-функция `computeRecommendationQuery(favorites): Query` — топ-3 жанра + средний рейтинг, exclude favoriteIds.
+- [x] Юнит-тесты на pure rule.
+- [x] Хук `useRecommendations()`. Реализован как `useRecommendedMovies()` (`src/pages/recommendations/model/`) — сознательное отклонение от буквального имени, см. AGENTS.md ("Data state").
+- [x] Страница `/recommendations` с empty-state «добавь в избранное».
 
 **Как лучше:** правило в pure-функции (тестируется в 0.3). Composition: data → pure rule → query → data.
 
@@ -347,7 +347,7 @@
 
 ### 2.8 Навигация к новым страницам
 
-- [ ] `/favorites`, `/popular`, `/recommendations` добавлены в `Header`/`BottomNav`. ➕ `/favorites` уже сделано вместе с 2.1 (`docs/plans/20260816-favorites-feature.md`, Task 6); `/popular`/`/recommendations` ждут своих задач (2.3/2.4).
+- [x] `/favorites`, `/popular`, `/recommendations` добавлены в `Header`/`BottomNav`. ➕ `/favorites` уже сделано вместе с 2.1 (`docs/plans/20260816-favorites-feature.md`, Task 6); `/popular` — вместе с 2.3 (`docs/plans/20260825-popular-this-week-rail.md`); `/recommendations` — вместе с 2.4 (`docs/plans/20260825-recommendations-rule-based.md`).
 
 **Как лучше:** делай это сразу по мере появления каждой страницы (2.1/2.3/2.4), а не отдельным проходом в конце — иначе часть ссылок забудется.
 
