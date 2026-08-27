@@ -5,10 +5,12 @@ import {
   usePopularMovies,
 } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
+import { useViewport } from '@shared/lib'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 import { Header } from '@widgets/header'
+import { BottomNav, MobileHeader } from '@widgets/mobile-chrome'
 
-import s from './PopularDesktop.module.css'
+import s from './Popular.module.css'
 
 const SKELETON_COUNT = 10
 
@@ -28,10 +30,12 @@ const PopularGrid = () => {
 
   if (movies.length === 0) {
     return (
-      <EmptyState
-        title='No popular movies right now'
-        description="This week's popular list is empty. Check back later."
-      />
+      <div className={s.stateWrap}>
+        <EmptyState
+          title='No popular movies right now'
+          description="This week's popular list is empty. Check back later."
+        />
+      </div>
     )
   }
 
@@ -56,10 +60,23 @@ const PopularGrid = () => {
   )
 }
 
-export const PopularDesktop = () => {
+// Навигационный chrome (Header vs MobileHeader+BottomNav) — временное useViewport-ветвление
+// внутри Popular, тот же выбор, что зафиксирован решением Task 3 плана
+// (docs/plans/20260827-mobile-first-adaptive-layout.md) для Favorites: единая точка композиции
+// chrome появится только в Task 6 (layout-route/SiteChrome), здесь просто сведён в один
+// компонент тот же выбор, который раньше делал PopularPage.tsx через рендер
+// PopularDesktop/PopularMobile.
+export const Popular = () => {
+  const { isMobile } = useViewport()
+
   return (
     <div className={s.page}>
-      <Header activeNav='popular' />
+      {isMobile ? (
+        <MobileHeader title='Popular' />
+      ) : (
+        <Header activeNav='popular' />
+      )}
+
       <main className={s.main}>
         <h1 className={s.heading}>Popular this week</h1>
         <AsyncBoundary
@@ -69,6 +86,8 @@ export const PopularDesktop = () => {
           <PopularGrid />
         </AsyncBoundary>
       </main>
+
+      {isMobile && <BottomNav active='popular' />}
     </div>
   )
 }

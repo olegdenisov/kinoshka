@@ -408,16 +408,43 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
 - Delete: `src/pages/popular/ui/PopularDesktop/`, `src/pages/popular/ui/PopularMobile/`
 - Create: `src/pages/popular/ui/Popular/Popular.test.tsx`
 
-- [ ] Прочитать текущие `PopularDesktop.tsx`/`PopularMobile.tsx` перед слиянием (следующий шаг
+- [x] Прочитать текущие `PopularDesktop.tsx`/`PopularMobile.tsx` перед слиянием (следующий шаг
       этой задачи, не сделан на этапе планирования) — свести по тому же паттерну, что Task 3
-      (`Card`+`rankBadge`, grid раскладка через CSS).
-- [ ] Слить раскладку rank-бейджей (`PopularBadge`) — они уже параметризуются через `rankBadge`
+      (`Card`+`rankBadge`, grid раскладка через CSS). Оба файла прочитаны целиком: расхождения
+      подтверждены — только chrome (`Header` vs `MobileHeader`+`BottomNav`), заголовочная
+      обёртка (`.main`/`h1.heading` у десктопа vs отдельный `.titleWrap`/`h1.title` у мобильного,
+      сведены в единую `main`+`heading` разметку по образцу `Favorites`), `SKELETON_COUNT`
+      (10 десктоп / 6 мобильный — взято десктопное значение 10, тот же выбор в пользу большего
+      значения, что был сделан для `Favorites` в Task 3), grid-колонки (`repeat(4, 1fr)` десктоп /
+      `repeat(2, 1fr)` мобильный — заменены на общий `repeat(auto-fill, minmax(...))` с
+      `min-width: 720px`-оверрайдом) и `variant='grid'` у `Card` (передавался только десктопом —
+      после Task 2 это просто гейт `Eye`-кнопки через `@media (hover: none)`, передаётся
+      безусловно, как в `Favorites`). Бизнес-логика (`usePopularMovies`, `useFavorites`,
+      `invalidatePopularMovies`, обработка пустого списка) идентична в обоих файлах.
+- [x] Слить раскладку rank-бейджей (`PopularBadge`) — они уже параметризуются через `rankBadge`
       проп `Card`/`MobileCard` (см. AGENTS.md "rankBadge slot placement"); после Task 2 это один
       слот в едином `Card` — сверить, что позиционирование бейджа не регрессирует ни в одном
-      брейкпоинте.
-- [ ] Навигационный chrome — тот же принцип, что в Task 3.
-- [ ] Слить тесты `PopularDesktop.test.tsx`/`PopularMobile.test.tsx`.
-- [ ] `make test` — все зелёные до следующей задачи.
+      брейкпоинте. Реализовано в `src/pages/popular/ui/Popular/Popular.tsx` — `rankBadge`
+      передаётся в `Card` безусловно (не завязано на брейкпоинт), позиционирование целиком внутри
+      объединённого `Card` (Task 2), проверено тестами на обеих ширинах (см. ниже).
+- [x] Навигационный chrome — тот же принцип, что в Task 3: временное `useViewport`-ветвление
+      внутри `Popular` (`isMobile ? <MobileHeader title='Popular' /> : <Header
+      activeNav='popular' />`, `{isMobile && <BottomNav active='popular' />}`), решение задаётся
+      Task 6 и здесь не пересматривается — тот же выбор, что и в `Favorites` (Task 3).
+- [x] Слить тесты `PopularDesktop.test.tsx`/`PopularMobile.test.tsx` — объединены в один
+      `src/pages/popular/ui/Popular/Popular.test.tsx`: успешная загрузка с rank-бейджами (обе
+      ширины), пустой список → `EmptyState`, полный отказ → `AsyncBoundary`-фолбэк с реальным
+      Retry-инвалидированием кэша (`invalidatePopularMovies`), плюс два новых теста на
+      `useViewport`-ветвление chrome по ширине окна (по образцу `Favorites.test.tsx`). Отклонение
+      от паттерна `Favorites.test.tsx`: пункт навигации "Popular" одинаково называется и в
+      `Header`, и в `BottomNav` (в отличие от "Favorites"/"Lists"), поэтому chrome-тесты
+      различают варианты по другим, уникальным для каждого chrome пунктам ("Favorites" есть
+      только в `Header.navItems`, "Lists" — только в `BottomNav.items") — задокументировано
+      комментарием в тесте.
+- [x] `make test` — все зелёные до следующей задачи. `make test`: 73 файла / 613 тестов зелёные
+      (три исходных файла — `PopularDesktop.tsx`/`.test.tsx`, `PopularMobile.tsx`/`.test.tsx` —
+      заменены на два: `Popular.tsx`, `Popular.test.tsx`); `make lint`, `make typecheck`,
+      `make build` — тоже зелёные.
 
 ### Task 5: Слияние `RecommendationsDesktop`/`RecommendationsMobile` в единый `Recommendations`
 

@@ -1,9 +1,3 @@
-import { useViewport } from '@shared/lib'
+import { Popular } from './ui/Popular'
 
-import { PopularDesktop } from './ui/PopularDesktop'
-import { PopularMobile } from './ui/PopularMobile'
-
-export const PopularPage = () => {
-  const { isMobile } = useViewport()
-  return isMobile ? <PopularMobile /> : <PopularDesktop />
-}
+export const PopularPage = () => <Popular />

@@ -1,1 +1,0 @@
-export { PopularMobile } from './PopularMobile'
