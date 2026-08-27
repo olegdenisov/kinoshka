@@ -3,13 +3,12 @@ import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
 import { server } from '../../../../test/setup'
-import { RecommendationsMobile } from './RecommendationsMobile'
+import { Recommendations } from './Recommendations'
 
 // Реальные MSW-хендлеры (не мок модуля) на /v1.5/movie/:id (favorites, через getMoviesByIds)
-// и /v1.5/movie (каталог, через getMoviesPage) — тот же подход, что RecommendationsDesktop.test.tsx/
-// FavoritesMobile.test.tsx/PopularMobile.test.tsx: composed-хук (useRecommendedMovies) делит
-// один и тот же реальный createCachedFetcher-кэш, так что Retry по-настоящему инвалидирует и
-// бьёт в сеть заново.
+// и /v1.5/movie (каталог, через getMoviesPage) — тот же подход, что FavoritesDesktop.test.tsx/
+// PopularDesktop.test.tsx: composed-хук (useRecommendedMovies) делит один и тот же реальный
+// createCachedFetcher-кэш, так что Retry по-настоящему инвалидирует и бьёт в сеть заново.
 const FAVORITES_KEY = 'kinoshka:favorites'
 const MOVIE_ENDPOINT = (id: number) => `*/v1.5/movie/${id}`
 const CATALOG_ENDPOINT = '*/v1.5/movie'
@@ -87,13 +86,22 @@ const mockCatalog = (
   return { getRequest: () => request }
 }
 
+// useViewport() читает window.innerWidth только один раз при монтировании (см.
+// useViewport.ts) — задаём ширину до рендера, resize-событие диспатчить не нужно.
+const DESKTOP_WIDTH = 1280
+const MOBILE_WIDTH = 375
+
+const setViewportWidth = (width: number) => {
+  window.innerWidth = width
+}
+
 const renderPage = async () => {
   let result: ReturnType<typeof render> | undefined
 
   await act(async () => {
     result = render(
       <MemoryRouter>
-        <RecommendationsMobile />
+        <Recommendations />
       </MemoryRouter>,
     )
   })
@@ -104,16 +112,46 @@ const renderPage = async () => {
 beforeEach(() => {
   localStorage.clear()
   sessionStorage.clear()
+  setViewportWidth(DESKTOP_WIDTH)
 })
 
 afterEach(() => {
-  // RecommendationsMobile рендерит MobileHeader, чей ThemeToggle применяет data-theme на
-  // document.documentElement — jsdom document общий между тестами файла, сбрасываем, чтобы
-  // тема, выставленная одним тестом, не утекала в следующий (см. FavoritesMobile.test.tsx).
+  // Recommendations рендерит Header (десктоп) или MobileHeader (мобильный) — оба содержат
+  // ThemeToggle, который выставляет data-theme на document.documentElement; jsdom document общий
+  // между тестами файла, сбрасываем, чтобы тема не утекала в следующий тест (см. Header.test.tsx).
   document.documentElement.removeAttribute('data-theme')
 })
 
-describe('RecommendationsMobile — пустой список избранного', () => {
+describe('Recommendations — навигационный chrome (временное useViewport-ветвление)', () => {
+  // "Picks" — общее название пункта навигации и в Header, и в BottomNav (в отличие от
+  // Favorites, где Header называет пункт "Favorites", а BottomNav — "Lists"), поэтому им нельзя
+  // отличить один chrome от другого. Используем пункты, уникальные для каждого варианта:
+  // "Favorites" есть только в Header.navItems, "Lists" — только в BottomNav.items (тот же приём,
+  // что Popular.test.tsx).
+  it('на десктопной ширине рендерит Header, а не BottomNav', async () => {
+    setViewportWidth(DESKTOP_WIDTH)
+    await renderPage()
+
+    expect(
+      screen.getByRole('button', { name: 'Favorites' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Lists' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('на мобильной ширине рендерит MobileHeader+BottomNav, а не Header', async () => {
+    setViewportWidth(MOBILE_WIDTH)
+    await renderPage()
+
+    expect(screen.getByRole('button', { name: 'Lists' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Favorites' }),
+    ).not.toBeInTheDocument()
+  })
+})
+
+describe('Recommendations — пустой список избранного', () => {
   it('рендерит EmptyState без сетевых запросов', async () => {
     await renderPage()
 
@@ -122,9 +160,16 @@ describe('RecommendationsMobile — пустой список избранног
       screen.getByText('Add movies you like to get recommendations'),
     ).toBeInTheDocument()
   })
+
+  it('на мобильной ширине тоже рендерит EmptyState без сетевых запросов', async () => {
+    setViewportWidth(MOBILE_WIDTH)
+    await renderPage()
+
+    expect(screen.getByText('No favorites yet')).toBeInTheDocument()
+  })
 })
 
-describe('RecommendationsMobile — непустое избранное, успешный подбор', () => {
+describe('Recommendations — непустое избранное, успешный подбор', () => {
   it('рендерит карточки рекомендаций; исходящий запрос реально содержит id/genres.name/rating.kp правила', async () => {
     setFavorites([601, 602])
     mockFavorite(601, { genres: [{ name: 'триллер' }], rating: { kp: 8.0 } })
@@ -142,8 +187,9 @@ describe('RecommendationsMobile — непустое избранное, усп�
     expect(url.searchParams.getAll('sortField')).toEqual(['rating.kp'])
     expect(url.searchParams.getAll('sortType')).toEqual(['-1'])
 
-    // Без кнопки-сердечка на этой странице (см. Technical Details плана) — MobileCard получает
-    // isFavorite/onToggleFavorite оба undefined, так что кнопка избранного не рендерится.
+    // Без кнопки-сердечка на этой странице (см. Technical Details плана
+    // 20260825-recommendations-rule-based.md) — Card получает isFavorite/onToggleFavorite оба
+    // undefined, так что кнопка избранного не рендерится.
     expect(
       screen.queryByRole('button', { name: 'Add to favorites' }),
     ).not.toBeInTheDocument()
@@ -151,9 +197,21 @@ describe('RecommendationsMobile — непустое избранное, усп�
       screen.queryByRole('button', { name: 'Remove from favorites' }),
     ).not.toBeInTheDocument()
   })
+
+  it('на мобильной ширине карточки рекомендаций тоже рендерятся', async () => {
+    setViewportWidth(MOBILE_WIDTH)
+    setFavorites([601, 602])
+    mockFavorite(601, { genres: [{ name: 'триллер' }], rating: { kp: 8.0 } })
+    mockFavorite(602, { genres: [{ name: 'драма' }], rating: { kp: 6.0 } })
+    mockCatalog([catalogDoc(701, 'Recommended Movie')])
+
+    await renderPage()
+
+    expect(await screen.findByText('Recommended Movie')).toBeInTheDocument()
+  })
 })
 
-describe('RecommendationsMobile — все избранные id 404-нулись', () => {
+describe('Recommendations — все избранные id 404-нулись', () => {
   it('useRecommendedMovies возвращает null → EmptyState "не удалось загрузить избранное"', async () => {
     setFavorites([801, 802])
     mockFavoriteNotFound(801)
@@ -182,7 +240,7 @@ describe('RecommendationsMobile — все избранные id 404-нулис�
   })
 })
 
-describe('RecommendationsMobile — каталог не вернул совпадений', () => {
+describe('Recommendations — каталог не вернул совпадений', () => {
   it('useRecommendedMovies возвращает [] → EmptyState "Nothing to recommend yet"', async () => {
     setFavorites([603, 604])
     mockFavorite(603, { genres: [{ name: 'триллер' }], rating: { kp: 8.0 } })
@@ -200,7 +258,7 @@ describe('RecommendationsMobile — каталог не вернул совпа�
   })
 })
 
-describe('RecommendationsMobile — Retry реально переинвалидирует кэш каталога, а не только избранного', () => {
+describe('Recommendations — Retry реально переинвалидирует кэш каталога, а не только избранного', () => {
   it('клик Retry вызывает invalidateRecommendations и повторно запрашивает каталог', async () => {
     setFavorites([605, 606])
     mockFavorite(605, { genres: [{ name: 'триллер' }], rating: { kp: 8.0 } })
@@ -245,13 +303,5 @@ describe('RecommendationsMobile — Retry реально переинвалид�
       await screen.findByText('Recovered Recommendation'),
     ).toBeInTheDocument()
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
-  })
-})
-
-describe('RecommendationsMobile — навигация', () => {
-  it('рендерит BottomNav с активным пунктом "Picks" независимо от состояния избранного', async () => {
-    await renderPage()
-
-    expect(screen.getByRole('button', { name: /Picks/i })).toBeInTheDocument()
   })
 })

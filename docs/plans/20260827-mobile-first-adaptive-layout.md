@@ -457,14 +457,44 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
 - Modify: `src/pages/recommendations/RecommendationsPage.test.tsx` (сейчас мокает/использует
   `useViewport` — обновить под убранное ветвление)
 
-- [ ] Слить `RecommendationsDesktop`/`RecommendationsMobile` (grid карточек + empty-state
+- [x] Слить `RecommendationsDesktop`/`RecommendationsMobile` (grid карточек + empty-state
       "добавь в избранное") по паттерну Task 3/4. `model/useRecommendedMovies.ts` не трогать —
-      уже общий page-слой хук.
-- [ ] Навигационный chrome — тот же принцип, что в Task 3/4.
-- [ ] Слить тесты `RecommendationsDesktop.test.tsx`/`RecommendationsMobile.test.tsx`, обновить
-      `RecommendationsPage.test.tsx` (убрать мок `useViewport`, если тест был завязан именно на
-      выбор варианта, а не на поведение страницы).
-- [ ] `make test` — все зелёные до следующей задачи.
+      уже общий page-слой хук. Реализовано в
+      `src/pages/recommendations/ui/Recommendations/{Recommendations.tsx, Recommendations.module.css}`
+      — оба исходных файла прочитаны целиком, различия подтверждены только в chrome (`Header` vs
+      `MobileHeader`+`BottomNav`) и grid-колонках (`repeat(4, 1fr)` десктоп /
+      `repeat(2, 1fr)` мобильный, сведены в общий `repeat(auto-fill, minmax(...))` с
+      `min-width: 720px`-оверрайдом, тот же паттерн, что `Favorites.module.css`/
+      `Popular.module.css`); `SKELETON_COUNT` (8 десктоп / 6 мобильный — взято десктопное
+      значение 8, тот же выбор в пользу большего значения, что уже делался для `Favorites`/
+      `Popular`); `variant='grid'` у `Card` передавался только десктопом — после Task 2 это гейт
+      `Eye`-кнопки через `@media (hover: none)`, передаётся безусловно, как в `Favorites`/
+      `Popular`. Бизнес-логика (`useRecommendedMovies`, `invalidateRecommendations`,
+      `useFavorites().ids` для гейта "нет избранного" vs каталог не дал совпадений vs все id
+      404-нулись) идентична в обоих исходных файлах и перенесена без изменений;
+      `model/useRecommendedMovies.ts` не тронут.
+- [x] Навигационный chrome — тот же принцип, что в Task 3/4: временное `useViewport`-ветвление
+      внутри `Recommendations` (`isMobile ? <MobileHeader title='Recommended for you' /> :
+      <Header activeNav='recommendations' />`, `{isMobile && <BottomNav
+      active='recommendations' />}`), решение задаётся Task 6 и здесь не пересматривается.
+- [x] Слить тесты `RecommendationsDesktop.test.tsx`/`RecommendationsMobile.test.tsx` в один
+      `src/pages/recommendations/ui/Recommendations/Recommendations.test.tsx`: пустое избранное,
+      успешный подбор с проверкой реального запроса (`id`/`genres.name`/`rating.kp`/`sortField`/
+      `sortType`), все id 404-нулись → `null` → "не удалось загрузить избранное", каталог не дал
+      совпадений → `[]` → "Nothing to recommend yet", полный отказ каталога → `AsyncBoundary`
+      Retry с реальным переинвалидированием кэша, плюс два новых теста на `useViewport`-ветвление
+      chrome по ширине окна (по образцу `Popular.test.tsx`, а не `Favorites.test.tsx` — пункт
+      навигации "Picks" одинаково называется и в `Header`, и в `BottomNav`, различаем варианты по
+      уникальным пунктам "Favorites"/"Lists", тот же приём, что уже задокументирован в
+      `Popular.test.tsx`). `RecommendationsPage.test.tsx` переписан: убран мок `useViewport` и
+      сам выбор Desktop/Mobile-стабов (развилки больше нет — `RecommendationsPage` теперь
+      тривиальная обёртка), заменён на один смоук-тест, мокающий `./ui/Recommendations` и
+      проверяющий факт делегирования (page-level поведение, не переиспытывание логики
+      `Recommendations`, которая уже покрыта `Recommendations.test.tsx`).
+- [x] `make test` — все зелёные до следующей задачи. `make test`: 72 файла / 610 тестов зелёные
+      (четыре исходных файла — `RecommendationsDesktop.tsx`/`.test.tsx`,
+      `RecommendationsMobile.tsx`/`.test.tsx` — заменены на два: `Recommendations.tsx`,
+      `Recommendations.test.tsx`); `make lint`, `make typecheck`, `make build` — тоже зелёные.
 
 ### Task 6: Единая точка выбора навигационного chrome (`Header` vs `MobileHeader`+`BottomNav`)
 
