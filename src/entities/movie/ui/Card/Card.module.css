@@ -111,6 +111,89 @@
   border: 1px solid var(--border-light);
 }
 
+/*
+  Единая кнопка избранного (см. Card.tsx) — мобильная база: маленький
+  круглый бейдж поверх постера сверху-справа, всегда видим (touch не имеет
+  hover, скрывать до наведения нельзя). .typeBadge занимает этот же угол
+  только на десктопе (см. @media (hover: none) ниже), конфликта корпусов нет.
+*/
+.favoriteBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border-light);
+  background: var(--bg-glass);
+  backdrop-filter: blur(6px);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 160ms;
+}
+
+.favoriteBtnActive {
+  color: var(--accent-warm);
+  border-color: var(--accent-warm-border);
+  background: var(--accent-warm-soft);
+}
+
+@media (min-width: 720px) {
+  /* Десктоп: та же кнопка переезжает в нижний правый угол — визуально
+     занимает место, где раньше был CardBtn-heart внутри .actions, но
+     остаётся отдельным DOM-узлом (см. Card.tsx) со своим независимым
+     z-index/opacity, а не ребёнком .actions — иначе opacity:0 родителя
+     умножился бы на opacity:1 ребёнка и скрыл бы кнопку насовсем. */
+  .favoriteBtn {
+    top: auto;
+    bottom: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    border-color: var(--border-strong);
+    background: var(--bg-glass-strong);
+  }
+}
+
+@media (min-width: 720px) and (hover: hover) and (pointer: fine) {
+  /* Fade-до-hover — только для устройств, которые реально умеют hover;
+     широкий экран без мыши (тачскрин-планшет) держит кнопку видимой
+     всегда, как на мобильном, просто в другой позиции. */
+  .favoriteBtn {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  .card:hover .favoriteBtn,
+  .favoriteBtn:focus-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .favoriteBtn:hover {
+    background: var(--accent-warm);
+    color: var(--bg-primary);
+    border-color: transparent;
+  }
+}
+
+/*
+  Rate/Add/Eye (.actions) и .typeBadge — decorative-extra контролы без
+  touch-аналога, скрываются по hover-фиче, а не по ширине экрана: сенсорный
+  экран любой ширины (в т.ч. широкий планшет) не должен их видеть — CSS
+  media-фичи hover/pointer выражают это точнее, чем брейкпоинт по ширине.
+*/
+@media (hover: none) {
+  .actions,
+  .typeBadge {
+    display: none;
+  }
+}
+
 .info {
   display: flex;
   flex-direction: column;

@@ -1,5 +1,5 @@
 import type { CastMember, MovieDetail, MovieImage } from '@entities/movie'
-import { Poster, MobileCard, formatCurrency, formatDate } from '@entities/movie'
+import { Poster, Card, formatCurrency, formatDate } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import {
   StarIcon,
@@ -216,7 +216,7 @@ export const MovieMobile = ({ movie, images }: MovieMobileProps) => {
           </div>
           <div className={`${s.relatedGrid} hide-scrollbar`}>
             {related.map(x => (
-              <MobileCard
+              <Card
                 key={x.id}
                 movie={x}
                 isFavorite={isFavorite(x.id)}

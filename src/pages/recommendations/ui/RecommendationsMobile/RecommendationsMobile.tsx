@@ -1,4 +1,4 @@
-import { MobileCard } from '@entities/movie'
+import { Card } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 import { BottomNav, MobileHeader } from '@widgets/mobile-chrome'
@@ -53,7 +53,7 @@ const RecommendationsGrid = () => {
   return (
     <div className={s.grid}>
       {movies.map(movie => (
-        <MobileCard key={movie.id} movie={movie} />
+        <Card key={movie.id} movie={movie} />
       ))}
     </div>
   )

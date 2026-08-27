@@ -1,5 +1,5 @@
 import type { Movie } from '@entities/movie'
-import { MobileCard } from '@entities/movie'
+import { Card } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { Link } from 'react-router'
 
@@ -32,7 +32,7 @@ export const MovieRailMobile = ({
       <div className={`hide-scrollbar ${s.scroll}`}>
         {items.map(m => (
           <div key={m.id} className={s.scrollItem}>
-            <MobileCard
+            <Card
               movie={m}
               isFavorite={isFavorite(m.id)}
               onToggleFavorite={toggle}

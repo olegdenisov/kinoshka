@@ -1,4 +1,4 @@
-import { MobileCard } from '@entities/movie'
+import { Card } from '@entities/movie'
 import {
   ActiveFilterChips,
   GenreSelector,
@@ -166,7 +166,7 @@ const MobileSearchResults = ({
     <>
       <div className={s.resultsGrid}>
         {movies.map(m => (
-          <MobileCard
+          <Card
             key={m.id}
             movie={m}
             isFavorite={isFavorite(m.id)}

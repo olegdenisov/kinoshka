@@ -127,6 +127,22 @@ describe('Card', () => {
     expect(screen.queryByLabelText('Add to favorites')).not.toBeInTheDocument()
   })
 
+  it('кнопка избранного — ровно один DOM-узел (не дублируется между брейкпоинтами после слияния с MobileCard)', () => {
+    renderCard(baseMovie, { onToggleFavorite: vi.fn() })
+
+    expect(screen.getAllByRole('button', { name: /favorites/i })).toHaveLength(
+      1,
+    )
+  })
+
+  it('isFavorite=true — тоже ровно одна кнопка избранного (не два разных узла active/inactive)', () => {
+    renderCard(baseMovie, { isFavorite: true, onToggleFavorite: vi.fn() })
+
+    expect(screen.getAllByRole('button', { name: /favorites/i })).toHaveLength(
+      1,
+    )
+  })
+
   it('клик по сердечку не триггерит переход по Link (location не меняется)', async () => {
     const user = userEvent.setup()
     const onToggleFavorite = vi.fn()
@@ -175,5 +191,12 @@ describe('Card', () => {
     renderCard({ ...baseMovie, genre: [] })
 
     expect(screen.queryByText('·')).not.toBeInTheDocument()
+  })
+
+  it('edge case: постер отсутствует И rankBadge не передан — рендерится fallback-плейсхолдер без бейджа ранга', () => {
+    renderCard(baseMovie)
+
+    expect(screen.getByText('— poster —')).toBeInTheDocument()
+    expect(screen.queryByText('#1')).not.toBeInTheDocument()
   })
 })
