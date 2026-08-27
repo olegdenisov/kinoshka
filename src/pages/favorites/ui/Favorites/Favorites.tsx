@@ -1,9 +1,6 @@
 import { Card, getMoviesByIds } from '@entities/movie'
 import { useFavoriteMovies, useFavorites } from '@features/favorites'
-import { useViewport } from '@shared/lib'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
-import { Header } from '@widgets/header'
-import { BottomNav, MobileHeader } from '@widgets/mobile-chrome'
 
 import s from './Favorites.module.css'
 
@@ -47,23 +44,16 @@ const FavoritesGrid = () => {
   )
 }
 
-// Навигационный chrome (Header vs MobileHeader+BottomNav) — временное useViewport-ветвление
-// внутри Favorites, как зафиксировано решением Task 3 плана
-// (docs/plans/20260827-mobile-first-adaptive-layout.md): единая точка композиции chrome
-// появится только в Task 6 (layout-route/SiteChrome), здесь просто сведён в один компонент тот
-// же выбор, который раньше делал FavoritesPage.tsx через рендер FavoritesDesktop/FavoritesMobile.
+// Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
+// единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6
+// плана docs/plans/20260827-mobile-first-adaptive-layout.md), которая оборачивает роут
+// `/favorites` (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
+// Favorites больше не вызывает useViewport и не решает, какой chrome показать.
 export const Favorites = () => {
   const { ids } = useFavorites()
-  const { isMobile } = useViewport()
 
   return (
     <div className={s.page}>
-      {isMobile ? (
-        <MobileHeader title='Favorites' />
-      ) : (
-        <Header activeNav='favorites' />
-      )}
-
       <main className={s.main}>
         <h1 className={s.heading}>Favorites</h1>
         {ids.length === 0 ? (
@@ -82,8 +72,6 @@ export const Favorites = () => {
           </AsyncBoundary>
         )}
       </main>
-
-      {isMobile && <BottomNav active='lists' />}
     </div>
   )
 }
