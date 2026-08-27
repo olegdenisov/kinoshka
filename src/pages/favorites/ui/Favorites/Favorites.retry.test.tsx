@@ -3,16 +3,21 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { vi } from 'vitest'
 
-import { FavoritesDesktop } from './FavoritesDesktop'
+import { Favorites } from './Favorites'
 
 // Мокаем весь `getMoviesByIds` (а не MSW-эндпоинт) для точного контроля тайминга —
 // реальная композиция (см. getMoviesByIds.ts) тоже умеет реджектиться при полном отказе
-// (см. FavoritesDesktop.test.tsx — «полный отказ загрузки (сетевая/5xx ошибка)»), но здесь
+// (см. Favorites.test.tsx — «полный отказ загрузки (сетевая/5xx ошибка)»), но здесь
 // нужно детерминированно проверить именно порядок вызовов invalidate→refetch, а не сам факт
 // реджекта. Мок ведёт себя как упрощённый `createCachedFetcher`: кэширует промис по
 // `JSON.stringify(ids)`, счётчик `fetchAttempts` растёт только на реальный промах кэша — так
 // тест проверяет то же самое свойство, что и `MoviePage.test.tsx` для Retry: `invalidate`
 // вызывается ДО повторного запроса.
+//
+// Остаётся отдельным файлом от Favorites.test.tsx (как и раньше — FavoritesDesktop.retry.test.tsx
+// был отдельным от FavoritesDesktop.test.tsx), потому что `vi.mock` здесь подменяет
+// `getMoviesByIds` для ВСЕГО файла — смешивать его с MSW-based тестами в одном файле означало бы
+// либо терять реальные сетевые сценарии, либо городить `vi.doMock`/`vi.resetModules` внутри теста.
 const { invalidate, getMoviesByIdsMock, getFetchAttempts } = vi.hoisted(() => {
   const cache = new Map<string, Promise<unknown>>()
   let fetchAttempts = 0
@@ -69,23 +74,26 @@ const FAVORITES_KEY = 'kinoshka:favorites'
 beforeEach(() => {
   localStorage.clear()
   invalidate.mockClear()
+  // Favorites рендерит десктопный Header по умолчанию (useViewport() читает
+  // window.innerWidth при монтировании) — chrome не важен для этого теста, ширина не задаётся
+  // отдельно, полагаемся на jsdom-дефолт как и раньше делал FavoritesDesktop.retry.test.tsx.
 })
 
 afterEach(() => {
-  // FavoritesDesktop renders Header, whose ThemeToggle applies data-theme on
+  // Favorites рендерит Header, чей ThemeToggle выставляет data-theme на
   // document.documentElement — jsdom document общий между тестами файла, сбрасываем, чтобы
   // тема, выставленная одним тестом, не утекала в следующий (см. Header.test.tsx).
   document.documentElement.removeAttribute('data-theme')
 })
 
-describe('FavoritesDesktop — Retry реально переинвалидирует кэш и повторяет запрос', () => {
+describe('Favorites — Retry реально переинвалидирует кэш и повторяет запрос', () => {
   it('клик Retry вызывает invalidate и повторно запрашивает данные', async () => {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify([1]))
 
     await act(async () => {
       render(
         <MemoryRouter>
-          <FavoritesDesktop />
+          <Favorites />
         </MemoryRouter>,
       )
     })

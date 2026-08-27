@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
 import { server } from '../../../../test/setup'
-import { FavoritesDesktop } from './FavoritesDesktop'
+import { Favorites } from './Favorites'
 
 const FAVORITES_KEY = 'kinoshka:favorites'
 const setFavorites = (ids: number[]) =>
@@ -43,13 +43,22 @@ const mockMovieError = (id: number, status: number) => {
   )
 }
 
+// useViewport() читает window.innerWidth только один раз при монтировании (см.
+// useViewport.ts) — задаём ширину до рендера, resize-событие диспатчить не нужно.
+const DESKTOP_WIDTH = 1280
+const MOBILE_WIDTH = 375
+
+const setViewportWidth = (width: number) => {
+  window.innerWidth = width
+}
+
 const renderPage = async () => {
   let result: ReturnType<typeof render> | undefined
 
   await act(async () => {
     result = render(
       <MemoryRouter>
-        <FavoritesDesktop />
+        <Favorites />
       </MemoryRouter>,
     )
   })
@@ -60,16 +69,42 @@ const renderPage = async () => {
 beforeEach(() => {
   localStorage.clear()
   sessionStorage.clear()
+  setViewportWidth(DESKTOP_WIDTH)
 })
 
 afterEach(() => {
-  // FavoritesDesktop renders Header, whose ThemeToggle applies data-theme on
-  // document.documentElement — jsdom document общий между тестами файла, сбрасываем, чтобы
-  // тема, выставленная одним тестом, не утекала в следующий (см. Header.test.tsx).
+  // Favorites рендерит Header (десктоп) или MobileHeader (мобильный) — оба содержат
+  // ThemeToggle, который выставляет data-theme на document.documentElement; jsdom document
+  // общий между тестами файла, сбрасываем, чтобы тема не утекала в следующий тест (см.
+  // Header.test.tsx).
   document.documentElement.removeAttribute('data-theme')
 })
 
-describe('FavoritesDesktop — пустой список избранного', () => {
+describe('Favorites — навигационный chrome (временное useViewport-ветвление)', () => {
+  it('на десктопной ширине рендерит Header, а не BottomNav', async () => {
+    setViewportWidth(DESKTOP_WIDTH)
+    await renderPage()
+
+    expect(
+      screen.getByRole('button', { name: 'Favorites' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Lists' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('на мобильной ширине рендерит MobileHeader+BottomNav, а не Header', async () => {
+    setViewportWidth(MOBILE_WIDTH)
+    await renderPage()
+
+    expect(screen.getByRole('button', { name: 'Lists' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Favorites' }),
+    ).not.toBeInTheDocument()
+  })
+})
+
+describe('Favorites — пустой список избранного', () => {
   it('рендерит EmptyState без сетевых запросов', async () => {
     await renderPage()
 
@@ -77,7 +112,7 @@ describe('FavoritesDesktop — пустой список избранного', 
   })
 })
 
-describe('FavoritesDesktop — непустой список избранного', () => {
+describe('Favorites — непустой список избранного', () => {
   it('рендерит карточки с данными для каждого избранного фильма', async () => {
     setFavorites([1, 2])
     mockMovie(1, { name: 'First Favorite' })
@@ -90,7 +125,7 @@ describe('FavoritesDesktop — непустой список избранног�
   })
 })
 
-describe('FavoritesDesktop — частичный отказ (404)', () => {
+describe('Favorites — частичный отказ (404)', () => {
   it('карточка для 404-фильма не рендерится, остальные рендерятся', async () => {
     setFavorites([1, 404])
     mockMovie(1, { name: 'Still Here' })
@@ -103,7 +138,7 @@ describe('FavoritesDesktop — частичный отказ (404)', () => {
   })
 })
 
-describe('FavoritesDesktop — полный отказ загрузки (все id 404)', () => {
+describe('Favorites — полный отказ загрузки (все id 404)', () => {
   it('показывает сообщение об ошибке загрузки, а не пустой грид', async () => {
     setFavorites([404, 405])
     mockMovieError(404, 404)
@@ -118,7 +153,7 @@ describe('FavoritesDesktop — полный отказ загрузки (все 
   })
 })
 
-describe('FavoritesDesktop — полный отказ загрузки (сетевая/5xx ошибка)', () => {
+describe('Favorites — полный отказ загрузки (сетевая/5xx ошибка)', () => {
   it('показывает error-фолбэк AsyncBoundary с Retry, а не EmptyState', async () => {
     setFavorites([500, 501])
     mockMovieError(500, 500)
@@ -133,7 +168,7 @@ describe('FavoritesDesktop — полный отказ загрузки (сет�
   })
 })
 
-describe('FavoritesDesktop — снятие с избранного на самой странице', () => {
+describe('Favorites — снятие с избранного на самой странице', () => {
   it('клик по сердечку убирает карточку из грида, остальные остаются', async () => {
     const user = userEvent.setup()
     setFavorites([1, 2])
@@ -169,5 +204,21 @@ describe('FavoritesDesktop — снятие с избранного на сам�
     )
 
     expect(await screen.findByText('No favorites yet')).toBeInTheDocument()
+  })
+
+  it('на мобильной ширине карточка тоже рендерит ровно одну кнопку избранного', async () => {
+    setViewportWidth(MOBILE_WIDTH)
+    setFavorites([1])
+    mockMovie(1, { name: 'Mobile Favorite' })
+
+    await renderPage()
+
+    expect(await screen.findByText('Mobile Favorite')).toBeInTheDocument()
+    // Один фильм в гриде — если бы Card рендерил два DOM-узла с одинаковым aria-label
+    // (регресс к состоянию до Task 2 слияния Card/MobileCard), getAllByRole вернул бы больше
+    // одного элемента.
+    expect(
+      screen.getAllByRole('button', { name: 'Remove from favorites' }),
+    ).toHaveLength(1)
   })
 })
