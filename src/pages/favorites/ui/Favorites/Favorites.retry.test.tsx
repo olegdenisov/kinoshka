@@ -74,16 +74,6 @@ const FAVORITES_KEY = 'kinoshka:favorites'
 beforeEach(() => {
   localStorage.clear()
   invalidate.mockClear()
-  // Favorites рендерит десктопный Header по умолчанию (useViewport() читает
-  // window.innerWidth при монтировании) — chrome не важен для этого теста, ширина не задаётся
-  // отдельно, полагаемся на jsdom-дефолт как и раньше делал FavoritesDesktop.retry.test.tsx.
-})
-
-afterEach(() => {
-  // Favorites рендерит Header, чей ThemeToggle выставляет data-theme на
-  // document.documentElement — jsdom document общий между тестами файла, сбрасываем, чтобы
-  // тема, выставленная одним тестом, не утекала в следующий (см. Header.test.tsx).
-  document.documentElement.removeAttribute('data-theme')
 })
 
 describe('Favorites — Retry реально переинвалидирует кэш и повторяет запрос', () => {

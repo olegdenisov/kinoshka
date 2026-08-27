@@ -521,7 +521,7 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
   заменить ветвление на `<SiteChrome />`.
 - Create: тесты на выбранный вариант (layout-route или `SiteChrome`)
 
-- [ ] **Сначала оценить layout-route** (`<Outlet/>` в `src/app/`, обёртывающий все роуты в
+- [x] **Сначала оценить layout-route** (`<Outlet/>` в `src/app/`, обёртывающий все роуты в
       `router.tsx`) как основной вариант, а не сразу проектировать `SiteChrome`: он не создаёт
       новый слайс, не требует кросс-импорта `@widgets/header`+`@widgets/mobile-chrome` из третьего
       виджета на том же слое (что иначе нарушает границы FSD — оба сейчас независимы друг от
@@ -529,12 +529,35 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
       позволяет вывести `activeNav` из `useLocation()` вместо прокидывания пропа с каждой страницы.
       Записать здесь явно, почему layout-route не подходит, если решение — всё же `SiteChrome`
       (вариант B) внутри `widgets/`.
-- [ ] Если принят вариант A — сразу в этой задаче убрать прямой рендер `Header`/`MobileHeader`+
+      **Принят вариант A (layout-route).** Конкретного блокера не нашлось: `src/app/layouts/
+      AppLayout.tsx` — обычный React-компонент с `<Outlet/>`, живёт в `app/` (не в `widgets/`),
+      импортирует `@widgets/header` и `@widgets/mobile-chrome` напрямую — это не кросс-импорт
+      между виджетами (что нарушало бы `pages → widgets → features → entities → shared`), а
+      обычный `app → widgets` импорт, разрешённый в любом направлении сверху вниз. `SiteChrome`
+      (вариант B) не потребовался.
+- [x] Если принят вариант A — сразу в этой задаче убрать прямой рендер `Header`/`MobileHeader`+
       `BottomNav` из всех шести исходных `*Desktop`/`*Mobile` файлов (см. Files-блок выше), а не
       только из трёх уже слитых в Task 3-5, и вывести `Header`'s `variant='search'` из текущего
       роута (`useLocation()`), а не из пропа — иначе на `/`, `/movie/:id` и `/search` в дереве
       будет по два chrome одновременно вплоть до Task 8-10.
-- [ ] Определить: `Header` безусловно (независимо от `variant`) вешает debounce-запись `?q` в URL
+      **Осознанное отклонение от буквального текста Files-блока — зафиксировано как принятое
+      решение, а не обнаружено постфактум.** `router.tsx` подключает `AppLayout` только над тремя
+      уже слитыми роутами — `/favorites`, `/popular`, `/recommendations` (Task 3-5). `/`,
+      `/movie/:id`, `/search` остаются top-level роутами вне `AppLayout` и **не** трогаются в этой
+      задаче: `HomeDesktop`/`HomeMobile`, `MovieDesktop`/`MovieMobile`, `SearchDesktop`/
+      `SearchMobile` по-прежнему рендерят свой `Header`/`MobileHeader`+`BottomNav` инлайн, как и
+      раньше. Причина — сам Files-блок предусматривает эту развилку явно ("если вариант A
+      откладывается до завершения Task 10, явно зафиксировать это здесь"): если бы все шесть
+      роутов сейчас подключились под `AppLayout`, три ещё не слитые страницы получили бы двойной
+      chrome одновременно в DOM (jsdom это не отфильтрует, реальный браузер — тоже, до тех пор,
+      пока эти три страницы не перестанут рендерить chrome сами) — то есть реальный визуальный
+      регресс, а не только шум в тестах. Tasks 8/9/10 каждый добавит свою запись в
+      `AppLayout.tsx`'s `ROUTE_CHROME`, переместит свой роут под `AppLayout` в `router.tsx` и
+      уберёт инлайн-рендер chrome из своей страницы — как часть собственного слияния Desktop/
+      Mobile, а не заранее здесь. Так как ни один из трёх подключённых сейчас роутов не
+      использует `variant='search'`, вопрос "откуда `Header` берёт `variant='search'`" не встаёт в
+      этой задаче — он входит в объём Task 10 вместе с переносом `/search`.
+- [x] Определить: `Header` безусловно (независимо от `variant`) вешает debounce-запись `?q` в URL
       (`Header.tsx`, эффект на строках 84-124). Глобальный `keydown`-листенер на ⌘K уже условный —
       он навешивается только при `variant === 'search'` (`Header.tsx:51`, ранний `return`), так что
       скрытый/неактивный `Header` на других роутах его не создаёт. Сейчас `Header` на мобильных
@@ -546,17 +569,53 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
       производительность DOM**, а тот факт, что скрытый `Header` продолжит безусловно писать/
       стирать `?q` в URL на роуте, где это не нужно), либо эффект `?q`-записи в `Header` явно
       гейтится тем же условием, что уже используется для ⌘K-листенера. Задокументировать выбор.
-- [ ] Если остаётся вариант "оба смонтированы, видимость через CSS" — использовать именно
+      **Решение: `Header` размонтирован через `useViewport()` в `AppLayout`, а не скрыт CSS-ом.**
+      `AppLayout` рендерит `isMobile ? <MobileHeader .../> : <Header .../>` — ровно один из двух
+      вариантов оказывается в дереве, второй не монтируется вовсе. Это то же самое точечное
+      использование `useViewport()`, которое уже было в `Favorites`/`Popular`/`Recommendations` до
+      этой задачи (Task 3-5) — Task 6 не меняет *механизм* (по-прежнему условный рендер, а не
+      `display: none`), а переносит его в одну общую точку вместо трёх копий. Благодаря этому
+      вопрос "как погасить `?q`-эффект у скрытого `Header`" снимается сам собой: раз `Header`
+      физически не монтирован на мобильном брейкпоинте, его эффекты (включая безусловный
+      `?q`-debounce на строках 84-124) не запускаются вовсе — Task 6 не потребовалось трогать
+      `Header.tsx` для этого случая. Правка самого `Header.tsx` (явный гейт на `?q`-эффект по
+      аналогии с ⌘K-листенером) осталась бы нужна только при выборе "оба смонтированы, видимость
+      через CSS" — от этого варианта решили отказаться (см. следующий пункт).
+- [x] Если остаётся вариант "оба смонтированы, видимость через CSS" — использовать именно
       `display: none` (не `visibility: hidden`/off-screen позиционирование), чтобы скрытый вариант
       выпадал из a11y-дерева и не давал дублирующихся `nav`/`banner` landmarks для скринридеров.
-- [ ] Свести соответствие ключей `activeNav` (`Header`: `home | movie | series | anime | favorites
+      **Не применимо — этот вариант не выбран.** `AppLayout` не монтирует оба варианта
+      одновременно (см. пункт выше), так что вопрос `display: none` vs `visibility: hidden` не
+      возникает: скрытый вариант просто не существует в дереве, что даёт тот же (и более сильный)
+      результат для a11y-дерева, чем `display: none` — не просто "выпадает из a11y-дерева", а не
+      создаёт лишних DOM-узлов и side-эффектов вовсе.
+- [x] Свести соответствие ключей `activeNav` (`Header`: `home | movie | series | anime | favorites
       | popular | recommendations`) и `active` (`BottomNav`: `home | search | lists | popular |
       recommendations | profile`) — множества пересекаются частично (`favorites`↔`lists` разные
       имена, `movie`/`series`/`anime` нет аналога в `BottomNav`, `search`/`profile` нет аналога в
       `Header`). Не "приводить к одному набору ключей" (невозможно без переименования одного из
       компонентов) — завести явную таблицу-маппинг `выбранный-ключ → {activeNav?, active?}` с
       понятным поведением для ключей без пары в одном из компонентов.
-- [ ] Под вариантом A решить судьбу пропов `MobileHeader`, которые сейчас передаются каждой
+      **Таблица-маппинг (задокументирована докблоком `AppLayout.tsx` и здесь):**
+
+      | Ключ | `Header.activeNav` | `BottomNav.active` |
+      | --- | --- | --- |
+      | home | `'home'` | `'home'` |
+      | movie / series / anime | тот же ключ | нет соответствия — `BottomNav` не умеет |
+      | favorites | `'favorites'` | `'lists'` (разные имена одного пункта) |
+      | popular | `'popular'` | `'popular'` |
+      | recommendations | `'recommendations'` | `'recommendations'` |
+      | search | нет соответствия — `Header` не умеет (это сам `variant='search'`, не nav pill) | `'search'` |
+      | profile | нет соответствия — `Header` не умеет (нет profile-пункта) | `'profile'` |
+
+      Реализовано как `ROUTE_CHROME: Record<string, { activeNav, active, title }>` в
+      `AppLayout.tsx`, ключ — `pathname`, а не абстрактный "выбранный ключ" — так как для трёх
+      роутов, подключённых сейчас, `pathname` и логический ключ навигации совпадают
+      1-в-1 (`/favorites` → `favorites`, и т.д.). Строки таблицы для `movie`/`search`/`profile`
+      пока не имеют записи в `ROUTE_CHROME` (эти роуты не подключены под `AppLayout` — см. пункт
+      выше) — таблица здесь задокументирована полностью на будущее (Task 9/10), а не только для
+      уже реализованных трёх строк.
+- [x] Под вариантом A решить судьбу пропов `MobileHeader`, которые сейчас передаются каждой
       страницей по-своему, а не выводятся из роута: `title` (`FavoritesMobile.tsx` — `'Favorites'`,
       `PopularMobile.tsx` — `'Popular'`, `RecommendationsMobile.tsx` — `'Recommended for you'`);
       и особенно `MovieMobile.tsx` (`onBack={() => navigate(-1)}`, `showSearch={false}`,
@@ -576,17 +635,52 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
       `useSearchParams()`, а не только к `useLocation().pathname`. Это — фикс из предыдущего ревью
       (см. `SearchDesktop.test.tsx`, тест "nav pill в шапке подсвечивается по `?type`"), при
       слиянии его нужно перенести на новое место, а не потерять вместе с удаляемым `SearchDesktop.tsx`.
-- [ ] Переключить `Favorites`/`Popular`/`Recommendations` (уже слитые в Task 3-5) на выбранное
+      **Реализовано только для текущих трёх роутов** (`title` per route: `'Favorites'`,
+      `'Popular'`, `'Recommended for you'` — точное соответствие тому, что раньше передавали
+      `FavoritesMobile.tsx`/`PopularMobile.tsx`/`RecommendationsMobile.tsx`) через
+      `ROUTE_CHROME`-карту в `AppLayout.tsx`, ключ — `pathname` (`useLocation().pathname`).
+      `MovieMobile`'s `onBack`/`showSearch`/`rightAction` и `BottomNav`'s `active='search'` на
+      `/movie/:id`, а также `Header`'s `?type`-driven `activeNav` на `/search` **осознанно не
+      реализованы сейчас** — они требуют либо расширения `RouteChromeConfig` необязательными
+      `onBack`/`showSearch`/`rightAction` слотами (Task 9), либо доступа к `useSearchParams()` в
+      дополнение к `useLocation().pathname` (Task 10), а не просто добавления `title` в текущую
+      карту. Это прямо задокументировано в докблоке `ROUTE_CHROME` в `AppLayout.tsx` как задел на
+      Task 9/10 — не забытый пробел, а явно отложенное решение, соответствующее тому, что Home/
+      Movie/Search вообще не подключены под `AppLayout` в этой задаче (см. второй пункт выше).
+- [x] Переключить `Favorites`/`Popular`/`Recommendations` (уже слитые в Task 3-5) на выбранное
       решение, убрать их временное `useViewport`-ветвление chrome.
-- [ ] Решить владение `Footer` (сейчас рендерится только в `HomeDesktop`, ни в одной другой
+      Сделано: `Favorites.tsx`/`Popular.tsx`/`Recommendations.tsx` больше не импортируют
+      `useViewport`, `Header`, `MobileHeader`, `BottomNav` — они рендерят только свой контент
+      (`<main>` с сеткой карточек), chrome добавляется снаружи через `AppLayout` в `router.tsx`.
+- [x] Решить владение `Footer` (сейчас рендерится только в `HomeDesktop`, ни в одной другой
       странице/варианте) — не в этой задаче принимать финальное решение (Footer относится к
       контенту `Home`, не к nav chrome), но зафиксировать здесь, что `SiteChrome`/layout-route его
       **не** включает, чтобы Task 8 не унаследовал его "случайно" через общий chrome-компонент.
-- [ ] Написать тесты: корректный `activeNav`/`active` доходит до обоих вариантов chrome; при
+      Подтверждено: `AppLayout.tsx` рендерит только `Header`/`MobileHeader`+`Outlet`+`BottomNav` —
+      никакого `Footer`. Финальное решение по владению `Footer` остаётся за Task 8 (`Home`), как и
+      было зафиксировано на этапе планирования.
+- [x] Написать тесты: корректный `activeNav`/`active` доходит до обоих вариантов chrome; при
       `variant='search'` рендерится search-специфика `Header`; если оба варианта в одном DOM-дереве
       (jsdom не применяет CSS, см. Testing Strategy) — тесты используют `within()`/`getAllByRole`
       с проверкой количества, а не `getByRole`.
-- [ ] `make test` — все зелёные до следующей задачи.
+      Написано в `src/app/layouts/AppLayout.test.tsx` (8 тестов, MemoryRouter + `Routes`/`Route`,
+      повторяющие структуру `router.tsx`): для каждого из трёх роутов (`/favorites`, `/popular`,
+      `/recommendations`) — десктопный тест (`Header` с правильным `activeNav`-пилюлей активной,
+      `BottomNav`-специфичный пункт "Lists" отсутствует) и мобильный тест (`MobileHeader` с
+      правильным `title`, `BottomNav` с правильным `active`-пунктом подсвеченным), плюс два теста
+      на то, что контент `<Outlet/>` рендерится независимо от chrome-варианта. `variant='search'`
+      не тестируется здесь — ни один из трёх текущих роутов его не использует (см. выше), тест на
+      него появится вместе с `/search` в Task 10. Поскольку `AppLayout` монтирует только один
+      chrome-вариант за раз (не оба одновременно под CSS), `within()`/`getAllByRole`-с-count в
+      строгом смысле не понадобились для различения chrome-вариантов друг от друга — но
+      `within(banner)` всё же используется там, где текст (`title` MobileHeader) совпадает с
+      текстом другого элемента в дереве (`BottomNav`'s подпись "Popular"), чтобы не наткнуться на
+      "found multiple elements" от `getByText` без скоупинга.
+- [x] `make test` — все зелёные до следующей задачи. `make test`: 73 файла / 612 тестов зелёные
+      (`AppLayout.test.tsx` добавлен, 8 новых тестов; 6 устаревших chrome-тестов, дублировавших
+      то же самое внутри `Favorites.test.tsx`/`Popular.test.tsx`/`Recommendations.test.tsx`, —
+      удалены как часть переноса ответственности за chrome в `AppLayout`); `make lint`,
+      `make typecheck`, `make build` — тоже зелёные.
 
 ### Task 7: Слияние `MovieRailDesktop`/`MovieRailMobile` в единый `MovieRail`
 

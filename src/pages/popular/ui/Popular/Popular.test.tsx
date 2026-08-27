@@ -82,41 +82,13 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks()
   vi.unstubAllEnvs()
-  // Popular рендерит Header (десктоп) или MobileHeader (мобильный) — оба содержат ThemeToggle,
-  // который выставляет data-theme на document.documentElement; jsdom document общий между
-  // тестами файла, сбрасываем, чтобы тема не утекала в следующий тест (см. Header.test.tsx).
-  document.documentElement.removeAttribute('data-theme')
 })
 
-describe('Popular — навигационный chrome (временное useViewport-ветвление)', () => {
-  // "Popular" — общее название пункта навигации и в Header, и в BottomNav (в отличие от
-  // Favorites, где Header называет пункт "Favorites", а BottomNav — "Lists"), поэтому им нельзя
-  // отличить один chrome от другого. Используем пункты, уникальные для каждого варианта:
-  // "Favorites" есть только в Header.navItems, "Lists" — только в BottomNav.items.
-  it('на десктопной ширине рендерит Header, а не BottomNav', async () => {
-    setViewportWidth(DESKTOP_WIDTH)
-    server.use(http.get(LIST_ENDPOINT, () => successResponse([])))
-    await renderPage()
-
-    expect(
-      screen.getByRole('button', { name: 'Favorites' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Lists' }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('на мобильной ширине рендерит MobileHeader+BottomNav, а не Header', async () => {
-    setViewportWidth(MOBILE_WIDTH)
-    server.use(http.get(LIST_ENDPOINT, () => successResponse([])))
-    await renderPage()
-
-    expect(screen.getByRole('button', { name: 'Lists' })).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Favorites' }),
-    ).not.toBeInTheDocument()
-  })
-})
+// Popular больше не рендерит Header/MobileHeader/BottomNav сам (Task 6 плана
+// docs/plans/20260827-mobile-first-adaptive-layout.md вынес выбор chrome в `AppLayout`,
+// `src/app/layouts/AppLayout.tsx`) — навигационный chrome теперь тестируется отдельно, в
+// `AppLayout.test.tsx`. `setViewportWidth`/`DESKTOP_WIDTH`/`MOBILE_WIDTH` остаются в этом файле
+// не для chrome, а для теста ниже ("на мобильной ширине карточка тоже рендерит rank-бейдж").
 
 describe('Popular — успешная загрузка', () => {
   it('рендерит карточки с rank-бейджами', async () => {
