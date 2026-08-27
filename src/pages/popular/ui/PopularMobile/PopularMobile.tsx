@@ -1,5 +1,5 @@
 import {
-  MobileCard,
+  Card,
   PopularBadge,
   invalidatePopularMovies,
   usePopularMovies,
@@ -38,7 +38,7 @@ const PopularGrid = () => {
   return (
     <div className={s.grid}>
       {movies.map(movie => (
-        <MobileCard
+        <Card
           key={movie.id}
           movie={movie}
           isFavorite={isFavorite(movie.id)}

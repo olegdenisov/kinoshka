@@ -1,4 +1,4 @@
-import { getMoviesByIds, MobileCard } from '@entities/movie'
+import { Card, getMoviesByIds } from '@entities/movie'
 import { useFavoriteMovies, useFavorites } from '@features/favorites'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 import { BottomNav, MobileHeader } from '@widgets/mobile-chrome'
@@ -33,7 +33,7 @@ const FavoritesGrid = () => {
   return (
     <div className={s.grid}>
       {movies.map(movie => (
-        <MobileCard
+        <Card
           key={movie.id}
           movie={movie}
           isFavorite={isFavorite(movie.id)}

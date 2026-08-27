@@ -53,22 +53,38 @@ export const Card = ({
 
         <div className={s.overlay} />
 
+        {/*
+          Rate/Add/Eye — decorative-extra controls, no touch-device analog
+          (hover doesn't mean anything on touch): rendered unconditionally,
+          hidden via `@media (hover: none)` in Card.module.css instead of a
+          JS isMobile check, so a real browser strips them from the tab
+          order too. Eye keeps its existing `variant === 'grid'` gate.
+        */}
         <div className={s.actions}>
           <CardBtn icon={<StarIcon size={10} />} label='Rate' />
           <CardBtn icon={<PlusIcon />} label='Add' />
           {variant === 'grid' && <CardBtn icon={<EyeIcon />} square />}
-          {onToggleFavorite && (
-            <CardBtn
-              icon={<HeartIcon size={10} filled={isFavorite} />}
-              active={isFavorite}
-              square
-              ariaLabel={
-                isFavorite ? 'Remove from favorites' : 'Add to favorites'
-              }
-              onClick={() => onToggleFavorite(movie.id)}
-            />
-          )}
         </div>
+
+        {/*
+          Единая кнопка избранного — один DOM-узел на оба брейкпоинта (было
+          два узла с одинаковым aria-label: CardBtn внутри .actions у Card и
+          отдельная .favoriteBtn у MobileCard). Позиция/вид переключаются
+          CSS-ом (top-right круг на мобильном, bottom-right квадрат в
+          hover-ряду на десктопе) — см. .favoriteBtn в Card.module.css.
+        */}
+        {onToggleFavorite && (
+          <button
+            type='button'
+            aria-label={
+              isFavorite ? 'Remove from favorites' : 'Add to favorites'
+            }
+            className={`${s.favoriteBtn} ${isFavorite ? s.favoriteBtnActive : ''}`}
+            onClick={() => onToggleFavorite(movie.id)}
+          >
+            <HeartIcon size={12} filled={isFavorite} />
+          </button>
+        )}
 
         <div className={s.topBadges}>
           <div className={s.ratingBadge}>
