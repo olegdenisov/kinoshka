@@ -4,6 +4,10 @@ This file provides guidance when working with code in this repository.
 
 Kinoshka — movie catalog SPA with a home feed, search, filters, and detail pages (overview, cast, media).
 
+## Git workflow
+
+`main` is protected — changes land only via pull request, never a direct push. Work on a branch and open a PR to merge into `main`.
+
 ## Commands
 
 A `Makefile` at the project root wraps all pnpm scripts. Prefer `make` over direct `pnpm` calls.
