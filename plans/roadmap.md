@@ -328,14 +328,21 @@
 
 **Как лучше:** правило в pure-функции (тестируется в 0.3). Composition: data → pure rule → query → data.
 
-### 2.5 Mobile-варианты
+### 2.5 Адаптивная вёрстка (mobile-first)
 
-- [ ] `HomeMobile` полноценная версия (вертикальные rails).
-- [ ] `SearchMobile` полноценная версия (drawer-фильтры).
-- [ ] `MovieMobile` полноценная версия.
-- [ ] Data-логика вынесена в `model/` и переиспользована между desktop+mobile.
+Изначально пункт был сформулирован как «доделать `*Mobile`-варианты» — переформулирован в отказ от самого паттерна парных `*Desktop`/`*Mobile` компонентов в пользу единой mobile-first адаптивной вёрстки. Обоснование и объём — в бэклоге: `docs/backlog/desktop-mobile-component-duplication.md`.
 
-**Как лучше:** не дублируй data-логику — общие хуки, различные UI-композиции.
+- [ ] Спланировать порядок миграции по страницам/виджетам и судьбу `useViewport()` (оставить для немногих действительно JS-зависимых развилок или убрать полностью).
+- [ ] `HomeDesktop`/`HomeMobile` → единый `Home` на мобильной CSS-базе (вертикальные rails расширяются в горизонтальные/сетку через media queries).
+- [ ] `SearchDesktop`/`SearchMobile` → единый `Search` (фильтры — drawer на мобильной базе, раскрываются в сайдбар на широких экранах).
+- [ ] `MovieDesktop`/`MovieMobile` → единый `Movie`.
+- [ ] `FavoritesDesktop`/`FavoritesMobile`, `PopularDesktop`/`PopularMobile`, `RecommendationsDesktop`/`RecommendationsMobile` → аналогично слиты в единые компоненты.
+- [ ] `Card`/`MobileCard` (`@entities/movie`), `mobile-chrome` (`MobileHeader`, `BottomNav`), логика внутри `movie-rail` — слить дублирующуюся разметку и стили.
+- [ ] Data-логика остаётся в `model/`, переиспользуется без дублирования (общие хуки, одна UI-композиция вместо двух).
+- [ ] Обновить `AGENTS.md` — раздел «Responsive pattern» (сейчас документирует парные `*Desktop`/`*Mobile` компоненты как обязательный паттерн для новых страниц/виджетов) переписать под mobile-first-подход.
+- [ ] Пересмотреть тесты, завязанные на `useViewport`/раздельный рендер `*Desktop`/`*Mobile`.
+
+**Как лучше:** мобильная раскладка — база (`min-width` media queries снизу вверх), а не производная от desktop. Не дублируй data-логику — общие хуки, одна UI-композиция вместо двух параллельных React-деревьев. Это сквозной рефакторинг, а не точечный фикс — мигрировать постранично, не одним PR.
 
 ### 2.6 Error boundaries
 
