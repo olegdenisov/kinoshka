@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
-import { MovieRailDesktop } from './MovieRailDesktop'
+import { MovieRail } from './MovieRail'
 
 const makeMovie = (id: number): Movie => ({
   id,
@@ -26,7 +26,7 @@ const makePopularMovie = (id: number, position: number): PopularMovie => ({
 const renderRail = (items: (Movie | PopularMovie)[], href?: string) =>
   render(
     <MemoryRouter>
-      <MovieRailDesktop
+      <MovieRail
         title='Popular'
         subtitle='Trending'
         items={items}
@@ -37,7 +37,7 @@ const renderRail = (items: (Movie | PopularMovie)[], href?: string) =>
 
 beforeEach(() => localStorage.clear())
 
-describe('MovieRailDesktop', () => {
+describe('MovieRail', () => {
   it('items=[] → рендерится EmptyState, карточки отсутствуют', () => {
     renderRail([])
 
@@ -48,7 +48,7 @@ describe('MovieRailDesktop', () => {
     expect(screen.queryAllByRole('link', { name: /Movie \d/ })).toHaveLength(0)
   })
 
-  it('заголовок секции (ссылка на /search) остаётся видимым при пустых items', () => {
+  it('заголовок секции (ссылка на /search по умолчанию) остаётся видимым при пустых items', () => {
     renderRail([])
 
     expect(screen.getByRole('link', { name: /Popular/ })).toHaveAttribute(
@@ -64,9 +64,16 @@ describe('MovieRailDesktop', () => {
     expect(screen.getByText('Movie 2')).toBeInTheDocument()
     expect(screen.queryByText('В подборке пока пусто')).not.toBeInTheDocument()
   })
+
+  it('каждая карточка обёрнута в .scrollItem (сохранённая обёртка бывшего MovieRailMobile)', () => {
+    const { container } = renderRail([makeMovie(1), makeMovie(2)])
+
+    const scrollItems = container.querySelectorAll('[class*="scrollItem"]')
+    expect(scrollItems).toHaveLength(2)
+  })
 })
 
-describe('MovieRailDesktop — избранное', () => {
+describe('MovieRail — избранное', () => {
   it('клик по сердечку карточки пишет id фильма в localStorage', async () => {
     const user = userEvent.setup()
     renderRail([makeMovie(1)])
@@ -91,7 +98,7 @@ describe('MovieRailDesktop — избранное', () => {
   })
 })
 
-describe('MovieRailDesktop — PopularMovie[] и rank-бейджи', () => {
+describe('MovieRail — PopularMovie[] и rank-бейджи', () => {
   it('рейл с PopularMovie[] рендерит PopularBadge внутри карточек', () => {
     renderRail([makePopularMovie(1, 3), makePopularMovie(2, 7)])
 
@@ -106,7 +113,7 @@ describe('MovieRailDesktop — PopularMovie[] и rank-бейджи', () => {
   })
 })
 
-describe('MovieRailDesktop — href заголовка', () => {
+describe('MovieRail — href заголовка', () => {
   it('с явным href="/popular" заголовок ведёт на /popular', () => {
     renderRail([makeMovie(1)], '/popular')
 
@@ -116,12 +123,48 @@ describe('MovieRailDesktop — href заголовка', () => {
     )
   })
 
-  it('без href заголовок ведёт на /search (дефолт)', () => {
+  it('без href заголовок ведёт на /search (дефолт, как раньше хардкодил MovieRailMobile)', () => {
     renderRail([makeMovie(1)])
 
     expect(screen.getByRole('link', { name: /Popular/ })).toHaveAttribute(
       'href',
       '/search',
     )
+  })
+})
+
+describe('MovieRail — карточки в рейле всегда variant="compact" (без Eye-кнопки)', () => {
+  it('на один элемент рейла ровно 5 кнопок: избранное + Rate + Add + 2 стрелки скролла — Eye-кнопка (только variant="grid") отсутствует', () => {
+    renderRail([makeMovie(1)])
+
+    // Card default variant post-Task-2 is 'grid' (renders an extra unlabeled
+    // Eye button) — MovieRail must pass variant='compact' explicitly so that
+    // extra button never shows up in rails.
+    expect(screen.getAllByRole('button')).toHaveLength(5)
+  })
+})
+
+describe('MovieRail — стрелки скролла', () => {
+  it('кнопки Previous/Next присутствуют в DOM (видимость управляется CSS hover/pointer media, не JS)', () => {
+    renderRail([makeMovie(1), makeMovie(2)])
+
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument()
+  })
+
+  it('клик по стрелке вызывает scrollBy на контейнере скролла', async () => {
+    const user = userEvent.setup()
+    renderRail([makeMovie(1), makeMovie(2)])
+
+    const scrollBySpy = vi.fn()
+    HTMLDivElement.prototype.scrollBy = scrollBySpy
+
+    await user.click(screen.getByRole('button', { name: 'Next' }))
+
+    expect(scrollBySpy).toHaveBeenCalledWith({ left: 480, behavior: 'smooth' })
+
+    await user.click(screen.getByRole('button', { name: 'Previous' }))
+
+    expect(scrollBySpy).toHaveBeenCalledWith({ left: -480, behavior: 'smooth' })
   })
 })

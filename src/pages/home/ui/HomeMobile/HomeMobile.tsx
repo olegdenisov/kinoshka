@@ -1,7 +1,7 @@
 import { CATALOG } from '@entities/movie'
 import { SearchIcon } from '@shared/ui'
 import { MobileHeader, BottomNav } from '@widgets/mobile-chrome'
-import { MovieRailMobile } from '@widgets/movie-rail'
+import { MovieRail } from '@widgets/movie-rail'
 import { useState } from 'react'
 import { Link } from 'react-router'
 
@@ -83,7 +83,7 @@ export const HomeMobile = () => {
 
       <div className={s.rails}>
         {sections.map((section, i) => (
-          <MovieRailMobile
+          <MovieRail
             key={i}
             title={section.title}
             subtitle={section.subtitle}

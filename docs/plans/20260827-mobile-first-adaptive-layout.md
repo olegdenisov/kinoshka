@@ -696,12 +696,20 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
   `MovieRail`, Task 8 донесёт до финального единого `Home`)
 - Create: `src/widgets/movie-rail/ui/MovieRail/MovieRail.test.tsx`
 
-- [ ] Свести `MovieRailDesktop`/`MovieRailMobile` в один компонент: базовая раскладка — нативный
+- [x] Свести `MovieRailDesktop`/`MovieRailMobile` в один компонент: базовая раскладка — нативный
       horizontal-scroll (как у `MovieRailMobile`); `ArrowBtn` рендерится всегда, видимость
       управляется `@media (hover: hover) and (pointer: fine)` (десктоп с мышью) вместо JS
       `isMobile`-проверки — устройство с тачскрином не увидит стрелки независимо от ширины экрана,
-      что даже точнее исходного намерения, чем брейкпоинт по ширине.
-- [ ] Свести пять реальных различий контракта (не только `ArrowBtn`/skeleton), подтверждённых
+      что даже точнее исходного намерения, чем брейкпоинт по ширине. Реализовано в
+      `src/widgets/movie-rail/ui/MovieRail/{MovieRail.tsx, MovieRail.module.css}`: CSS-модуль
+      написан mobile-first — база (`.scroll` с `grid-auto-columns: 140px`, `scroll-snap-type: x
+      mandatory`, `.header` с горизонтальным паддингом 20px) один-в-один повторяет бывший
+      `MovieRailMobile.module.css`, десктопный `@media (min-width: 720px)`-блок переопределяет те
+      же свойства значениями бывшего `MovieRailDesktop.module.css` (`grid-auto-columns: 200px`,
+      без snap, без горизонтального паддинга, `align-items: flex-end`). `.arrows { display: none }`
+      по умолчанию, `display: flex` только внутри `@media (hover: hover) and (pointer: fine)` —
+      `ArrowBtn` (перенесён как есть в `MovieRail/ArrowBtn/`) всегда в DOM, видимость чисто CSS.
+- [x] Свести пять реальных различий контракта (не только `ArrowBtn`/skeleton), подтверждённых
       чтением обоих файлов: (1) заголовок — `href?: string` даёт `<Link>`-обёртку у десктопа,
       мобильный хардкодит "See all →" на `/search` без пропа — итоговый компонент сохраняет
       `href?: string`, обе ссылки используют его; (2) `EmptyState` при пустом `items` — есть только
@@ -719,9 +727,54 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
       `MobileCard` — после Task 2 её карточки без явного `variant` получают дефолт `'grid'` (с
       `Eye`) — единый `MovieRail` должен явно передавать `variant='compact'` в обоих брейкпоинтах,
       сохраняя текущее отсутствие `Eye`-кнопки в рейлах.
-- [ ] Обновить все call sites, использующие `MovieRailDesktop`/`MovieRailMobile` напрямую.
-- [ ] Слить тесты `MovieRailDesktop.test.tsx`/`MovieRailMobile.test.tsx`.
-- [ ] `make test` — все зелёные до следующей задачи.
+      Все шесть подтверждены в реализации: (1) `href = '/search'` default-параметр, единственная
+      `<Link>`-обёртка заголовка используется в обоих брейкпоинтах (CSS решает только типографику);
+      (2) `items.length === 0 ? <EmptyState .../> : ...` перенесено дословно, безусловно; (3)
+      `type MovieRailProps = { items: (Movie | PopularMovie)[]; ... }` — взят более широкий
+      десктопный тип, `rankBadge` строится через `'position' in m ? <PopularBadge .../> :
+      undefined`, как было в `MovieRailDesktop`; (4) каждый `<Card>` по-прежнему обёрнут в
+      `<div className={s.scrollItem}>` (перенесено из `MovieRailMobile`, не потеряно при слиянии с
+      десктопной раскладкой); (5) `MovieRailSkeletonDesktop` перенесён в
+      `src/widgets/movie-rail/ui/MovieRail/{MovieRailSkeleton.tsx, MovieRailSkeleton.module.css}`
+      под новым именем `MovieRailSkeleton` (суффикс `Desktop` больше не соответствует действительности
+      — компонент используется одинаково на обоих брейкпоинтах), экспорт в
+      `src/widgets/movie-rail/index.ts` обновлён, call site `HomeDesktop.tsx` переключён на новое
+      имя (4 вызова `<AsyncBoundary fallback={<MovieRailSkeleton />} .../>`); (6) `<Card
+      variant='compact' .../>` передаётся явно и безусловно в единственном месте рендера карточки
+      внутри `MovieRail.tsx` — раньше это делал только `MovieRailDesktop`, `MovieRailMobile` вообще
+      не указывал `variant` (получал бы дефолтный `'grid'` после Task 2, то есть регрессию с
+      появлением `Eye`-кнопки в рейлах, если бы не был передан явно).
+- [x] Обновить все call sites, использующие `MovieRailDesktop`/`MovieRailMobile` напрямую.
+      Обновлены все шесть, перечисленные в Files-блоке: `src/pages/home/ui/PersonalRails/PersonalRails.tsx`,
+      `src/pages/home/ui/PopularMoviesRail/PopularMoviesRail.tsx`,
+      `src/pages/home/ui/TopAnimeRails/TopAnimeRails.tsx`,
+      `src/pages/home/ui/TrandingSeriesRail/TrandingSeriesRail.tsx` — импорт `MovieRailDesktop` →
+      `MovieRail`, без изменения передаваемых пропов; `src/pages/home/ui/HomeDesktop/HomeDesktop.tsx`
+      — импорт `MovieRailSkeletonDesktop` → `MovieRailSkeleton` (4 использования в `AsyncBoundary`
+      fallback); `src/pages/home/ui/HomeMobile/HomeMobile.tsx` — импорт `MovieRailMobile` →
+      `MovieRail` (временный шаг, `HomeMobile` остаётся отдельным компонентом от `HomeDesktop` до
+      Task 8, здесь только меняется импорт рейла, как и предписано Files-блоком). `grep -rn
+      "MovieRailDesktop\|MovieRailMobile\|MovieRailSkeletonDesktop" src` после изменений находит
+      только два текстовых упоминания в WHY-комментарии `MovieRail.module.css` (объясняет
+      происхождение mobile-first/desktop-override блоков), ни одного реального импорта/использования.
+- [x] Слить тесты `MovieRailDesktop.test.tsx`/`MovieRailMobile.test.tsx`.
+      Слиты в `src/widgets/movie-rail/ui/MovieRail/MovieRail.test.tsx`: все кейсы
+      `MovieRailDesktop.test.tsx` перенесены как есть (EmptyState на пустых items, заголовок-ссылка
+      на пустых items, рендер карточек, избранное туда-обратно, `PopularMovie[]`/`rankBadge`,
+      `href` явный/дефолтный `/search`) плюс единственный содержательный кейс из
+      `MovieRailMobile.test.tsx` (клик по сердечку/toggle — идентичен десктопному, дубликат не
+      заведён повторно). Добавлены новые тесты, специфичные для слияния: (a) обёртка `.scrollItem`
+      вокруг каждой карточки (`container.querySelectorAll('[class*="scrollItem"]')` — проверка
+      DOM-структуры, не брейкпоинт-специфичной видимости, см. Testing Strategy про jsdom и media
+      queries); (b) ровно 5 кнопок на один элемент рейла с избранным (favorite + Rate + Add + 2
+      стрелки скролла, без Eye — подтверждает, что `variant='compact'` реально передаётся, а не
+      просто задокументирован); (c) кнопки `Previous`/`Next` всегда в DOM и клик по ним вызывает
+      `scrollBy` с ожидаемым `left`/`behavior` (видимость по `hover`/`pointer` — CSS, не
+      тестируется в jsdom, см. Testing Strategy).
+- [x] `make test` — все зелёные до следующей задачи. `make test`: 72 файла / 614 тестов зелёные
+      (`MovieRailDesktop.test.tsx`+`MovieRailMobile.test.tsx` заменены одним `MovieRail.test.tsx`,
+      добавившим тесты сверх перенесённых — 614 против прежних 613); `make lint`, `make typecheck`,
+      `make build` — тоже зелёные.
 
 ### Task 8: Слияние `HomeDesktop`/`HomeMobile` в единый `Home` (+ перевод с `CATALOG` на живые данные)
 

@@ -5,7 +5,7 @@ import {
 } from '@entities/movie'
 import { AsyncBoundary, Footer } from '@shared/ui'
 import { Header } from '@widgets/header'
-import { MovieRailSkeletonDesktop } from '@widgets/movie-rail'
+import { MovieRailSkeleton } from '@widgets/movie-rail'
 
 import { HeroSection } from '../HeroSection'
 import { PersonalRails } from '../PersonalRails'
@@ -22,25 +22,25 @@ export const HomeDesktop = () => {
       <HeroSection />
       <div className={s.rails}>
         <AsyncBoundary
-          fallback={<MovieRailSkeletonDesktop />}
+          fallback={<MovieRailSkeleton />}
           onRetry={() => invalidatePopularMovies()}
         >
           <PopularMoviesRail />
         </AsyncBoundary>
         <AsyncBoundary
-          fallback={<MovieRailSkeletonDesktop />}
+          fallback={<MovieRailSkeleton />}
           onRetry={() => invalidateNewMovies({ type: ['tv-series'] })}
         >
           <TrandingSeriesRail />
         </AsyncBoundary>
         <AsyncBoundary
-          fallback={<MovieRailSkeletonDesktop />}
+          fallback={<MovieRailSkeleton />}
           onRetry={() => invalidateTopRatedMovies({ type: ['anime'] })}
         >
           <TopAnimeRails />
         </AsyncBoundary>
         <AsyncBoundary
-          fallback={<MovieRailSkeletonDesktop />}
+          fallback={<MovieRailSkeleton />}
           onRetry={() => invalidateTopRatedMovies()}
         >
           <PersonalRails />
