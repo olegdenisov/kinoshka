@@ -20,9 +20,9 @@ const MovieDetailContent = ({ id, isMobile }: MovieDetailContentProps) => {
   const { detail, images } = useMovieDetail(id)
 
   return isMobile ? (
-    <MovieMobile movie={detail} images={images} />
+    <MovieMobile key={id} movie={detail} images={images} />
   ) : (
-    <MovieDesktop movie={detail} images={images} />
+    <MovieDesktop key={id} movie={detail} images={images} />
   )
 }
 

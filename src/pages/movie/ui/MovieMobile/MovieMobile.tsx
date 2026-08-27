@@ -16,9 +16,6 @@ import { useNavigate } from 'react-router'
 
 import s from './MovieMobile.module.css'
 
-// Совпадает с FALLBACK_SCREENSHOT_COUNT в desktop-варианте (MediaTab.tsx).
-const FALLBACK_SCREENSHOT_COUNT = 8
-
 type LikedState = {
   rate: boolean
   list: boolean
@@ -324,13 +321,13 @@ type MobileMediaProps = {
 const MobileMedia = ({ m, images }: MobileMediaProps) => {
   return (
     <div className={s.mediaContainer}>
-      <div
-        className={s.trailerBox}
-        style={{
-          background: `linear-gradient(135deg, oklch(0.2 0.05 ${m.hue}), oklch(0.1 0.03 ${m.hue + 20}))`,
-        }}
-      >
-        {m.trailerUrl ? (
+      {m.trailerUrl && (
+        <div
+          className={s.trailerBox}
+          style={{
+            background: `linear-gradient(135deg, oklch(0.2 0.05 ${m.hue}), oklch(0.1 0.03 ${m.hue + 20}))`,
+          }}
+        >
           <a
             href={m.trailerUrl}
             target='_blank'
@@ -339,37 +336,23 @@ const MobileMedia = ({ m, images }: MobileMediaProps) => {
           >
             <PlayIcon size={18} />
           </a>
-        ) : (
-          <button
-            type='button'
-            disabled
-            className={`${s.trailerBtn} ${s.trailerBtnDisabled}`}
-          >
-            <PlayIcon size={18} />
-          </button>
-        )}
-      </div>
-      <div className={s.screenshotsLabel}>Screenshots</div>
-      <div className={s.screenshotsGrid}>
-        {images.length > 0
-          ? images.map(image => (
+        </div>
+      )}
+      {images.length > 0 && (
+        <>
+          <div className={s.screenshotsLabel}>Screenshots</div>
+          <div className={s.screenshotsGrid}>
+            {images.map(image => (
               <img
                 key={image.url}
                 src={image.previewUrl ?? image.url}
                 alt=''
                 className={s.screenshotImg}
               />
-            ))
-          : Array.from({ length: FALLBACK_SCREENSHOT_COUNT }, (_, i) => (
-              <div
-                key={i}
-                className={s.screenshotFallback}
-                style={{
-                  background: `linear-gradient(${135 + i * 20}deg, oklch(0.2 0.05 ${m.hue + i * 15}), oklch(0.1 0.03 ${m.hue}))`,
-                }}
-              />
             ))}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

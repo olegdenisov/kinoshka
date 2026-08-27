@@ -255,6 +255,43 @@ describe('MoviePage — /movie/-1 и /movie/1.5 (отрицательный/др
   })
 })
 
+describe('MoviePage — навигация между фильмами через похожие (backlog: tab не сбрасывался)', () => {
+  it('переход на другой фильм по ссылке из Similar titles сбрасывает активный таб на Overview', async () => {
+    mockMovie(1, {
+      similarMovies: [
+        { id: 2, name: 'Second Movie', year: 2023, type: 'movie' },
+      ],
+    })
+    mockMovie(2, { name: 'Second Movie' })
+    mockImages([])
+
+    const user = userEvent.setup()
+    const { container } = await renderMoviePage('/movie/1')
+
+    expect(screen.getAllByText('Orbit of Silence').length).toBeGreaterThan(0)
+
+    await user.click(screen.getByRole('button', { name: 'Cast' }))
+    expect(
+      container.querySelector('[class*="tabBtnActive"]'),
+    ).toHaveTextContent('Cast')
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Second Movie' }))
+    })
+
+    // "Second Movie" уже виден на странице фильма 1 как заголовок карточки в Similar
+    // titles — ждём не сам текст, а заголовок h1 (появляется только после того, как
+    // навигация внутри react-router'овского startTransition реально закоммитилась).
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Second Movie' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Orbit of Silence')).not.toBeInTheDocument()
+    expect(
+      container.querySelector('[class*="tabBtnActive"]'),
+    ).toHaveTextContent('Overview')
+  })
+})
+
 describe('MoviePage — общая ошибка (500)', () => {
   it('рендерит общий ErrorState, текстово отличимый от not-found-варианта', async () => {
     mockMovieError(777, 500, 'Internal Server Error')

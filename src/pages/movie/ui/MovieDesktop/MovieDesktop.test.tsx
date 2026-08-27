@@ -131,13 +131,14 @@ describe('MovieDesktop — fallback-ветки при отсутствующих
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(6)
   })
 
-  it('Media: images пуст — рендерит градиентный fallback вместо <img>, кнопка трейлера задизейблена', async () => {
+  it('Media: images пуст и trailerUrl отсутствует — секции Trailer и Screenshots скрыты целиком', async () => {
     const user = userEvent.setup()
     const { container } = renderMovieDesktop(MOVIE_NO_OPTIONALS, [])
 
     await user.click(screen.getByRole('button', { name: 'Media' }))
 
+    expect(screen.queryByText('Trailer')).not.toBeInTheDocument()
+    expect(screen.queryByText('Screenshots')).not.toBeInTheDocument()
     expect(container.querySelectorAll('img').length).toBe(0)
-    expect(container.querySelector('button:disabled')).toBeInTheDocument()
   })
 })
