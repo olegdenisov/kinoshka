@@ -1,0 +1,118 @@
+/* Mobile-first база: нативный horizontal-scroll со snap, как у бывшего
+   MovieRailMobile. Десктопный оверрайд ниже (min-width: 720px) укрупняет
+   типографику/раскладку и убирает scroll-snap — как у бывшего
+   MovieRailDesktop. */
+
+.section {
+  margin-bottom: 40px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 20px 14px;
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subtitle {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.titleLink {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+.titleArrow {
+  display: inline-block;
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-warm);
+  letter-spacing: 0.06em;
+}
+
+/* Стрелки скроллинга — только для устройств с мышью/трекпадом (hover+точный
+   pointer). На тачскрине скрыты вне зависимости от ширины экрана. */
+.arrows {
+  display: none;
+  gap: 6px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .arrows {
+    display: flex;
+  }
+}
+
+.scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 140px;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 0 20px 4px;
+  scroll-snap-type: x mandatory;
+}
+
+.scrollItem {
+  scroll-snap-align: start;
+}
+
+@media (min-width: 720px) {
+  .section {
+    margin-bottom: 64px;
+  }
+
+  .header {
+    align-items: flex-end;
+    margin-bottom: 20px;
+    padding: 0;
+  }
+
+  .subtitle {
+    font-size: 10.5px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .titleArrow {
+    margin-left: 10px;
+    font-size: 13px;
+  }
+
+  .scroll {
+    grid-auto-columns: 200px;
+    gap: 20px;
+    padding: 0 0 8px;
+    scroll-snap-type: none;
+  }
+
+  .scrollItem {
+    scroll-snap-align: none;
+  }
+}

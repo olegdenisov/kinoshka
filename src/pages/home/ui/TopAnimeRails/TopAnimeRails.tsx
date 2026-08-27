@@ -1,9 +1,7 @@
 import { useTopRatedMovies } from '@entities/movie'
-import { MovieRailDesktop } from '@widgets/movie-rail'
+import { MovieRail } from '@widgets/movie-rail'
 
 export const TopAnimeRails = () => {
   const series = useTopRatedMovies({ type: ['anime'] })
-  return (
-    <MovieRailDesktop title='Top anime' subtitle='Hand-picked' items={series} />
-  )
+  return <MovieRail title='Top anime' subtitle='Hand-picked' items={series} />
 }

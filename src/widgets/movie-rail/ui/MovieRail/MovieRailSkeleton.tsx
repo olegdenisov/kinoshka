@@ -1,10 +1,10 @@
 import { Skeleton } from '@shared/ui'
 
-import s from './MovieRailSkeletonDesktop.module.css'
+import s from './MovieRailSkeleton.module.css'
 
 const SKELETON_COUNT = 7
 
-export const MovieRailSkeletonDesktop = () => {
+export const MovieRailSkeleton = () => {
   return (
     <section className={s.section}>
       <div className={s.header}>

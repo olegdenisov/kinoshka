@@ -7,21 +7,21 @@ import { Link } from 'react-router'
 
 import { ArrowBtn } from './ArrowBtn'
 
-import s from './MovieRailDesktop.module.css'
+import s from './MovieRail.module.css'
 
-type MovieRailDesktopProps = {
+type MovieRailProps = {
   title: string
   subtitle: string
   items: (Movie | PopularMovie)[]
   href?: string
 }
 
-export const MovieRailDesktop = ({
+export const MovieRail = ({
   title,
   subtitle,
   items,
   href = '/search',
-}: MovieRailDesktopProps) => {
+}: MovieRailProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const { isFavorite, toggle } = useFavorites()
 
@@ -41,6 +41,9 @@ export const MovieRailDesktop = ({
             </Link>
           </h2>
         </div>
+        {/* Стрелки рендерятся всегда: видимость управляется CSS-медиа-фичей
+            (hover: hover) and (pointer: fine), а не JS isMobile-проверкой —
+            тачскрин любой ширины экрана их не увидит. */}
         <div className={s.arrows}>
           <ArrowBtn dir='left' onClick={() => scroll(-1)} />
           <ArrowBtn dir='right' onClick={() => scroll(1)} />
@@ -55,21 +58,22 @@ export const MovieRailDesktop = ({
       ) : (
         <div ref={scrollRef} className={`hide-scrollbar ${s.scroll}`}>
           {items.map(m => (
-            <Card
-              key={m.id}
-              movie={m}
-              variant='compact'
-              isFavorite={isFavorite(m.id)}
-              onToggleFavorite={toggle}
-              rankBadge={
-                'position' in m ? (
-                  <PopularBadge
-                    position={m.position}
-                    positionDiff={m.positionDiff}
-                  />
-                ) : undefined
-              }
-            />
+            <div key={m.id} className={s.scrollItem}>
+              <Card
+                movie={m}
+                variant='compact'
+                isFavorite={isFavorite(m.id)}
+                onToggleFavorite={toggle}
+                rankBadge={
+                  'position' in m ? (
+                    <PopularBadge
+                      position={m.position}
+                      positionDiff={m.positionDiff}
+                    />
+                  ) : undefined
+                }
+              />
+            </div>
           ))}
         </div>
       )}
