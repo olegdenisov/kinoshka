@@ -1,1 +1,0 @@
-export { RecommendationsMobile } from './RecommendationsMobile'
