@@ -364,19 +364,40 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
 - Create: `src/pages/favorites/ui/Favorites/Favorites.test.tsx` (объединяет актуальные кейсы из
   `FavoritesDesktop.test.tsx`, `FavoritesDesktop.retry.test.tsx`, `FavoritesMobile.test.tsx`)
 
-- [ ] Свести `FavoritesDesktop`/`FavoritesMobile` в один компонент: сетка карточек (`grid`) с
+- [x] Свести `FavoritesDesktop`/`FavoritesMobile` в один компонент: сетка карточек (`grid`) с
       `Card` (после Task 2 это уже один компонент вместо `Card`/`MobileCard`), число колонок —
       через CSS grid `auto-fill`/`minmax` вместо разных `SKELETON_COUNT`/`grid` разметок.
-- [ ] Навигационный chrome (`Header` vs `MobileHeader`+`BottomNav`) — оставить как временное
-      `useViewport`-ветвление внутри `Favorites` до Task 6 (не решать здесь, чтобы не блокировать
-      более простую задачу архитектурным вопросом навигации) **или**, если Task 6 решено делать
-      раньше по ходу работы — использовать готовую точку композиции. Явно зафиксировать, какой из
-      двух вариантов выбран, в этой задаче.
-- [ ] Перенести `EmptyState`/`AsyncBoundary`/retry-логику (`onRetry={() =>
-      getMoviesByIds.invalidate(ids)}`) без изменений в поведении.
-- [ ] Слить и адаптировать тесты трёх исходных файлов под новый `Favorites` (skeleton, empty state,
-      retry, рендер карточек) — успешные и ошибочные сценарии.
-- [ ] `make test` — все зелёные до следующей задачи.
+      Реализовано в `src/pages/favorites/ui/Favorites/{Favorites.tsx, Favorites.module.css}` —
+      единый `SKELETON_COUNT = 8`, единая сетка `.grid { grid-template-columns: repeat(auto-fill,
+      minmax(140px, 1fr)) }` с mobile-first базой и `@media (min-width: 720px)`-оверрайдом
+      (`minmax(260px, 1fr)`, больший `gap`/паддинги), вместо двух раздельных
+      `grid-template-columns: repeat(2, 1fr)` (мобильный, `SKELETON_COUNT=6`) /
+      `repeat(4, 1fr)` (десктоп, `SKELETON_COUNT=8`).
+- [x] Навигационный chrome (`Header` vs `MobileHeader`+`BottomNav`) — **выбран вариант "временное
+      `useViewport`-ветвление внутри `Favorites`"** (Task 6 в этой сессии ещё не выполнялся, идёт
+      после Task 3-5 по плану): `Favorites` вызывает `useViewport()` и рендерит
+      `isMobile ? <MobileHeader title='Favorites' /> : <Header activeNav='favorites' />`,
+      аналогично `{isMobile && <BottomNav active='lists' />}` внизу дерева — тот же выбор, что
+      раньше делал `FavoritesPage.tsx`, просто сведён в один компонент вместо рендера двух разных
+      компонентов страницы.
+- [x] Перенести `EmptyState`/`AsyncBoundary`/retry-логику (`onRetry={() =>
+      getMoviesByIds.invalidate(ids)}`) без изменений в поведении — перенесено дословно в
+      `Favorites.tsx` (тот же `FavoritesSkeletonGrid`/`FavoritesGrid`/`AsyncBoundary` каркас, что
+      был в обоих исходных файлах).
+- [x] Слить и адаптировать тесты трёх исходных файлов под новый `Favorites` (skeleton, empty state,
+      retry, рендер карточек) — успешные и ошибочные сценарии. Реализовано как **два** тестовых
+      файла (не один) — `Favorites.test.tsx` (MSW-based кейсы: пустой список, непустой список,
+      частичный 404, полный 404, полный 5xx, снятие с избранного, плюс два новых теста на
+      `useViewport`-ветвление chrome по ширине окна) и `Favorites.retry.test.tsx`
+      (`vi.mock('@entities/movie')`-based invalidate→refetch кейс из
+      `FavoritesDesktop.retry.test.tsx`) — по той же причине, по которой это было два файла в
+      исходном коде: `vi.mock` в retry-тесте подменяет `getMoviesByIds` для всего файла, смешивать
+      это с MSW-сценариями в одном файле означало бы либо терять реальные сетевые кейсы, либо
+      городить `vi.doMock`/`vi.resetModules` внутри одного теста. Files-блок этой задачи называл
+      только один файл — отклонение зафиксировано здесь явно.
+- [x] `make test` — все зелёные до следующей задачи. `make test`: 74 файла / 613 тестов зелёные;
+      `make lint`, `make typecheck`, `make build` — тоже зелёные (см. Testing Strategy — билд
+      прогоняется дополнительно, так как задача трогает `*Page.tsx`).
 
 ### Task 4: Слияние `PopularDesktop`/`PopularMobile` в единый `Popular`
 
