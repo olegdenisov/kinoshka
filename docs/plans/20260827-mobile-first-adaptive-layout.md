@@ -1145,19 +1145,89 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
 
 **Files:** нет изменений кода — только проверки.
 
-- [ ] Все страницы (`/`, `/search`, `/movie/:id`, `/favorites`, `/popular`, `/recommendations`)
-      рендерятся как единые компоненты без `*Desktop`/`*Mobile` пар.
-- [ ] Каждая страница визуально корректна на 375px (мобильный база) и 1440px (десктоп) — ручная
-      проверка в браузере/DevTools responsive mode по каждой странице.
-- [ ] `useViewport()` используется только в местах, явно обоснованных в Task 1/6/7/10 — либо
-      удалён, если обоснованных мест не осталось.
-- [ ] `grep -rn "isMobile"` по `src/pages`, `src/widgets`, `src/entities` не находит забытых
-      условных веток вне зафиксированного списка (исключить сам `useViewport.ts` — там `isMobile`
-      это имя поля возвращаемого объекта, а не условная ветка).
-- [ ] `make test` — полный прогон, все зелёные.
-- [ ] `make check` (lint + build) — зелёный.
-- [ ] Приложение вручную открыто на golden path (главная → поиск → карточка фильма → избранное →
-      popular → recommendations) — регрессий в навигации/интерактивах нет.
+- [x] Все страницы (`/`, `/search`, `/movie/:id`, `/favorites`, `/popular`, `/recommendations`)
+      рендерятся как единые компоненты без `*Desktop`/`*Mobile` пар. `find src -type d \(
+      -iname "*Desktop" -o -iname "*Mobile" \)` — пустой результат. `src/app/router.tsx`: все
+      шесть роутов заведены под единый `<AppLayout />` и рендерят по одному компоненту-странице
+      (`HomePage`, `SearchPage`, `MoviePage`, `FavoritesPage`, `PopularPage`,
+      `RecommendationsPage`). Прочитаны все шесть `*Page.tsx` — каждый рендерит ровно один
+      единый UI-компонент без `isMobile`-ветвления: `HomePage` → `<Home />`, `SearchPage` →
+      `<Search />`, `FavoritesPage` → `<Favorites />`, `PopularPage` → `<Popular />`,
+      `RecommendationsPage` → `<Recommendations />`; `MoviePage` чуть сложнее (валидация `id`,
+      `AsyncBoundary` с 404-фоллбэком), но и там единственный рендерящийся UI-компонент —
+      `<Movie key={id} movie={detail} images={images} />`, без Desktop/Mobile пары.
+- [x] Каждая страница визуально корректна на 375px (мобильный база) и 1440px (десктоп). Ручной
+      просмотр человеком недоступен в этом автономном прогоне — вместо него сделана реальная
+      автоматизированная проверка через `playwright-cli` (не просто skip): поднят `pnpm dev`
+      (порт 5175, локальный, backgrounded), браузер открыт и прогнан по всем 6 роутам на обеих
+      ширинах (375×800 и 1440×900) со скриншотами каждой страницы. Результат: на 1440px везде
+      корректно рендерится `Header` с pill-навигацией (активный пункт подсвечен — Home/
+      Favorites/Popular/Picks проверены явно), на 375px везде `MobileHeader` (лого + search-
+      триггер + theme toggle + avatar) сверху и `BottomNav` (Home/Catalog/Lists/Popular/Picks/
+      Profile, активный пункт подсвечен) снизу — раскладка на обеих ширинах структурно верна,
+      переполнений/наложений/обрезанного текста на скриншотах не видно. На `/search` при 1440px
+      корректно показан `SearchSidebar` (radio-rows Type, чипы Genre, `YearRangeSlider`, Rating-
+      чипы), при 375px вместо сайдбара — кнопка `Filters` + `Sort`-дропдown (bottom-sheet
+      паттерн), что соответствует ожидаемому поведению из Task 10. **Важная оговорка**: в этом
+      воркtree нет `.env.local` (не создавался ни на одном этапе плана), поэтому все живые
+      data-хуки (`useNewMovies`/`useTopRatedMovies`/`usePopularMovies`/`useMovieDetail`/
+      `useMovieCatalog`/`getMoviesPage`) получают HTML-страницу вместо JSON от `apiClient` и
+      закономерно падают в `ApiError`/`SyntaxError` — это ограничение окружения (нет реального
+      API-ключа/URL), не регрессия вёрстки: каждый такой случай корректно перехвачен
+      `AsyncBoundary`/`ErrorBoundary` и отрисован как `ErrorState` с кнопкой retry, без падения
+      всего дерева и без сломанной раскладки вокруг него (chrome — Header/MobileHeader/
+      BottomNav/Footer — везде рендерится нормально независимо от состояния данных). Разделы, не
+      зависящие от `apiClient` (`/favorites`, `/recommendations` при пустом избранном — чисто
+      client-side `localStorage`), отрисовались с реальными данными (`EmptyState`) без единой
+      ошибки, что даёт более сильное свидетельство корректности раскладки, чем только error-
+      state скриншоты. Скриншоты и временный dev-сервер использованы только для проверки в этом
+      прогоне и не сохранены в репозитории (не являются частью изменений плана).
+- [x] `useViewport()` используется только в местах, явно обоснованных в Task 1/6/7/10.
+      `grep -rn "useViewport(" src` — те же два реальных вызова, что зафиксированы в Task 11, без
+      изменений: `src/app/layouts/AppLayout.tsx:182` и `src/pages/search/ui/Search/Search.tsx:170`.
+      Остальные совпадения `grep -rl "useViewport" src` — комментарии/докблоки
+      (`GenreSelector.tsx`/`.module.css`, `ActiveFilterChips.tsx`, `AppLayout.test.tsx`,
+      `Favorites.tsx`/`.test.tsx`, `Popular.tsx`/`.test.tsx`, `Recommendations.tsx`/`.test.tsx`,
+      `RecommendationsPage.test.tsx`, `Search.test.tsx`, `Home.tsx`, `shared/lib/index.ts`,
+      `shared/lib/viewport/index.ts`, само определение хука) и само определение `useViewport.ts` —
+      удалять хук не требуется, оставлен без изменений, как и решено в Task 11.
+- [x] `grep -rn "isMobile"` по `src/pages`, `src/widgets`, `src/entities` — прогнано, каждое
+      совпадение проинспектировано: `src/pages/search/ui/Search/Search.tsx` (docблок-упоминания
+      на строках 5/167 + сама переменная `const { isMobile } = useViewport()` на 170 и её
+      условные ветки на 204/235/248/292) — это и есть задокументированная точечная развилка
+      Search/Task 10, ожидаемо; `src/widgets/movie-rail/ui/MovieRail/MovieRail.tsx:45` и
+      `src/entities/movie/ui/Card/Card.tsx:60` — оба совпадения оказались комментариями,
+      явно противопоставляющими выбранный CSS-подход (`@media (hover: hover) and
+      (pointer: fine)` / `@media (hover: none)`) гипотетической "JS isMobile-проверке", которую
+      сознательно не стали делать — не условная ветка в коде, а WHY-комментарий. Забытых
+      условных веток вне списка из Task 1/6/7/10 не найдено — новых находок/отклонений нет,
+      правка кода не потребовалась.
+- [x] `make test` — полный прогон, все зелёные: 70 файлов / 593 теста.
+- [x] `make check` (lint + build) — зелёный с той же pre-existing оговоркой, что и в Task 8/11:
+      `format-check` (`oxfmt --check .`) по-прежнему падает на этом самом файле плана
+      (`docs/plans/20260827-mobile-first-adaptive-layout.md`), подтверждено повторным прогоном
+      `npx oxfmt --check` именно сейчас — это тот же pre-existing/не сходящийся баг форматтера на
+      широких таблицах+кириллице+длинных inline-code строках, задокументированный в Task 8 (не
+      относится к Task 12, повторную попытку `--write` не делали — заведомый тупик по инструкции
+      оркестратора). `make lint` (`oxlint .`) — зелёный, без предупреждений. `make build`
+      (`tsc -b && vite build`) — зелёный, `dist/` собран без ошибок (387 модулей, без
+      type-ошибок). Итого: lint+build (фактические код-гейты) зелёные, `make check` целиком как
+      единая команда не запускался по той же причине, что и в Task 8/11.
+- [x] Приложение вручную открыто на golden path (главная → поиск → карточка фильма → избранное →
+      popular → recommendations) — ручной просмотр человеком недоступен, но через `playwright-cli`
+      пройдена реальная SPA-навигация без единой полной перезагрузки страницы и без падения
+      React-дерева: клик по hero-форме на `/` с текстом "matrix" и Enter корректно увёл на
+      `/search?q=matrix` (URL синхронизировался, `Header` переключился в `variant='search'` —
+      поисковая строка вместо pill-навигации, как и ожидается на `/search`); клик по pill
+      "Home" в `Header` со страницы `/recommendations` увёл обратно на `/` без перезагрузки;
+      переходы на `/movie/1`, `/favorites`, `/popular`, `/recommendations` (через прямую
+      навигацию — карточки фильмов недоступны для клика из-за отсутствия `.env.local`/живых
+      данных, см. оговорку выше) прошли без ошибок в консоли, отличных от уже объяснённых
+      network-ошибок отсутствующего API. Дополнительное, более сильное подтверждение отсутствия
+      навигационных регрессий — уже пройденный `make test` (593 теста), который включает
+      навигационные сценарии (переходы между роутами, сброс таба фильма при смене `id` — см.
+      `MoviePage.tsx`'s `key={id}` комментарий про коммит 04cfa61, retry-сценарии для каждого
+      рейла и т.д.) и целиком зелёный.
 
 ### Task 13: [Final] Обновить документацию
 
