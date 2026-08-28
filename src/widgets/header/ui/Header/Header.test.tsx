@@ -180,6 +180,59 @@ describe('Header (variant="search")', () => {
   })
 })
 
+/** Тот же `Header`, что и в `AppLayout`: variant пересчитывается из текущего pathname — компонент
+ * не размонтируется при смене роута (одна и та же позиция в дереве), меняются только пропы. */
+const HeaderRouteChrome = () => {
+  const { pathname } = useLocation()
+  const variant = pathname === '/search' ? 'search' : 'default'
+  return (
+    <Header
+      variant={variant}
+      activeNav={variant === 'search' ? 'search' : undefined}
+    />
+  )
+}
+
+describe('Header — ?q-эффект не пишет/не чистит URL вне variant="search"', () => {
+  // `Header` не размонтируется между роутами внутри `AppLayout` (см. его докблок и
+  // `HeaderRouteChrome` выше) — регрессионный тест на сценарий оттуда: смонтированный на /search
+  // с набранным ?q `Header` переключается в variant='default' при уходе на другой роут, и его
+  // ?q-debounce-эффект не должен ни писать, ни чистить query-параметры роута, куда перешли.
+  it('переход search → другой роут (без ремаунта Header) не оставляет/не чистит ?q целевого роута', () => {
+    lastSearch = ''
+    const { rerender } = render(
+      <MemoryRouter initialEntries={['/search?q=dune']}>
+        <HeaderRouteChrome />
+        <LocationProbe />
+        <NavigateProbe to={null} />
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByPlaceholderText('Search movies, series, anime…'),
+    ).toHaveValue('dune')
+
+    act(() => {
+      rerender(
+        <MemoryRouter initialEntries={['/search?q=dune']}>
+          <HeaderRouteChrome />
+          <LocationProbe />
+          <NavigateProbe to='/favorites?foo=bar' />
+        </MemoryRouter>,
+      )
+    })
+
+    // Debounce-таймер (250ms) успевает истечь — если бы эффект был безусловным, он бы догнал
+    // унаследованный draft='dune' и дописал/перезаписал ?q поверх ?foo=bar на новом роуте.
+    act(() => vi.advanceTimersByTime(250))
+
+    expect(lastSearch).toBe('?foo=bar')
+    expect(
+      screen.queryByPlaceholderText('Search movies, series, anime…'),
+    ).not.toBeInTheDocument()
+  })
+})
+
 describe('Header — ⌘K/Ctrl+K фокусирует поле поиска (подсказка была чисто визуальной)', () => {
   it('⌘K (metaKey) фокусирует инпут', () => {
     renderHeader(['/search'])

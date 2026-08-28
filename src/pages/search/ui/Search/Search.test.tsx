@@ -749,6 +749,62 @@ describe('Search (mobile-ветка) — BottomSheet сортировки пиш
   })
 })
 
+describe('Search (mobile-ветка) — футер BottomSheet фильтров (Reset/Show results)', () => {
+  it('Reset очищает активные фильтры, не закрывая bottom-sheet', async () => {
+    setViewportWidth(MOBILE_WIDTH)
+    mockCatalog([catalogDoc('Oppenheimer', 304)])
+
+    await renderSearch(['/search?genres=Drama&rating=8'])
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    })
+
+    // Rating-кнопка "8+" активна до сброса — тот же фильтр, что задан в URL выше.
+    expect(screen.getByRole('button', { name: '8+' }).className).toMatch(
+      /ratingBtnActive/,
+    )
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    })
+
+    expect(lastSearch).not.toContain('genres=')
+    expect(lastSearch).not.toContain('rating=')
+    // Bottom-sheet остаётся открытым — Reset не совпадает по семантике с закрытием
+    // (`BottomSheet` всегда рендерит children, открытость — CSS-класс на backdrop/sheet).
+    expect(screen.getByRole('button', { name: '8+' }).className).not.toMatch(
+      /ratingBtnActive/,
+    )
+    expect(
+      screen.getAllByRole('button', { name: 'Close' })[0].className,
+    ).toMatch(/backdropOpen/)
+  })
+
+  it('Show results закрывает bottom-sheet (backdrop теряет open-класс), не трогая уже применённые фильтры', async () => {
+    setViewportWidth(MOBILE_WIDTH)
+    mockCatalog([catalogDoc('Oppenheimer', 306)])
+
+    await renderSearch(['/search?genres=Drama'])
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    })
+    // Первый `BottomSheet` в дереве — фильтры (см. Search.tsx: фильтры рендерятся раньше сортировки).
+    const filterBackdrop = () =>
+      screen.getAllByRole('button', { name: 'Close' })[0]
+    expect(filterBackdrop().className).toMatch(/backdropOpen/)
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Show results' }))
+    })
+
+    expect(filterBackdrop().className).not.toMatch(/backdropOpen/)
+    // Фильтр остаётся применённым — Show results закрывает лист, не сбрасывая выбор.
+    expect(lastSearch).toContain('genres=Drama')
+  })
+})
+
 describe('Search (mobile-ветка) — избранное в гриде результатов', () => {
   it('клик по сердечку карточки пишет id фильма в localStorage', async () => {
     setViewportWidth(MOBILE_WIDTH)

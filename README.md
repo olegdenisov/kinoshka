@@ -53,7 +53,14 @@ src/
 
 ## Адаптивность
 
-Страницы и виджеты реализованы парами `*Desktop` / `*Mobile`. Хук `useViewport` (`src/shared/lib/viewport/useViewport.ts`) определяет, какой вариант отрендерить. Breakpoint: **720px**.
+Mobile-first: у каждой страницы/виджета один компонент и один CSS-модуль — мобильная раскладка безусловная (базовая), десктопные переопределения идут в блоках `@media (min-width: 720px)` поверх неё. Пары `*Desktop`/`*Mobile` не используются. Breakpoint: **720px** (`MOBILE_BREAKPOINT`, `src/shared/lib/viewport/useViewport.ts`).
+
+Хук `useViewport` остался, но его вызовы намеренно сужены до двух точечных JS-развилок — случаев, когда разница не CSS-вариант оформления, а выбор, какой компонент монтировать (и его сайд-эффекты):
+
+- `src/app/layouts/AppLayout.tsx` — выбирает `Header` (`@widgets/header`) или `MobileHeader`+`BottomNav` (`@widgets/mobile-chrome`).
+- `src/pages/search/ui/Search/Search.tsx` — выбирает `SearchSidebar` (`@widgets/search-sidebar`) или мобильный filter-bar + `BottomSheet`.
+
+Остальные бывшие `useViewport()`-развилки (старые `*Page.tsx`, стрелки скролла в `MovieRail` и т.п.) свелись к чистому CSS.
 
 ## Структура компонентов
 
