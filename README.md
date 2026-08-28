@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/olegdenisov/kinoshka/actions/workflows/ci.yml/badge.svg)](https://github.com/olegdenisov/kinoshka/actions/workflows/ci.yml)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
 [![Feature-Sliced Design](https://img.shields.io/badge/Architecture-FSD-blueviolet)](https://feature-sliced.design/)
 
@@ -10,7 +10,7 @@
 
 ## Стек
 
-- **React 19** + **TypeScript 6** + **Vite 8**
+- **React 19** + **TypeScript 7** + **Vite 8**
 - **React Router 7** — клиентская маршрутизация
 - **React Compiler** — автоматическая мемоизация (`babel-plugin-react-compiler`); ручные `useMemo` / `useCallback` / `memo` не нужны
 - **Vitest** + **Testing Library** + **MSW** — юнит и интеграционные тесты, мокирование API-запросов
