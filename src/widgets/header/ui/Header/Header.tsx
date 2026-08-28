@@ -82,6 +82,16 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
   }, [urlQuery])
 
   useEffect(() => {
+    // `Header` не размонтируется между роутами внутри `AppLayout` (см. его докблок) — на
+    // остальных роутах `variant='default'`, поисковый инпут не рендерится и `draft` не может
+    // измениться, так что этот гейт сейчас ничего не меняет по факту. Держим его явным (не
+    // полагаемся на "draft всё равно всегда ''"), чтобы эффект не писал/не чистил `?q` вообще
+    // ни на одном не-search роуте, даже если туда попадёт `?q` по другой причине — тот же приём,
+    // что уже используется для ⌘K-листенера выше.
+    if (variant !== 'search') {
+      return
+    }
+
     // Пишем в URL, только когда дебаунс "устоялся" (debouncedDraft === draft) — нет
     // необновлённого хвоста от предыдущей раскладки ввода. Это же защищает немедленный
     // сброс из clearQuery: пока внутренний таймер debouncedDraft ещё не догнал '',
@@ -121,7 +131,7 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
     // resync-эффекту выше принять наш собственный write за внешнее изменение.
     lastSyncedQueryRef.current =
       trimmed.length >= QUERY_MIN_LENGTH ? trimmed : ''
-  }, [debouncedDraft, draft, setSearchParams])
+  }, [variant, debouncedDraft, draft, setSearchParams])
 
   const clearQuery = () => {
     setDraft('')
