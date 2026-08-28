@@ -1102,20 +1102,44 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
   потребителя)
 - Modify: `src/shared/lib/index.ts`, `src/shared/lib/viewport/index.ts` (актуализировать экспорт)
 
-- [ ] `grep -rn "useViewport(" src` (вызовы, а не любые упоминания — см. Context про
+- [x] `grep -rn "useViewport(" src` (вызовы, а не любые упоминания — см. Context про
       `GenreSelector`'s докблок, который матчится на текстовый `useViewport`, но хук не вызывает)
       и сверить результат со списком из Task 1 — каждый оставшийся потребитель должен быть в
       списке обоснованных точечных развилок, иначе он либо забытый `*Desktop`/`*Mobile`-остаток
       (доделать слияние), либо не обоснован (вынести решение в Task 1-документ и договориться,
-      оставлять или убирать).
-- [ ] Если потребителей не осталось совсем — удалить `useViewport.ts` и его экспорты (не оставлять
-      неиспользуемый публичный API "на будущее" — противоречит YAGNI).
-- [ ] Проверить, что нигде не остались пустые/неиспользуемые директории `*Desktop`/`*Mobile`
+      оставлять или убирать). Прогнано: ровно два реальных вызова остались —
+      `src/app/layouts/AppLayout.tsx:182` (`const { isMobile } = useViewport()`, выбор chrome —
+      `Header` vs `MobileHeader`+`BottomNav`, обосновано в Task 1/Audit и Task 6) и
+      `src/pages/search/ui/Search/Search.tsx:170` (`const { isMobile } = useViewport()`, выбор
+      sidebar vs bottom-sheet фильтров + dropdown vs bottom-sheet сортировки, обосновано в Task
+      1/Audit и Task 10) — оба совпадают с итоговым списком из раздела Audit ("максимум две точки:
+      одна в chrome-решении Task 6, одна в `Search`-фильтрах Task 10"). Остальные совпадения
+      `grep -rl "useViewport" src` — чисто текстовые упоминания в докблоках/комментариях
+      (`GenreSelector.tsx`/`.module.css`, `ActiveFilterChips.tsx`, `AppLayout.test.tsx`,
+      `Favorites.tsx`/`.test.tsx`, `Popular.tsx`/`.test.tsx`, `Recommendations.tsx`/`.test.tsx`,
+      `RecommendationsPage.test.tsx`, `Search.test.tsx`, `Home.tsx`, `shared/lib/index.ts`,
+      `shared/lib/viewport/index.ts`, `useViewport.ts` само определение) — подтверждено чтением:
+      `Favorites.tsx`/`Popular.tsx`/`Recommendations.tsx`/`Home.tsx` содержат только комментарий
+      вида "больше не вызывает `useViewport`", хук не вызывают. Забытых `*Page.tsx`-развилок или
+      неучтённых вызовов не найдено — Task 6/8/9/10 полностью убрали ветвление из всех
+      merged-компонентов, кроме двух обоснованных точек.
+- [x] Если потребителей не осталось совсем — удалить `useViewport.ts` и его экспорты (не оставлять
+      неиспользуемый публичный API "на будущее" — противоречит YAGNI). Не применимо: два реальных
+      потребителя (`AppLayout.tsx`, `Search.tsx`) остались, оба обоснованы Task 1/Audit — `useViewport.ts`
+      и его экспорты (`src/shared/lib/index.ts`, `src/shared/lib/viewport/index.ts`) оставлены без
+      изменений, реализация хука не тронута.
+- [x] Проверить, что нигде не остались пустые/неиспользуемые директории `*Desktop`/`*Mobile`
       (`find src -type d -iname "*Desktop" -o -type d -iname "*Mobile"` — пусто, кроме случаев,
-      явно исключённых из скоупа плана, если такие найдутся).
-- [ ] Прогнать `make lint` — `noUnusedLocals`/`noUnusedParameters` (см. AGENTS.md) поймает мёртвые
-      импорты после удаления файлов.
-- [ ] `make test` и `make check` — все зелёные.
+      явно исключённых из скоупа плана, если такие найдутся). Прогнано: `find src -type d \(
+      -iname "*Desktop" -o -iname "*Mobile" \)` — пустой результат, ни одной директории не
+      осталось.
+- [x] Прогнать `make lint` — `noUnusedLocals`/`noUnusedParameters` (см. AGENTS.md) поймает мёртвые
+      импорты после удаления файлов. `make lint` (`oxlint .`) — зелёный, без предупреждений.
+- [x] `make test` и `make check` — все зелёные. Прогнано как четыре отдельные команды (см.
+      известную pre-existing проблему `format-check` на markdown-файлах, не относящуюся к этой
+      задаче — `make check` целиком не запускался): `make test` — 70 файлов / 593 теста зелёные;
+      `make lint` — зелёный; `make typecheck` (`tsc --noEmit`) — зелёный, без ошибок; `make build`
+      (`tsc -b && vite build`) — зелёный, `dist/` собран без ошибок.
 
 ### Task 12: Verify acceptance criteria
 
