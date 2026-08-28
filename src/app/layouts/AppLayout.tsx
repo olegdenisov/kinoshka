@@ -3,7 +3,13 @@ import { IconButton, ShareIcon } from '@shared/ui'
 import { Header } from '@widgets/header'
 import { BottomNav, MobileHeader } from '@widgets/mobile-chrome'
 import type { ReactNode } from 'react'
-import { Outlet, useLocation, useMatch, useNavigate } from 'react-router'
+import {
+  Outlet,
+  useLocation,
+  useMatch,
+  useNavigate,
+  useSearchParams,
+} from 'react-router'
 
 type BottomNavKey =
   | 'home'
@@ -47,16 +53,19 @@ type RouteChromeConfig = {
 /**
  * route → chrome-конфиг карта (Task 6 плана docs/plans/20260827-mobile-first-adaptive-layout.md).
  * Заполнена для маршрутов, уже подключённых под этот layout — `/favorites`, `/popular`,
- * `/recommendations` (Task 3-5), `/` (Task 8) и `/movie/:id` (Task 9, см. `MOVIE_CHROME` ниже —
+ * `/recommendations` (Task 3-5), `/` (Task 8), `/movie/:id` (Task 9, см. `MOVIE_CHROME` ниже —
  * не входит в эту карту, потому что ключ здесь — точный `pathname`, а `/movie/123` не совпадёт
- * с литералом `/movie/:id`).
+ * с литералом `/movie/:id`) и `/search` (Task 10, см. `SEARCH_CHROME` ниже — по той же причине,
+ * что `MOVIE_CHROME`, не входит в эту карту, хоть у `/search` и нет динамического сегмента: у
+ * этого роута `activeNav` вычисляется не по статической карте, а из `?type`, см. ниже).
  *   - `/` (Task 8): простой случай, `activeNav: 'home'`, `active: 'home'`, `title` не задаётся
  *     (см. докблок `RouteChromeConfig.title` — воспроизводит исходное поведение `HomeMobile`).
  *   - `/movie/:id` (Task 9): НЕ простой случай — см. `MOVIE_CHROME` и докблок
  *     `RouteChromeConfig.onBack`/`rightAction` выше.
  *   - `/search` (Task 10): `Header`'s `activeNav` там читается не из пути (путь один и тот же),
- *     а из `?type` в URL (`useFilterState()`/`getFilterFromSearchParams`) — этой карте, ключ
- *     которой строится по `pathname`, нужен доступ к `useSearchParams()` для этого случая.
+ *     а из `?type` в URL (`useFilterState()`/`getFilterFromSearchParams`) — реализовано в
+ *     `AppLayout` ниже через `useSearchParams()` + `isSearchRoute`, см. `SEARCH_CHROME` и
+ *     докблок `AppLayout`.
  *
  * Полная таблица соответствия `Header.activeNav` ↔ `BottomNav.active` (множества пересекаются
  * только частично, см. чек-бокс Task 6):
@@ -114,6 +123,29 @@ const MOVIE_CHROME: RouteChromeConfig = {
 }
 
 /**
+ * Chrome-конфиг для `/search` (Task 10) — тоже отдельная константа, не запись в `ROUTE_CHROME`,
+ * хоть тут и нет динамического сегмента: `pathname` для `/search` статичен и совпадение по
+ * литералу сработало бы, но `Header`'s `activeNav` здесь читается не из пути (см. докблок
+ * `ROUTE_CHROME` выше и `RouteChromeConfig.activeNav`), а из `?type` — единственный пункт, где
+ * значение приходит из `useSearchParams()`, а не из статической карты. Держать это как обычную
+ * запись в `ROUTE_CHROME` означало бы либо хранить там функцию вместо строки (усложняет тип
+ * остальных пяти статических записей ради одной), либо вычислять `activeNav` инлайново в
+ * `AppLayout` — выбран второй вариант: `SEARCH_CHROME` даёт только не-`activeNav` часть
+ * (`active`/`title`/`onBack`/`showSearch`/`rightAction`, все — как для обычного простого
+ * маршрута), а `activeNav` дополняется в `AppLayout` из `searchParams.get('type')`.
+ * `active: 'search'` — единственный ключ `BottomNav`, у которого нет аналога в `Header`
+ * (см. таблицу соответствия выше). `title`/`onBack`/`showSearch`/`rightAction` не заданы — на
+ * мобильном `/search` рендерит голый `<MobileHeader />` без пропов, воспроизводя точное
+ * поведение удалённого `SearchMobile.tsx` (`<MobileHeader />` без единого пропа).
+ * `Header`'s `variant='search'` (инлайн-поиск вместо nav pills, ⌘K-листенер) тоже не часть
+ * `RouteChromeConfig` — это чисто десктопная развилка `Header`, вычисляется в `AppLayout`
+ * рядом с `activeNav` через тот же `isSearchRoute`.
+ */
+const SEARCH_CHROME: RouteChromeConfig = {
+  active: 'search',
+}
+
+/**
  * Единая точка выбора навигационного chrome (`Header` vs `MobileHeader`+`BottomNav`) — заменяет
  * временное `useViewport`-ветвление, повторявшееся в каждой из `Favorites`/`Popular`/
  * `Recommendations` (Task 3-5 плана). Выбран вариант A (layout-route с `<Outlet/>`), а не
@@ -134,13 +166,36 @@ const MOVIE_CHROME: RouteChromeConfig = {
  * `/popular`, `/recommendations`, `/movie/:id`), не использует `variant='search'` — эта ветка
  * `Header` (и её ⌘K-листенер, и её `?q`-эффект в контексте реального поиска) присоединится
  * только вместе с `/search` в Task 10.
+ *
+ * **Task 10 (`/search`) добавила второй JS-fork поверх этого.** `/search` подключён под этот
+ * layout (см. `router.tsx`) вместо инлайн-рендера chrome внутри `Search` — тот же принцип, что
+ * применялся к `/`/`/favorites`/`/popular`/`/recommendations`/`/movie/:id` раньше. Отличие —
+ * `Header`'s `activeNav` там читается не из `pathname` (один и тот же путь для всех значений
+ * `?type`), а из `useSearchParams().get('type')`; `Header`'s `variant='search'` (инлайн-поиск
+ * вместо nav pills) — тоже развилка, зависящая от текущего роута, а не от `RouteChromeConfig`
+ * (см. `SEARCH_CHROME` выше). Оба вычисляются здесь через `isSearchRoute`, отдельно от
+ * `config`/`ROUTE_CHROME`/`MOVIE_CHROME`.
  */
 export const AppLayout = () => {
   const { pathname } = useLocation()
+  const [searchParams] = useSearchParams()
   const { isMobile } = useViewport()
   const navigate = useNavigate()
   const isMovieRoute = useMatch('/movie/:id') != null
-  const config = isMovieRoute ? MOVIE_CHROME : ROUTE_CHROME[pathname]
+  const isSearchRoute = pathname === '/search'
+  const config = isMovieRoute
+    ? MOVIE_CHROME
+    : isSearchRoute
+      ? SEARCH_CHROME
+      : ROUTE_CHROME[pathname]
+  const headerVariant = isSearchRoute ? 'search' : 'default'
+  // `|| 'search'` (не `??`), чтобы точно повторить прежнюю семантику `filters.type ?? 'search'`
+  // из удалённого `SearchDesktop.tsx` — `filters.type` там уже само по себе
+  // `searchParams.get('type') || null` (см. `getFilterFromSearchParams`), так что пустая строка
+  // в `?type=` тоже должна давать `'search'`, не пустую строку.
+  const headerActiveNav = isSearchRoute
+    ? searchParams.get('type') || 'search'
+    : config?.activeNav
 
   return (
     <>
@@ -152,7 +207,7 @@ export const AppLayout = () => {
           rightAction={config?.rightAction}
         />
       ) : (
-        <Header activeNav={config?.activeNav} />
+        <Header variant={headerVariant} activeNav={headerActiveNav} />
       )}
 
       <Outlet />

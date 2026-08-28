@@ -48,12 +48,14 @@
   cursor: pointer;
 }
 
-/* Mobile sizing (SearchMobile, opted in via the `compact` prop) — matches the removed inline
-   styles (height 34, fontSize 12.5, pill radius) so switching to the shared component isn't a
-   visual regression on mobile. Explicit variant class rather than a `@media` query — same
-   pattern as `ActiveFilterChips`'s `compact` prop: only one of SearchDesktop/SearchMobile ever
-   mounts at a time (see `useViewport`), so the caller already knows which size it wants and a
-   media query would just re-derive information the JS side already has. */
+/* Mobile sizing (Search's bottom-sheet filters variant, opted in via the `compact` prop) —
+   matches the removed inline styles (height 34, fontSize 12.5, pill radius) so switching to the
+   shared component isn't a visual regression on mobile. Explicit variant class rather than a
+   `@media` query — same pattern as `ActiveFilterChips`'s `compact` prop: after Task 10 (merge of
+   SearchDesktop/SearchMobile into one adaptive `Search`), only one of the sidebar/bottom-sheet
+   filter variants ever mounts at a time (see `useViewport()` inside `Search` itself now, not a
+   page-level branch) — the caller still knows which size it wants, and a media query would just
+   re-derive information the JS side already has. */
 .chipCompact {
   height: 34px;
   padding: 0 14px;

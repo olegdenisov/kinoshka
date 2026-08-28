@@ -1,33 +1,32 @@
+/* Мобильная база (Task 10): бывший инлайновый MobilePagination.module.css из SearchMobile.tsx —
+   компактные кнопки, перенос строки (flex-wrap), без hover-эффектов (тач не имеет hover). Desktop
+   override ниже (min-width: 720px) возвращает прежние крупные кнопки/hover из бывшего
+   Pagination.module.css — visual-only разница, JSX/логика (Pagination.tsx) общие для обоих
+   брейкпоинтов уже до этой задачи. */
 .container {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  margin-top: 48px;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin-top: 24px;
 }
 
 .btn {
-  min-width: 36px;
-  height: 36px;
-  padding: 0 10px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
   border-radius: 4px;
   background: transparent;
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.02em;
-  transition: all 140ms;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.btn:hover:not(:disabled) {
-  background: var(--border-faint);
-  color: var(--text-primary);
 }
 
 .btn:disabled {
@@ -41,18 +40,45 @@
   border-color: var(--accent-warm-border);
 }
 
-.btnActive:hover {
-  background: var(--accent-warm-soft);
-  color: var(--accent-warm);
-}
-
 .ellipsis {
-  width: 36px;
-  height: 36px;
+  min-width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text-faint);
+}
+
+@media (min-width: 720px) {
+  .container {
+    gap: 4px;
+    flex-wrap: nowrap;
+    margin-top: 48px;
+  }
+
+  .btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    transition: all 140ms;
+  }
+
+  .btn:hover:not(:disabled) {
+    background: var(--border-faint);
+    color: var(--text-primary);
+  }
+
+  .btnActive:hover {
+    background: var(--accent-warm-soft);
+    color: var(--accent-warm);
+  }
+
+  .ellipsis {
+    width: 36px;
+    height: 36px;
+  }
 }

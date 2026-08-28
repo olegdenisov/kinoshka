@@ -1,9 +1,29 @@
+/*
+ * Единый Search.module.css (Task 10) — слияние бывших SearchDesktop.module.css и
+ * SearchMobile.module.css. Мобильный вариант фильтров (filterBar/BottomSheet-контент) и
+ * десктопный вариант (aside-сайдбар/SearchControls) — не CSS-варианты одного дерева (см.
+ * Search.tsx докблок), поэтому их классы ниже не оборачиваются в @media: JS (isMobile в
+ * Search.tsx) решает, какое из двух под-деревьев вообще монтируется, класс каждого блока просто
+ * не существует в DOM на "чужом" брейкпоинте. Единственные части, где @media реально нужен —
+ * общая для обоих брейкпоинтов раскладка (.page/.layout/.main) и результаты
+ * (эти CSS-модули унифицированы отдельно, см. SearchResultsGrid.module.css/
+ * SearchResultSkeletonGrid.module.css/Pagination.module.css/SearchHeader.module.css).
+ */
+
 .page {
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
   padding-bottom: 80px;
 }
+
+@media (min-width: 720px) {
+  .page {
+    padding-bottom: 0;
+  }
+}
+
+/* ---- Мобильный sticky filter-bar (аналог удалённого SearchMobile.tsx) ---- */
 
 .filterBar {
   position: sticky;
@@ -92,145 +112,72 @@
   text-transform: uppercase;
 }
 
-.sectionHeader {
-  padding: 20px 20px 12px;
+/* ---- Раскладка: sidebar (десктоп) + основной контент ---- */
+
+.layout {
+  padding: 20px 20px 0;
 }
 
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  color: var(--text-muted);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-bottom: 4px;
+@media (min-width: 720px) {
+  .layout {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 32px 40px 80px;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 40px;
+  }
 }
 
-.title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
+.main {
+  min-width: 0;
 }
+
+/* ---- Результаты: обёртка/индикатор апдейта, общие для обоих брейкпоинтов ---- */
 
 .resultsWrapper {
   position: relative;
   transition: opacity 150ms ease;
 }
 
-.resultsWrapperUpdating {
+.updating {
   opacity: 0.5;
   pointer-events: none;
 }
 
-.updatingIndicator {
+.updatingBadge {
   position: absolute;
   top: 0;
-  right: 16px;
+  right: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-family: var(--font-mono);
-  font-size: 9.5px;
-  color: var(--text-muted);
+  font-size: 10.5px;
+  color: var(--text-faint);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .emptyWrap {
-  padding: 12px 20px 40px;
-}
-
-.emptyPaginationWrap {
+  padding: 12px 0 40px;
   text-align: center;
-  margin-top: 24px;
-}
-
-.resultsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-  padding: 0 16px;
 }
 
 .paginationSection {
   text-align: center;
-  margin-top: 24px;
-  padding: 0 16px;
 }
 
-.resultsCount {
-  margin-top: 14px;
+.countText {
+  margin-top: 16px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--text-faint);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.skeletonGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-  padding: 0 16px;
-}
-
-.skeletonItem {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.paginationContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  flex-wrap: wrap;
-}
-
-.pageBtn {
-  min-width: 34px;
-  height: 34px;
-  padding: 0 8px;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pageBtn:disabled {
-  color: var(--text-disabled);
-  cursor: default;
-}
-
-.pageBtnActive {
-  background: var(--accent-warm-soft);
-  color: var(--accent-warm);
-  border-color: var(--accent-warm-border);
-}
-
-.pageEllipsis {
-  min-width: 34px;
-  height: 34px;
-  padding: 0 8px;
-  border-radius: 4px;
-  border: none;
-  color: var(--text-faint);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 500;
-}
+/* ---- Мобильный BottomSheet-контент фильтров/сортировки (аналог удалённого SearchMobile.tsx) ---- */
 
 .filterSheetBody {
   display: flex;

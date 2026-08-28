@@ -1,20 +1,27 @@
+/* Мобильная база (Task 10) — размеры бывшего инлайнового заголовка SearchMobile.tsx
+   (.eyebrow/.title, 22px). Desktop override ниже (min-width: 720px) возвращает прежние
+   36px/8px-отступ бывшего SearchHeader.module.css — до этой задачи SearchHeader был
+   desktop-only компонентом (SearchMobile.tsx рендерил параллельный инлайновый блок вместо
+   него, не переиспользуя этот компонент вовсе — премисса плана "уже общий компонент" не
+   подтвердилась при чтении кода, см. Task 10 плана), теперь используется на обоих
+   брейкпоинтах, разница — целиком CSS. */
 .wrapper {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .breadcrumb {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 9.5px;
   color: var(--text-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 36px;
+  font-size: 22px;
   font-weight: 500;
   letter-spacing: -0.02em;
 }
@@ -22,8 +29,27 @@
 .count {
   margin-left: 14px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text-muted);
   letter-spacing: 0.06em;
   font-weight: 400;
+}
+
+@media (min-width: 720px) {
+  .wrapper {
+    margin-bottom: 24px;
+  }
+
+  .breadcrumb {
+    font-size: 10.5px;
+    margin-bottom: 8px;
+  }
+
+  .title {
+    font-size: 36px;
+  }
+
+  .count {
+    font-size: 14px;
+  }
 }

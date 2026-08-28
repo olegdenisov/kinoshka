@@ -1,5 +1,18 @@
+/* Мобильная база (Task 10) — 2 колонки, зазор бывшего SearchMobile.module.css's .resultsGrid.
+   Desktop override (min-width: 720px) — прежние 4 колонки/24px зазор бывшего
+   SearchResultsGrid.module.css. До этой задачи компонент использовался только SearchDesktop
+   (SearchMobile.tsx рендерил Card напрямую в собственном .resultsGrid вместо переиспользования
+   этого компонента — премисса плана "уже общий" не подтвердилась, см. Task 10 плана); теперь
+   используется на обоих брейкпоинтах. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (min-width: 720px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
 }
