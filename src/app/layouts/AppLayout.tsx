@@ -16,20 +16,28 @@ type RouteChromeConfig = {
    * докблок `AppLayout` про полную таблицу соответствия. */
   activeNav: string
   active: BottomNavKey
-  title: string
+  /**
+   * Необязательный — `/` (Task 8) сознательно не задаёт `title`: `MobileHeader` без `title`
+   * рендерит логотип + search-триггер (`showSearch && !title`, см. `MobileHeader.tsx`), что
+   * воспроизводит поведение исходного `HomeMobile.tsx` (`<MobileHeader />` без пропов вовсе).
+   * `/favorites`/`/popular`/`/recommendations` передают `title`, потому что их мобильный
+   * header — не входная точка поиска, а простой заголовок страницы.
+   */
+  title?: string
 }
 
 /**
  * route → chrome-конфиг карта (Task 6 плана docs/plans/20260827-mobile-first-adaptive-layout.md).
- * Заполнена только для маршрутов, уже подключённых под этот layout — `/favorites`, `/popular`,
- * `/recommendations` (см. Task 3-5). Task 6 сознательно НЕ подключает сюда `/`, `/movie/:id`,
- * `/search` — эти три страницы всё ещё рендерят Header/MobileHeader+BottomNav напрямую сами
- * (см. HomeDesktop/HomeMobile, MovieDesktop/MovieMobile, SearchDesktop/SearchMobile), и подключение
- * их роутов под `AppLayout` уже сейчас дало бы двойной chrome в DOM одновременно с их
- * собственным. Tasks 8/9/10 каждый добавит свою запись в эту карту и одновременно уберёт
- * собственный inline-рендер chrome из соответствующей страницы — как часть их собственного
- * слияния Desktop/Mobile, не заранее здесь. В частности:
- *   - `/` (Task 8): простой случай, `activeNav: 'home'`, `active: 'home'`.
+ * Заполнена для маршрутов, уже подключённых под этот layout — `/favorites`, `/popular`,
+ * `/recommendations` (Task 3-5) и `/` (Task 8, см. запись `home` ниже). Task 6 сознательно НЕ
+ * подключала сюда `/`, `/movie/:id`, `/search` — на тот момент эти три страницы ещё рендерили
+ * Header/MobileHeader+BottomNav напрямую сами (см. HomeDesktop/HomeMobile, MovieDesktop/
+ * MovieMobile, SearchDesktop/SearchMobile), и подключение их роутов под `AppLayout` сразу дало
+ * бы двойной chrome в DOM одновременно с их собственным. Tasks 8/9/10 каждый добавляет свою
+ * запись в эту карту и одновременно убирает собственный inline-рендер chrome из соответствующей
+ * страницы — как часть их собственного слияния Desktop/Mobile. В частности:
+ *   - `/` (Task 8): простой случай, `activeNav: 'home'`, `active: 'home'`, `title` не задаётся
+ *     (см. докблок `RouteChromeConfig.title` — воспроизводит исходное поведение `HomeMobile`).
  *   - `/movie/:id` (Task 9): НЕ простой случай — `MobileHeader` там получает `onBack`,
  *     `showSearch={false}` и `rightAction` (кнопка "поделиться", завязанная на page-local
  *     CSS-класс `MovieMobile.module.css`'s `.shareBtn`), которые эта карта в её текущем виде
@@ -52,6 +60,10 @@ type RouteChromeConfig = {
  *   profile         → activeNav=нет соответствия,  active='profile'
  */
 const ROUTE_CHROME: Record<string, RouteChromeConfig> = {
+  '/': {
+    activeNav: 'home',
+    active: 'home',
+  },
   '/favorites': {
     activeNav: 'favorites',
     active: 'lists',
@@ -86,9 +98,10 @@ const ROUTE_CHROME: Record<string, RouteChromeConfig> = {
  * none` `Header` продолжил бы это делать на роутах вроде `/favorites`, где `?q` не нужен и не
  * ожидается. Явное условное (не)монтирование через `useViewport()` — тот самый точечный JS-форк,
  * зафиксированный в Task 1/Audit как оправданный (CSS `hover`/`pointer` не может выразить "не
- * монтировать вообще"). Ни один из трёх роутов, подключённых сейчас, не использует
- * `variant='search'` — эта ветка `Header` (и её ⌘K-листенер, и её `?q`-эффект в контексте
- * реального поиска) присоединится только вместе с `/search` в Task 10.
+ * монтировать вообще"). Ни один из четырёх роутов, подключённых сейчас (`/`, `/favorites`,
+ * `/popular`, `/recommendations`), не использует `variant='search'` — эта ветка `Header` (и её
+ * ⌘K-листенер, и её `?q`-эффект в контексте реального поиска) присоединится только вместе с
+ * `/search` в Task 10.
  */
 export const AppLayout = () => {
   const { pathname } = useLocation()

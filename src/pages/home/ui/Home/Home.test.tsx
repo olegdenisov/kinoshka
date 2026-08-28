@@ -1,9 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { MemoryRouter } from 'react-router'
+import { useEffect } from 'react'
+import { MemoryRouter, useLocation } from 'react-router'
 
 import { server } from '../../../../test/setup'
-import { HomeDesktop } from './HomeDesktop'
+import { Home } from './Home'
 
 // Реальный retry (roadmap 1.6): рейл падает → ErrorState с Retry → клик реально бьёт
 // в сеть заново (invalidateTopRatedMovies/invalidatePopularMovies из hooks/index.ts), а не
@@ -11,8 +12,8 @@ import { HomeDesktop } from './HomeDesktop'
 // рейл на /v1.5/movie с уникальным ключом query — rating.kp + type=anime, никто другой его не
 // делит) мокается падающим, чтобы у теста была ровно одна ErrorState-инстанция для клика.
 const MOVIE_ENDPOINT = '*/v1.5/movie'
-// PopularMoviesRail (Task 9) больше не делит эндпоинт/кэш с PersonalRails — теперь он
-// на отдельном курируемом списке /v1.5/list/{slug} (usePopularMovies() → getPopularMovies).
+// PopularMoviesRail не делит эндпоинт/кэш с PersonalRails — он на отдельном курируемом списке
+// /v1.5/list/{slug} (usePopularMovies() → getPopularMovies).
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
 
 const doc = (overrides: Record<string, unknown> = {}) => ({
@@ -72,37 +73,40 @@ const popularListErrorResponse = () =>
     { status: 500 },
   )
 
-/** Единственный рейл с уникальным ключом query (rating.kp + type=anime) падает изначально
- * (первый запрос), остальные три рейла всегда успешны. После первого запроса TopAnimeRails
- * тоже начинает отвечать успехом — реальный второй запрос (после invalidate) его получит.
- * PopularMoviesRail мокается отдельным успешным хендлером на LIST_ENDPOINT — он больше не
- * делит эндпоинт с остальными тремя рейлами (все они на MOVIE_ENDPOINT). */
-const mockMovies = () => {
-  const requestsByKind = { topAnime: 0, other: 0 }
+const renderHome = async () => {
+  await act(async () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    )
+  })
+}
 
-  server.use(
-    http.get(MOVIE_ENDPOINT, ({ request }) => {
-      const url = new URL(request.url)
-      const hasRatingKp = url.searchParams.has('rating.kp')
-      const type = url.searchParams.get('type')
+/** Читает текущие pathname/search из роутера — тот же приём, что HeroSection.test.tsx, для
+ * проверки навигации без Routes-дерева (MemoryRouter без Route не размонтирует Home на переходе). */
+let lastPathname = '/'
+let lastSearch = ''
+const LocationProbe = () => {
+  const { pathname, search } = useLocation()
+  useEffect(() => {
+    lastPathname = pathname
+    lastSearch = search
+  }, [pathname, search])
+  return null
+}
 
-      if (hasRatingKp && type === 'anime') {
-        requestsByKind.topAnime += 1
-        if (requestsByKind.topAnime === 1) {
-          return errorResponse()
-        }
-        return successResponse([doc({ id: 99, name: 'Anime Recovered' })])
-      }
-
-      requestsByKind.other += 1
-      return successResponse([doc({ id: 1, name: 'Other Movie' })])
-    }),
-    http.get(LIST_ENDPOINT, () =>
-      popularListSuccessResponse([popularListItem()]),
-    ),
-  )
-
-  return requestsByKind
+const renderHomeWithLocationProbe = async () => {
+  lastPathname = '/'
+  lastSearch = ''
+  await act(async () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Home />
+        <LocationProbe />
+      </MemoryRouter>,
+    )
+  })
 }
 
 beforeEach(() => {
@@ -113,23 +117,96 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks()
   vi.unstubAllEnvs()
-  // HomeDesktop renders Header, whose ThemeToggle applies data-theme on
-  // document.documentElement — jsdom document общий между тестами файла, сбрасываем, чтобы
-  // тема, выставленная одним тестом, не утекала в следующий (см. Header.test.tsx).
-  document.documentElement.removeAttribute('data-theme')
 })
 
-describe('HomeDesktop — реальный retry для рейлов', () => {
-  it('рейл с ошибкой показывает ErrorState с Retry; клик реально бьёт в сеть и рендерит данные', async () => {
-    const requestsByKind = mockMovies()
+describe('Home — единый компонент, chrome больше не рендерится самим Home', () => {
+  it('не рендерит Header/MobileHeader/BottomNav сам — навигационный chrome теперь только в AppLayout (Task 6/8)', async () => {
+    server.use(
+      http.get(MOVIE_ENDPOINT, () => successResponse([doc()])),
+      http.get(LIST_ENDPOINT, () =>
+        popularListSuccessResponse([popularListItem()]),
+      ),
+    )
+
+    await renderHome()
+
+    // Ни Header (banner-роль), ни MobileHeader (тоже banner), ни BottomNav (nav-роль с
+    // характерными для BottomNav подписями) не смонтированы — Home рендерит только свой
+    // контент (hero, рейлы, Footer).
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Lists' }),
+    ).not.toBeInTheDocument()
+  })
+})
+
+describe('Home — Footer рендерится безусловно (Task 8 решение)', () => {
+  it('рендерит Footer в единственном дереве Home (раньше был только в HomeDesktop)', async () => {
+    server.use(
+      http.get(MOVIE_ENDPOINT, () => successResponse([doc()])),
+      http.get(LIST_ENDPOINT, () =>
+        popularListSuccessResponse([popularListItem()]),
+      ),
+    )
+
+    await renderHome()
+
+    expect(screen.getByText('© 2026 Kinoshka')).toBeInTheDocument()
+  })
+})
+
+describe('Home — HeroSection (общий, не парный) отправляет на /search из единого дерева', () => {
+  it('Enter в поле поиска (≥ QUERY_MIN_LENGTH) уводит на /search?q=...', async () => {
+    server.use(
+      http.get(MOVIE_ENDPOINT, () => successResponse([doc()])),
+      http.get(LIST_ENDPOINT, () =>
+        popularListSuccessResponse([popularListItem()]),
+      ),
+    )
+
+    await renderHomeWithLocationProbe()
+
+    const input = screen.getByPlaceholderText(
+      'Try "films from 2024 rated 8+" or a title…',
+    )
 
     await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomeDesktop />
-        </MemoryRouter>,
-      )
+      fireEvent.change(input, { target: { value: 'dune' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
     })
+
+    expect(lastPathname).toBe('/search')
+    expect(lastSearch).toBe('?q=dune')
+  })
+})
+
+describe('Home — реальный retry для рейлов (перенесено из HomeDesktop.test.tsx)', () => {
+  it('рейл с ошибкой показывает ErrorState с Retry; клик реально бьёт в сеть и рендерит данные', async () => {
+    const requestsByKind = { topAnime: 0, other: 0 }
+
+    server.use(
+      http.get(MOVIE_ENDPOINT, ({ request }) => {
+        const url = new URL(request.url)
+        const hasRatingKp = url.searchParams.has('rating.kp')
+        const type = url.searchParams.get('type')
+
+        if (hasRatingKp && type === 'anime') {
+          requestsByKind.topAnime += 1
+          if (requestsByKind.topAnime === 1) {
+            return errorResponse()
+          }
+          return successResponse([doc({ id: 99, name: 'Anime Recovered' })])
+        }
+
+        requestsByKind.other += 1
+        return successResponse([doc({ id: 1, name: 'Other Movie' })])
+      }),
+      http.get(LIST_ENDPOINT, () =>
+        popularListSuccessResponse([popularListItem()]),
+      ),
+    )
+
+    await renderHome()
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument()
     expect(requestsByKind.topAnime).toBe(1)
@@ -177,8 +254,7 @@ describe('HomeDesktop — реальный retry для рейлов', () => {
         const hasRatingKp = url.searchParams.has('rating.kp')
         const hasType = url.searchParams.has('type')
 
-        // rating.kp без type — теперь исключительно PersonalRails (PopularMoviesRail
-        // переехал на LIST_ENDPOINT в Task 9).
+        // rating.kp без type — исключительно PersonalRails (PopularMoviesRail на LIST_ENDPOINT).
         if (hasRatingKp && !hasType) {
           requestsByKind.sharedTopRated += 1
           if (requestsByKind.sharedTopRated === 1) {
@@ -192,13 +268,7 @@ describe('HomeDesktop — реальный retry для рейлов', () => {
       }),
     )
 
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomeDesktop />
-        </MemoryRouter>,
-      )
-    })
+    await renderHome()
 
     // Раздельные кэш-ключи/эндпоинты -> два независимых сетевых запроса, оба падают.
     expect(requestsByKind.popularList).toBe(1)
@@ -208,7 +278,7 @@ describe('HomeDesktop — реальный retry для рейлов', () => {
     const retryButtons = screen.getAllByText('Попробовать снова')
     expect(retryButtons).toHaveLength(2)
 
-    // Клик по retry только PopularMoviesRail (первый рейл в DOM-порядке HomeDesktop).
+    // Клик по retry только PopularMoviesRail (первый рейл в DOM-порядке Home).
     await act(async () => {
       fireEvent.click(retryButtons[0])
     })
@@ -242,13 +312,7 @@ describe('HomeDesktop — реальный retry для рейлов', () => {
       ),
     )
 
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomeDesktop />
-        </MemoryRouter>,
-      )
-    })
+    await renderHome()
 
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
     expect(screen.getAllByText('Any Movie').length).toBeGreaterThan(0)

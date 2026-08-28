@@ -13,15 +13,17 @@ const setViewportWidth = (width: number) => {
   window.innerWidth = width
 }
 
-// Повторяет структуру src/app/router.tsx: AppLayout — layout-route с <Outlet/>, три дочерних
-// роута — уже слитые в Task 3-5 страницы (здесь — плейсхолдер вместо реального Favorites/
-// Popular/Recommendations, проверяем именно композицию chrome + Outlet, а не их бизнес-логику,
-// которая уже покрыта Favorites.test.tsx/Popular.test.tsx/Recommendations.test.tsx).
+// Повторяет структуру src/app/router.tsx: AppLayout — layout-route с <Outlet/>, четыре дочерних
+// роута — уже слитые страницы (Task 3-5 Favorites/Popular/Recommendations, Task 8 Home; здесь —
+// плейсхолдеры вместо реальных компонентов, проверяем именно композицию chrome + Outlet, а не их
+// бизнес-логику, которая уже покрыта Home.test.tsx/Favorites.test.tsx/Popular.test.tsx/
+// Recommendations.test.tsx).
 const renderAt = (path: string) =>
   render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route element={<AppLayout />}>
+          <Route path='/' element={<div>Home page content</div>} />
           <Route
             path='/favorites'
             element={<div>Favorites page content</div>}
@@ -65,6 +67,18 @@ describe('AppLayout — Outlet рендерит контент страницы 
 // вовсе, а не просто скрыт CSS-ом (тот же приём, что Popular.test.tsx/Recommendations.test.tsx
 // использовали до Task 6 для различения chrome-вариантов).
 describe('AppLayout — десктоп рендерит Header, не MobileHeader/BottomNav', () => {
+  it('/: activeNav="home" подсвечивает пункт "Home"', () => {
+    renderAt('/')
+
+    const banner = screen.getByRole('banner')
+    expect(
+      within(banner).getByRole('button', { name: 'Home' }).className,
+    ).toMatch(/navPillActive/)
+    expect(
+      screen.queryByRole('button', { name: 'Lists' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('/favorites: activeNav="favorites" подсвечивает пункт "Favorites"', () => {
     renderAt('/favorites')
 
@@ -103,6 +117,20 @@ describe('AppLayout — десктоп рендерит Header, не MobileHeade
 })
 
 describe('AppLayout — мобильный рендерит MobileHeader+BottomNav, не Header', () => {
+  it('/: MobileHeader без title показывает search-триггер (не логотип-заголовок), BottomNav — active="home"', () => {
+    setViewportWidth(MOBILE_WIDTH)
+    renderAt('/')
+
+    // `/`-запись ROUTE_CHROME сознательно не задаёт `title` (см. докблок RouteChromeConfig.title
+    // в AppLayout.tsx) — MobileHeader без title рендерит search-триггер вместо заголовка,
+    // воспроизводя исходное поведение HomeMobile.tsx (`<MobileHeader />` без пропов).
+    const banner = screen.getByRole('banner')
+    expect(within(banner).getByText('Search…')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Home/ }).className).toMatch(
+      /navItemActive/,
+    )
+  })
+
   it('/favorites: MobileHeader получает title="Favorites", BottomNav — active="lists"', () => {
     setViewportWidth(MOBILE_WIDTH)
     renderAt('/favorites')

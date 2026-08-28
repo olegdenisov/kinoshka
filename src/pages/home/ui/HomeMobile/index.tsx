@@ -1,1 +1,0 @@
-export { HomeMobile } from './HomeMobile'

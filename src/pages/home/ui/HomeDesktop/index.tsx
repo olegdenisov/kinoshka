@@ -1,1 +1,0 @@
-export { HomeDesktop } from './HomeDesktop'
