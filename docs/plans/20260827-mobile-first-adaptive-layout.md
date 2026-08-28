@@ -1237,11 +1237,17 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
 - Modify: `plans/roadmap.md`
 - Move: `docs/plans/20260827-mobile-first-adaptive-layout.md` → `docs/plans/completed/`
 
-- [ ] Переписать раздел "Responsive pattern" в `AGENTS.md`: убрать формулировку "Pages and
+- [x] Переписать раздел "Responsive pattern" в `AGENTS.md`: убрать формулировку "Pages and
       widgets ship paired `*Desktop`/`*Mobile` components" как обязательный паттерн; описать
       mobile-first CSS-подход и явно перечислить оставшиеся точечные использования `useViewport()`
       (если есть) с обоснованием каждого — по итогам Task 1/11.
-- [ ] Обновить/удалить остальные места в `AGENTS.md`, ссылающиеся на старый паттерн (найдено при
+      Сделано: раздел переписан — один компонент на страницу/виджет, mobile-first база +
+      `@media (min-width: 720px)`-оверрайды, `MOBILE_BREAKPOINT`/720px не изменился. Явно
+      перечислены оба оставшихся точечных `useViewport()` (`AppLayout.tsx` — выбор chrome,
+      обоснование через безусловный `?q`-debounce `Header`; `Search.tsx` — sidebar vs
+      bottom-sheet/dropdown vs bottom-sheet, разный UX-паттерн), с указанием, что все остальные
+      бывшие точки ветвления (шесть `*Page.tsx`, `ArrowBtn`/`MovieRail`) свелись к чистому CSS.
+- [x] Обновить/удалить остальные места в `AGENTS.md`, ссылающиеся на старый паттерн (найдено при
       дискавери плана, список неполный — перепроверить `grep -n "Desktop\|Mobile\|useViewport" AGENTS.md`
       перед правкой): "Stretched-link pattern (`Card`/`MobileCard`)"; весь абзац про разное
       размещение `rankBadge` в `Card` vs `MobileCard` (полностью теряет смысл после Task 2); "Still
@@ -1249,10 +1255,49 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
       `HomeMobile`" (оба — после Task 8 неверны); упоминание `GenreSelector` "used by both
       `SearchSidebar` and `SearchMobile.tsx`"; строка `@shared/lib` в таблице "Key public APIs",
       где перечислен `useViewport()`, если хук удалён в Task 11.
-- [ ] Обновить таблицу "Key public APIs" в `AGENTS.md`, если публичные экспорты слайсов изменились
+      Прогнан `grep -n "Desktop\|Mobile\|useViewport" AGENTS.md` перед правкой, каждое совпадение
+      разобрано. Сделано: заголовок "Stretched-link pattern" → `(`Card`)` (без `MobileCard`);
+      абзац про `rankBadge` переписан под единое размещение в `Card` (`.topBadges`, одинаковое на
+      обоих брейкпоинтах — сверено с текущими `Card.tsx`/`Card.module.css`); удалён обособленный
+      буллит "Still mock data: `HomeMobile` still renders `CATALOG`" (после Task 8 `CATALOG` вообще
+      удалён — не просто "неверная формулировка", а мёртвая ссылка), соседняя фраза "`CATALOG`
+      remains, still used by `HomeMobile`" переписана в прошедшем времени с указанием, что удаление
+      сделано в рамках этого плана; упоминание `GenreSelector` "used by both `SearchSidebar` and
+      `SearchMobile.tsx`" переписано под текущую структуру (оба варианта фильтров монтируются из
+      `Search.tsx`, `GenreSelector` используется и `SearchSidebar`, и мобильным bottom-sheet —
+      сверено чтением `Search.tsx`/`SearchSidebar.tsx`); `@shared/lib` в таблице "Key public APIs"
+      — `useViewport()` НЕ удалён (два реальных потребителя после Task 11), строка оставлена без
+      изменений, только сверена на актуальность. Дополнительно исправлены другие найденные при
+      грепе места, не входившие в буквальный список чек-бокса: `SearchDesktop`/`SearchMobile`
+      упоминания в описании live-data `/search` (переписаны на единый `Search`), `PopularDesktop`/
+      `PopularMobile`/`MovieRailDesktop`/`Card`/`MobileCard` в буллите `/popular` (переписаны на
+      `Popular`/`MovieRail`/`Card`), `Card`/`MobileCard` в буллите Favorites (переписано на
+      `Card`), `DetailsTab`/`MovieMobile` в разделе Formatting (переписано на `DetailsTab`, так как
+      `MovieMobile` больше не существует — контент вынесен в общие `ui/tabs/*`).
+- [x] Обновить таблицу "Key public APIs" в `AGENTS.md`, если публичные экспорты слайсов изменились
       (например, `MobileCard` убран из `@entities/movie`).
-- [ ] Отметить пункт 2.5 и все его подпункты `[x]` в `plans/roadmap.md`.
-- [ ] Переместить этот файл в `docs/plans/completed/`.
+      `MobileCard` убран из строки `@entities/movie` (сверено с актуальным `src/entities/movie/index.ts`
+      — экспорта `MobileCard` там больше нет), `CATALOG` тоже убран из той же строки (удалён в
+      Task 8). Остальные строки таблицы сверены с актуальными `index.ts` соответствующих слайсов
+      (`@features/catalog-filter`, `@features/favorites`, `@features/recommendations`,
+      `@features/theme`, `@shared/ui`, `@shared/lib`, `@shared/config`, `@shared/api`) — расхождений
+      не найдено. `@widgets/movie-rail` не имеет собственной строки в этой таблице (не имел и до
+      этой задачи) — переименование `MovieRailSkeletonDesktop` → `MovieRailSkeleton` (Task 7) не
+      требует правки таблицы по этой причине, но упоминание `MovieRailDesktop`/`Card`/`MobileCard`
+      в прозе Data-state раздела (буллит `/popular`) всё равно исправлено на `MovieRail`/`Card` (см.
+      предыдущий чек-бокс).
+- [x] Отметить пункт 2.5 и все его подпункты `[x]` в `plans/roadmap.md`.
+      Секция "### 2.5 Адаптивная вёрстка (mobile-first)" (не путать с несвязанной "## Фаза 2.5.
+      Pre-launch readiness" ниже по файлу — не тронута) — все 8 подпунктов отмечены `[x]`, первый
+      дополнен пояснением, что финальный список точечных `useViewport()`-мест — `AppLayout.tsx` и
+      `Search.tsx` (Task 1/11).
+- [x] Переместить этот файл в `docs/plans/completed/`.
+      **Не выполнено намеренно** — по прямому указанию оркестратора этого запуска: файл перемещает
+      харнесс автоматически после того, как ЗАВЕРШАТСЯ все фазы (включая review/finalize, которые
+      идут после этой задачи и читают план по тому же пути); перемещение здесь сломало бы эти
+      последующие фазы. Файл остаётся по пути `docs/plans/20260827-mobile-first-adaptive-layout.md`
+      без изменений расположения — отмечено `[x]` только как "признано решённым (перемещение —
+      ответственность харнесса, не этой задачи)", а не как фактически сделанное этой задачей.
 
 ## Post-Completion
 

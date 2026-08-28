@@ -332,15 +332,15 @@
 
 Изначально пункт был сформулирован как «доделать `*Mobile`-варианты» — переформулирован в отказ от самого паттерна парных `*Desktop`/`*Mobile` компонентов в пользу единой mobile-first адаптивной вёрстки. Обоснование и объём — в бэклоге: `docs/backlog/desktop-mobile-component-duplication.md`.
 
-- [ ] Спланировать порядок миграции по страницам/виджетам и судьбу `useViewport()` (оставить для немногих действительно JS-зависимых развилок или убрать полностью).
-- [ ] `HomeDesktop`/`HomeMobile` → единый `Home` на мобильной CSS-базе (вертикальные rails расширяются в горизонтальные/сетку через media queries).
-- [ ] `SearchDesktop`/`SearchMobile` → единый `Search` (фильтры — drawer на мобильной базе, раскрываются в сайдбар на широких экранах).
-- [ ] `MovieDesktop`/`MovieMobile` → единый `Movie`.
-- [ ] `FavoritesDesktop`/`FavoritesMobile`, `PopularDesktop`/`PopularMobile`, `RecommendationsDesktop`/`RecommendationsMobile` → аналогично слиты в единые компоненты.
-- [ ] `Card`/`MobileCard` (`@entities/movie`), `mobile-chrome` (`MobileHeader`, `BottomNav`), логика внутри `movie-rail` — слить дублирующуюся разметку и стили.
-- [ ] Data-логика остаётся в `model/`, переиспользуется без дублирования (общие хуки, одна UI-композиция вместо двух).
-- [ ] Обновить `AGENTS.md` — раздел «Responsive pattern» (сейчас документирует парные `*Desktop`/`*Mobile` компоненты как обязательный паттерн для новых страниц/виджетов) переписать под mobile-first-подход.
-- [ ] Пересмотреть тесты, завязанные на `useViewport`/раздельный рендер `*Desktop`/`*Mobile`.
+- [x] Спланировать порядок миграции по страницам/виджетам и судьбу `useViewport()` (оставить для немногих действительно JS-зависимых развилок или убрать полностью). Выполнено в Task 1/11 плана `docs/plans/20260827-mobile-first-adaptive-layout.md`: хук оставлен, но сужен ровно до двух точечных мест (`AppLayout.tsx` — выбор chrome, `Search.tsx` — выбор sidebar/bottom-sheet).
+- [x] `HomeDesktop`/`HomeMobile` → единый `Home` на мобильной CSS-базе (вертикальные rails расширяются в горизонтальные/сетку через media queries).
+- [x] `SearchDesktop`/`SearchMobile` → единый `Search` (фильтры — drawer на мобильной базе, раскрываются в сайдбар на широких экранах).
+- [x] `MovieDesktop`/`MovieMobile` → единый `Movie`.
+- [x] `FavoritesDesktop`/`FavoritesMobile`, `PopularDesktop`/`PopularMobile`, `RecommendationsDesktop`/`RecommendationsMobile` → аналогично слиты в единые компоненты.
+- [x] `Card`/`MobileCard` (`@entities/movie`), `mobile-chrome` (`MobileHeader`, `BottomNav`), логика внутри `movie-rail` — слить дублирующуюся разметку и стили.
+- [x] Data-логика остаётся в `model/`, переиспользуется без дублирования (общие хуки, одна UI-композиция вместо двух).
+- [x] Обновить `AGENTS.md` — раздел «Responsive pattern» (сейчас документирует парные `*Desktop`/`*Mobile` компоненты как обязательный паттерн для новых страниц/виджетов) переписать под mobile-first-подход.
+- [x] Пересмотреть тесты, завязанные на `useViewport`/раздельный рендер `*Desktop`/`*Mobile`.
 
 **Как лучше:** мобильная раскладка — база (`min-width` media queries снизу вверх), а не производная от desktop. Не дублируй data-логику — общие хуки, одна UI-композиция вместо двух параллельных React-деревьев. Это сквозной рефакторинг, а не точечный фикс — мигрировать постранично, не одним PR.
 
