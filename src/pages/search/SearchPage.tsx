@@ -1,8 +1,5 @@
-import { useViewport } from '../../shared/lib/viewport/useViewport'
-import { SearchDesktop } from './ui/SearchDesktop'
-import { SearchMobile } from './ui/SearchMobile'
+import { Search } from './ui/Search'
 
 export const SearchPage = () => {
-  const { isMobile } = useViewport()
-  return isMobile ? <SearchMobile /> : <SearchDesktop />
+  return <Search />
 }

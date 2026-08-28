@@ -973,7 +973,7 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
   механику `compact` пропа для обоих согласно решению из Task 1)
 - Create: `src/pages/search/ui/Search/Search.test.tsx`
 
-- [ ] Реализовать решение из Task 1 по `SearchSidebar` vs bottom-sheet фильтрам: оба варианта
+- [x] Реализовать решение из Task 1 по `SearchSidebar` vs bottom-sheet фильтрам: оба варианта
       разметки остаются (это тот самый "разный UX" случай из Solution Overview, не CSS-only), но
       выбор между ними и выбор `Pagination`-варианта переезжают в единый `Search`, а не
       разбросаны по `SearchDesktop.tsx`/`SearchMobile.tsx` отдельно. **Отклонение от буквальной
@@ -984,24 +984,114 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
       Аналогичный прецедент отклонения от буквального роадмапа уже задокументирован в AGENTS.md
       (`useRecommendedMovies` vs роадмапного `useRecommendations`) — зафиксировать так же явно
       здесь, а не молча.
-- [ ] Слить `Pagination`/`MobilePagination` в один компонент с двумя визуальными режимами через
+      **Сделано ровно так, как описано.** `src/pages/search/ui/Search/Search.tsx` — один
+      компонент, единственный `useViewport()` внутри него решает, какое из двух под-деревьев
+      фильтров монтируется: `SearchSidebar` (виджет `@widgets/search-sidebar`, не изменён —
+      остался отдельным компонентом, вариант "заменить единым filter-composition компонентом" из
+      Files-блока не потребовался) для десктопа, sticky filter-bar (Filters/Sort-кнопки +
+      `ActiveFilterChips compact`) + два `BottomSheet` (фильтры/сортировка, содержимое перенесено
+      из удалённого `SearchMobile.tsx` дословно) для мобильного. **Тот же принцип расширен и на
+      выбор сортировки** (не было явно в Files-блоке, но логически то же семейство): десктопный
+      дропдаун `SortSelect` (через `SearchControls`) vs мобильный `BottomSheet`-список — тоже
+      разный UX (наведение мышью на дропдаун vs полноэкранный тач-список), не CSS-вариант,
+      выбирается тем же `isMobile`. Chrome (`Header`/`MobileHeader`+`BottomNav`) в `Search`
+      больше не рендерится вовсе — `/search` перемещён под `AppLayout` в `src/app/router.tsx`
+      (был последним top-level роутом, все шесть теперь под layout), `AppLayout.tsx` расширен
+      `SEARCH_CHROME`-константой + `isSearchRoute`-веткой: `Header`'s `activeNav` там читается не
+      из `pathname` (единственный такой роут), а из `useSearchParams().get('type')` — та самая
+      логика, что раньше жила в удалённом `SearchDesktop.tsx` (`activeNav={filters.type ??
+      'search'}`), перенесена в `AppLayout` дословно (сохранён даже нюанс с пустой строкой в
+      `?type=` через `|| 'search'`, не `??`). `Header`'s `variant='search'` — тоже развилка по
+      `isSearchRoute`, не часть `RouteChromeConfig` (сугубо десктопная, вычисляется рядом с
+      `activeNav`).
+- [x] Слить `Pagination`/`MobilePagination` в один компонент с двумя визуальными режимами через
       CSS (обе уже используют общие `buildPageRange`/`clampPage` из `lib/buildPageRange.ts` — эта
       часть не дублируется, дублируется только JSX/CSS обёртка).
-- [ ] Обновить/подтвердить `compact` проп у `GenreSelector` **и** `ActiveFilterChips`: если после
+      Сделано без единой правки JSX `Pagination.tsx` (только докблок добавлен) — весь бывший
+      `MobilePagination` (инлайновый компонент внутри `SearchMobile.tsx`) удалён вместе с файлом,
+      его визуальный режим перенесён целиком в `Pagination.module.css` как mobile-first база
+      (34px кнопки, `flex-wrap: wrap`, без hover) + `@media (min-width: 720px)` оверрайд (36px,
+      `nowrap`, hover-состояния) — прежние значения бывшего десктопного `Pagination.module.css`.
+      Классы (`container`/`btn`/`btnActive`/`ellipsis`) не переименовывались.
+- [x] Обновить/подтвердить `compact` проп у `GenreSelector` **и** `ActiveFilterChips`: если после
       слияния оба варианта фильтров технически могут сосуществовать в DOM одновременно (даже если
       один скрыт CSS) — инвариант "рендерится только один вариант" ломается для обоих компонентов
       одинаково, проп должен продолжать явно передаваться вызывающей стороной единого `Search` (не
       полагаться на case из докблока `GenreSelector`, переписать докблок под новую структуру).
-- [ ] Свести `SearchResults`/`MobileSearchResults` (сейчас два похожих компонента под `use()`
+      И `GenreSelector`, и `ActiveFilterChips` фактически продолжают монтироваться строго по
+      одному варианту за раз — `Search` использует условный рендер (`!isMobile ? sidebar :
+      mobile-filter-bar/bottom-sheet`), не `display: none` — оба варианта технически МОГУТ
+      существовать в одном React-дереве компонента `Search` (в отличие от старого мира, где это
+      гарантировал `useViewport`-выбор на уровне `*Page.tsx` между двумя разными React-деревьями),
+      но одновременно не смонтированы. Докблоки обоих компонентов переписаны под эту
+      формулировку инварианта ("рендерится только в одном из двух активных вариантов фильтров
+      `Search` одновременно", а не "рендерится только на одном брейкпоинте") — `compact` остаётся
+      явным JS-параметром от вызывающей стороны в обоих случаях, механизм не менялся.
+      `ActiveFilterChips` докблока `compact` не имела вовсе до этой задачи — добавлена с нуля,
+      по аналогии с `GenreSelector`'s.
+- [x] Свести `SearchResults`/`MobileSearchResults` (сейчас два похожих компонента под `use()`
       внутри `useMovieCatalog`, см. докблоки в обоих файлах) в один, сохранив разделение Suspense
       boundary от остальной страницы (см. существующие докблоки — не терять это обоснование).
       `SearchHeader`, `SearchControls`, `SearchResultsGrid`/`SearchResultSkeletonGrid`, `SortSelect`
       уже общие компоненты — проверить, что они действительно не требуют изменений.
-- [ ] Не трогать `usePageSync`/`useCatalogUpdateStatus`/`useMovieCatalog` (`src/pages/search/model/`)
+      **Премисса плана про "уже общие компоненты" не подтвердилась при чтении кода —
+      зафиксировано явно, а не молча, по тому же принципу, что и остальные отклонения этой
+      задачи.** Чтение `SearchMobile.tsx` показало, что `SearchHeader`/`SearchControls`/
+      `SearchResultsGrid`/`SearchResultSkeletonGrid`/`SortSelect` реально использовались только
+      `SearchDesktop.tsx` — `SearchMobile.tsx` рендерил параллельные инлайновые эквиваленты
+      (`.sectionHeader`/`.eyebrow`+`.title` вместо `SearchHeader`, `Card`-грид напрямую в
+      собственном `.resultsGrid` вместо `SearchResultsGrid`, свой sticky filter-bar вместо
+      `SearchControls`). Решение по каждому отдельно: **`SearchResultsGrid`/
+      `SearchResultSkeletonGrid`** — унифицированы под mobile-first CSS (2 колонки мобильный/4
+      десктоп, см. их докблоки) и используются на обоих брейкпоинтах внутри слитого
+      `SearchResults` — чистое "просто CSS" слияние, JSX/логика не менялись. **`SearchHeader`** —
+      тоже унифицирован mobile-first (22px мобильный/36px десктоп), используется на обоих
+      брейкпоинтах, с одной сознательной потерей паритета: мобильный overline-лейбл раньше
+      менялся между "Search results"/"Catalog" по `isSearchMode`, единый компонент показывает
+      статичный `Catalog · /search`, как раньше было у десктопа (`title` по-прежнему меняется по
+      `isSearchMode`) — принятое упрощение, не покрытое ни одним существующим тестом.
+      **`SearchControls`/`SortSelect`** — остались desktop-only (не стали общими): дропдаун
+      сортировки — не просто другой CSS десктопного/мобильного варианта, а другой UX-паттерн (см.
+      первый чек-бокс выше) — мобильный вариант сортировки остался отдельным bottom-sheet-деревом
+      внутри `Search.tsx`, не через `SearchControls`. `SearchResults` (единый компонент внутри
+      `Search.tsx`) сохраняет Suspense-границу как отдельный узел под `use()`, обёрнутый
+      `AsyncBoundary` в `Search` — то же обоснование, что в обоих исходных докблоках (не потеряно).
+- [x] Не трогать `usePageSync`/`useCatalogUpdateStatus`/`useMovieCatalog` (`src/pages/search/model/`)
       — уже общий слой, слияние касается только `ui/`.
-- [ ] Слить тесты `SearchDesktop.test.tsx`/`SearchMobile.test.tsx`, обновить/перенести тесты
+      Ни один из трёх файлов не тронут (проверено — `git diff` по `src/pages/search/model/` пуст).
+- [x] Слить тесты `SearchDesktop.test.tsx`/`SearchMobile.test.tsx`, обновить/перенести тесты
       `Pagination.test.tsx` под объединённый компонент.
-- [ ] `make test` и `make check` — все зелёные до следующей задачи.
+      Слиты в `src/pages/search/ui/Search/Search.test.tsx` (два раздела — "desktop-ветка"
+      переиспользует почти весь набор `SearchDesktop.test.tsx` один-в-один, "mobile-ветка"
+      покрывает только то, что реально отличается: filter-bar-триггеры/BottomSheet-фильтры/
+      BottomSheet-сортировка/избранное в гриде — data/retry/loading-indicator-пути не
+      дублировались повторно для мобильной ветки, т.к. это тот же код `SearchResults`,
+      viewport-агностичный, уже покрытый desktop-разделом). Два теста, завязанных на реальный
+      `Header` (который `Search` больше не рендерит), адаптированы, а не выброшены: (1) "?q
+      появляется в шапке → сброс page/фильтров" — переписан через `HeaderQuerySetter`-хелпер
+      (пишет `?q` напрямую через `useSearchParams()`, тот же приём, что уже был в удалённом
+      `SearchMobile.test.tsx` — теперь применяется единообразно к обеим веткам); (2) "шапка
+      страницы остаётся при ошибке AsyncBoundary" — переписан на проверку Search-owned контента
+      (`aside` сайдбара + заголовок), а не текста placeholder'а `Header`. Тест "nav pill в шапке
+      подсвечивается по `?type`" перенесён в `AppLayout.test.tsx` (не в `Search.test.tsx`) — по
+      прецеденту Task 9 (`/movie/:id` chrome-тесты туда же) — `Header` теперь живёт только в
+      `AppLayout`, тестировать его оттуда логичнее; добавлены ещё два теста рядом (`Header`'s
+      инлайн-поиск виден без `?type`, мобильный голый `MobileHeader`+`BottomNav active='search'`).
+      `Pagination.test.tsx` не потребовал содержательных изменений (JSX/API компонента не
+      менялись) — добавлен только комментарий, объясняющий, почему набор тестов не расширялся
+      под мобильный вариант отдельно (jsdom не считает media queries, оба визуальных режима дают
+      один DOM/a11y-контракт).
+- [x] `make test` и `make check` — все зелёные до следующей задачи.
+      `make test`: 593/593 зелёных (было 610 на конец Task 9 — минус дублированные Desktop/
+      Mobile-тесты `Search`, слитые в один набор с уменьшённым дублированием мобильной ветки,
+      плюс 5 новых тестов `AppLayout.test.tsx` на `/search`, net ожидаемо меньше). `make check` —
+      по тому же прецеденту, что Task 8/9 (`format-check` падает на markdown-файлах плана, не
+      связано с этой задачей): `make lint`/`make typecheck`/`make build` запущены отдельно — все
+      три зелёные. Отдельно обнаружен и исправлен реальный (не pre-existing markdown)
+      formatting-issue: `oxfmt --check .` изначально также флагал новый `Search.test.tsx`
+      (обычное форматирование, не markdown-баг) — исправлено запуском `oxfmt` без `--check` на
+      этом одном файле, `make test`/`make lint`/`make typecheck`/`make build` перепрогнаны после
+      фикса, все зелёные.
 
 ### Task 11: Финальная зачистка `useViewport()` и мёртвого кода
 

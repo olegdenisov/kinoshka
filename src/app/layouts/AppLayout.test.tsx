@@ -14,10 +14,12 @@ const setViewportWidth = (width: number) => {
 }
 
 // Повторяет структуру src/app/router.tsx: AppLayout — layout-route с <Outlet/>, дочерние роуты —
-// уже слитые страницы (Task 3-5 Favorites/Popular/Recommendations, Task 8 Home, Task 9 Movie;
-// здесь — плейсхолдеры вместо реальных компонентов, проверяем именно композицию chrome + Outlet,
-// а не их бизнес-логику, которая уже покрыта Home.test.tsx/Favorites.test.tsx/Popular.test.tsx/
-// Recommendations.test.tsx/Movie.test.tsx).
+// уже слитые страницы (Task 3-5 Favorites/Popular/Recommendations, Task 8 Home, Task 9 Movie,
+// Task 10 Search; здесь — плейсхолдеры вместо реальных компонентов, проверяем именно композицию
+// chrome + Outlet, а не их бизнес-логику, которая уже покрыта Home.test.tsx/Favorites.test.tsx/
+// Popular.test.tsx/Recommendations.test.tsx/Movie.test.tsx/Search.test.tsx). `/search` — тоже
+// плейсхолдер `<div>`, не реальный `Search`: `path` может включать query (`/search?type=series`),
+// MemoryRouter матчит по pathname, query долетает до `AppLayout`'s `useSearchParams()` как есть.
 const renderAt = (path: string) =>
   render(
     <MemoryRouter initialEntries={[path]}>
@@ -34,6 +36,7 @@ const renderAt = (path: string) =>
             path='/recommendations'
             element={<div>Recommendations page content</div>}
           />
+          <Route path='/search' element={<div>Search page content</div>} />
         </Route>
       </Routes>
     </MemoryRouter>,
@@ -202,6 +205,52 @@ describe('AppLayout — мобильный рендерит MobileHeader+BottomN
     // onBack рендерит кнопку "назад" (ChevronLeftIcon, без accessible name) вместо логотипа —
     // логотип ("kino·shka") больше не в дереве.
     expect(within(banner).queryByText('kino')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Catalog/ }).className).toMatch(
+      /navItemActive/,
+    )
+  })
+})
+
+// /search (Task 10) — единственный роут, где Header's activeNav не выводится из pathname (один
+// и тот же путь для любого ?type), а из useSearchParams().get('type') (см. SEARCH_CHROME/
+// isSearchRoute в AppLayout.tsx). Реализация раньше жила в удалённом SearchDesktop.tsx
+// (`activeNav={filters.type ?? 'search'}`) — тест "nav pill в шапке подсвечивается по ?type"
+// переехал сюда вместе с этой логикой (было в SearchDesktop.test.tsx до слияния в единый Search).
+describe('AppLayout — /search: Header.variant="search", activeNav из ?type (не из pathname)', () => {
+  it('без ?type: инлайн-поиск виден, ни один type-pill не подсвечен', () => {
+    renderAt('/search')
+
+    const banner = screen.getByRole('banner')
+    expect(
+      within(banner).getByPlaceholderText('Search movies, series, anime…'),
+    ).toBeInTheDocument()
+    expect(
+      within(banner)
+        .getAllByRole('button')
+        .some(btn => btn.className.match(/navPillActive/)),
+    ).toBe(false)
+  })
+
+  it('/search?type=series подсвечивает "Series", соседние типы — нет (ревью-фикс: activeNav был захардкожен)', () => {
+    renderAt('/search?type=series')
+
+    const banner = screen.getByRole('banner')
+    const seriesBtn = within(banner).getByRole('button', { name: 'Series' })
+    expect(seriesBtn.className).toMatch(/navPillActive/)
+
+    const moviesBtn = within(banner).getByRole('button', { name: 'Movies' })
+    expect(moviesBtn.className).not.toMatch(/navPillActive/)
+
+    const animeBtn = within(banner).getByRole('button', { name: 'Anime' })
+    expect(animeBtn.className).not.toMatch(/navPillActive/)
+  })
+
+  it('мобильный /search: голый MobileHeader (search-триггер, без title), BottomNav — active="search"', () => {
+    setViewportWidth(MOBILE_WIDTH)
+    renderAt('/search')
+
+    const banner = screen.getByRole('banner')
+    expect(within(banner).getByText('Search…')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Catalog/ }).className).toMatch(
       /navItemActive/,
     )

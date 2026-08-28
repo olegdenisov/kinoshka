@@ -10,6 +10,16 @@ type PaginationProps = {
   onChange: (p: number) => void
 }
 
+/**
+ * Единый компонент пагинации (Task 10, план `docs/plans/20260827-mobile-first-adaptive-layout.md`)
+ * — до этой задачи существовал в двух копиях: этот JSX (`Pagination`, десктоп) и
+ * почти идентичный инлайновый `MobilePagination` внутри удалённого `SearchMobile.tsx`. Оба уже
+ * использовали общие pure-функции `buildPageRange`/`clampPage` (`../../lib/buildPageRange`) —
+ * различался только JSX/CSS-обёрткой (толщина/размер кнопок, hover), не логика. Слияние —
+ * "просто CSS" случай (см. Solution Overview плана): JSX ниже не менялся, разница между
+ * брейкпоинтами выражена целиком в `Pagination.module.css` через mobile-first `@media
+ * (min-width: 720px)`.
+ */
 export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
   // Защита от рассинхрона: ?page из URL может временно выйти за пределы totalPages
   // (напр. смена фильтров ещё не долетела до фетчера) — клэмпим для рендера/disabled,

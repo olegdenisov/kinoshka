@@ -45,10 +45,10 @@ window.matchMedia = vi.fn().mockImplementation((query: string) => {
 })
 
 // Дефолтный MSW-хендлер для справочника жанров (Task 3, docs/plans/20260815-dynamic-genre-
-// dictionary.md) — без него любой тест, рендерящий SearchDesktop/SearchSidebar/SearchMobile
-// (эти компоненты вызывают useGenreDictionary → фоновый fetch), падает на
-// `onUnhandledRequest: 'error'`. Отдельные тесты переопределяют этот хендлер через
-// `server.use(...)`, если им нужен конкретный набор жанров или сценарий ошибки.
+// dictionary.md) — без него любой тест, рендерящий Search/SearchSidebar (эти компоненты вызывают
+// useGenreDictionary → фоновый fetch), падает на `onUnhandledRequest: 'error'`. Отдельные тесты
+// переопределяют этот хендлер через `server.use(...)`, если им нужен конкретный набор жанров или
+// сценарий ошибки.
 const DEFAULT_GENRE_DICTIONARY_ITEMS = [
   { id: 1, name: 'боевик', slug: null, enName: null },
   { id: 2, name: 'драма', slug: null, enName: null },

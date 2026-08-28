@@ -2,6 +2,12 @@ import { render, screen } from '@testing-library/react'
 
 import { Pagination } from './Pagination'
 
+// Task 10 (план docs/plans/20260827-mobile-first-adaptive-layout.md) слила бывший инлайновый
+// MobilePagination (SearchMobile.tsx) в этот же компонент — JSX/логика не менялись (уже были
+// общими через buildPageRange/clampPage), поменялась только CSS-обёртка (Pagination.module.css,
+// mobile-first + @media override). Поэтому набор тестов ниже не расширялся под мобильный
+// вариант отдельно: jsdom не считает media queries (см. Testing Strategy плана), и оба визуальных
+// режима рендерят один и тот же DOM/аксессибилити-контракт — покрывать их дважды нечем.
 describe('Pagination', () => {
   it('рендерит номера страниц вокруг текущей с эллипсисами по краям', () => {
     render(<Pagination page={5} totalPages={10} onChange={vi.fn()} />)
