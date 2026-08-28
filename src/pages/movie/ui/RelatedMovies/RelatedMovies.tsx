@@ -22,7 +22,7 @@ export const RelatedMovies = ({ movies, movieTitle }: RelatedMoviesProps) => {
         <div className={s.eyebrow}>Similar titles</div>
         <h2 className={s.heading}>More like {movieTitle}</h2>
       </div>
-      <div className={s.grid}>
+      <div className={`${s.grid} hide-scrollbar`}>
         {movies.map(x => (
           <Card
             key={x.id}

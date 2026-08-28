@@ -868,25 +868,92 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
   подтверждено чтением файла, см. Context; доработать под мобильную раскладку через CSS)
 - Create: `src/pages/movie/ui/Movie/Movie.test.tsx`
 
-- [ ] Перенести `LikedState` из `src/pages/movie/ui/MovieDesktop/types.ts` в
+- [x] Перенести `LikedState` из `src/pages/movie/ui/MovieDesktop/types.ts` в
       `src/pages/movie/ui/types.ts` и обновить импорты в `MovieHero.tsx`/`MovieActions.tsx` — этот
       тип общий (не desktop-специфика, несмотря на текущее расположение), удаление `MovieDesktop/`
-      без этого шага ломает сборку обоих файлов.
-- [ ] Завести `MovieMobile`'s контент на переиспользуемые `ui/tabs/*` компоненты
+      без этого шага ломает сборку обоих файлов. Сделано в указанном порядке (новый файл → правка
+      импортов → `rm -rf MovieDesktop/ MovieMobile/`), сборка не ломалась ни на одном шаге.
+- [x] Завести `MovieMobile`'s контент на переиспользуемые `ui/tabs/*` компоненты
       (`OverviewTab`/`CastTab`/`DetailsTab`/`MediaTab`) вместо инлайновой копии вёрстки/логики,
       которую сейчас содержит `MovieMobile.tsx` (399 строк против 49 у `MovieDesktop.tsx`) — это
       основной объём работы задачи, делать до попытки свести оболочки в один компонент.
-- [ ] Свести `MovieHero`, `MovieTabsNav`, `MovieActions`, `RelatedMovies` (уже общие,
-      не парные) в единый `Movie` вместе с chrome-решением из Task 6.
-- [ ] Сохранить `key={id}` на варианте контента (сейчас навешан в `MovieDetailContent`/`MoviePage.tsx`
+      Подтверждено построчным сравнением: контент `MobileOverview`/`MobileCast`/`MobileMedia`/
+      `MobileDetailsContent` (и их локальные `TagPillMini`/`MiniStat`/`MobileActionBtn`) содержательно
+      идентичен `OverviewTab`/`CastTab`/`MediaTab`/`DetailsTab` — той же разметке, что уже
+      использовал `MovieDesktop`. Инлайновая копия просто отброшена вместе с `MovieMobile.tsx`, а
+      единый `Movie` (см. следующий чек-бокс) рендерит общие `ui/tabs/*` на обоих брейкпоинтах.
+- [x] Свести `MovieHero`, `MovieTabsNav`, `MovieActions`, `RelatedMovies` (уже общие,
+      не парные) в единый `Movie` вместе с chrome-решением из Task 6. Создан
+      `src/pages/movie/ui/Movie/{Movie.tsx, Movie.module.css, index.tsx}` — одно JS-дерево
+      (`MovieHero` → `MovieTabsNav` → таб-контент → `RelatedMovies`) без `useViewport`-ветвления;
+      разница между брейкпоинтами выражена целиком через `@media (min-width: 720px)` в CSS-модулях
+      `Movie`/`MovieHero`/`MovieTabsNav`/`RelatedMovies`/`ui/tabs/*/*.module.css` (мобильная база
+      без медиа-запроса — новая, десктопная секция внутри `@media` воспроизводит прежние
+      `MovieDesktop`-значения дословно). Chrome (Header/MobileHeader+BottomNub) `Movie` больше не
+      рендерит сам — этим занимается `AppLayout`.
+      **Расширение `AppLayout`/`RouteChromeConfig` (решение по докблоку из Task 6/8):** выбран
+      путь "расширить существующий `RouteChromeConfig`", а не отдельный механизм/контекст — три
+      новых необязательных поля: `onBack?: boolean` (булев флаг, не сама функция — `AppLayout` сам
+      вызывает `useNavigate()` и строит `() => navigate(-1)`, странице не нужно прокидывать
+      колбэк), `showSearch?: boolean` (проброс 1-в-1 в `MobileHeader`), `rightAction?: ReactNode`
+      (обычный узел, не render-prop/функция — кнопка "поделиться" не зависит ни от `navigate`, ни
+      от какого-либо page-local состояния: в исходном `MovieMobile.tsx` она тоже была без
+      `onClick`; докблок `AppLayout` из Task 6 предполагал, что `rightAction`, скорее всего,
+      понадобится как функция — решение по факту оказалось проще). `rightAction` реализован через
+      общий `IconButton`+`ShareIcon` (`@shared/ui`) вместо переноса page-local
+      `MovieMobile.module.css`'s `.shareBtn` — CSS-класс всё равно пропадал вместе с файлом, а
+      `IconButton` уже даёт визуально эквивалентную (36×36, круглая через `border-radius`)
+      иконку-кнопку без нового CSS-модуля. Поскольку `/movie/:id` — динамический сегмент,
+      точное сравнение `ROUTE_CHROME[pathname]` (как для `/`/`/favorites`/`/popular`/
+      `/recommendations`) не подходит — конфиг для фильма вынесен в отдельную константу
+      `MOVIE_CHROME` и подключается через `useMatch('/movie/:id') != null` (матчит по паттерну,
+      не по литералу пути) вместо добавления записи в `ROUTE_CHROME`. `BottomNav`'s `active`
+      для `/movie/:id` — `'search'` (у detail-страницы фильма нет своего пункта, ближайший по
+      смыслу раздел — каталог; то же значение, что было жёстко зашито в удалённом
+      `MovieMobile.tsx`). Десктопный `Header` на `/movie/:id` рендерится с `activeNav` не заданным
+      (не подсвечивает ни один nav-pill) — воспроизводит поведение голого `<Header />` в удалённом
+      `MovieDesktop.tsx`. Роут `/movie/:id` перемещён из top-level в `src/app/router.tsx` под
+      `AppLayout`, рядом с `/`/`/favorites`/`/popular`/`/recommendations`; `/search` остаётся
+      top-level (Task 10).
+- [x] Сохранить `key={id}` на варианте контента (сейчас навешан в `MovieDetailContent`/`MoviePage.tsx`
       для ремаунта таба при смене id между фильмами, см. коммит `04cfa61` "reset movie tab on
-      navigation") — не потерять при слиянии `MovieDesktop`/`MovieMobile` в одно дерево.
-- [ ] Обеспечить, что 404-обработка (`ApiError`+`AsyncBoundary.errorFallback`, см. AGENTS.md
-      "Data state") и retry (`invalidateMovieDetail`) не регрессируют при слиянии.
-- [ ] Слить тесты `MovieDesktop.test.tsx`/`MovieMobile.test.tsx`/`MoviePage.test.tsx` —
+      navigation") — не потерять при слиянии `MovieDesktop`/`MovieMobile` в одно дерево. Сохранён:
+      `MovieDetailContent` в `MoviePage.tsx` рендерит `<Movie key={id} movie={detail}
+      images={images} />` — тест "переход на другой фильм по ссылке из Similar titles сбрасывает
+      активный таб на Overview" (`MoviePage.test.tsx`) остался зелёным без изменений.
+- [x] Обеспечить, что 404-обработка (`ApiError`+`AsyncBoundary.errorFallback`, см. AGENTS.md
+      "Data state") и retry (`invalidateMovieDetail`) не регрессируют при слиянии. Не регрессировали:
+      `movieErrorFallback`/`onRetry={() => invalidateMovieDetail(numericId)}` в `MoviePage.tsx` не
+      трогались (только удалён проп `isMobile`, который `MovieDetailContent` больше не принимает) —
+      все связанные тесты (404, общая ошибка 500, реальный повторный запрос без ожидания
+      cooldown) в `MoviePage.test.tsx` остались зелёными без единой правки самого файла теста.
+- [x] Слить тесты `MovieDesktop.test.tsx`/`MovieMobile.test.tsx`/`MoviePage.test.tsx` —
       `testFixtures.ts` и `lib/groupCrewByProfession.ts`/тест не трогать (не завязаны на
-      Desktop/Mobile).
-- [ ] `make test` и `make check` — все зелёные до следующей задачи.
+      Desktop/Mobile). `MovieDesktop.test.tsx`+`MovieMobile.test.tsx` (оба гоняли содержательно
+      одинаковые проверки против одних и тех же `ui/tabs/*`, только с разными обёртками) слиты в
+      `src/pages/movie/ui/Movie/Movie.test.tsx` — за основу взят набор `MovieDesktop.test.tsx`
+      (Overview/Cast/Media/Details/RelatedMovies/fallback-ветки), плюс перенесён уникальный тест из
+      `MovieMobile.test.tsx` ("клик по сердечку карточки похожего фильма пишет id в
+      localStorage" — единственная проверка, которой не было в desktop-наборе). `afterEach`-сброс
+      `data-theme` из обоих старых файлов (нужен был из-за безусловно смонтированного
+      `ThemeToggle` внутри `Header`/`MobileHeader`) не перенесён — `Movie` больше не рендерит
+      chrome сам, `ThemeToggle` в его дереве не участвует. `MoviePage.test.tsx` оставлен как есть,
+      без единой правки — по прецеденту Task 5 (`RecommendationsPage.test.tsx`) страничный тест,
+      несущий реальную логику (id-парсинг, `AsyncBoundary`, 404/retry-сценарии — не тривиальная
+      обёртка вроде `RecommendationsPage.tsx`), не мокал `useViewport`/`isMobile` напрямую и не
+      требовал изменений после того, как `MovieDetailContent` перестал ветвиться. Дополнительно
+      обновлён `src/app/layouts/AppLayout.test.tsx` — добавлены два теста на `/movie/:id`
+      (десктоп: `Header` без подсвеченного nav-pill; мобильный: `onBack`/`showSearch=false`/
+      `rightAction="Share"`, `BottomNav` — `active='search'`), т.к. `AppLayout`'s `RouteChromeConfig`
+      расширен в рамках этой же задачи.
+- [x] `make test` и `make check` — все зелёные до следующей задачи. `make test`: 610/610 (было
+      619/619 на конец Task 8 — минус ~13 дублированных Desktop/Mobile-тестов, слитых в один
+      набор, плюс 2 новых теста `AppLayout.test.tsx` на `/movie/:id`, net -9, ожидаемо). `make
+      check` заменён на `make lint` + `make typecheck` + `make build` по отдельности (см. известную
+      pre-existing проблему `format-check` на файлах плана — тот же баг/ограничение `oxfmt`,
+      задокументированное в Task 8: `oxfmt --check .` падает на markdown-файлах (включая этот файл
+      плана) независимо от изменений этой задачи, а `oxfmt --write` для них не идемпотентен) — все
+      три команды зелёные.
 
 ### Task 10: Слияние `SearchDesktop`/`SearchMobile` в единый `Search`
 

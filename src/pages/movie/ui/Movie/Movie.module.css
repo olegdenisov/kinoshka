@@ -1,0 +1,22 @@
+.root {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding-bottom: 90px;
+}
+
+.tabContent {
+  padding: 24px 20px;
+}
+
+@media (min-width: 720px) {
+  .root {
+    padding-bottom: 0;
+  }
+
+  .tabContent {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 48px 40px;
+  }
+}

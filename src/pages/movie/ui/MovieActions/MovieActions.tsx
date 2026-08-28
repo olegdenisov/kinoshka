@@ -1,6 +1,6 @@
 import { StarIcon, PlusIcon, EyeIcon, HeartIcon, ShareIcon } from '@shared/ui'
 
-import type { LikedState } from '../MovieDesktop/types'
+import type { LikedState } from '../types'
 
 import s from './MovieActions.module.css'
 

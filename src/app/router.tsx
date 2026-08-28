@@ -8,21 +8,21 @@ import { RecommendationsPage } from '../pages/recommendations'
 import { SearchPage } from '../pages/search'
 import { AppLayout } from './layouts/AppLayout'
 
-// `/search`, `/movie/:id` остаются top-level роутами вне `AppLayout` — Movie/Search ещё не
-// слиты в единый адаптивный компонент (Task 9/10 плана
-// docs/plans/20260827-mobile-first-adaptive-layout.md) и продолжают рендерить свой
-// Header/MobileHeader+BottomNav напрямую сами; подключение их роутов под `AppLayout` сейчас дало
-// бы двойной chrome в дереве. `/favorites`, `/popular`, `/recommendations` (Task 3-5) и `/`
-// (Task 8 — Home слит, CATALOG-мок удалён, chrome вынесен) уже под layout — каждая из Task 9/10
-// сама уберёт inline-рендер chrome из своей страницы и переместит свой роут сюда же, как часть
-// собственного слияния.
+// `/search` остаётся top-level роутом вне `AppLayout` — Search ещё не слит в единый адаптивный
+// компонент (Task 10 плана docs/plans/20260827-mobile-first-adaptive-layout.md) и продолжает
+// рендерить свой Header/MobileHeader+BottomNav напрямую сам; подключение его роута под
+// `AppLayout` сейчас дало бы двойной chrome в дереве. `/`, `/favorites`, `/popular`,
+// `/recommendations` (Tasks 3-5/8) и `/movie/:id` (Task 9 — Movie слит, chrome вынесен в
+// AppLayout's MOVIE_CHROME, см. src/app/layouts/AppLayout.tsx) уже под layout. Task 10 сама
+// уберёт inline-рендер chrome из Search и переместит и его роут сюда же, как часть собственного
+// слияния.
 export const router = createBrowserRouter([
   { path: '/search', element: <SearchPage /> },
-  { path: '/movie/:id', element: <MoviePage /> },
   {
     element: <AppLayout />,
     children: [
       { path: '/', element: <HomePage /> },
+      { path: '/movie/:id', element: <MoviePage /> },
       { path: '/favorites', element: <FavoritesPage /> },
       { path: '/popular', element: <PopularPage /> },
       { path: '/recommendations', element: <RecommendationsPage /> },

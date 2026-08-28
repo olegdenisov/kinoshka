@@ -4,7 +4,7 @@ import { StarIcon, PlayIcon } from '@shared/ui'
 import { Link } from 'react-router'
 
 import { MovieActions } from '../MovieActions'
-import type { LikedState } from '../MovieDesktop/types'
+import type { LikedState } from '../types'
 
 import s from './MovieHero.module.css'
 

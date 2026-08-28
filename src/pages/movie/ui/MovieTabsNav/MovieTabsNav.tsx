@@ -30,7 +30,7 @@ export const MovieTabsNav = ({
 }: MovieTabsNavProps) => {
   return (
     <div className={s.nav}>
-      <div className={s.inner}>
+      <div className={`${s.inner} hide-scrollbar`}>
         {tabs.map(t => (
           <TabBtn
             key={t}

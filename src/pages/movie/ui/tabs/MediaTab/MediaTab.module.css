@@ -39,8 +39,8 @@
 }
 
 .trailerPlay {
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   border-radius: 999px;
   background: var(--accent-warm);
   color: var(--bg-primary);
@@ -58,10 +58,11 @@
   cursor: not-allowed;
 }
 
+/* Мобильная база — 2 колонки (как в удалённом MovieMobile.tsx); десктоп — 4, оверрайд ниже. */
 .screenshotsGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
 }
 
 .screenshot {
@@ -71,4 +72,16 @@
   border: 1px solid var(--bg-chip);
   border-radius: 4px;
   object-fit: cover;
+}
+
+@media (min-width: 720px) {
+  .trailerPlay {
+    width: 72px;
+    height: 72px;
+  }
+
+  .screenshotsGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
 }

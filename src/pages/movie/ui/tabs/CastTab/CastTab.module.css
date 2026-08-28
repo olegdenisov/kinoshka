@@ -7,10 +7,11 @@
   margin-bottom: 12px;
 }
 
+/* Мобильная база — 3 колонки (как в удалённом MovieMobile.tsx); десктоп — 6, оверрайд ниже. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
 
 .castCard {
@@ -42,4 +43,11 @@
   color: var(--text-muted);
   letter-spacing: 0.06em;
   margin-top: 2px;
+}
+
+@media (min-width: 720px) {
+  .grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 20px;
+  }
 }
