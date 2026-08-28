@@ -29,12 +29,11 @@
      theme-reactive text painted on top of it (.heading/.tagline/.ratings/
      .synopsis etc.) keeps sufficient contrast in both themes; stops are
      built from var(--bg-primary) via color-mix instead of a hardcoded
-     #0F0D11/rgba(15,13,17,...) — see MovieMobile.module.css .heroScrim for
-     the identical pattern. */
+     #0F0D11/rgba(15,13,17,...). */
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--bg-primary) 30%, transparent) 0%,
-    color-mix(in srgb, var(--bg-primary) 70%, transparent) 60%,
+    color-mix(in srgb, var(--bg-primary) 20%, transparent) 0%,
+    color-mix(in srgb, var(--bg-primary) 80%, transparent) 70%,
     var(--bg-primary) 100%
   );
 }
@@ -54,18 +53,17 @@
 .inner {
   position: relative;
   z-index: 1;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 40px 40px 48px;
+  padding: 20px 20px 28px;
 }
 
 .breadcrumbs {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 9.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -85,16 +83,20 @@
   color: var(--text-secondary);
 }
 
+/* Мобильная база — одна колонка, всё по центру (постер сверху, текст под ним), как в удалённом
+   MovieMobile.tsx; десктопная раскладка (грид 320px+1fr, текст слева) — оверрайд ниже. */
 .layout {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 48px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .poster {
   position: relative;
-  box-shadow: 0 30px 60px -20px var(--shadow-color);
+  width: 200px;
+  margin-bottom: 24px;
+  box-shadow: 0 30px 50px -20px var(--shadow-color);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -123,15 +125,17 @@
 }
 
 .info {
-  padding-top: 4px;
+  width: 100%;
 }
 
 .tags {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 9.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-secondary);
@@ -140,12 +144,12 @@
 .tagPill {
   display: inline-flex;
   align-items: center;
-  height: 22px;
-  padding: 0 8px;
+  height: 20px;
+  padding: 0 7px;
   border: 1px solid var(--border-soft);
   border-radius: 3px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
   letter-spacing: 0.1em;
 }
@@ -153,25 +157,26 @@
 .heading {
   margin: 0 0 6px;
   font-family: var(--font-display);
-  font-size: 72px;
-  line-height: 0.98;
-  letter-spacing: -0.035em;
+  font-size: 32px;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
   font-weight: 500;
 }
 
 .tagline {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 18px;
+  font-size: 15px;
   color: var(--text-muted);
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .ratings {
-  display: flex;
-  gap: 32px;
-  margin-bottom: 32px;
-  padding: 20px 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 14px 0;
   border-top: 1px solid var(--border-faint);
   border-bottom: 1px solid var(--border-faint);
 }
@@ -179,12 +184,13 @@
 .ratingBlock {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 4px;
 }
 
 .ratingLabel {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 9.5px;
   color: var(--text-muted);
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -195,14 +201,14 @@
   align-items: baseline;
   gap: 6px;
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 500;
   letter-spacing: -0.02em;
 }
 
 .ratingSub {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 9.5px;
   color: var(--text-faint);
   letter-spacing: 0.04em;
 }
@@ -219,10 +225,90 @@
 
 .synopsis {
   margin: 0;
-  max-width: 640px;
   font-family: var(--font-body);
-  font-size: 15.5px;
+  font-size: 14.5px;
   line-height: 1.6;
   color: var(--text-secondary);
   letter-spacing: -0.003em;
+}
+
+@media (min-width: 720px) {
+  .inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 40px 40px 48px;
+  }
+
+  .breadcrumbs {
+    justify-content: flex-start;
+    margin-bottom: 40px;
+    font-size: 10.5px;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 48px;
+    align-items: start;
+    text-align: left;
+  }
+
+  .poster {
+    width: auto;
+    margin-bottom: 0;
+  }
+
+  .info {
+    padding-top: 4px;
+  }
+
+  .tags {
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 10.5px;
+  }
+
+  .tagPill {
+    height: 22px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+
+  .heading {
+    font-size: 72px;
+  }
+
+  .tagline {
+    font-size: 18px;
+    margin-bottom: 32px;
+  }
+
+  .ratings {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 32px;
+    padding: 20px 0;
+  }
+
+  .ratingBlock {
+    align-items: flex-start;
+  }
+
+  .ratingLabel {
+    font-size: 10.5px;
+  }
+
+  .ratingValue {
+    font-size: 28px;
+  }
+
+  .ratingSub {
+    font-size: 10.5px;
+  }
+
+  .synopsis {
+    max-width: 640px;
+    font-size: 15.5px;
+  }
 }

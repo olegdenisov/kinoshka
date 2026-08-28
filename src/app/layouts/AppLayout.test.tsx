@@ -13,17 +13,18 @@ const setViewportWidth = (width: number) => {
   window.innerWidth = width
 }
 
-// Повторяет структуру src/app/router.tsx: AppLayout — layout-route с <Outlet/>, четыре дочерних
-// роута — уже слитые страницы (Task 3-5 Favorites/Popular/Recommendations, Task 8 Home; здесь —
-// плейсхолдеры вместо реальных компонентов, проверяем именно композицию chrome + Outlet, а не их
-// бизнес-логику, которая уже покрыта Home.test.tsx/Favorites.test.tsx/Popular.test.tsx/
-// Recommendations.test.tsx).
+// Повторяет структуру src/app/router.tsx: AppLayout — layout-route с <Outlet/>, дочерние роуты —
+// уже слитые страницы (Task 3-5 Favorites/Popular/Recommendations, Task 8 Home, Task 9 Movie;
+// здесь — плейсхолдеры вместо реальных компонентов, проверяем именно композицию chrome + Outlet,
+// а не их бизнес-логику, которая уже покрыта Home.test.tsx/Favorites.test.tsx/Popular.test.tsx/
+// Recommendations.test.tsx/Movie.test.tsx).
 const renderAt = (path: string) =>
   render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route element={<AppLayout />}>
           <Route path='/' element={<div>Home page content</div>} />
+          <Route path='/movie/:id' element={<div>Movie page content</div>} />
           <Route
             path='/favorites'
             element={<div>Favorites page content</div>}
@@ -114,6 +115,21 @@ describe('AppLayout — десктоп рендерит Header, не MobileHeade
       screen.queryByRole('button', { name: 'Lists' }),
     ).not.toBeInTheDocument()
   })
+
+  // /movie/:id (Task 9) — MOVIE_CHROME не задаёт activeNav (см. докблок RouteChromeConfig в
+  // AppLayout.tsx — воспроизводит поведение голого <Header /> из удалённого MovieDesktop.tsx),
+  // поэтому ни один nav-pill не подсвечен.
+  it('/movie/1: Header рендерится без подсвеченного nav-pill (activeNav не задан)', () => {
+    renderAt('/movie/1')
+
+    const banner = screen.getByRole('banner')
+    expect(screen.getByText('Movie page content')).toBeInTheDocument()
+    expect(
+      within(banner)
+        .getAllByRole('button')
+        .some(btn => btn.className.match(/navPillActive/)),
+    ).toBe(false)
+  })
 })
 
 describe('AppLayout — мобильный рендерит MobileHeader+BottomNav, не Header', () => {
@@ -167,6 +183,26 @@ describe('AppLayout — мобильный рендерит MobileHeader+BottomN
     const banner = screen.getByRole('banner')
     expect(within(banner).getByText('Recommended for you')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Picks/ }).className).toMatch(
+      /navItemActive/,
+    )
+  })
+
+  // /movie/:id (Task 9) — MOVIE_CHROME: onBack вместо логотипа, showSearch=false (нет
+  // search-триггера), rightAction — кнопка "Share" (IconButton+ShareIcon), BottomNav —
+  // active='search' (у detail-страницы фильма нет своего пункта, см. докблок MOVIE_CHROME).
+  it('/movie/1: MobileHeader получает onBack/showSearch=false/rightAction="Share", BottomNav — active="search"', () => {
+    setViewportWidth(MOBILE_WIDTH)
+    renderAt('/movie/1')
+
+    const banner = screen.getByRole('banner')
+    expect(
+      within(banner).getByRole('button', { name: 'Share' }),
+    ).toBeInTheDocument()
+    expect(within(banner).queryByText('Search…')).not.toBeInTheDocument()
+    // onBack рендерит кнопку "назад" (ChevronLeftIcon, без accessible name) вместо логотипа —
+    // логотип ("kino·shka") больше не в дереве.
+    expect(within(banner).queryByText('kino')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Catalog/ }).className).toMatch(
       /navItemActive/,
     )
   })

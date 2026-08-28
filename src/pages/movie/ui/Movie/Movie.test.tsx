@@ -4,37 +4,38 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
-import { MovieMobile } from './MovieMobile'
+import { Movie } from './Movie'
 
-const renderMovieMobile = (
+// Слияние MovieDesktop.test.tsx/MovieMobile.test.tsx (Task 9 плана
+// docs/plans/20260827-mobile-first-adaptive-layout.md): оба набора тестов проверяли один и тот
+// же контент (MovieHero + ui/tabs/* + RelatedMovies) — до этой задачи MovieMobile.tsx инлайнил
+// собственную копию вёрстки табов вместо переиспользования ui/tabs/*, поэтому тесты дублировались
+// почти дословно. Movie больше не рендерит Header/MobileHeader сам (chrome — забота AppLayout,
+// см. src/app/layouts/AppLayout.tsx), поэтому здесь не нужен afterEach-сброс data-theme, который
+// был в обоих старых наборах тестов из-за безусловно смонтированного ThemeToggle внутри
+// Header/MobileHeader.
+const renderMovie = (
   movie: MovieDetail = MOVIE,
   images: MovieImage[] = IMAGES,
 ) =>
   render(
     <MemoryRouter>
-      <MovieMobile movie={movie} images={images} />
+      <Movie movie={movie} images={images} />
     </MemoryRouter>,
   )
 
-// MovieMobile безусловно монтирует MobileHeader → ThemeToggle, который выставляет data-theme на
-// document.documentElement — сбрасываем, чтобы значение не утекало в следующий тест (см.
-// useTheme.test.tsx).
-afterEach(() => {
-  document.documentElement.removeAttribute('data-theme')
-})
-
-describe('MovieMobile — hero', () => {
-  it('показывает tagline и рейтинги из movie', () => {
-    renderMovieMobile()
+describe('Movie — Overview (дефолтный таб)', () => {
+  it('показывает tagline, синопсис-тизер, рейтинги и жанры из movie', () => {
+    renderMovie()
 
     expect(screen.getByText(MOVIE.tagline)).toBeInTheDocument()
+    expect(screen.getByText(MOVIE.shortSynopsis!)).toBeInTheDocument()
+    expect(screen.getByText('25k votes')).toBeInTheDocument()
     expect(screen.getByText('85%')).toBeInTheDocument()
   })
-})
 
-describe('MovieMobile — Overview (дефолтный таб)', () => {
-  it('показывает синопсис, crew, страны и рейтинги', () => {
-    renderMovieMobile()
+  it('показывает синопсис, жанры, crew, страны и рейтинги в самом табе', () => {
+    renderMovie()
 
     expect(screen.getByText(MOVIE.synopsis)).toBeInTheDocument()
     expect(screen.getByText('Hanna Vesper')).toBeInTheDocument()
@@ -44,10 +45,10 @@ describe('MovieMobile — Overview (дефолтный таб)', () => {
   })
 })
 
-describe('MovieMobile — Cast', () => {
+describe('Movie — Cast', () => {
   it('показывает имя/роль каждого cast-члена', async () => {
     const user = userEvent.setup()
-    renderMovieMobile()
+    renderMovie()
 
     await user.click(screen.getByRole('button', { name: 'Cast' }))
 
@@ -57,10 +58,10 @@ describe('MovieMobile — Cast', () => {
   })
 })
 
-describe('MovieMobile — Media', () => {
+describe('Movie — Media', () => {
   it('показывает скриншот из images, когда он есть', async () => {
     const user = userEvent.setup()
-    const { container } = renderMovieMobile()
+    const { container } = renderMovie()
 
     await user.click(screen.getByRole('button', { name: 'Media' }))
 
@@ -70,10 +71,10 @@ describe('MovieMobile — Media', () => {
   })
 })
 
-describe('MovieMobile — Details', () => {
-  it('показывает дату премьеры, возрастной рейтинг и бюджет через formatCurrency', async () => {
+describe('Movie — Details', () => {
+  it('показывает дату премьеры, страну, возрастной рейтинг и бюджет через formatCurrency', async () => {
     const user = userEvent.setup()
-    renderMovieMobile()
+    renderMovie()
 
     await user.click(screen.getByRole('button', { name: 'Details' }))
 
@@ -84,26 +85,23 @@ describe('MovieMobile — Details', () => {
   })
 })
 
-describe('MovieMobile — Similar titles', () => {
+describe('Movie — RelatedMovies', () => {
   it('рендерит похожие фильмы из movie.similarMovies', () => {
-    renderMovieMobile()
+    renderMovie()
 
     expect(screen.getAllByText('The Quiet Archive').length).toBeGreaterThan(0)
   })
 
   it('скрывает секцию, когда similarMovies пуст', () => {
-    renderMovieMobile({ ...MOVIE, similarMovies: [] })
+    renderMovie({ ...MOVIE, similarMovies: [] })
 
     expect(screen.queryByText('Similar titles')).not.toBeInTheDocument()
   })
-})
-
-describe('MovieMobile — избранное в related-секции', () => {
-  beforeEach(() => localStorage.clear())
 
   it('клик по сердечку карточки похожего фильма пишет его id в localStorage', async () => {
+    localStorage.clear()
     const user = userEvent.setup()
-    renderMovieMobile()
+    renderMovie()
 
     await user.click(
       screen.getAllByRole('button', { name: 'Add to favorites' })[0],
@@ -115,17 +113,22 @@ describe('MovieMobile — избранное в related-секции', () => {
   })
 })
 
-describe('MovieMobile — fallback-ветки при отсутствующих опциональных полях', () => {
-  it('hero: criticScore отсутствует — рейтинг "—"', () => {
-    renderMovieMobile(MOVIE_NO_OPTIONALS, [])
+describe('Movie — fallback-ветки при отсутствующих опциональных полях', () => {
+  it('Hero: votesKp/criticScore отсутствуют — рейтинги "—", кнопка трейлера скрыта', () => {
+    renderMovie(MOVIE_NO_OPTIONALS, [])
 
-    // Critics-блок (criticScore undefined) добавляет второе "—" рядом с всегда-"—" Yours.
+    expect(screen.getByText('— votes')).toBeInTheDocument()
+    expect(screen.getByText('— reviews')).toBeInTheDocument()
+    // Critics-блок (criticScore undefined) добавляет второе "—" рядом с всегда-"—" Your rating.
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2)
+    expect(
+      screen.queryByRole('link', { name: /trailer/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('Overview: countries/ratingKp/ratingImdb/ratingMpaa отсутствуют — рендерит "—" вместо значений', async () => {
     const user = userEvent.setup()
-    renderMovieMobile(MOVIE_NO_OPTIONALS, [])
+    renderMovie(MOVIE_NO_OPTIONALS, [])
 
     await user.click(screen.getByRole('button', { name: 'Overview' }))
 
@@ -135,7 +138,7 @@ describe('MovieMobile — fallback-ветки при отсутствующих 
 
   it('Details: premiereWorld/countries/ratingMpaa/ageRating/budget/feesWorld отсутствуют — все "—"', async () => {
     const user = userEvent.setup()
-    renderMovieMobile(MOVIE_NO_OPTIONALS, [])
+    renderMovie(MOVIE_NO_OPTIONALS, [])
 
     await user.click(screen.getByRole('button', { name: 'Details' }))
 
@@ -143,12 +146,13 @@ describe('MovieMobile — fallback-ветки при отсутствующих 
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(6)
   })
 
-  it('Media: images пуст и trailerUrl отсутствует — секции трейлера и скриншотов скрыты целиком', async () => {
+  it('Media: images пуст и trailerUrl отсутствует — секции Trailer и Screenshots скрыты целиком', async () => {
     const user = userEvent.setup()
-    const { container } = renderMovieMobile(MOVIE_NO_OPTIONALS, [])
+    const { container } = renderMovie(MOVIE_NO_OPTIONALS, [])
 
     await user.click(screen.getByRole('button', { name: 'Media' }))
 
+    expect(screen.queryByText('Trailer')).not.toBeInTheDocument()
     expect(screen.queryByText('Screenshots')).not.toBeInTheDocument()
     expect(container.querySelectorAll('img').length).toBe(0)
   })

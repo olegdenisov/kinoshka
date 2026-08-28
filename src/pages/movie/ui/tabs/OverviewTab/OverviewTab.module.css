@@ -1,7 +1,9 @@
+/* Мобильная база — одна колонка (sidebar под основным контентом); десктопный 2-колоночный
+   грид — оверрайд ниже. */
 .root {
-  display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  gap: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 }
 
 .sectionHead {
@@ -14,11 +16,10 @@
 }
 
 .synopsis {
-  margin: 0 0 32px;
-  max-width: 640px;
+  margin: 0 0 24px;
   font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.65;
+  font-size: 14.5px;
+  line-height: 1.6;
   color: var(--text-primary);
   letter-spacing: -0.003em;
 }
@@ -27,7 +28,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .genreBadge {
@@ -45,8 +46,8 @@
 
 .crew {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
 .metaRow {
@@ -115,4 +116,28 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
+}
+
+@media (min-width: 720px) {
+  .root {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 64px;
+  }
+
+  .synopsis {
+    margin: 0 0 32px;
+    max-width: 640px;
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .genres {
+    margin-bottom: 32px;
+  }
+
+  .crew {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
 }

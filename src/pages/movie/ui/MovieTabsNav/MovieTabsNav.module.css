@@ -1,6 +1,8 @@
+/* `top` — липкое смещение под mobile-chrome (MobileHeader, min-height 52px) на мобильной базе;
+   десктопный `Header` выше (~68px) — оверрайд ниже. */
 .nav {
   position: sticky;
-  top: 68px;
+  top: 52px;
   z-index: 10;
   background: var(--bg-glass-heavy);
   backdrop-filter: blur(12px);
@@ -8,22 +10,22 @@
 }
 
 .inner {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 0 40px;
   display: flex;
+  overflow-x: auto;
+  padding: 0 12px;
 }
 
 .tabBtn {
   position: relative;
-  height: 52px;
-  padding: 0 20px;
+  flex-shrink: 0;
+  height: 46px;
+  padding: 0 14px;
   background: transparent;
   border: none;
   cursor: pointer;
   color: var(--text-muted);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
   letter-spacing: -0.005em;
   transition: color 160ms;
@@ -39,8 +41,8 @@
 
 .tabBtnIndicator {
   position: absolute;
-  left: 16px;
-  right: 16px;
+  left: 10px;
+  right: 10px;
   bottom: -1px;
   height: 2px;
   background: transparent;
@@ -49,4 +51,28 @@
 
 .tabBtnActive .tabBtnIndicator {
   background: var(--accent-warm);
+}
+
+@media (min-width: 720px) {
+  .nav {
+    top: 68px;
+  }
+
+  .inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 40px;
+    overflow-x: visible;
+  }
+
+  .tabBtn {
+    height: 52px;
+    padding: 0 20px;
+    font-size: 14px;
+  }
+
+  .tabBtnIndicator {
+    left: 16px;
+    right: 16px;
+  }
 }
