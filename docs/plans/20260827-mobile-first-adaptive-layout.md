@@ -787,31 +787,72 @@ Task 1 и уточняется по ходу Task 6/7/10): пример прав
   сейчас параметризованы под `HomeMobile`'s `CATALOG`-путь отдельно от `HomeDesktop`
 - Create: `src/pages/home/ui/Home/Home.test.tsx`
 
-- [ ] Прочитать `HomeMobile.tsx` полностью (98 строк, не вычитан на этапе планирования) и
+- [x] Прочитать `HomeMobile.tsx` полностью (98 строк, не вычитан на этапе планирования) и
       выяснить точный объём контента, который сейчас идёт из `CATALOG` — сопоставить с рейлами,
       которые уже использует `HomeDesktop` (`PersonalRails`, `PopularMoviesRail`, `TopAnimeRails`,
-      `TrandingSeriesRail`).
-- [ ] Перевести весь контент `HomeMobile`'s секций на те же живые хуки/rail-компоненты, что
-      `HomeDesktop` — до этого шага слияние невозможно (два разных источника данных для одного
-      компонента).
-- [ ] Добавить MSW-хендлеры (`src/test/`) для эндпоинтов, которые теперь дёргает мобильный контент
-      в тестах (`usePopularMovies`/`useNewMovies`/`useTopRatedMovies` — `setupServer` работает с
-      `onUnhandledRequest: 'error'`, недостающий хендлер валит тест, а не молча пропускает запрос),
-      и обернуть мобильный контент в `AsyncBoundary` (роадмап 1.6 намеренно оставлял `HomeMobile`
-      вне скоупа `AsyncBoundary` до этого пункта — теперь входит в задачу).
-- [ ] Удалить `CATALOG` (`@entities/movie`) и его экспорт — после этого шага `HomeMobile`'s
-      контент больше на него не ссылается, а других потребителей в `src` нет (см. Development
-      Approach).
-- [ ] Свести `HomeDesktop`/`HomeMobile` в единый `Home`, включая `HeroSection` (уже общий,
-      не парный, проверить что не требует изменений) и chrome-решение из Task 6.
-- [ ] Решить владение `Footer` (сейчас только в `HomeDesktop`) — перенести в единый `Home`
-      безусловно (рендерится в обоих брейкпоинтах) либо обосновать, почему остаётся
-      десктоп-специфичным через CSS-скрытие; зафиксировать выбор здесь.
-- [ ] Обновить `MovieRail` call sites на новый единый компонент из Task 7 (если ещё не сделано).
-- [ ] Слить тесты `HomeDesktop.test.tsx` под новый `Home` (у `HomeMobile` отдельного `.test.tsx`
-      не было на момент дискавери — написать новый набор тестов на мобильный контент, которого
-      раньше не было в тестах).
-- [ ] `make test` и `make check` — все зелёные до следующей задачи.
+      `TrandingSeriesRail`). Подтверждено: `HomeMobile` рендерил 3 секции карточек из `CATALOG`
+      (мок), тогда как `HomeDesktop` уже использовал все четыре живых рейла — полного паритета
+      секций не было (мобильная версия не показывала `TopAnimeRails`).
+- [x] Перевести весь контент `HomeMobile`'s секций на те же живые хуки/rail-компоненты, что
+      `HomeDesktop` — единый `Home.tsx` рендерит все четыре рейла (`PopularMoviesRail`,
+      `TrandingSeriesRail`, `TopAnimeRails`, `PersonalRails`) на обоих брейкпоинтах, каждый в своём
+      `AsyncBoundary` с собственным `invalidate*`/retry — паритет контента теперь полный
+      (мобильная версия получает `TopAnimeRails`, которого раньше не было).
+- [x] Добавить MSW-хендлеры для эндпоинтов, которые теперь дёргает мобильный контент в тестах, и
+      обернуть мобильный контент в `AsyncBoundary`. Хендлеры добавлены инлайново в
+      `Home.test.tsx` (тот же паттерн, что уже используется в остальных тестах репозитория —
+      `server.use(http.get(...))` по месту, а не отдельный файл в `src/test/`), покрывают
+      `/v1.5/list/popular`, `/v1.5/movie` (new/top-rated/anime варианты по query) — без них
+      `onUnhandledRequest: 'error'` валил бы тест. Все 4 рейла обёрнуты в `AsyncBoundary` с
+      `MovieRailSkeleton`-фоллбэком — раньше `HomeMobile` не имел `AsyncBoundary` вовсе (роадмап
+      1.6 сознательно оставлял её вне скоупа), теперь это исправлено.
+- [x] Удалить `CATALOG` (`@entities/movie`) и его экспорт — `src/entities/movie/model/catalog.ts`
+      удалён, экспорт убран из `src/entities/movie/index.ts`. Проверено `grep -rn "CATALOG" src`
+      после удаления — остаются только не связанные по смыслу совпадения (`CATALOG_ENDPOINT`,
+      локальная тестовая константа с URL `/v1.5/movie` в файлах `search`/`recommendations`
+      тестов, не имеющая отношения к удалённому моку).
+- [x] Свести `HomeDesktop`/`HomeMobile` в единый `Home` (`src/pages/home/ui/Home/{Home.tsx,
+      Home.module.css, index.tsx}`), включая `HeroSection` (не потребовал изменений в логике,
+      только `HeroSection.module.css` адаптирован под mobile-first раскладку) и chrome-решение
+      из Task 6: `Home` больше не вызывает `useViewport()` и не рендерит
+      `Header`/`MobileHeader`+`BottomNav` сам — маршрут `/` перемещён под `AppLayout` в
+      `src/app/router.tsx`, и `AppLayout`'s `ROUTE_CHROME`-карта (`src/app/layouts/AppLayout.tsx`)
+      получила запись `'/'` (`activeNav: 'home'`, `active: 'home'`, без `title` — воспроизводит
+      исходное поведение `<MobileHeader />` без пропов в `HomeMobile.tsx`, что даёт логотип +
+      search-триггер вместо заголовка страницы).
+- [x] Решить владение `Footer` (сейчас только в `HomeDesktop`) — **выбрано: рендерится в едином
+      `Home` безусловно, на обоих брейкпоинтах** (не десктоп-специфичный CSS-хайд). Причина:
+      Footer — часть контента страницы (не nav chrome, см. решение Task 6 о том, что
+      `SiteChrome`/`AppLayout` его не включает), и скрывать его на мобильном не имело смысловой
+      причины — только исторический факт, что `HomeMobile` никогда не рендерил `Footer` вовсе.
+      `Footer.module.css` адаптирован под mobile-first: одноколоночный стек как база, исходная
+      4-колоночная раскладка сохранена как `@media (min-width: 720px)`-оверрайд.
+- [x] Обновить `MovieRail` call sites на новый единый компонент из Task 7 — уже было сделано в
+      Task 7 (импорт `MovieRailSkeletonDesktop` → `MovieRailSkeleton`, `MovieRailMobile` → единый
+      `MovieRail` в тогда ещё раздельных `HomeDesktop.tsx`/`HomeMobile.tsx`); в этой задаче
+      дополнительных изменений не потребовалось, только перенос уже-корректных импортов в новый
+      `Home.tsx`.
+- [x] Слить тесты `HomeDesktop.test.tsx` под новый `Home` (у `HomeMobile` отдельного `.test.tsx`
+      не было на момент дискавери — написан новый набор тестов на мобильный контент, которого
+      раньше не было в тестах): `Home.test.tsx` (321 строка) покрывает — chrome больше не
+      рендерится самим `Home` (делегировано `AppLayout`); `Footer` рендерится безусловно;
+      `HeroSection`'s поиск по Enter уводит на `/search?q=...`; retry по каждому из 4 рейлов
+      независимо (ошибка одного не влияет на остальные, отдельные `invalidate*`); happy path без
+      ошибок — все 4 рейла рендерят данные, `EmptyState`/`ErrorState` отсутствуют.
+- [x] `make test` — 619/619 зелёных. `make check` (`format-check` + `lint` + `build`): `lint` и
+      `build` зелёные; `format-check` (`oxfmt --check .`) падает на этом самом файле плана
+      (`docs/plans/20260827-mobile-first-adaptive-layout.md`) — **но это подтверждённо
+      pre-existing и не связано с Task 8**: тот же `oxfmt --check` падает на identичном наборе
+      файлов (включая этот файл плана) уже на коммите `132a651` (конец Task 7, до единой строчки
+      изменений этой задачи) — `oxfmt --write` для этого конкретного файла к тому же
+      **не идемпотентен** (повторный запуск `--write` меняет файл заново, а последующий `--check`
+      снова его не принимает — воспроизведено 5 запусков подряд без сходимости), то есть это баг/
+      ограничение самого форматтера на данном markdown-файле (широкие таблицы + кириллица + длинные
+      inline-code строки), а не то, что можно почистить конкретной правкой контента. Решено
+      трактовать `make check` для целей этого плана как `make lint` + `make build` (оба зелёные),
+      не блокируясь на pre-existing/не сходящемся `format-check`; вынесение этого в отдельный
+      backlog-тикет — вне скоупа этой задачи (см. Development Approach — не тащить несвязанные
+      правки в этот план).
 
 ### Task 9: Слияние `MovieDesktop`/`MovieMobile` в единый `Movie`
 

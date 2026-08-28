@@ -1,0 +1,29 @@
+.page {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+/*
+  Горизонтальный паддинг рейлов не задаётся здесь — MovieRail.module.css сам несёт
+  mobile-first боковой отступ (.header/.scroll padding: 0 20px) и убирает его в своём
+  собственном @media (min-width: 720px) блоке, полагаясь на боковой паддинг этого контейнера
+  на десктопе. Вертикальный интервал между рейлами тоже задаёт сам MovieRail (.section
+  margin-bottom) — здесь не дублируется через gap.
+*/
+.rails {
+  padding-top: 20px;
+}
+
+@media (min-width: 720px) {
+  .page {
+    padding-bottom: 0;
+  }
+
+  .rails {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 40px 40px 80px;
+  }
+}

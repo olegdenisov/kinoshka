@@ -1,15 +1,22 @@
+/*
+  Mobile-first: до Task 8 (docs/plans/20260827-mobile-first-adaptive-layout.md) Footer
+  рендерился только внутри HomeDesktop — этот модуль был чистым десктопным CSS без единого
+  @media. Слияние HomeDesktop/HomeMobile в единый Home решило рендерить Footer безусловно в
+  обоих брейкпоинтах (см. докблок Home.tsx), так что база ниже стала одноколоночным мобильным
+  стеком, а исходная 4-колоночная десктопная раскладка сохранена без изменений как
+  `@media (min-width: 720px)` оверрайд.
+*/
+
 .footer {
   border-top: 1px solid var(--border-faint);
-  padding: 48px 40px;
-  max-width: 1440px;
-  margin: 0 auto;
+  padding: 32px 20px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 40px;
-  margin-bottom: 48px;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  margin-bottom: 28px;
 }
 
 .logo {
@@ -37,7 +44,7 @@
   font-size: 13px;
   color: var(--text-muted);
   line-height: 1.55;
-  max-width: 240px;
+  max-width: none;
 }
 
 .colHeader {
@@ -67,12 +74,38 @@
 
 .bottom {
   display: flex;
-  justify-content: space-between;
-  padding-top: 24px;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 20px;
   border-top: 1px solid var(--border-faint);
   font-family: var(--font-mono);
   font-size: 10.5px;
   color: var(--text-faint);
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+@media (min-width: 720px) {
+  .footer {
+    padding: 48px 40px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  .grid {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 48px;
+  }
+
+  .tagline {
+    max-width: 240px;
+  }
+
+  .bottom {
+    flex-direction: row;
+    gap: 0;
+    justify-content: space-between;
+    padding-top: 24px;
+  }
 }

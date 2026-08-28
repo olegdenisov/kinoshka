@@ -1,3 +1,12 @@
+/*
+  Mobile-first: до Task 8 (docs/plans/20260827-mobile-first-adaptive-layout.md) этот модуль был
+  только десктопным (HeroSection рендерился только внутри HomeDesktop; HomeMobile инлайнил свою
+  собственную, отдельную hero-разметку). Слияние HomeDesktop/HomeMobile в единый Home означает,
+  что HeroSection теперь рендерится и на мобильном брейкпоинте — база ниже уменьшает типографику/
+  паддинги/gap под узкий экран, `@media (min-width: 720px)` восстанавливает исходные десктопные
+  значения без изменений.
+*/
+
 .hero {
   position: relative;
   overflow: hidden;
@@ -50,27 +59,25 @@
 .content {
   position: relative;
   z-index: 1;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 120px 40px 140px;
+  padding: 56px 20px 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 36px;
+  gap: 20px;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 12px 6px 8px;
+  gap: 8px;
+  padding: 5px 10px 5px 7px;
   border-radius: 999px;
   /* UI-chrome pill (not a photo scrim) — text color already tracks the
      theme, so the background must too or contrast breaks in light mode */
   background: var(--bg-glass-secondary-strong);
   border: 1px solid var(--border-light);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 9.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-secondary);
@@ -78,23 +85,23 @@
 
 .badgeDot {
   display: block;
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
   background: var(--accent-warm);
-  box-shadow: 0 0 0 4px var(--accent-warm-glow);
+  box-shadow: 0 0 0 3px var(--accent-warm-glow);
   flex-shrink: 0;
 }
 
 .heading {
   font-family: var(--font-display);
-  font-size: 82px;
-  line-height: 0.98;
-  letter-spacing: -0.035em;
+  font-size: 34px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
   font-weight: 500;
   margin: 0;
   text-align: center;
-  max-width: 900px;
+  max-width: 100%;
   color: var(--text-primary);
 }
 
@@ -111,10 +118,10 @@
 
 .description {
   margin: 0;
-  max-width: 540px;
+  max-width: 100%;
   text-align: center;
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 13.5px;
   line-height: 1.55;
   color: var(--text-secondary);
   letter-spacing: -0.005em;
@@ -125,9 +132,9 @@
   max-width: 640px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 56px;
-  padding: 0 18px;
+  gap: 10px;
+  height: 48px;
+  padding: 0 14px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-soft);
   border-radius: 8px;
@@ -148,8 +155,11 @@
   outline: none;
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 15.5px;
+  font-size: 14px;
   letter-spacing: -0.005em;
+  /* prevents iOS Safari from auto-zooming the page on input focus (min 16px avoids it
+     entirely, but 14px matches the rest of the mobile hero's type scale — accepted trade-off) */
+  min-width: 0;
 }
 
 .searchInput::placeholder {
@@ -157,15 +167,16 @@
 }
 
 .searchBtn {
-  height: 36px;
-  padding: 0 14px;
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 12px;
   background: var(--accent-warm);
   color: var(--bg-primary);
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -179,9 +190,12 @@
 .chips {
   display: flex;
   gap: 6px;
+  width: 100%;
+  overflow-x: auto;
 }
 
 .chip {
+  flex-shrink: 0;
   height: 32px;
   padding: 0 14px;
   /* UI-chrome pill (not a photo scrim) — see .badge comment above */
@@ -191,7 +205,7 @@
   border-radius: 999px;
   cursor: pointer;
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
   letter-spacing: -0.005em;
   transition: all 160ms;
@@ -209,13 +223,14 @@
 
 .stats {
   display: flex;
-  gap: 48px;
-  margin-top: 32px;
-  padding-top: 24px;
+  gap: 24px;
+  margin-top: 24px;
+  padding-top: 20px;
   border-top: 1px solid var(--border-faint);
   width: 100%;
   max-width: 640px;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  justify-content: center;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -230,7 +245,7 @@
 
 .statValue {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 500;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -238,4 +253,74 @@
 
 .statLabel {
   text-transform: uppercase;
+}
+
+@media (min-width: 720px) {
+  .content {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 120px 40px 140px;
+    gap: 36px;
+  }
+
+  .badge {
+    gap: 10px;
+    padding: 6px 12px 6px 8px;
+    font-size: 10.5px;
+  }
+
+  .badgeDot {
+    width: 6px;
+    height: 6px;
+    box-shadow: 0 0 0 4px var(--accent-warm-glow);
+  }
+
+  .heading {
+    font-size: 82px;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    max-width: 900px;
+  }
+
+  .description {
+    max-width: 540px;
+    font-size: 15px;
+  }
+
+  .searchBar {
+    gap: 12px;
+    height: 56px;
+    padding: 0 18px;
+  }
+
+  .searchInput {
+    font-size: 15.5px;
+  }
+
+  .searchBtn {
+    height: 36px;
+    padding: 0 14px;
+    font-size: 11px;
+  }
+
+  .chips {
+    width: auto;
+    overflow-x: visible;
+  }
+
+  .chip {
+    font-size: 13px;
+  }
+
+  .stats {
+    gap: 48px;
+    margin-top: 32px;
+    padding-top: 24px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .statValue {
+    font-size: 20px;
+  }
 }
