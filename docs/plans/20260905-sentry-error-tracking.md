@@ -168,36 +168,36 @@ plans/roadmap.md                        — отметить чекбоксы 2.
 - Modify: `vite.config.ts`
 - Create: `src/vite-env.d.ts`
 
-- [ ] Переписать `defineConfig({...})` в `defineConfig(({ mode, command }) => {...})`, внутри
+- [x] Переписать `defineConfig({...})` в `defineConfig(({ mode, command }) => {...})`, внутри
       вызвать `loadEnv(mode, process.cwd(), '')` (пустой префикс — иначе `SENTRY_*` без
       `VITE_`-префикса не попадут в результат) и получить `env`.
-- [ ] Прочитать версию пакета через `JSON.parse(readFileSync(new URL('./package.json',
+- [x] Прочитать версию пакета через `JSON.parse(readFileSync(new URL('./package.json',
       import.meta.url), 'utf-8')).version` (`node:fs`) — не через
       `process.env.npm_package_version` (см. Context/Solution Overview).
-- [ ] Добавить чтение git SHA через `execSync('git rev-parse --short HEAD', { encoding: 'utf-8'
+- [x] Добавить чтение git SHA через `execSync('git rev-parse --short HEAD', { encoding: 'utf-8'
       }).trim()`, обёрнутое в `try/catch` с fallback `'unknown'`.
-- [ ] Собрать `const release = \`kinoshka@${version}+${gitSha}\`` — одна строка на весь конфиг.
-- [ ] Вычислить `const sentryEnabled = command === 'build' && Boolean(env.SENTRY_AUTH_TOKEN &&
+- [x] Собрать `const release = \`kinoshka@${version}+${gitSha}\`` — одна строка на весь конфиг.
+- [x] Вычислить `const sentryEnabled = command === 'build' && Boolean(env.SENTRY_AUTH_TOKEN &&
       env.SENTRY_ORG && env.SENTRY_PROJECT)`.
-- [ ] Собрать массив `plugins` императивно: `[react(), babel({...})]`, и только если
+- [x] Собрать массив `plugins` императивно: `[react(), babel({...})]`, и только если
       `sentryEnabled` — запушить в конец `sentryVitePlugin({ org: env.SENTRY_ORG, project:
       env.SENTRY_PROJECT, authToken: env.SENTRY_AUTH_TOKEN, release: { name: release },
       sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] }, errorHandler: (error) => {
       console.warn('[sentry-vite-plugin]', error) } })` (импорт `sentryVitePlugin` из
       `@sentry/vite-plugin`) — `errorHandler` не даёт неудачному аплоаду (невалидный токен,
       сеть) уронить сборку.
-- [ ] Добавить `define: { __APP_RELEASE__: JSON.stringify(release) }` — задаётся безусловно
+- [x] Добавить `define: { __APP_RELEASE__: JSON.stringify(release) }` — задаётся безусловно
       (не только когда `sentryEnabled`), т.к. `sentry.ts` читает эту константу при каждой
       сборке, а use-site сам решает, нужна ли она (см. Task 2).
-- [ ] Добавить `build: { sourcemap: sentryEnabled ? 'hidden' : false }`.
-- [ ] Создать `src/vite-env.d.ts` с `declare const __APP_RELEASE__: string` — без единого
+- [x] Добавить `build: { sourcemap: sentryEnabled ? 'hidden' : false }`.
+- [x] Создать `src/vite-env.d.ts` с `declare const __APP_RELEASE__: string` — без единого
       top-level `import`/`export` в файле (иначе он станет модулем, и `declare const`
       перестанет быть глобальной декларацией).
-- [ ] Убедиться, что `resolve`/`test`-секции конфига не сломались после перехода на функцию
+- [x] Убедиться, что `resolve`/`test`-секции конфига не сломались после перехода на функцию
       `defineConfig` (возврат объекта из колбэка), и что `define` из этого же объекта долетает
       и до Vitest-запуска (он использует тот же `defineConfig`, просто с `mode: 'test'` —
       `define` в возвращаемом объекте ни от чего не зависит и применяется всегда).
-- [ ] Прогнать `pnpm exec tsc -b` (не `make typecheck` — см. Context, корневой `tsconfig.json`
+- [x] Прогнать `pnpm exec tsc -b` (не `make typecheck` — см. Context, корневой `tsconfig.json`
       без `-b` не проверяет ни `vite.config.ts`, ни `src/**`) и `make test` — существующие
       тесты не должны сломаться от смены формы `defineConfig`.
 
