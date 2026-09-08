@@ -16,6 +16,7 @@
     "commit": "cz"
   },
   "dependencies": {
+    "@sentry/react": "^10.71.0",
     "@siberiacancode/fetches": "^1.14.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -27,6 +28,7 @@
     "@commitlint/cli": "^21.1.0",
     "@commitlint/config-conventional": "^21.1.0",
     "@rolldown/plugin-babel": "^0.2.3",
+    "@sentry/vite-plugin": "^5.4.0",
     "@siberiacancode/apicraft": "^1.11.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
