@@ -47,6 +47,10 @@ export default defineConfig(({ mode, command }) => {
         org: env.SENTRY_ORG,
         project: env.SENTRY_PROJECT,
         authToken: env.SENTRY_AUTH_TOKEN,
+        // не задан по умолчанию → плагин бьёт в sentry.io (US). Организации на
+        // EU data region (de.sentry.io) без явного url получают 401 "Invalid
+        // org token" — см. https://github.com/getsentry/sentry-cli/issues/3385.
+        ...(env.SENTRY_URL ? { url: env.SENTRY_URL } : {}),
         release: {
           name: release,
           // auto: сам берёт repo/commit из git — нужен GitHub integration в Sentry
