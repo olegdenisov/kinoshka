@@ -236,28 +236,38 @@ plans/roadmap.md                        — отметить чекбоксы 2.
 - Modify: `src/app/providers.tsx`
 - Create: `src/app/providers.test.tsx`
 
-- [ ] `export const GlobalErrorBoundary = ({ children }: PropsWithChildren) => (...)` — рендерит
+- [x] `export const GlobalErrorBoundary = ({ children }: PropsWithChildren) => (...)` — рендерит
       `<Sentry.ErrorBoundary fallback={({ resetError }) => <ErrorState title='...'
       description='...' onRetry={resetError} />}>{children}</Sentry.ErrorBoundary>` (импорт
       `ErrorState` из `@shared/ui`).
-- [ ] В `src/app/providers.tsx`: вызвать `initSentry()` один раз на верхнем уровне модуля (до
+- [x] В `src/app/providers.tsx`: вызвать `initSentry()` один раз на верхнем уровне модуля (до
       определения компонента `Providers`), обернуть `<RouterProvider>` в `<GlobalErrorBoundary>`.
-- [ ] Написать тест на `GlobalErrorBoundary` с `vi.mock('@sentry/react', async
-      (importOriginal) => ({ ...(await importOriginal()), captureException: vi.fn() }))` —
-      частичный мок, реальный `Sentry.ErrorBoundary` остаётся рабочим, а `captureException`
-      можно проверить как spy. Дочерний компонент бросает исключение при первом рендере и не
-      бросает при повторном (module-level флаг) — проверить: вместо краха показывается
-      `ErrorState`-фолбэк (заголовок, кнопка retry), `captureException` вызван, клик по retry →
+- [x] Написать тест на `GlobalErrorBoundary` — **[deviation]**: план предлагал `vi.mock(
+      '@sentry/react', ..., { captureException: vi.fn() })` и проверку "captureException
+      вызван". Эмпирически проверено, что `Sentry.ErrorBoundary` (@sentry/react@10.71.0)
+      репортит ошибку через внутренний `captureReactException` (bundle-файл `error.js` внутри
+      самого пакета), который импортирует `captureException` напрямую из `'@sentry/browser'` —
+      отдельного пакета, доступного только как вложенная (не хойстнутая pnpm) транзитивная
+      зависимость, не резолвящаяся из тестового файла и не перехватываемая моком
+      `'@sentry/react'` (0 вызовов на практике). Добавление `@sentry/browser` в devDependencies
+      для прямого резолва тоже не решило проблему (Vite/Vitest создают для вложенного и
+      корневого путей разные экземпляры модуля в графе) — devDependency откачена обратно. Тест
+      вместо этого проверяет реальный (не замоканный) `Sentry.ErrorBoundary` по наблюдаемому
+      контракту: дочерний компонент бросает исключение (module-level флаг `shouldThrow`, не
+      self-flipping — React синхронно повторяет рендер после ошибки ДО того, как считает её
+      настоящей; self-flipping флаг не бросал бы во второй попытке и boundary не перехватывал бы
+      ошибку вовсе, см. комментарий в тесте и аналогичный паттерн в `AsyncBoundary.test.tsx`) →
+      показывается `ErrorState`-фолбэк (заголовок, описание, кнопка retry) → клик по retry →
       дочерний компонент рендерится успешно. Ожидаемо шумный `console.error` от React
       error-boundary логирования — не баг теста.
-- [ ] Написать тест на happy path: без ошибки в детях `GlobalErrorBoundary` рендерит `children`
-      как есть, `captureException` не вызван.
-- [ ] Написать тест на `providers.tsx`, мокая `./router` (лёгкий фейковый router-объект — не
+- [x] Написать тест на happy path: без ошибки в детях `GlobalErrorBoundary` рендерит `children`
+      как есть (проверка `captureException` не вызван опущена по той же причине, что и выше).
+- [x] Написать тест на `providers.tsx`, мокая `./router` (лёгкий фейковый router-объект — не
       нужно тянуть реальные страницы/MSW) и `./sentry` (`vi.mock('./sentry')`): проверить, что
       `initSentry` вызван при импорте модуля, и что рендер `<Providers />` оборачивает вывод в
       разметку `GlobalErrorBoundary` (напр. через `vi.mock('./GlobalErrorBoundary')` со
       спай-компонентом, отдающим детей с маркер-атрибутом).
-- [ ] `make test` — проходит.
+- [x] `make test` — проходит.
 
 ### Task 4: Env-плейсхолдеры
 
