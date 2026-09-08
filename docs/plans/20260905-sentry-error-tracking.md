@@ -289,7 +289,7 @@ plans/roadmap.md                        — отметить чекбоксы 2.
 - Modify: `AGENTS.md`
 - Modify: `plans/roadmap.md`
 
-- [ ] В `AGENTS.md` добавить раздел «Error tracking (Sentry)» рядом с существующими
+- [x] В `AGENTS.md` добавить раздел «Error tracking (Sentry)» рядом с существующими
       тематическими разделами: `initSentry()` вызывается только при `PROD && VITE_SENTRY_DSN`
       (`src/app/sentry.ts`); где живёт `GlobalErrorBoundary` и почему это отдельный компонент, а
       не правка `shared/ui/ErrorBoundary`; список env-переменных (`VITE_SENTRY_DSN` —
@@ -304,9 +304,9 @@ plans/roadmap.md                        — отметить чекбоксы 2.
       вырезает `X-API-KEY` как defense-in-depth, и отдельно — принятое ограничение про
       `VITE_API_KEY`, инлайненный в бандл (см. Solution Overview) вне скоупа этого плана; что
       трейсинг (`browserTracingIntegration`) сознательно не подключён — предмет `2.5.2`.
-- [ ] В `plans/roadmap.md` отметить чекбоксы `2.5.1` (`- [ ]` → `- [x]`) после завершения всех
+- [x] В `plans/roadmap.md` отметить чекбоксы `2.5.1` (`- [ ]` → `- [x]`) после завершения всех
       задач этого плана.
-- [ ] Тестов не требует.
+- [x] Тестов не требует.
 
 ### Task 6: Верификация и перенос плана
 
