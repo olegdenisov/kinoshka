@@ -9,6 +9,12 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig, loadEnv, type PluginOption } from 'vite'
 
+import {
+  buildRelease,
+  isSentryEnabled,
+  resolveBuildSourcemap,
+} from './sentry.config'
+
 // https://vite.dev/config/
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -26,11 +32,9 @@ export default defineConfig(({ mode, command }) => {
     // .git недоступен (напр. в некоторых Docker-образах) — билд не должен падать
   }
 
-  const release = `kinoshka@${version}+${gitSha}`
+  const release = buildRelease({ version, gitSha })
 
-  const sentryEnabled =
-    command === 'build' &&
-    Boolean(env.SENTRY_AUTH_TOKEN && env.SENTRY_ORG && env.SENTRY_PROJECT)
+  const sentryEnabled = isSentryEnabled({ command, env })
 
   const plugins: PluginOption[] = [
     react(),
@@ -68,7 +72,7 @@ export default defineConfig(({ mode, command }) => {
       __APP_RELEASE__: JSON.stringify(release),
     },
     build: {
-      sourcemap: sentryEnabled ? 'hidden' : false,
+      sourcemap: resolveBuildSourcemap(sentryEnabled),
     },
     test: {
       environment: 'jsdom',

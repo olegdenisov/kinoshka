@@ -7,7 +7,7 @@ build:
 	pnpm build
 
 typecheck:
-	pnpm exec tsc --noEmit
+	pnpm exec tsc -b
 
 build-only:
 	pnpm exec vite build

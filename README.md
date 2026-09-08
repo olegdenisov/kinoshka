@@ -17,6 +17,7 @@
 - **Zod** — валидация данных (localStorage, API-границы)
 - **oxlint** — Rust-линтер (TS/React/jsx-a11y правила)
 - **husky** + **lint-staged** + **commitlint** — pre-commit линтинг и conventional commits (`pnpm commit`)
+- **Sentry** (`@sentry/react` + `@sentry/vite-plugin`) — error tracking в prod-сборке, аплоад source maps на этапе билда
 
 ## Команды
 
