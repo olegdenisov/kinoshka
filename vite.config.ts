@@ -47,7 +47,16 @@ export default defineConfig(({ mode, command }) => {
         org: env.SENTRY_ORG,
         project: env.SENTRY_PROJECT,
         authToken: env.SENTRY_AUTH_TOKEN,
-        release: { name: release },
+        release: {
+          name: release,
+          // auto: сам берёт repo/commit из git — нужен GitHub integration в Sentry
+          // (Settings → Integrations → GitHub), иначе шаг тихо пропускается
+          // (ignoreMissing/ignoreEmpty не роняют билд).
+          setCommits: { auto: true, ignoreMissing: true, ignoreEmpty: true },
+          // деплоем считаем только сборки на Vercel (VERCEL_ENV задаётся им
+          // автоматически) — CI/локальные билды в Deploys не попадают.
+          ...(env.VERCEL_ENV ? { deploy: { env: env.VERCEL_ENV } } : {}),
+        },
         sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
         errorHandler: error => {
           console.warn('[sentry-vite-plugin]', error)
