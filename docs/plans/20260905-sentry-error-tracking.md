@@ -208,24 +208,24 @@ plans/roadmap.md                        — отметить чекбоксы 2.
 - Create: `src/app/sentry.ts`
 - Create: `src/app/sentry.test.ts`
 
-- [ ] `export const scrubApiKeyHeader = (event: Sentry.ErrorEvent): Sentry.ErrorEvent => {...}`
+- [x] `export const scrubApiKeyHeader = (event: Sentry.ErrorEvent): Sentry.ErrorEvent => {...}`
       — если `event.request?.headers` существует, удаляет ключи `X-API-KEY`/`x-api-key`;
       возвращает `event` без мутации остальных полей.
-- [ ] `export const initSentry = (): void => {...}` — читает `const dsn =
+- [x] `export const initSentry = (): void => {...}` — читает `const dsn =
       import.meta.env.VITE_SENTRY_DSN`; при `!import.meta.env.PROD || !dsn` — сразу `return`.
       Иначе вызывает `Sentry.init({ dsn, release: __APP_RELEASE__, environment:
       import.meta.env.MODE, sendDefaultPii: false, beforeSend: scrubApiKeyHeader })`. Без
       `integrations`/`tracesSampleRate` — трейсинг вне скоупа (см. Overview).
-- [ ] Написать тесты на `scrubApiKeyHeader`: событие с `request.headers['X-API-KEY']` →
+- [x] Написать тесты на `scrubApiKeyHeader`: событие с `request.headers['X-API-KEY']` →
       заголовок вырезан, остальные заголовки не тронуты; событие без `request` → возвращается
       как есть, без исключения.
-- [ ] Написать тесты на `initSentry` с `vi.mock('@sentry/react')`:
+- [x] Написать тесты на `initSentry` с `vi.mock('@sentry/react')`:
       - `vi.stubEnv('PROD', false)` (или `VITE_SENTRY_DSN` пуст при `PROD=true`) → `Sentry.init`
         не вызван;
       - `vi.stubEnv('PROD', true)` + непустой `VITE_SENTRY_DSN` → `Sentry.init` вызван ровно
         один раз с объектом, содержащим `dsn`, `release: __APP_RELEASE__`, `sendDefaultPii:
         false`, `beforeSend: scrubApiKeyHeader`, и **без** `tracesSampleRate`/`integrations`.
-- [ ] `make test` — проходит.
+- [x] `make test` — проходит.
 
 ### Task 3: `GlobalErrorBoundary` — Sentry.ErrorBoundary поверх всего приложения
 
