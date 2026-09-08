@@ -383,12 +383,12 @@
 
 ### 2.5.1 Sentry — error tracking + source maps
 
-- [ ] `pnpm add @sentry/react @sentry/vite-plugin`.
-- [ ] Инициализация в `src/app/providers.tsx` (только production-сборка).
-- [ ] Sentry-вариант `ErrorBoundary` оборачивает global boundary.
-- [ ] Source maps загружаются в Sentry при build (Vite plugin), но не паблишатся в `dist/`.
-- [ ] DSN в `.env.local` как `VITE_SENTRY_DSN`.
-- [ ] PII scrubbing включён.
+- [x] `pnpm add @sentry/react @sentry/vite-plugin`.
+- [x] Инициализация в `src/app/providers.tsx` (только production-сборка).
+- [x] Sentry-вариант `ErrorBoundary` оборачивает global boundary.
+- [x] Source maps загружаются в Sentry при build (Vite plugin), но не паблишатся в `dist/`.
+- [x] DSN в `.env.local` как `VITE_SENTRY_DSN`.
+- [x] PII scrubbing включён.
 
 **Как лучше:** sample rate 0.1-0.2 в production — не платишь за весь трафик. Release tagging через `process.env.npm_package_version` + git SHA в meta. Подключи Sentry через `Sentry.ErrorBoundary` — оно само сообщает в Sentry о пойманных ошибках.
 
