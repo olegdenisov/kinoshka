@@ -91,3 +91,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          # не секрет (просто хост региона), поэтому не в GitHub Secrets — см.
+          # https://github.com/getsentry/sentry-cli/issues/3385: без явного url
+          # org-токен региональных инстансов (us.sentry.io/de.sentry.io) 401-ит
+          # на дефолтном sentry.io.
+          SENTRY_URL: https://us.sentry.io
