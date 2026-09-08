@@ -310,21 +310,32 @@ plans/roadmap.md                        — отметить чекбоксы 2.
 
 ### Task 6: Верификация и перенос плана
 
-- [ ] `pnpm exec tsc -b` — чисто (реальный typecheck, см. Context).
-- [ ] `make test` — весь набор тестов проходит.
-- [ ] `make build` без `SENTRY_*` в окружении (текущее состояние `.env.local` — плейсхолдеры):
+- [x] `pnpm exec tsc -b` — чисто (реальный typecheck, см. Context).
+- [x] `make test` — весь набор тестов проходит (74 test files, 612 tests, все зелёные).
+- [x] `make build` без `SENTRY_*` в окружении (текущее состояние `.env.local` — плейсхолдеры):
       плагин не подключается (`sentryEnabled === false`), билд не падает, `find dist -name
-      '*.map'` — пусто, ни в одном чанке нет `//# sourceMappingURL=`.
-- [ ] Собрать ещё раз с фиктивными `SENTRY_AUTH_TOKEN`/`SENTRY_ORG`/`SENTRY_PROJECT` (заведомо
+      '*.map'` — пусто, ни в одном чанке нет `//# sourceMappingURL=`. Подтверждено: билд прошёл
+      (`✓ built in 2.11s`), `find dist -name '*.map'` вернул пусто, `grep -r sourceMappingURL
+      dist/` — ничего не найдено.
+- [x] Собрать ещё раз с фиктивными `SENTRY_AUTH_TOKEN`/`SENTRY_ORG`/`SENTRY_PROJECT` (заведомо
       невалидные значения) — убедиться, что `sentryVitePlugin` реально активируется (в логе
       сборки видны его сообщения) и *не* роняет билд на невалидном токене (401) благодаря
       `errorHandler`; `find dist -name '*.map'` — пусто и в этом сценарии (файлы должны быть
       удалены после — неудачной — попытки аплоада; если `sentry-cli` не подчищает их при
       ошибке сети/авторизации, зафиксировать это как ⚠️ и решить по месту — либо явный
       `try/finally` вокруг сборки не нужен, т.к. `filesToDeleteAfterUpload` — это post-build
-      хук самого плагина, а не post-upload).
-- [ ] Проверить все чекбоксы плана и `plans/roadmap.md` отмечены.
-- [ ] Переместить этот файл в `docs/plans/completed/`.
+      хук самого плагина, а не post-upload). Подтверждено эмпирически (env vars, `.env.local` не
+      трогался): плагин активировался (лог `[sentry-vite-plugin] Info: Sending telemetry...`),
+      `sentry-cli releases new` и `sourcemaps upload` оба упали с `401 Invalid token`, но сам
+      `vite build` всё равно завершился успешно (`✓ built in 5.94s`) — `errorHandler` отработал
+      как задумано. **Не потребовалось ⚠️-пометки**: `find dist -name '*.map'` после этого
+      билда тоже пусто — `filesToDeleteAfterUpload` подчистил `.map`-файлы, несмотря на то что
+      сам аплоад упал (это действительно post-build хук плагина, не зависящий от успеха
+      аплоада, как и предполагалось в Solution Overview).
+- [x] Проверить все чекбоксы плана и `plans/roadmap.md` отмечены. Все чекбоксы Task 1-6 в этом
+      файле — `[x]`; `plans/roadmap.md` §2.5.1 — все 6 чекбоксов `[x]` (подтверждено повторно).
+- [x] Переместить этот файл в `docs/plans/completed/`. (skipped - harness moves the plan after
+      all phases finish)
 
 ## Post-Completion
 
