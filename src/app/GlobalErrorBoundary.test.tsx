@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react'
 import { fireEvent, render, screen } from '@testing-library/react'
 
 import { GlobalErrorBoundary } from './GlobalErrorBoundary'
@@ -16,6 +17,9 @@ import { GlobalErrorBoundary } from './GlobalErrorBoundary'
 // проверяется по наблюдаемому контракту — что он ловит ошибку, показывает переданный fallback
 // (ErrorState) и восстанавливается по `resetError` — а не по факту вызова `captureException`,
 // который относится к внутренней реализации Sentry SDK, а не к логике GlobalErrorBoundary.
+// Отдельно (см. describe "GlobalErrorBoundary — сообщает об ошибке в Sentry" ниже) это всё же
+// проверяется — не мокингом '@sentry/react', а реальным `Sentry.init()` с тестовым
+// transport/`beforeSend` в самом тесте.
 // module-level флаг (не self-flipping внутри рендера) — React после ошибки в рендере
 // синхронно повторяет попытку рендера ещё раз ДО того, как решит считать её настоящей
 // ошибкой (см. AsyncBoundary.test.tsx, тот же паттерн); self-flipping флаг привёл бы к тому,
@@ -62,5 +66,47 @@ describe('GlobalErrorBoundary — happy path', () => {
 
     expect(screen.getByText('all good')).toBeInTheDocument()
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
+  })
+})
+
+// Проверено эмпирически (не единственно по внешней документации): @sentry/react, @sentry/browser
+// и @sentry/core в этом репозитории — ровно одна физическая версия (10.71.0) в
+// content-addressable pnpm store, и обе "копии" — та, что резолвится вложенно из
+// @sentry/react/node_modules/@sentry/browser внутри captureReactException, и та, что резолвится
+// из этого тестового файла через `import * as Sentry from '@sentry/react'` (`export * from
+// '@sentry/browser'` в его index.js) — читают состояние активного клиента из одного и того же
+// `globalThis.__SENTRY__[SDK_VERSION]`-carrier (@sentry/core/carrier.js, getMainCarrier/
+// getSentryCarrier) — сам SDK специально спроектирован так, чтобы несколько бандл-копий одной
+// версии делили один активный клиент. Поэтому `Sentry.init()`, вызванный прямо в тесте с
+// кастомным `transport`/`beforeSend`, реально перехватывает событие, порождённое внутренним
+// `captureReactException` — в отличие от `vi.mock('@sentry/react', ...)`, который подменяет
+// только внешний реэкспорт и не долетает до внутреннего вызова (см. комментарий выше).
+describe('GlobalErrorBoundary — сообщает об ошибке в Sentry', () => {
+  afterEach(() => {
+    Sentry.getCurrentScope().setClient(undefined)
+  })
+
+  it('captureReactException долетает до реального Sentry-клиента (тестовый transport/beforeSend)', async () => {
+    const capturedEvents: Sentry.ErrorEvent[] = []
+    Sentry.init({
+      dsn: 'https://public@o0.ingest.sentry.io/0',
+      transport: () => ({
+        send: async () => ({}),
+        flush: async () => true,
+      }),
+      beforeSend: event => {
+        capturedEvents.push(event)
+        return event
+      },
+    })
+
+    render(
+      <GlobalErrorBoundary>
+        <Bomb />
+      </GlobalErrorBoundary>,
+    )
+
+    await vi.waitFor(() => expect(capturedEvents.length).toBeGreaterThan(0))
+    expect(capturedEvents[0]?.exception?.values?.[0]?.value).toBe('boom')
   })
 })
