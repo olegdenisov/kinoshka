@@ -39,4 +39,10 @@ export const initSentry = (): void => {
     sendDefaultPii: false,
     beforeSend: scrubApiKeyHeader,
   })
+
+  // TEMP DEBUG — убрать после диагностики (события не долетают до Sentry в проде).
+  // Позволяет из консоли прод-сайта вызвать window.__sentryDebug.captureException(...)
+  // и window.__sentryDebug.getClient()?.getOptions() напрямую, в обход global handlers.
+  ;(window as unknown as { __sentryDebug: typeof Sentry }).__sentryDebug =
+    Sentry
 }
