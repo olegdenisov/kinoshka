@@ -4,3 +4,4 @@ export {
   trackPageview,
   isAnalyticsEnabled,
 } from './analytics'
+export { reportWebVitals } from './reportWebVitals'

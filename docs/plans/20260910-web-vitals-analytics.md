@@ -266,7 +266,7 @@ interface Window {
 - Modify: `src/shared/lib/analytics/index.ts`
 - Modify: `src/shared/lib/index.ts`
 
-- [ ] `export const reportWebVitals = (): void => {...}` — при `!isAnalyticsEnabled()` —
+- [x] `export const reportWebVitals = (): void => {...}` — при `!isAnalyticsEnabled()` —
       `return`. Модульный флаг `let reported = false` — если уже `true`, тоже `return` (защита
       от двойной регистрации callback'ов при повторном вызове/HMR, симметрично
       `initAnalytics()`'s `getElementById`-гейту в Task 2). Иначе `reported = true` и `void
@@ -276,15 +276,15 @@ interface Window {
       публичный барел `src/shared/lib/index.ts`, который тянется почти из всех модулей
       приложения — статический импорт затащил бы `web-vitals` в основной чанк ради одной
       прод-only точки вызова (актуально для бюджетов бандла из `2.5.3`).
-- [ ] Приватная `reportMetric = (metric: Metric): void => trackEvent(\`web vital: 
+- [x] Приватная `reportMetric = (metric: Metric): void => trackEvent(\`web vital: 
       ${metric.name.toLowerCase()}\`, { value: Math.round(metric.name === 'CLS' ? metric.value *
       1000 : metric.value), rating: metric.rating })` — имя события в нижнем регистре
       (`web vital: lcp`), единообразно с `'search submitted'`/`'filter changed'`/`'favorite
       added'` (см. Solution Overview) — Plausible-голы это буквальные строки, их болезненно
       переименовывать после накопления данных, поэтому регистр фиксируется один раз здесь.
-- [ ] Ре-экспортировать `reportWebVitals` из `src/shared/lib/analytics/index.ts` и
+- [x] Ре-экспортировать `reportWebVitals` из `src/shared/lib/analytics/index.ts` и
       `src/shared/lib/index.ts`.
-- [ ] Написать тесты через `vi.mock('web-vitals', () => ({ onLCP: vi.fn(), onINP: vi.fn(),
+- [x] Написать тесты через `vi.mock('web-vitals', () => ({ onLCP: vi.fn(), onINP: vi.fn(),
       onCLS: vi.fn() }))` и `vi.mock('./analytics', ...)` (сохраняя `isAnalyticsEnabled` мокнутым
       `true`/`false` по кейсу): аналитика выключена → ни один `on*` не вызван; аналитика включена
       → все три вызваны ровно по разу (дождаться `await vi.dynamicImportSettled()` или
@@ -293,7 +293,7 @@ interface Window {
       зарегистрированного callback с `{ name: 'CLS', value: 0.123, rating: 'good' }` →
       `trackEvent` получил `'web vital: cls'` и `{ value: 123, rating: 'good' }`; аналогично для
       `'LCP'`/`'INP'` (→ `'web vital: lcp'`/`'web vital: inp'`) без домножения на 1000.
-- [ ] `make test` — проходит.
+- [x] `make test` — проходит.
 
 ### Task 4: Вызов `initAnalytics()`/`reportWebVitals()` из `providers.tsx`
 
