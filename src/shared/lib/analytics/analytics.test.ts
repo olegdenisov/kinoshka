@@ -119,6 +119,17 @@ describe('trackEvent', () => {
     })
   })
 
+  it('props={} (пустой объект, truthy в JS) — передаётся как { props: {} }, не как undefined', () => {
+    vi.stubEnv('PROD', true)
+    vi.stubEnv('VITE_PLAUSIBLE_DOMAIN', 'example.com')
+    const plausible = vi.fn()
+    window.plausible = plausible as Window['plausible']
+
+    trackEvent('foo', {})
+
+    expect(plausible).toHaveBeenCalledWith('foo', { props: {} })
+  })
+
   it('аналитика выключена (!PROD) — window.plausible не вызван, даже если определена', () => {
     vi.stubEnv('PROD', false)
     vi.stubEnv('VITE_PLAUSIBLE_DOMAIN', 'example.com')

@@ -6,6 +6,20 @@ export const isAnalyticsEnabled = (): boolean =>
 
 const SCRIPT_ID = 'plausible-analytics-script'
 
+// Официальный стаб Plausible для script.manual.js: копит вызовы в .q, пока не загрузится
+// реальный скрипт (он при загрузке доотправляет их). Объявлен через явную аннотацию типа
+// (а не `as Window['plausible']` force-cast) — функция с `...args: unknown[]` структурно
+// совместима с более узкой публичной сигнатурой `(event, options?) => void` (rest-параметр
+// unknown[] принимает любые аргументы), поэтому компилятор реально проверяет совместимость,
+// а не просто отключается на этой строке.
+const plausibleStub: NonNullable<Window['plausible']> = Object.assign(
+  (...args: unknown[]) => {
+    plausibleStub.q = plausibleStub.q || []
+    plausibleStub.q.push(args)
+  },
+  { q: undefined as unknown[] | undefined },
+)
+
 // Явная функция, а не side-effect при импорте — тестируема с разными import.meta.env.PROD /
 // VITE_PLAUSIBLE_DOMAIN через vi.stubEnv (тот же паттерн, что initSentry).
 export const initAnalytics = (): void => {
@@ -15,13 +29,7 @@ export const initAnalytics = (): void => {
   // <script> исполняется асинхронно независимо от defer, поэтому без стаба window.plausible
   // не определена ещё несколько миллисекунд после initAnalytics() — trackPageview() из
   // AppLayout's mount-эффекта и ранние web-vitals (LCP) терялись бы почти на каждой сессии.
-  // Официальный стаб Plausible для script.manual.js: копит вызовы в window.plausible.q,
-  // сам скрипт при загрузке доотправляет их.
-  window.plausible =
-    window.plausible ||
-    (function (...args: unknown[]) {
-      ;(window.plausible!.q = window.plausible!.q || []).push(args)
-    } as Window['plausible'])
+  window.plausible = window.plausible || plausibleStub
 
   // Защита от повторного вызова (напр. HMR) — не вставлять второй <script>.
   if (document.getElementById(SCRIPT_ID)) return
