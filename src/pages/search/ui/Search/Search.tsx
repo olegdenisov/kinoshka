@@ -26,6 +26,7 @@ import {
   useMovieCatalog,
 } from '../../model/useMovieCatalog'
 import { usePageSync } from '../../model/usePageSync'
+import { useSearchAnalytics } from '../../model/useSearchAnalytics'
 import { Pagination } from '../Pagination'
 import { SearchControls } from '../SearchControls'
 import { SearchHeader } from '../SearchHeader'
@@ -182,6 +183,7 @@ export const Search = () => {
   const [searchParams] = useSearchParams()
 
   const query = searchParams.get('q') ?? ''
+  useSearchAnalytics(query)
   const isSearchMode = query.trim().length > 0
   const { page, goToPage } = usePageSync({ query, filters })
   const {
