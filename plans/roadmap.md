@@ -400,10 +400,10 @@
 
 ### 2.5.2 Web Vitals + analytics
 
-- [ ] `pnpm add web-vitals`.
-- [ ] Web Vitals в Sentry — через `browserTracingIntegration` (Sentry Performance, `tracesSampleRate > 0`; отдельный API `Sentry.metrics` упразднён в 2024) — либо через `web-vitals` → события в PostHog/Plausible.
-- [ ] Analytics: PostHog (self-hosted free tier) либо Plausible (privacy-first, без cookie-баннера).
-- [ ] Event tracking минимальный: page view, search submitted, filter changed, favorite added.
+- [x] `pnpm add web-vitals`.
+- [x] Web Vitals в Sentry — через `browserTracingIntegration` (Sentry Performance, `tracesSampleRate > 0`; отдельный API `Sentry.metrics` упразднён в 2024) — либо через `web-vitals` → события в PostHog/Plausible. (реализовано через `web-vitals` → Plausible, см. `docs/plans/20260910-web-vitals-analytics.md`)
+- [x] Analytics: PostHog (self-hosted free tier) либо Plausible (privacy-first, без cookie-баннера). (выбран Plausible)
+- [x] Event tracking минимальный: page view, search submitted, filter changed, favorite added.
 
 **Как лучше:** не Google Analytics — для портфолио privacy-friendly стек (Plausible/PostHog/Umami) выглядит зрелее. Cookie banner с GA = legal-overhead, для каталога фильмов не нужно. INP (Interaction to Next Paint) — новая Core Web Vital вместо FID с 2024, обязательно её мониторь.
 

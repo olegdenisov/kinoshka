@@ -426,7 +426,7 @@ interface Window {
 - Modify: `AGENTS.md`
 - Modify: `plans/roadmap.md`
 
-- [ ] В `AGENTS.md` добавить раздел «Web Vitals + Analytics (Plausible)» рядом с разделом
+- [x] В `AGENTS.md` добавить раздел «Web Vitals + Analytics (Plausible)» рядом с разделом
       «Error tracking (Sentry)»: состав `src/shared/lib/analytics/` (`initAnalytics`,
       `trackEvent`, `trackPageview`, `reportWebVitals` — публичные; `isAnalyticsEnabled` —
       внутренняя деталь модуля, не реэкспортируется из `@shared/lib`), прод-only гейт через
@@ -443,12 +443,12 @@ interface Window {
       `Header`'s 250мс дебаунса `?q`, паттерн transition-ref — аналогично `usePageSync`; filter
       changed — `applyFilters`, не `setSort`; favorite added — ветка добавления в `toggle`, не
       `add`).
-- [ ] Обновить строку `@shared/lib` в таблице "Key public APIs" — добавить `initAnalytics()`,
+- [x] Обновить строку `@shared/lib` в таблице "Key public APIs" — добавить `initAnalytics()`,
       `trackEvent()`, `trackPageview()`, `reportWebVitals()` (без `isAnalyticsEnabled()` — не
       публичный экспорт барела, см. выше).
-- [ ] В `plans/roadmap.md` отметить чекбоксы `2.5.2` (`- [ ]` → `- [x]`) после завершения всех
+- [x] В `plans/roadmap.md` отметить чекбоксы `2.5.2` (`- [ ]` → `- [x]`) после завершения всех
       задач этого плана.
-- [ ] Тестов не требует.
+- [x] Тестов не требует.
 
 ### Task 10: Верификация и перенос плана
 
