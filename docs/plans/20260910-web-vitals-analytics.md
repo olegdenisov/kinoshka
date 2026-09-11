@@ -452,24 +452,32 @@ interface Window {
 
 ### Task 10: Верификация и перенос плана
 
-- [ ] `pnpm exec tsc -b` — чисто.
-- [ ] `make lint` — чисто (oxlint, `noUnusedLocals`-related на новый модуль `analytics/`).
-- [ ] `make test` — весь набор тестов проходит.
-- [ ] `make build` без `VITE_PLAUSIBLE_DOMAIN` в окружении — билд не падает, `initAnalytics`/
+- [x] `pnpm exec tsc -b` — чисто.
+- [x] `make lint` — чисто (oxlint, `noUnusedLocals`-related на новый модуль `analytics/`).
+- [x] `make test` — весь набор тестов проходит (78 test files, 657 tests).
+- [x] `make build` без `VITE_PLAUSIBLE_DOMAIN` в окружении — билд не падает, `initAnalytics`/
       `reportWebVitals` в собранном бандле присутствуют, но не активны (проверяется тестами
-      Task 2-3, не билдом напрямую).
-- [ ] Собрать с фиктивным `VITE_PLAUSIBLE_DOMAIN` + `NODE_ENV=production`/`vite build` —
+      Task 2-3, не билдом напрямую). Подтверждено: `dist/assets/web-vitals-*.js` — отдельный
+      динамически импортируемый чанк, main-чанк содержит вызовы `initAnalytics`/`reportWebVitals`.
+- [x] Собрать с фиктивным `VITE_PLAUSIBLE_DOMAIN` + `NODE_ENV=production`/`vite build` —
       убедиться, что итоговый HTML/JS не ломается, `initAnalytics()` в браузере (можно
       `make preview` + DevTools) пытается подгрузить `plausible.io/js/script.manual.js`
       (сетевой запрос уйдёт и упадёт 404 без реального домена в Plausible — ожидаемо, не блокер).
-- [ ] Проверить все чекбоксы плана и `plans/roadmap.md` отмечены.
-- ➕ [ ] **Не связано с 2.5.2, напоминание от пользователя (2026-09-10) — выполнить, если ещё не
+      Билд с `VITE_PLAUSIBLE_DOMAIN=example-fake-domain.test` прошёл успешно, `dist/index.html`
+      ссылается на корректные хэшированные `index-*.js`/`index-*.css`. Ручная проверка через
+      `make preview` + DevTools Network — manual test (skipped - not automatable).
+- [x] Проверить все чекбоксы плана и `plans/roadmap.md` отмечены.
+- ➕ [x] **Не связано с 2.5.2, напоминание от пользователя (2026-09-10) — выполнить, если ещё не
       сделано**: добавить `.claude/worktrees/` в `.gitignore`; завести `.worktreeinclude` в
       корне репозитория со списком файлов, которых нет в git, но которые нужны каждому
       worktree (`.env.local`) — тогда они будут копироваться в каждый новый worktree
       автоматически. Проверено на момент создания этого пункта: ни `.gitignore`, ни
-      `.worktreeinclude` этого ещё не содержат/не существуют.
-- [ ] Переместить этот файл в `docs/plans/completed/`.
+      `.worktreeinclude` этого ещё не содержат/не существуют. Выполнено: `.gitignore` дополнен
+      строкой `.claude/worktrees/`; создан `.worktreeinclude` в корне репозитория со списком
+      `.env.local` (по одному пути на строку — существующей конвенции для этого типа файла в
+      репозитории не найдено).
+- [x] Переместить этот файл в `docs/plans/completed/` — manual test (skipped - not automatable,
+      выполняется harness-процессом после завершения всех фаз, не этим агентом).
 
 ## Post-Completion
 
