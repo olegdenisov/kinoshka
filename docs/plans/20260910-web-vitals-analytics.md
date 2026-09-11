@@ -175,12 +175,12 @@ interface Window {
 - Modify: `.env.example`
 - Modify: `src/vite-env.d.ts`
 
-- [ ] `pnpm add web-vitals` (production dependency — исполняется в браузере в рантайме, не
+- [x] `pnpm add web-vitals` (production dependency — исполняется в браузере в рантайме, не
       build-time инструмент).
-- [ ] В `.env.local` добавить `VITE_PLAUSIBLE_DOMAIN=` (пустой плейсхолдер, по образцу
+- [x] В `.env.local` добавить `VITE_PLAUSIBLE_DOMAIN=` (пустой плейсхолдер, по образцу
       `VITE_SENTRY_DSN`).
-- [ ] В `.env.example` добавить `VITE_PLAUSIBLE_DOMAIN=<plausible-domain>`.
-- [ ] В `src/vite-env.d.ts` добавить `interface Window { plausible?: ((event: string, options?:
+- [x] В `.env.example` добавить `VITE_PLAUSIBLE_DOMAIN=<plausible-domain>`.
+- [x] В `src/vite-env.d.ts` добавить `interface Window { plausible?: ((event: string, options?:
       { props?: Record<string, string | number | boolean> }) => void) & { q?: unknown[] } }` —
       `q` — очередь событий, которую ставит queue-stub из Task 2 (см. там). Файл остаётся
       без единого `import`/`export` (иначе он перестанет быть ambient-декларацией, как и с
@@ -189,7 +189,7 @@ interface Window {
       `Window`) работает только через `interface`, `type` для этого физически не годится —
       добавить короткий Russian WHY-комментарий над декларацией, чтобы это не "исправили"
       обратно на `type` в будущем ревью.
-- [ ] Тестов не требует (зависимость + статическая конфигурация, не код).
+- [x] Тестов не требует (зависимость + статическая конфигурация, не код).
 
 ### Task 2: `src/shared/lib/analytics/analytics.ts` — initAnalytics, trackEvent, trackPageview
 
@@ -463,6 +463,12 @@ interface Window {
       `make preview` + DevTools) пытается подгрузить `plausible.io/js/script.manual.js`
       (сетевой запрос уйдёт и упадёт 404 без реального домена в Plausible — ожидаемо, не блокер).
 - [ ] Проверить все чекбоксы плана и `plans/roadmap.md` отмечены.
+- ➕ [ ] **Не связано с 2.5.2, напоминание от пользователя (2026-09-10) — выполнить, если ещё не
+      сделано**: добавить `.claude/worktrees/` в `.gitignore`; завести `.worktreeinclude` в
+      корне репозитория со списком файлов, которых нет в git, но которые нужны каждому
+      worktree (`.env.local`) — тогда они будут копироваться в каждый новый worktree
+      автоматически. Проверено на момент создания этого пункта: ни `.gitignore`, ни
+      `.worktreeinclude` этого ещё не содержат/не существуют.
 - [ ] Переместить этот файл в `docs/plans/completed/`.
 
 ## Post-Completion
