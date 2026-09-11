@@ -102,4 +102,15 @@ describe('useSearchAnalytics', () => {
 
     expect(trackEvent).not.toHaveBeenCalled()
   })
+
+  it('монтирование сразу с непустым query (deep link/refresh на /search?q=...) трекает без ожидания 800мс — осознанное поведение, не только результат "набора текста"', () => {
+    renderHook(({ query }) => useSearchAnalytics(query), {
+      initialProps: { query: 'batman' },
+    })
+
+    // Не продвигаем таймеры вовсе — useDebouncedValue's начальное состояние равно первому
+    // значению без задержки, поэтому эффект уже отработал синхронно на первом рендере.
+    expect(trackEvent).toHaveBeenCalledTimes(1)
+    expect(trackEvent).toHaveBeenCalledWith('search submitted')
+  })
 })

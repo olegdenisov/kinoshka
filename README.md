@@ -18,6 +18,7 @@
 - **oxlint** — Rust-линтер (TS/React/jsx-a11y правила)
 - **husky** + **lint-staged** + **commitlint** — pre-commit линтинг и conventional commits (`pnpm commit`)
 - **Sentry** (`@sentry/react` + `@sentry/vite-plugin`) — error tracking в prod-сборке, аплоад source maps на этапе билда
+- **web-vitals** + **Plausible** — мониторинг Core Web Vitals (LCP/INP/CLS) и privacy-friendly event tracking (page view, search submitted, filter changed, favorite added) в prod-сборке
 
 ## Команды
 

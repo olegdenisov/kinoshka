@@ -17,6 +17,14 @@ import { useEffect, useRef } from 'react'
  *
  * Page-slice `model/`-хук (не `@features`/`@entities`) — page-internal, не экспортируется через
  * публичный `index.ts` (см. AGENTS.md, "Page-slice `model/` facade").
+ *
+ * **Замечание про монтирование с уже непустым `query`** (deep link на `/search?q=...`,
+ * обновление страницы, back-навигация): `useDebouncedValue`'s начальное состояние равно первому
+ * переданному значению без задержки (см. его докблок), поэтому эффект здесь отработает уже на
+ * первом рендере и затрекает `'search submitted'` сразу, без ожидания 800мс. Это осознанное
+ * поведение, а не баг — план трекает любое "устоявшееся" (settled) непустое значение `query`, не
+ * делая исключения для первого рендера, так что заход по прямой ссылке с параметром поиска тоже
+ * считается "submitted".
  */
 export const useSearchAnalytics = (query: string): void => {
   const settledQuery = useDebouncedValue(query, 800)
