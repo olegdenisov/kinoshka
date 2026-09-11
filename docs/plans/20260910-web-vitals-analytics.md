@@ -347,7 +347,7 @@ interface Window {
 - Create: `src/pages/search/model/useSearchAnalytics.test.ts`
 - Modify: `src/pages/search/ui/Search/Search.tsx`
 
-- [ ] **Важно**: `query`, приходящий из `Search.tsx` (`searchParams.get('q')`), уже
+- [x] **Важно**: `query`, приходящий из `Search.tsx` (`searchParams.get('q')`), уже
       debounce-committed `Header`'ом, но самим `Header`'s дебаунсом всего в `QUERY_DEBOUNCE_MS`
       (250мс, `src/widgets/header/ui/Header/Header.tsx`) — печатая одно слово, пользователь
       коммитит в `?q` несколько промежуточных непустых значений подряд ("ba" → "batm" →
@@ -357,19 +357,19 @@ interface Window {
       сравнивать с последним затреканным значением: `const settledQuery =
       useDebouncedValue(query, 800)`. Это гасит серию быстрых промежуточных коммитов `?q` в одно
       "устоявшееся" значение перед трекингом.
-- [ ] `src/pages/search/model/useSearchAnalytics.ts`: `export const useSearchAnalytics = (query:
+- [x] `src/pages/search/model/useSearchAnalytics.ts`: `export const useSearchAnalytics = (query:
       string): void => {...}` — `useRef<string>('')` хранит последний затреканный (непустой)
       query; `useEffect` на `[settledQuery]`: `const trimmed = settledQuery.trim(); if (trimmed
       && trimmed !== lastTrackedRef.current) { trackEvent('search submitted');
       lastTrackedRef.current = trimmed } else if (!trimmed) { lastTrackedRef.current = '' }`
       (сброс рефа на пустой query — иначе повторный ввод того же текста после очистки поля не
       затрекается снова).
-- [ ] Не отправлять сам текст запроса как prop (`trackEvent('search submitted')` без `props`) —
+- [x] Не отправлять сам текст запроса как prop (`trackEvent('search submitted')` без `props`) —
       минимизирует объём пользовательских данных в аналитике, соответствует выбору Plausible
       как privacy-first решения.
-- [ ] В `Search.tsx` вызвать `useSearchAnalytics(query)` сразу после строки, где вычисляется
+- [x] В `Search.tsx` вызвать `useSearchAnalytics(query)` сразу после строки, где вычисляется
       `query = searchParams.get('q') ?? ''` (`src/pages/search/ui/Search/Search.tsx:184`).
-- [ ] Написать тесты на `useSearchAnalytics` через `renderHook` (`@testing-library/react`) +
+- [x] Написать тесты на `useSearchAnalytics` через `renderHook` (`@testing-library/react`) +
       `vi.mock('@shared/lib', ... trackEvent: vi.fn())` (сохраняя реальный `useDebouncedValue`
       через `vi.importActual`) + `vi.useFakeTimers()`: серия быстрых `rerender`'ов с
       промежуточными значениями (`'ba'` → `'batm'` → `'batman'`, каждый до истечения 800мс) →
@@ -378,7 +378,7 @@ interface Window {
       вызван снова; смена на другой непустой `query` (с выдержкой 800мс) → вызван снова; переход
       в пустой `query`, затем обратно на тот же текст, что был раньше → вызван снова (реф
       сброшен).
-- [ ] `make test` — проходит.
+- [x] `make test` — проходит.
 
 ### Task 7: Filter changed tracking — `useFilterState.ts`
 
