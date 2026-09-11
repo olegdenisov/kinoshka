@@ -200,11 +200,11 @@ interface Window {
 - Create: `src/shared/lib/analytics/index.ts`
 - Modify: `src/shared/lib/index.ts`
 
-- [ ] `export const isAnalyticsEnabled = (): boolean => import.meta.env.PROD &&
+- [x] `export const isAnalyticsEnabled = (): boolean => import.meta.env.PROD &&
       Boolean(import.meta.env.VITE_PLAUSIBLE_DOMAIN)` — **не** реэкспортируется из публичного
       `src/shared/lib/index.ts` (см. ниже), остаётся внутренней деталью модуля `analytics/` —
       у неё нет потребителей за пределами `analytics.ts`/`reportWebVitals.ts`.
-- [ ] **Критично**: `initAnalytics()` должен поставить Plausible's queue-stub на `window` ДО
+- [x] **Критично**: `initAnalytics()` должен поставить Plausible's queue-stub на `window` ДО
       добавления `<script>` в DOM — динамически вставленный `<script>` (в отличие от
       статического тега в `index.html`) исполняется асинхронно вне зависимости от `defer`,
       поэтому `window.plausible` не определён ещё несколько миллисекунд после
@@ -219,43 +219,43 @@ interface Window {
       ```
       (тип `Window.plausible` из Task 1 дополнить необязательным `q?: unknown[]`, чтобы стаб
       типизировался без `any`).
-- [ ] `export const initAnalytics = (): void => {...}` — при `!isAnalyticsEnabled()` — `return`.
+- [x] `export const initAnalytics = (): void => {...}` — при `!isAnalyticsEnabled()` — `return`.
       Иначе: поставить стаб (см. выше); если `document.getElementById(
       'plausible-analytics-script')` уже существует — `return` (защита от повторного вызова,
       напр. HMR); иначе создать `<script>` с `id`, `defer = true`, `dataset.domain =
       import.meta.env.VITE_PLAUSIBLE_DOMAIN`, `src = 'https://plausible.io/js/script.manual.js'`,
       добавить в `document.head`.
-- [ ] `export const trackEvent = (name: string, props?: Record<string, string | number |
+- [x] `export const trackEvent = (name: string, props?: Record<string, string | number |
       boolean>): void => {...}` — при `!isAnalyticsEnabled()` — `return`. Иначе
       `window.plausible?.(name, props ? { props } : undefined)`.
-- [ ] `export const trackPageview = (): void => trackEvent('pageview')` — `'pageview'` —
+- [x] `export const trackPageview = (): void => trackEvent('pageview')` — `'pageview'` —
       зарезервированное имя события в Plausible (не custom event), вызывает реальную запись
       просмотра страницы.
-- [ ] `src/shared/lib/analytics/index.ts` — ре-экспорт `initAnalytics`, `trackEvent`,
+- [x] `src/shared/lib/analytics/index.ts` — ре-экспорт `initAnalytics`, `trackEvent`,
       `trackPageview`, `isAnalyticsEnabled` (последняя — для использования внутри
       `reportWebVitals.ts`, Task 3, тот же модуль).
-- [ ] В `src/shared/lib/index.ts` добавить `export { initAnalytics, trackEvent, trackPageview }
+- [x] В `src/shared/lib/index.ts` добавить `export { initAnalytics, trackEvent, trackPageview }
       from './analytics'` — без `isAnalyticsEnabled` (см. первый пункт выше).
-- [ ] Написать тесты на `isAnalyticsEnabled`/`initAnalytics` через `vi.stubEnv('PROD', ...)` +
+- [x] Написать тесты на `isAnalyticsEnabled`/`initAnalytics` через `vi.stubEnv('PROD', ...)` +
       `vi.stubEnv('VITE_PLAUSIBLE_DOMAIN', ...)`: `!PROD` → скрипт не создан, стаб не
       установлен; `PROD` без домена → скрипт не создан; `PROD` + домен → в `document.head`
       появился `<script>` с верными `src`/`data-domain`/`defer`, и `window.plausible` определена
       (стаб) сразу после вызова, синхронно, до какой-либо сетевой загрузки; повторный вызов
       `initAnalytics()` не создаёт второй `<script>` (проверка через `document.querySelectorAll`).
-- [ ] Написать тест на **очередь до загрузки скрипта**: после `initAnalytics()` (стаб
+- [x] Написать тест на **очередь до загрузки скрипта**: после `initAnalytics()` (стаб
       установлен, реальный Plausible-скрипт не выполнялся — в jsdom он и не выполнится) вызвать
       `trackEvent('foo')`/`trackPageview()` → вызов лёг в `window.plausible.q` (массив
       `arguments`-объектов), не потерялся молча.
-- [ ] Написать тесты на `trackEvent`/`trackPageview`: `window.plausible` не задан → вызов не
+- [x] Написать тесты на `trackEvent`/`trackPageview`: `window.plausible` не задан → вызов не
       бросает исключение; `window.plausible` — `vi.fn()`, аналитика включена → вызван с
       ожидаемыми `(name, options)`; аналитика выключена (`!PROD`) → `window.plausible` не
       вызван, даже если он определён.
-- [ ] **Изоляция тестов**: добавить `afterEach(() => { document.getElementById(
+- [x] **Изоляция тестов**: добавить `afterEach(() => { document.getElementById(
       'plausible-analytics-script')?.remove(); delete (window as { plausible?: unknown
       }).plausible; vi.unstubAllEnvs() })` (по образцу `src/app/sentry.test.ts:9`) — иначе
       `<script>`/стаб, оставленные одним тестом, ломают независимость последующих ("скрипт не
       создан" может ложно пройти из-за уже существующего элемента от предыдущего кейса).
-- [ ] `make test` — проходит.
+- [x] `make test` — проходит.
 
 ### Task 3: `reportWebVitals.ts` — интеграция пакета `web-vitals`
 
