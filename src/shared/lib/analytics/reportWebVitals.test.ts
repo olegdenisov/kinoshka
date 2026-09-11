@@ -96,6 +96,36 @@ describe('reportWebVitals', () => {
     })
   })
 
+  it('сбой динамического импорта web-vitals (напр. ad-blocker/сеть) — не роняет процесс необработанным rejection, логирует ошибку и откатывает reported для повторной попытки', async () => {
+    isAnalyticsEnabled.mockReturnValue(true)
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.doMock('web-vitals', () => {
+      throw new Error('chunk load failed')
+    })
+
+    const { reportWebVitals } = await import('./reportWebVitals')
+    reportWebVitals()
+    await vi.dynamicImportSettled()
+
+    expect(consoleError).toHaveBeenCalledWith(
+      '[web-vitals] failed to load',
+      expect.any(Error),
+    )
+    expect(onLCP).not.toHaveBeenCalled()
+
+    // `reported` откатился после неудачи — следующий вызов пробует загрузку снова
+    // (а не молча остаётся навсегда отключённым до перезагрузки страницы).
+    vi.doMock('web-vitals', () => ({ onLCP, onINP, onCLS }))
+    reportWebVitals()
+    await vi.dynamicImportSettled()
+
+    expect(onLCP).toHaveBeenCalledTimes(1)
+    expect(onINP).toHaveBeenCalledTimes(1)
+    expect(onCLS).toHaveBeenCalledTimes(1)
+
+    consoleError.mockRestore()
+  })
+
   it('INP-callback: не домножает value, шлёт "web vital: inp"', async () => {
     isAnalyticsEnabled.mockReturnValue(true)
     const { reportWebVitals } = await import('./reportWebVitals')

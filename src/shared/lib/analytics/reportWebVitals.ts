@@ -29,9 +29,19 @@ export const reportWebVitals = (): void => {
   // analytics/index.ts реэкспортируется через публичный барел src/shared/lib/index.ts,
   // который тянется почти из всех модулей приложения — статический импорт затащил бы
   // web-vitals в основной чанк ради одной прод-only точки вызова.
-  void import('web-vitals').then(({ onLCP, onINP, onCLS }) => {
-    onLCP(reportMetric)
-    onINP(reportMetric)
-    onCLS(reportMetric)
-  })
+  //
+  // .catch обязателен: сетевой сбой (offline, ad-blocker, упавший CDN) роняет сам import()
+  // с unhandled promise rejection, если её не перехватить. `reported` откатывается назад,
+  // чтобы повторный вызов reportWebVitals() (например, HMR) не был заблокирован навсегда
+  // из-за одной неудачной попытки загрузки чанка.
+  void import('web-vitals')
+    .then(({ onLCP, onINP, onCLS }) => {
+      onLCP(reportMetric)
+      onINP(reportMetric)
+      onCLS(reportMetric)
+    })
+    .catch((error: unknown) => {
+      reported = false
+      console.error('[web-vitals] failed to load', error)
+    })
 }

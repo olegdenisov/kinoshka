@@ -302,14 +302,14 @@ interface Window {
 - Modify: `src/app/providers.tsx`
 - Modify: `src/app/providers.test.tsx`
 
-- [ ] На верхнем уровне модуля `providers.tsx`, рядом с `initSentry()` (до определения
+- [x] На верхнем уровне модуля `providers.tsx`, рядом с `initSentry()` (до определения
       `Providers`), добавить вызовы `initAnalytics()` и `reportWebVitals()`.
-- [ ] Дополнить существующий тест `providers.test.tsx` (мокающий `./sentry`) аналогичным
+- [x] Дополнить существующий тест `providers.test.tsx` (мокающий `./sentry`) аналогичным
       `vi.mock('@shared/lib', ...)` — `providers.tsx` импортирует `initAnalytics`/
       `reportWebVitals` из `@shared/lib`, не из `./analytics` (такого локального модуля в
       `src/app/` нет), поэтому мокать нужно именно `@shared/lib`. Проверить, что
       `initAnalytics`/`reportWebVitals` вызваны по разу при импорте модуля.
-- [ ] `make test` — проходит.
+- [x] `make test` — проходит.
 
 ### Task 5: Page view tracking — `AppLayout.tsx`
 
