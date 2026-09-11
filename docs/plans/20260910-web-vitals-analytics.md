@@ -318,11 +318,11 @@ interface Window {
 - Modify: `src/app/layouts/AppLayout.tsx`
 - Modify: `src/app/layouts/AppLayout.test.tsx`
 
-- [ ] Импортировать `useEffect` из `react` и `trackPageview` из `@shared/lib`.
-- [ ] Добавить `useEffect(() => { trackPageview() }, [location.pathname])` — реагирует только на
+- [x] Импортировать `useEffect` из `react` и `trackPageview` из `@shared/lib`.
+- [x] Добавить `useEffect(() => { trackPageview() }, [location.pathname])` — реагирует только на
       смену `pathname`, не на изменение query-параметров (`?q`, `?genres`, и т.д.) в рамках той
       же страницы.
-- [ ] **Важно про тест**: существующий `renderAt(path)`-хелпер в `AppLayout.test.tsx` монтирует
+- [x] **Важно про тест**: существующий `renderAt(path)`-хелпер в `AppLayout.test.tsx` монтирует
       свежий `MemoryRouter` на каждый вызов — этим хелпером нельзя отличить "сменился pathname"
       от "сменились только query-параметры", т.к. каждый кейс — отдельный fresh-mount, и оба
       сценария дают тривиально по 1 вызову. Для этой задачи нужна отдельная тестовая обвязка
@@ -331,13 +331,13 @@ interface Window {
       />, children: [...] }], { initialEntries: [...] })` + `<RouterProvider router={router} />`
       (`react-router`), и дальше `router.navigate('/favorites')` / `router.navigate('/?x=1')`
       внутри `act()`/`await waitFor`.
-- [ ] Написать тест: `vi.mock('@shared/lib', ... trackPageview: vi.fn())` (с
+- [x] Написать тест: `vi.mock('@shared/lib', ... trackPageview: vi.fn())` (с
       `vi.importActual` для остальных реальных экспортов `useViewport` и т.д., которые
       `AppLayout` уже использует) — начальный рендер на `/` → `trackPageview` вызван 1 раз;
       `router.navigate('/favorites')` (смена `pathname`) в том же смонтированном дереве → вызван
       ещё раз (итого 2); `router.navigate('/favorites?x=1')` (смена только query-параметров на
       том же `pathname`) → `trackPageview` не вызывается повторно (всё ещё 2).
-- [ ] `make test` — проходит.
+- [x] `make test` — проходит.
 
 ### Task 6: Search submitted tracking — `useSearchAnalytics`
 
