@@ -1,0 +1,5 @@
+# Files not tracked by git that every new worktree still needs (copied in
+# automatically when a worktree is created). One path per line, relative to
+# the repo root.
+
+.env.local

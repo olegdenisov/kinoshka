@@ -30,18 +30,25 @@ export const reportWebVitals = (): void => {
   // который тянется почти из всех модулей приложения — статический импорт затащил бы
   // web-vitals в основной чанк ради одной прод-only точки вызова.
   //
-  // .catch обязателен: сетевой сбой (offline, ad-blocker, упавший CDN) роняет сам import()
-  // с unhandled promise rejection, если её не перехватить. `reported` откатывается назад,
-  // чтобы повторный вызов reportWebVitals() (например, HMR) не был заблокирован навсегда
+  // Обработчик ошибки обязателен: сетевой сбой (offline, ad-blocker, упавший CDN) роняет сам
+  // import() с unhandled promise rejection, если её не перехватить. `reported` откатывается
+  // назад, чтобы повторный вызов reportWebVitals() (например, HMR) не был заблокирован навсегда
   // из-за одной неудачной попытки загрузки чанка.
-  void import('web-vitals')
-    .then(({ onLCP, onINP, onCLS }) => {
+  //
+  // Двухаргументная форма .then(onFulfilled, onRejected) вместо .then(onFulfilled).catch(...) —
+  // намеренно: onRejected здесь реагирует только на отказ самого import(), а не на ошибку внутри
+  // onFulfilled. Если сама регистрация onLCP/onINP/onCLS вдруг бросит исключение, это другая
+  // категория сбоя (не "не удалось загрузить чанк"), и списывать её на 'failed to load' было бы
+  // вводящим в заблуждение логом.
+  void import('web-vitals').then(
+    ({ onLCP, onINP, onCLS }) => {
       onLCP(reportMetric)
       onINP(reportMetric)
       onCLS(reportMetric)
-    })
-    .catch((error: unknown) => {
+    },
+    (error: unknown) => {
       reported = false
       console.error('[web-vitals] failed to load', error)
-    })
+    },
+  )
 }
