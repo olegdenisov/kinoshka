@@ -1,8 +1,9 @@
-import { useViewport } from '@shared/lib'
+import { trackPageview, useViewport } from '@shared/lib'
 import { IconButton, ShareIcon } from '@shared/ui'
 import { Header } from '@widgets/header'
 import { BottomNav, MobileHeader } from '@widgets/mobile-chrome'
 import type { ReactNode } from 'react'
+import { useEffect } from 'react'
 import {
   Outlet,
   useLocation,
@@ -196,6 +197,14 @@ export const AppLayout = () => {
   const headerActiveNav = isSearchRoute
     ? searchParams.get('type') || 'search'
     : config?.activeNav
+
+  // Page view tracking (Task 5, docs/plans/20260910-web-vitals-analytics.md): реагирует только
+  // на смену `pathname` — намеренно не на `location.key`/`search`, иначе debounce-запись `?q` в
+  // Header (QUERY_DEBOUNCE_MS) или клики по фильтрам на /search спамили бы pageview на каждое
+  // изменение query-параметров внутри одной и той же страницы.
+  useEffect(() => {
+    trackPageview()
+  }, [pathname])
 
   return (
     <>

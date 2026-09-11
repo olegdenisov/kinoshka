@@ -1,7 +1,25 @@
-import { render, screen, within } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router'
+import type * as SharedLib from '@shared/lib'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
+import {
+  createMemoryRouter,
+  MemoryRouter,
+  Route,
+  RouterProvider,
+  Routes,
+} from 'react-router'
 
 import { AppLayout } from './AppLayout'
+
+// Task 5 (docs/plans/20260910-web-vitals-analytics.md): AppLayout вызывает trackPageview() на
+// смену pathname. Мокаем только trackPageview, остальные реальные экспорты (useViewport и т.д.,
+// которые AppLayout уже использует) сохраняем через vi.importActual — тот же паттерн, что
+// providers.test.tsx использует для initAnalytics/reportWebVitals.
+vi.mock('@shared/lib', async importOriginal => {
+  const actual = await importOriginal<typeof SharedLib>()
+  return { ...actual, trackPageview: vi.fn() }
+})
+
+const { trackPageview } = await import('@shared/lib')
 
 // useViewport() читает window.innerWidth только один раз при монтировании (см.
 // src/shared/lib/viewport/useViewport.ts) — задаём ширину до рендера, resize-событие
@@ -43,6 +61,7 @@ const renderAt = (path: string) =>
   )
 
 beforeEach(() => {
+  vi.mocked(trackPageview).mockClear()
   setViewportWidth(DESKTOP_WIDTH)
 })
 
@@ -254,5 +273,50 @@ describe('AppLayout — /search: Header.variant="search", activeNav из ?type (
     expect(screen.getByRole('button', { name: /Catalog/ }).className).toMatch(
       /navItemActive/,
     )
+  })
+})
+
+// Task 5 (docs/plans/20260910-web-vitals-analytics.md): trackPageview() реагирует на смену
+// pathname, не на смену query-параметров. Не переиспользует renderAt() выше — тот монтирует
+// свежий MemoryRouter на каждый вызов, так что два отдельных renderAt('/a')/renderAt('/a?x=1')
+// дают тривиально по 1 вызову каждый и не различают "сменился pathname" от "сменились только
+// query-параметры". Здесь роутер монтируется один раз (createMemoryRouter + RouterProvider) и
+// дальше реально навигируется внутри того же дерева через router.navigate(...).
+describe('AppLayout — page view tracking: смена pathname трекается, смена только query — нет', () => {
+  it('маунт на /: 1 вызов; navigate на /favorites: ещё вызов; navigate на /favorites?x=1: без нового вызова', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          element: <AppLayout />,
+          children: [
+            { path: '/', element: <div>Home page content</div> },
+            {
+              path: '/favorites',
+              element: <div>Favorites page content</div>,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ['/'] },
+    )
+
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => expect(trackPageview).toHaveBeenCalledTimes(1))
+
+    await act(async () => {
+      await router.navigate('/favorites')
+    })
+    await waitFor(() => expect(trackPageview).toHaveBeenCalledTimes(2))
+    expect(screen.getByText('Favorites page content')).toBeInTheDocument()
+
+    await act(async () => {
+      await router.navigate('/favorites?x=1')
+    })
+    // Тот же pathname, сменился только query — trackPageview не должен вызваться повторно.
+    // waitFor на реальном условии (не просто await Promise.resolve()) страхует от ложного
+    // прохождения теста, если navigate ещё не долетел до commit к моменту проверки.
+    await waitFor(() => expect(router.state.location.search).toBe('?x=1'))
+    expect(trackPageview).toHaveBeenCalledTimes(2)
   })
 })
