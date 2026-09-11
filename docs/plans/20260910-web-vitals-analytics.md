@@ -387,18 +387,18 @@ interface Window {
 - Modify: `src/features/catalog-filter/model/useFilterState.ts`
 - Modify: `src/features/catalog-filter/model/useFilterState.test.tsx`
 
-- [ ] Импортировать `trackEvent` из `@shared/lib`.
-- [ ] В `applyFilters` (единственная точка коммита `FilterState` в URL — вызывается из
+- [x] Импортировать `trackEvent` из `@shared/lib`.
+- [x] В `applyFilters` (единственная точка коммита `FilterState` в URL — вызывается из
       `setFilters`/`toggleGenre`/сброса диапазона года/рейтинга) добавить `trackEvent('filter
       changed')` до или после `setSearchParams` (порядок не важен — `trackEvent` не зависит от
       результата навигации).
-- [ ] Не трекать `setSort` — роадмап называет только "filter changed" в списке из четырёх
+- [x] Не трекать `setSort` — роадмап называет только "filter changed" в списке из четырёх
       событий, сортировка не входит.
-- [ ] Дополнить существующие тесты `useFilterState.test.tsx`: `vi.mock('@shared/lib', ...
+- [x] Дополнить существующие тесты `useFilterState.test.tsx`: `vi.mock('@shared/lib', ...
       trackEvent: vi.fn())` (сохраняя остальные реальные экспорты через `vi.importActual`) —
       вызов `setFilters(...)`/`toggleGenre(...)` → `trackEvent` вызван с `'filter changed'`;
       вызов `setSort(...)` → `trackEvent` НЕ вызван.
-- [ ] `make test` — проходит.
+- [x] `make test` — проходит.
 
 ### Task 8: Favorite added tracking — `useFavorites.ts`
 
