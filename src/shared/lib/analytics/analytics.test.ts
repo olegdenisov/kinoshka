@@ -7,6 +7,12 @@ import {
 
 afterEach(() => {
   document.getElementById('plausible-analytics-script')?.remove()
+  // plausibleStub — модульный синглтон в analytics.ts (не пересоздаётся между тестами), поэтому
+  // window.plausible.q (при initAnalytics()'s стабе — та же ссылка на массив, что и
+  // plausibleStub.q) очищается in-place перед удалением window.plausible — иначе очередь
+  // накапливается между тестами и следующий тест, проверяющий её длину, зависел бы от порядка
+  // запуска предыдущих тестов.
+  window.plausible?.q?.splice(0, window.plausible.q.length)
   delete (window as { plausible?: unknown }).plausible
   vi.unstubAllEnvs()
 })

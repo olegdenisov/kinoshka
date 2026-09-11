@@ -1,4 +1,4 @@
-import { useStorageSlot } from '@shared/lib'
+import { trackEvent, useStorageSlot } from '@shared/lib'
 
 import { favoritesSlot } from './favoritesStorage'
 
@@ -27,11 +27,12 @@ export const useFavorites = (): UseFavoritesResult => {
       setIds(favoritesSlot.get().filter(existingId => existingId !== id)),
     toggle: id => {
       const current = favoritesSlot.get()
-      setIds(
-        current.includes(id)
-          ? current.filter(existingId => existingId !== id)
-          : [...current, id],
-      )
+      if (current.includes(id)) {
+        setIds(current.filter(existingId => existingId !== id))
+      } else {
+        setIds([...current, id])
+        trackEvent('favorite added')
+      }
     },
     clear: () => setIds([]),
   }

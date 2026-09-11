@@ -1,8 +1,22 @@
+import type * as SharedLib from '@shared/lib'
 import { act, renderHook } from '@testing-library/react'
 
 import { useFavorites } from './useFavorites'
 
-beforeEach(() => localStorage.clear())
+// Мокаем только trackEvent, остальные реальные экспорты @shared/lib (useStorageSlot и т.д.)
+// сохраняем через vi.importActual — тот же паттерн, что useFilterState.test.tsx использует
+// (Task 7).
+vi.mock('@shared/lib', async importOriginal => {
+  const actual = await importOriginal<typeof SharedLib>()
+  return { ...actual, trackEvent: vi.fn() }
+})
+
+const { trackEvent } = await import('@shared/lib')
+
+beforeEach(() => {
+  localStorage.clear()
+  vi.mocked(trackEvent).mockClear()
+})
 
 describe('useFavorites — успешные сценарии', () => {
   it('add добавляет id в ids и isFavorite начинает возвращать true', () => {
@@ -32,6 +46,36 @@ describe('useFavorites — успешные сценарии', () => {
 
     act(() => result.current.toggle(1))
     expect(result.current.ids).toEqual([])
+  })
+
+  it('toggle на отсутствующем id (добавление) вызывает trackEvent("favorite added")', () => {
+    const { result } = renderHook(() => useFavorites())
+
+    act(() => result.current.toggle(1))
+
+    expect(trackEvent).toHaveBeenCalledWith('favorite added')
+    expect(trackEvent).toHaveBeenCalledTimes(1)
+  })
+
+  it('toggle на уже избранном id (удаление) НЕ вызывает trackEvent', () => {
+    const { result } = renderHook(() => useFavorites())
+
+    act(() => result.current.toggle(1))
+    vi.mocked(trackEvent).mockClear()
+
+    act(() => result.current.toggle(1))
+
+    expect(result.current.ids).toEqual([])
+    expect(trackEvent).not.toHaveBeenCalled()
+  })
+
+  it('add() НЕ вызывает trackEvent — трекинг живёт только в ветке добавления toggle()', () => {
+    const { result } = renderHook(() => useFavorites())
+
+    act(() => result.current.add(1))
+
+    expect(result.current.ids).toEqual([1])
+    expect(trackEvent).not.toHaveBeenCalled()
   })
 
   it('повторный add того же id не создаёт дубликат', () => {

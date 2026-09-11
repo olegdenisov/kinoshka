@@ -407,17 +407,17 @@ interface Window {
 - Modify: `src/features/favorites/model/useFavorites.ts`
 - Modify: `src/features/favorites/model/useFavorites.test.ts`
 
-- [ ] Импортировать `trackEvent` из `@shared/lib`.
-- [ ] В `toggle(id)`: в ветке, где `id` ещё не было в `current` (т.е. фильм добавляется, а не
+- [x] Импортировать `trackEvent` из `@shared/lib`.
+- [x] В `toggle(id)`: в ветке, где `id` ещё не было в `current` (т.е. фильм добавляется, а не
       удаляется), добавить `trackEvent('favorite added')` — не в ветке удаления.
-- [ ] Не трогать `add(id)` отдельно (нет вызывающих в `.tsx`, дублировать логику трекинга там же
+- [x] Не трогать `add(id)` отдельно (нет вызывающих в `.tsx`, дублировать логику трекинга там же
       не нужно, но раз функция публичная и может получить вызывающего в будущем — оставить как
       есть без трекинга до появления реального потребителя, чтобы не выдумывать событие для
       мёртвого пути).
-- [ ] Дополнить существующие тесты `useFavorites.test.ts`: `vi.mock('@shared/lib', ...
+- [x] Дополнить существующие тесты `useFavorites.test.ts`: `vi.mock('@shared/lib', ...
       trackEvent: vi.fn())` — `toggle(id)` на отсутствующем id → `trackEvent('favorite added')`
       вызван; `toggle(id)` на уже избранном id (удаление) → `trackEvent` НЕ вызван.
-- [ ] `make test` — проходит.
+- [x] `make test` — проходит.
 
 ### Task 9: Документация — AGENTS.md и roadmap.md
 
