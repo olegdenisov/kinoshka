@@ -1,3 +1,4 @@
+import type * as SharedLib from '@shared/lib'
 import { act, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { MemoryRouter } from 'react-router'
@@ -24,6 +25,15 @@ vi.mock('react-router', async () => {
   }
 })
 
+// Мокаем только trackEvent, остальные реальные экспорты @shared/lib сохраняем через
+// vi.importActual — тот же паттерн, что useSearchAnalytics.test.ts использует (Task 6).
+vi.mock('@shared/lib', async importOriginal => {
+  const actual = await importOriginal<typeof SharedLib>()
+  return { ...actual, trackEvent: vi.fn() }
+})
+
+const { trackEvent } = await import('@shared/lib')
+
 const wrapper = (initialEntries: string[]) => {
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
@@ -33,6 +43,7 @@ const wrapper = (initialEntries: string[]) => {
 
 beforeEach(() => {
   setSearchParamsCalls = []
+  vi.mocked(trackEvent).mockClear()
 })
 
 describe('useFilterState', () => {
@@ -250,5 +261,35 @@ describe('useFilterState', () => {
     act(() => result.current.setSort(''))
 
     expect(result.current.sort).toBe('')
+  })
+
+  it('setFilters трекает "filter changed"', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search']),
+    })
+
+    act(() => result.current.setFilters({ ...EMPTY_FILTERS, type: 'movie' }))
+
+    expect(trackEvent).toHaveBeenCalledWith('filter changed')
+  })
+
+  it('toggleGenre трекает "filter changed"', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search']),
+    })
+
+    act(() => result.current.toggleGenre('Drama'))
+
+    expect(trackEvent).toHaveBeenCalledWith('filter changed')
+  })
+
+  it('setSort НЕ трекает "filter changed" — сортировка не входит в список из четырёх событий', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search']),
+    })
+
+    act(() => result.current.setSort('Highest rated'))
+
+    expect(trackEvent).not.toHaveBeenCalled()
   })
 })

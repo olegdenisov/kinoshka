@@ -1,3 +1,4 @@
+import { trackEvent } from '@shared/lib'
 import { useSearchParams } from 'react-router'
 
 import { getGenreLabel } from '../lib/genreMap'
@@ -52,6 +53,9 @@ export const useFilterState = () => {
       },
       { replace: true },
     )
+    // Единственная точка коммита FilterState в URL (setFilters/toggleGenre/сброс года/рейтинга
+    // идут через неё) — setSort трекается отдельно и намеренно не проходит через applyFilters.
+    trackEvent('filter changed')
   }
 
   const setFilters = (
