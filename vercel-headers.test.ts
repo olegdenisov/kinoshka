@@ -194,8 +194,11 @@ describe('vercel.json — Content-Security-Policy-Report-Only', () => {
     // Пересчитываем хеш заново из исходного index.html (а не сравниваем с захардкоженной
     // строкой) — так тест сам ловит рассинхрон при будущей правке инлайн-скрипта.
     const html = readFileSync(path.join(ROOT, 'index.html'), 'utf-8')
+    // /i — CodeQL (js/bad-tag-filter) корректно указал, что без флага регэксп не матчит
+    // <SCRIPT>/<Script> в верхнем/смешанном регистре, который браузер парсит как тег наравне
+    // с нижним регистром.
     const scriptTags = [
-      ...html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g),
+      ...html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/gi),
     ]
     // `src=` substring check намеренно избегается — ловит и будущий `data-src=`. Инлайн-скрипт
     // определяется отсутствием атрибута `src` как отдельного токена в списке атрибутов тега.
