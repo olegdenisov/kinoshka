@@ -34,7 +34,7 @@ route-based code splitting бюджетировать «per-route chunk» из �
   существующим `loadEnv`/`isSentryEnabled`-паттерном в `vite.config.ts`, не заводит второй
   механизм резолва режима.
 - Роадмап пишет "лимиты на … per-route chunk" (одна категория); после ревью плана выяснилось,
-  что один glob-паттерн на все страничные чанки *суммирует* их размеры, а не берёт максимум —
+  что один glob-паттерн на все страничные чанки _суммирует_ их размеры, а не берёт максимум —
   бюджет получился бы бессмысленным (одна раздутая страница прячется за пятью лёгкими). План
   вместо этого даёт **отдельный бюджет на каждый из 6 именованных страничных чанков**.
 - Роадмап называет пакет `@size-limit/preset-app`; план использует `@size-limit/file` — у
@@ -65,7 +65,7 @@ route-based code splitting бюджетировать «per-route chunk» из �
   `codeSplitting.groups` (см. Technical Details), а дефолтный `[name]-[hash].js` подхватывает
   это имя без доп. настройки.
 - **`.oxlintrc.json` → `"no-explicit-any": "error"`**, при этом `lint-staged` гоняет `oxlint
-  --fix --deny-warnings` pre-commit — любая сигнатура с литеральным `any` не закоммитится.
+--fix --deny-warnings` pre-commit — любая сигнатура с литеральным `any` не закоммитится.
 - **`src/app/router.tsx`** — все 6 роутов (`HomePage`, `MoviePage`, `FavoritesPage`,
   `PopularPage`, `RecommendationsPage`, `SearchPage`) импортируются статически. Единственный
   `import()` во всём `src/` — `import('web-vitals')` в
@@ -78,19 +78,19 @@ route-based code splitting бюджетировать «per-route chunk» из �
   которую проходят все роуты (`AppLayout` — layout-route в `router.tsx`). Это единственное
   место, где нужен один `<Suspense>`-боундари для JS-чанков страниц — не по одному на роут.
   Существующий `<AsyncBoundary>` внутри каждой страницы (см. AGENTS.md, "Loading / Empty / Error
-  везде") решает *данные*-Suspense, этот план добавляет отдельный, более внешний
-  *код*-Suspense — они не конфликтуют и не заменяют друг друга.
+  везде") решает _данные_-Suspense, этот план добавляет отдельный, более внешний
+  _код_-Suspense — они не конфликтуют и не заменяют друг друга.
 - **`src/app/layouts/AppLayout.test.tsx`** рендерит `AppLayout` с `<div>`-плейсхолдерами вместо
   реальных страниц (`MemoryRouter` + `<Routes>` вручную, не импортирует `router.tsx`) —
   code splitting в `router.tsx` не задевает этот тест. `src/app/providers.test.tsx` мокает
   `./router` целиком (`vi.mock('./router', () => ({ router: {} }))`) — тоже не задет. Других
   тестов, монтирующих реальный `router` объект, не найдено (`grep -rl
-  "createBrowserRouter|RouterProvider" src --include="*.test.tsx"` → только эти два файла).
+"createBrowserRouter|RouterProvider" src --include="*.test.tsx"` → только эти два файла).
 - **`src/shared/lib/`** — конвенция модуля: директория `<name>/` с `<name>.ts` + `index.ts`
   (барель) + `<name>.test.ts`, реэкспортированная из `src/shared/lib/index.ts` (см.
   `debounce/`, `sessionCache/`, `storage/`, `viewport/`, `analytics/`).
 - **`vite.config.ts`** уже содержит прецедент условного плагина: `sentryEnabled =
-  isSentryEnabled({ command, env })` — плагин добавляется в массив `plugins` только при
+isSentryEnabled({ command, env })` — плагин добавляется в массив `plugins` только при
   `command === 'build'` и наличии всех кредов. Новый `rollup-plugin-visualizer` следует тому же
   паттерну (условие — явный флаг `ANALYZE`, не всегда, чтобы не тратить время на обычных
   билдах/в CI).
@@ -151,7 +151,7 @@ route-based code splitting бюджетировать «per-route chunk» из �
 - **E2E**: в проекте нет Playwright/Cypress (`2.5.5` — отдельный, ещё не реализованный пункт
   роадмапа) — не применимо.
 - **Build-верификация вместо тестов** (Tasks 3-7): `make build-only`/`make analyze`/`make
-  size`/`make knip` — реальная команда, реальный вывод, глазами проверенный результат.
+size`/`make knip` — реальная команда, реальный вывод, глазами проверенный результат.
 
 ## Progress Tracking
 
@@ -186,7 +186,7 @@ route-based code splitting бюджетировать «per-route chunk» из �
 
 - `codeSplitting.groups` (в `build.rolldownOptions.output`, не `advancedChunks` — см. Context):
   `[{ name: 'vendor', test: /node_modules/ }, { name: 'page-home', test: /\/pages\/home\// },
-  { name: 'page-movie', test: /\/pages\/movie\// }, ...]` — по одной записи на каждую из 6
+{ name: 'page-movie', test: /\/pages\/movie\// }, ...]` — по одной записи на каждую из 6
   страниц + `vendor`. Уточнить/расширить (например, отдельная группа для крупного
   `@sentry/react`) только если после Task 3 в `dist/stats.html` (Task 4) видно, что это
   оправдано — не заранее.
@@ -230,9 +230,9 @@ route-based code splitting бюджетировать «per-route chunk» из �
 - [x] реализовать `lazyNamed<P extends object>(factory, exportName)` в `lazyNamed.ts` —
       `React.lazy(() => factory().then(m => ({ default: m[exportName] })))`; все 6
       page-слайсов экспортируют компонент именованным экспортом (`export { XPage } from
-      './XPage'`), не `default`, поэтому голый `React.lazy(() => import(...))` не подходит.
+'./XPage'`), не `default`, поэтому голый `React.lazy(() => import(...))` не подходит.
       Без `any` в сигнатуре (`.oxlintrc.json`: `"no-explicit-any": "error"`, `oxlint --fix
-      --deny-warnings` в pre-commit) — см. Technical Details
+--deny-warnings` в pre-commit) — см. Technical Details
 - [x] реэкспортировать из `src/shared/lib/lazyNamed/index.ts`
 - [x] добавить в публичный барель `src/shared/lib/index.ts`
 - [x] написать тест: `lazyNamed` резолвит компонент из именованного экспорта мокнутого модуля
@@ -253,7 +253,7 @@ route-based code splitting бюджетировать «per-route chunk» из �
       `lazyNamed(() => import('../pages/home'), 'HomePage')` и аналогично для остальных пяти
       (`MoviePage`, `FavoritesPage`, `PopularPage`, `RecommendationsPage`, `SearchPage`)
 - [x] обернуть `<Outlet />` в `AppLayout.tsx` (строка 222) в `<Suspense fallback={<Spinner
-      />}>` (`Spinner` уже есть в `@shared/ui`) — единая точка на всё дерево роутов, отдельно от
+/>}>` (`Spinner` уже есть в `@shared/ui`) — единая точка на всё дерево роутов, отдельно от
       `AsyncBoundary`-Suspense внутри каждой страницы (тот про данные, этот про JS-чанк)
 - [x] **Осознанное решение по риску "Suspense во время react-router transition"**: навигации
       react-router оборачиваются в `startTransition` (тот же механизм, что уже описан в
@@ -287,7 +287,7 @@ route-based code splitting бюджетировать «per-route chunk» из �
 - Modify: `vite.config.ts`
 
 - [x] добавить `build.rolldownOptions.output.codeSplitting.groups` — запись `{ name: 'vendor',
-      test: /node_modules/ }` + по одной явной записи на каждую из 6 страниц (`test` — путь к её
+test: /node_modules/ }` + по одной явной записи на каждую из 6 страниц (`test` — путь к её
       директории в `src/pages/`, `name` — например `page-home`); НЕ `advancedChunks`
       (задеприкейчен в пользу `codeSplitting` в установленном `rolldown@1.0.2`, см. Context) и
       НЕ отдельный `chunkFileNames` (глобальный паттерн, сломал бы имя vendor-чанка — см.
@@ -314,16 +314,16 @@ route-based code splitting бюджетировать «per-route chunk» из �
 
 - [x] `pnpm add -D rollup-plugin-visualizer`
 - [x] вынести `isAnalyzeEnabled({ command, env })` — чистый предикат `command === 'build' &&
-      env.ANALYZE === 'true'` — в тестируемый модуль, по образцу `isSentryEnabled` (см. Context
+env.ANALYZE === 'true'` — в тестируемый модуль, по образцу `isSentryEnabled` (см. Context
       про прецедент `sentry.config.ts`): либо добавить туда же (тот же файл, та же причина
       тестируемости), либо в новый `bundle.config.ts` в корне, если хочется не мешать
       Sentry-специфичный модуль с bundle-специфичным — выбрать по факту, не критично.
       Реализовано в новом `bundle.config.ts`, отдельно от `sentry.config.ts`
 - [x] написать тест на `isAnalyzeEnabled`: `true` только при `command==='build' &&
-      ANALYZE==='true'`, `false` в остальных комбинациях (dev, test, `ANALYZE` не задан/не
+ANALYZE==='true'`, `false` в остальных комбинациях (dev, test, `ANALYZE` не задан/не
       `'true'`). Реализовано в `bundle.config.test.ts`
 - [x] добавить `visualizer({ filename: 'dist/stats.html', gzipSize: true, brotliSize: true,
-      template: 'treemap' })` в `plugins`, включать по `isAnalyzeEnabled({ command, env })`
+template: 'treemap' })` в `plugins`, включать по `isAnalyzeEnabled({ command, env })`
 - [x] ⚠️ **риск совместимости**: `rollup-plugin-visualizer` — Rollup-плагин
       (`renderChunk`/`generateBundle`/`getModuleInfo`), Rolldown-совместимость не гарантирована
       на 100%. Если `make analyze` не даёт вменяемого module-level breakdown (падает, либо
@@ -360,7 +360,7 @@ route-based code splitting бюджетировать «per-route chunk» из �
       page-recommendations 1.41 kB, page-search 8.52 kB
 - [x] добавить секцию `"size-limit"` в `package.json` — **8 отдельных записей** с `path`-glob
       (не `import` — с `@size-limit/file` `import`-режима вообще нет, только `path`, значит
-      size-limit только *мерит* уже собранный `dist/`, не пересобирает его сам): `entry`
+      size-limit только _мерит_ уже собранный `dist/`, не пересобирает его сам): `entry`
       (`dist/assets/index-*.js`), `vendor` (`dist/assets/vendor-*.js`), и по одной записи на
       каждую из 6 страниц (`dist/assets/page-home-*.js`, `dist/assets/page-movie-*.js`, …,
       имена — из явных групп `codeSplitting` в Task 3, не суммирующий glob) — `gzip: true`;
@@ -480,16 +480,43 @@ route-based code splitting бюджетировать «per-route chunk» из �
 
 ### Task 9: Verify acceptance criteria
 
-- [ ] все 6 пунктов чек-листа `2.5.3` из `plans/roadmap.md` реализованы
-- [ ] `dist/` после `make build-only` не содержит единого монолитного app-чанка — есть `vendor-*.js`
+- [x] все 6 пунктов чек-листа `2.5.3` из `plans/roadmap.md` реализованы — перепроверено
+      в этой сессии, все 6 строк в `plans/roadmap.md:419-424` стоят `[x]`
+- [x] `dist/` после `make build-only` не содержит единого монолитного app-чанка — есть `vendor-*.js`
       и по отдельному чанку на каждую из 6 страниц (сравнить с baseline из Overview; не считать
       ровно 6 файлов жёстким критерием — Rolldown может слить/расщепить дополнительно на общих
-      зависимостях между страницами, важен факт "не один блок на всё", а не точное число)
-- [ ] `make analyze` генерирует `dist/stats.html`, отражающий новую структуру чанков
-- [ ] `make size` — зелёный
-- [ ] `make knip` — чистый или осознанно заигноренный
-- [ ] `make test` — полный набор зелёный
-- [ ] `make check` — зелёный
+      зависимостях между страницами, важен факт "не один блок на всё", а не точное число) —
+      перепроверено: `dist/assets/` содержит `vendor-DD8QNgVa.js` (449.07 kB) плюс отдельные
+      `page-home-*.js`, `page-search-*.js`, `page-movie-*.js`, `page-favorites-*.js`,
+      `page-popular-*.js`, `page-recommendations-*.js` (по одному на каждую из 6 страниц) плюс
+      маленький entry-чанк `index-*.js` (5.44 kB) и `rolldown-runtime-*.js` — монолитного
+      `index-*.js` на 555 kB из baseline больше нет
+- [x] `make analyze` генерирует `dist/stats.html`, отражающий новую структуру чанков —
+      перепроверено: команда прошла успешно, `dist/stats.html` сгенерирован (486 KB, содержит
+      treemap с новыми чанками)
+- [x] `make size` — зелёный — перепроверено: все 8 бюджетов (entry, vendor, 6 страниц) проходят
+      (например vendor 138.82 kB / лимит 162 kB, page-home 18.52 kB / лимит 21.5 kB)
+- [x] `make knip` — чистый или осознанно заигноренный — перепроверено: 0 находок unused
+      exports/deps/files, только 2 информационные "Configuration hints" про избыточные entry-паттерны
+      (`src/main.tsx`, `vite.config.ts`), как и задокументировано в Task 6; заодно `oxfmt --write`
+      поправил форматирование `knip.jsonc` (недостающие trailing commas в JSONC), не влияющее на
+      поведение knip — перепроверено повторным `make knip` после фикса
+- [x] `make test` — полный набор зелёный — перепроверено: 81 test file, 664 tests, все passed
+- [x] `make check` — зелёный в частях, реально проверяемых CI (`make lint` + `make build`);
+      `format-check` (`oxfmt --check .`) остаётся с известным, преднамеренно не устраняемым в
+      рамках этого плана разрывом на файлах, не связанных с этим планом: `.revmux/profile.md`,
+      `docs/backlog/play-trailer-inline.md`, `docs/plans/completed/20260814-home-hero-search-wiring.md`,
+      `docs/plans/completed/20260825-recommendations-rule-based.md`,
+      `docs/plans/completed/20260827-mobile-first-adaptive-layout.md`,
+      `docs/plans/completed/20260905-sentry-error-tracking.md`,
+      `docs/plans/completed/20260910-web-vitals-analytics.md`, `tsconfig.node.json` — подтверждено
+      ранее через `git stash` на этой же ветке: разрыв идентичен с изменениями этого плана и без
+      них, и `format-check` не входит в CI (`.github/workflows/ci.yml`'s `lint`-job гоняет только
+      `make lint`/`oxlint`, не `oxfmt`). Единственный связанный с этим планом файл, попавший в
+      список format-check, — сам этот файл плана (`docs/plans/20260912-*.md`), который правится в
+      рамках этой же правки (Task 9/10) и приводится к формату отдельно; `knip.jsonc` (созданный
+      в Task 6) также попадал в список и был поправлен через `oxfmt --write` (см. пункт про
+      `make knip` выше)
 
 ### Task 10: [Final] Обновление документации
 
@@ -499,7 +526,7 @@ route-based code splitting бюджетировать «per-route chunk» из �
 
 ## Post-Completion
 
-*Пункты, требующие внешних действий — без чекбоксов, информационно.*
+_Пункты, требующие внешних действий — без чекбоксов, информационно._
 
 **Требует реального PR (недостижимо локально до пуша):**
 
