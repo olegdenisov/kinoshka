@@ -5,3 +5,8 @@ useDefault = true
 
 [allowlist]
 paths = ['''\.env\.example$''']
+# Sentry DSN public key (project 4512052165607429, org o4512052151844864) embedded in
+# vercel.json's CSP report-uri. Public keys in a Sentry DSN are meant to be exposed
+# client-side (see AGENTS.md, "Error tracking (Sentry)") — same value already ships in
+# every production JS bundle via VITE_SENTRY_DSN, so this is not a leaked secret.
+regexes = ['''ba5e2436894e905aa0a71618112e7c1b''']
