@@ -1,4 +1,4 @@
-.PHONY: dev build typecheck build-only lint format format-check preview install hooks clean check generate-api test test-watch coverage audit
+.PHONY: dev build typecheck build-only lint format format-check preview install hooks clean check generate-api test test-watch coverage audit analyze
 
 dev:
 	pnpm dev
@@ -50,3 +50,6 @@ coverage:
 
 audit:
 	pnpm audit --audit-level high --prod
+
+analyze:
+	ANALYZE=true pnpm exec vite build

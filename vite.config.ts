@@ -7,8 +7,10 @@ import path from 'path'
 import babel from '@rolldown/plugin-babel'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig, loadEnv, type PluginOption } from 'vite'
 
+import { isAnalyzeEnabled } from './bundle.config'
 import {
   buildRelease,
   isSentryEnabled,
@@ -35,11 +37,26 @@ export default defineConfig(({ mode, command }) => {
   const release = buildRelease({ version, gitSha })
 
   const sentryEnabled = isSentryEnabled({ command, env })
+  const analyzeEnabled = isAnalyzeEnabled({ command, env })
 
   const plugins: PluginOption[] = [
     react(),
     babel({ presets: [reactCompilerPreset()] }),
   ]
+
+  if (analyzeEnabled) {
+    // ANALYZE=true make analyze — генерирует dist/stats.html (treemap) состава бандла после
+    // code splitting (Task 2/3). Не подключается на обычных билдах/в CI — только по явному
+    // флагу, чтобы не тратить на это время каждого билда.
+    plugins.push(
+      visualizer({
+        filename: 'dist/stats.html',
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap',
+      }) as PluginOption,
+    )
+  }
 
   if (sentryEnabled) {
     plugins.push(
