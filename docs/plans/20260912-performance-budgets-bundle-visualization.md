@@ -520,9 +520,21 @@ template: 'treemap' })` в `plugins`, включать по `isAnalyzeEnabled({ 
 
 ### Task 10: [Final] Обновление документации
 
-- [ ] финальная сверка `AGENTS.md`/`plans/roadmap.md` с фактической реализацией (если что-то
-      отклонилось по ходу Task 1-9 — доописать)
-- [ ] переместить этот план в `docs/plans/completed/`
+- [x] финальная сверка `AGENTS.md`/`plans/roadmap.md` с фактической реализацией (если что-то
+      отклонилось по ходу Task 1-9 — доописать) — перепроверено построчно против
+      `src/shared/lib/lazyNamed/lazyNamed.ts`, `src/app/router.tsx`, `vite.config.ts`,
+      `bundle.config.ts`, `package.json`'s `"size-limit"` секции, `knip.jsonc`, `Makefile`,
+      `.github/workflows/ci.yml`: раздел AGENTS.md "Performance budgets + bundle visualization"
+      (строки 255-267) и секция `plans/roadmap.md:417-433` точно описывают реализацию —
+      `lazyNamed<P extends object>`, все 6 `lazyNamed()`-вызовов в `router.tsx`,
+      `codeSplitting.groups` (vendor + 6 page-групп, без `advancedChunks`/`chunkFileNames`),
+      `isAnalyzeEnabled`/`ANALYZE`-флаг в `bundle.config.ts`, 8 записей `size-limit`
+      (`@size-limit/file`, не `preset-app`), `knip.jsonc` (entry/project/ignore ровно как
+      описано), CI-job'ы `size` (`make build-only` → `make size`) и `knip` — расхождений не
+      найдено, доописывать ничего не потребовалось
+- [x] переместить этот план в `docs/plans/completed/` — move deferred to harness finalize step
+      (per task-prompt convention — moving now would break later review phases that read this
+      file)
 
 ## Post-Completion
 
