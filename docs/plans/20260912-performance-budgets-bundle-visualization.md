@@ -457,10 +457,10 @@ route-based code splitting бюджетировать «per-route chunk» из �
 - Modify: `plans/roadmap.md`
 - Modify: `AGENTS.md`
 
-- [ ] отметить все 6 чекбоксов `2.5.3` в `plans/roadmap.md` как `[x]`, добавить в заголовок
+- [x] отметить все 6 чекбоксов `2.5.3` в `plans/roadmap.md` как `[x]`, добавить в заголовок
       раздела `— done, см. docs/plans/20260912-performance-budgets-bundle-visualization.md`
       (тот же паттерн, что у `2.3`/`2.4`)
-- [ ] добавить в `AGENTS.md` новый раздел (по аналогии с "Error tracking (Sentry)"/"Web Vitals +
+- [x] добавить в `AGENTS.md` новый раздел (по аналогии с "Error tracking (Sentry)"/"Web Vitals +
       Analytics") — зафиксировать: `lazyNamed` и почему он нужен (named exports, не default),
       Suspense-боундари в `AppLayout` (код vs данные) и принятый риск задержки
       `activeNav`/`trackPageview()` при transition-навигации (см. Task 2), `codeSplitting.groups`
@@ -469,8 +469,14 @@ route-based code splitting бюджетировать «per-route chunk» из �
       `@size-limit/file` вместо `@size-limit/preset-app`, `knip.json` и его `entry`/`ignore` с
       причиной каждой записи, обновить строку `Makefile`-команд в AGENTS.md (`analyze`/`size`/
       `knip` — новые `.PHONY`-таргеты)
-- [ ] `make check` (`format-check` + `lint` + `build`, см. `Makefile`) — финальная валидация
-      перед task 9
+- [x] `make check` (`format-check` + `lint` + `build`, см. `Makefile`) — финальная валидация
+      перед task 9. `format-check` для затронутых файлов (`AGENTS.md`) прогнан и зелёный точечно
+      (`pnpm exec oxfmt --check/oxfmt AGENTS.md`) — полный `make check`'s `format-check` уже был
+      красным на baseline этой ветки (до Task 8) на несвязанных с этой задачей файлах
+      (`.revmux/profile.md`, `docs/plans/completed/*.md`, `knip.jsonc`, `tsconfig.node.json` —
+      воспроизведено через `git stash`); `lint` и `build` (со включённым Sentry source-map
+      upload) прогнаны отдельно и зелёные, `make size` и `make test` (81 файлов, 664 теста) —
+      тоже зелёные
 
 ### Task 9: Verify acceptance criteria
 

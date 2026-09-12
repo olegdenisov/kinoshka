@@ -414,14 +414,14 @@
 - PostHog: https://posthog.com/docs
 - INP метрика: https://web.dev/articles/inp
 
-### 2.5.3 Performance budgets + bundle visualization
+### 2.5.3 Performance budgets + bundle visualization — done, см. `docs/plans/20260912-performance-budgets-bundle-visualization.md`
 
-- [ ] `pnpm add -D size-limit @size-limit/preset-app rollup-plugin-visualizer`.
-- [ ] `pnpm add -D knip` — детектор unused exports/deps/files, job в CI.
-- [ ] `size-limit` config в `package.json`: лимиты на entry bundle, vendor, per-route chunk.
-- [ ] `size-limit` job в CI — fail при превышении.
-- [ ] `rollup-plugin-visualizer` в `vite.config.ts` (mode `--analyze` → `dist/stats.html`).
-- [ ] Route-based code splitting через `React.lazy` (если ещё не сделано).
+- [x] `pnpm add -D size-limit @size-limit/preset-app rollup-plugin-visualizer`. Реализовано с `@size-limit/file`, не `@size-limit/preset-app` — у `preset-app` есть плагин `@size-limit/time` (headless Chrome/`estimo`), не нужный, когда бюджет — только байты, не время выполнения.
+- [x] `pnpm add -D knip` — детектор unused exports/deps/files, job в CI.
+- [x] `size-limit` config в `package.json`: лимиты на entry bundle, vendor, per-route chunk. Реализовано как 8 отдельных записей (entry/vendor + по одной на каждую из 6 страниц) вместо одного суммирующего glob на все страничные чанки — см. AGENTS.md.
+- [x] `size-limit` job в CI — fail при превышении.
+- [x] `rollup-plugin-visualizer` в `vite.config.ts` (mode `--analyze` → `dist/stats.html`). Реализовано через `ANALYZE=true`-env-флаг (`make analyze`), не через CLI-режим `--analyze` — композится с уже существующим `loadEnv`/`isSentryEnabled`-паттерном в `vite.config.ts`.
+- [x] Route-based code splitting через `React.lazy` (если ещё не сделано). Сделано через `lazyNamed` — адаптер над `React.lazy` для страниц с именованным (не `default`) экспортом.
 
 **Как лучше:** не ставь лимит «с потолка» — измерь текущий размер, прибавь 10-20%, поставь как baseline. Каждый новый чанк/dep — explicit решение. `bundle-stats-action` в CI комментирует diff бандла в PR.
 
