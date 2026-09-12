@@ -286,19 +286,19 @@ route-based code splitting бюджетировать «per-route chunk» из �
 
 - Modify: `vite.config.ts`
 
-- [ ] добавить `build.rolldownOptions.output.codeSplitting.groups` — запись `{ name: 'vendor',
+- [x] добавить `build.rolldownOptions.output.codeSplitting.groups` — запись `{ name: 'vendor',
       test: /node_modules/ }` + по одной явной записи на каждую из 6 страниц (`test` — путь к её
       директории в `src/pages/`, `name` — например `page-home`); НЕ `advancedChunks`
       (задеприкейчен в пользу `codeSplitting` в установленном `rolldown@1.0.2`, см. Context) и
       НЕ отдельный `chunkFileNames` (глобальный паттерн, сломал бы имя vendor-чанка — см.
       Context)
-- [ ] `make build-only` — убедиться, что в `dist/assets/` теперь `vendor-*.js` + 6 файлов
+- [x] `make build-only` — убедиться, что в `dist/assets/` теперь `vendor-*.js` + 6 файлов
       `page-home-*.js`/`page-movie-*.js`/… (по имени каждой группы) вместо одного `index-*.js`
       на 555 kB; также заметить (не обязательно фиксить сейчас — см. Post-Completion), что CSS
       тоже расщепляется на entry + по файлу на страницу (сейчас единый `index-*.css`, 56 kB)
-- [ ] тест не пишем — статический литерал групп без условной логики (см. Development Approach);
+- [x] тест не пишем — статический литерал групп без условной логики (см. Development Approach);
       проверка — сам факт появления ожидаемых чанков в `dist/`
-- [ ] воспроизводимый `make build-only` (стабильный набор чанков, без "плавающих" суффиксов от
+- [x] воспроизводимый `make build-only` (стабильный набор чанков, без "плавающих" суффиксов от
       коллизии имён) — обязательное условие перед task 4
 
 ### Task 4: `rollup-plugin-visualizer` — визуализация состава бандла

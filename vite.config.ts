@@ -86,6 +86,31 @@ export default defineConfig(({ mode, command }) => {
     },
     build: {
       sourcemap: resolveBuildSourcemap(sentryEnabled),
+      rolldownOptions: {
+        output: {
+          // output.codeSplitting.groups — актуальный Rolldown-нативный API (не
+          // advancedChunks, задеприкейчен в пользу этого поля в rolldown@1.0.2).
+          // Явные name на каждую страницу вместо имени, выведенного из
+          // содержимого чанка — все 6 page-слайсов импортируются через
+          // одинаковый барель index.tsx, что иначе рискует коллизией имён
+          // (page-index-*.js, page-index2-*.js, ...). Отдельный chunkFileNames
+          // не нужен — [name]-[hash].js подхватывает имя группы сам.
+          codeSplitting: {
+            groups: [
+              { name: 'vendor', test: /node_modules/ },
+              { name: 'page-home', test: /\/pages\/home\// },
+              { name: 'page-movie', test: /\/pages\/movie\// },
+              { name: 'page-favorites', test: /\/pages\/favorites\// },
+              { name: 'page-popular', test: /\/pages\/popular\// },
+              {
+                name: 'page-recommendations',
+                test: /\/pages\/recommendations\//,
+              },
+              { name: 'page-search', test: /\/pages\/search\// },
+            ],
+          },
+        },
+      },
     },
     test: {
       environment: 'jsdom',
