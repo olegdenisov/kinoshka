@@ -350,23 +350,29 @@ route-based code splitting бюджетировать «per-route chunk» из �
 - Modify: `Makefile` (не забыть добавить новый таргет и в строку `.PHONY: ...` на первой строке
   файла — сейчас там перечислены все существующие таргеты явным списком)
 
-- [ ] `pnpm add -D size-limit @size-limit/file` — не `@size-limit/preset-app` (см. отклонение в
+- [x] `pnpm add -D size-limit @size-limit/file` — не `@size-limit/preset-app` (см. отклонение в
       Overview: `preset-app` тащит `@size-limit/time`, запускающий headless Chrome/`estimo` —
       не нужно, когда бюджет только про байты)
-- [ ] `make build-only` — снять реальные post-split размеры каждого из 8 чанков (числа baseline
-      в Overview — из сборки ДО Task 2-3, устарели и не годятся как бюджет)
-- [ ] добавить секцию `"size-limit"` в `package.json` — **8 отдельных записей** с `path`-glob
+- [x] `make build-only` — снять реальные post-split размеры каждого из 8 чанков (числа baseline
+      в Overview — из сборки ДО Task 2-3, устарели и не годятся как бюджет).
+      Измеренные gzip-размеры: entry 2.38 kB, vendor 140.43 kB, page-home 18.70 kB,
+      page-movie 7.59 kB, page-favorites 1.09 kB, page-popular 1.07 kB,
+      page-recommendations 1.41 kB, page-search 8.52 kB
+- [x] добавить секцию `"size-limit"` в `package.json` — **8 отдельных записей** с `path`-glob
       (не `import` — с `@size-limit/file` `import`-режима вообще нет, только `path`, значит
       size-limit только *мерит* уже собранный `dist/`, не пересобирает его сам): `entry`
       (`dist/assets/index-*.js`), `vendor` (`dist/assets/vendor-*.js`), и по одной записи на
       каждую из 6 страниц (`dist/assets/page-home-*.js`, `dist/assets/page-movie-*.js`, …,
       имена — из явных групп `codeSplitting` в Task 3, не суммирующий glob) — `gzip: true`;
-      лимит каждой записи = её измеренный размер + 15%
-- [ ] добавить `size` в `Makefile`: `pnpm exec size-limit`
-- [ ] `make size` — все 8 бюджетов проходят на текущей сборке
-- [ ] тест не пишем — числовые пороги, не код с бизнес-логикой; зелёный `make size` — сама
+      лимит каждой записи = её измеренный размер + 15%.
+      Итоговые лимиты (измеренный gzip + 15%, округлено): entry 2.75 kB, vendor 162 kB,
+      page-home 21.5 kB, page-movie 8.75 kB, page-favorites 1.3 kB, page-popular 1.25 kB,
+      page-recommendations 1.65 kB, page-search 9.8 kB
+- [x] добавить `size` в `Makefile`: `pnpm exec size-limit`
+- [x] `make size` — все 8 бюджетов проходят на текущей сборке
+- [x] тест не пишем — числовые пороги, не код с бизнес-логикой; зелёный `make size` — сама
       проверка
-- [ ] зелёный `make size` — обязательное условие перед task 6
+- [x] зелёный `make size` — обязательное условие перед task 6
 
 ### Task 6: `knip` — детектор unused exports/deps/files
 
