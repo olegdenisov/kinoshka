@@ -434,11 +434,11 @@
 
 ### 2.5.4 CSP headers + security
 
-- [ ] CSP через HTTP-заголовок `Content-Security-Policy-Report-Only` (хостинг-конфиг — `vercel.json`/`netlify.toml`/`_headers`; **не** meta-тег — браузеры не поддерживают `report-uri`/`report-to`/`frame-ancestors` и сам режим report-only в `<meta>`).
-- [ ] Endpoint для CSP-violations (можно в Sentry).
-- [ ] После 1-2 недель без legitimate violations — переключение заголовка на enforce (`Content-Security-Policy`).
-- [ ] Дополнительно: `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` (тот же хостинг-конфиг).
-- [ ] SRI (Subresource Integrity) для external scripts (если есть).
+- [x] CSP через HTTP-заголовок `Content-Security-Policy-Report-Only` (хостинг-конфиг — `vercel.json`/`netlify.toml`/`_headers`; **не** meta-тег — браузеры не поддерживают `report-uri`/`report-to`/`frame-ancestors` и сам режим report-only в `<meta>`). Реализовано через `vercel.json`, см. `docs/plans/20260912-csp-security-headers.md`.
+- [x] Endpoint для CSP-violations (можно в Sentry). Реализовано через Sentry security-report endpoint (`report-uri`, построен из реального публичного `VITE_SENTRY_DSN`), не отдельным backend'ом.
+- [ ] После 1-2 недель без legitimate violations — переключение заголовка на enforce (`Content-Security-Policy`). Требует 1-2 недели реального наблюдения на проде, см. Post-Completion в `docs/plans/20260912-csp-security-headers.md`.
+- [x] Дополнительно: `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` (тот же хостинг-конфиг). Также добавлен `X-Content-Type-Options: nosniff` сверх формулировки roadmap.
+- [x] SRI (Subresource Integrity) для external scripts (если есть). Решение — не применять ни к одному текущему ресурсу (Google Fonts stylesheet, `plausible.io/js/script.manual.js` — оба не подходят под pinned hash), см. AGENTS.md.
 
 **Как лучше:** включай CSP в production, не в dev — иначе мешает HMR. В фазе 4 (SSR) — заголовки выставляются сервером напрямую. Прогони итоговую конфигурацию через CSP Evaluator.
 
