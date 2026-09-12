@@ -71,6 +71,39 @@ jobs:
           HUSKY: '0'
       - run: make audit
 
+  size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v5
+        with:
+          version: '11'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
+      - run: make build-only
+      - run: make size
+
+  knip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v5
+        with:
+          version: '11'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
+      - run: make knip
+
   build:
     runs-on: ubuntu-latest
     needs: [lint, typecheck, test]
