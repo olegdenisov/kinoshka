@@ -98,7 +98,7 @@ describe('vercel.json — Content-Security-Policy-Report-Only', () => {
     expect(getDirective(directives, 'default-src')).toEqual(new Set(["'self'"]))
   })
 
-  it('script-src — ровно self/hash/plausible, без unsafe-inline', () => {
+  it('script-src — ровно self/hash/unsafe-inline/plausible', () => {
     const { directives } = getCsp()
     const scriptSrc = getDirective(directives, 'script-src')
     const hashSource = [...scriptSrc].find(v => v.startsWith("'sha256-"))
@@ -107,8 +107,17 @@ describe('vercel.json — Content-Security-Policy-Report-Only', () => {
     }
     // Точное множество (а не .has()-проверки) — иначе незамеченное добавление постороннего
     // хоста в script-src тест пропустит молча.
+    // 'unsafe-inline' присутствует ради обратной совместимости со старыми браузерами, не
+    // понимающими hash-source (CSP Evaluator's suggestion) — браузеры, которые понимают
+    // 'sha256-...', по спеке CSP2+ полностью игнорируют 'unsafe-inline' рядом с ним, так что
+    // реальной дыры не появляется.
     expect(scriptSrc).toEqual(
-      new Set(["'self'", hashSource, 'https://plausible.io']),
+      new Set([
+        "'self'",
+        hashSource,
+        "'unsafe-inline'",
+        'https://plausible.io',
+      ]),
     )
   })
 
@@ -162,6 +171,13 @@ describe('vercel.json — Content-Security-Policy-Report-Only', () => {
     expect(getDirective(directives, 'form-action')).toEqual(new Set(["'self'"]))
     expect(getDirective(directives, 'frame-ancestors')).toEqual(
       new Set(["'none'"]),
+    )
+  })
+
+  it("require-trusted-types-for 'script' — hardening против DOM XSS sinks", () => {
+    const { directives } = getCsp()
+    expect(getDirective(directives, 'require-trusted-types-for')).toEqual(
+      new Set(["'script'"]),
     )
   })
 
