@@ -227,19 +227,19 @@ route-based code splitting бюджетировать «per-route chunk» из �
 - Create: `src/shared/lib/lazyNamed/index.ts`
 - Modify: `src/shared/lib/index.ts`
 
-- [ ] реализовать `lazyNamed<P extends object>(factory, exportName)` в `lazyNamed.ts` —
+- [x] реализовать `lazyNamed<P extends object>(factory, exportName)` в `lazyNamed.ts` —
       `React.lazy(() => factory().then(m => ({ default: m[exportName] })))`; все 6
       page-слайсов экспортируют компонент именованным экспортом (`export { XPage } from
       './XPage'`), не `default`, поэтому голый `React.lazy(() => import(...))` не подходит.
       Без `any` в сигнатуре (`.oxlintrc.json`: `"no-explicit-any": "error"`, `oxlint --fix
       --deny-warnings` в pre-commit) — см. Technical Details
-- [ ] реэкспортировать из `src/shared/lib/lazyNamed/index.ts`
-- [ ] добавить в публичный барель `src/shared/lib/index.ts`
-- [ ] написать тест: `lazyNamed` резолвит компонент из именованного экспорта мокнутого модуля
+- [x] реэкспортировать из `src/shared/lib/lazyNamed/index.ts`
+- [x] добавить в публичный барель `src/shared/lib/index.ts`
+- [x] написать тест: `lazyNamed` резолвит компонент из именованного экспорта мокнутого модуля
       (успешный кейс — рендер через `React.Suspense`, дождаться появления контента)
-- [ ] написать тест: реджект промиса `factory` пробрасывается наружу (та же семантика, что у
+- [x] написать тест: реджект промиса `factory` пробрасывается наружу (та же семантика, что у
       голого `React.lazy` — ловится `ErrorBoundary`, не глушится тихо)
-- [ ] `make test` — оба новых теста и весь набор проходят, прежде чем переходить к task 2
+- [x] `make test` — оба новых теста и весь набор проходят, прежде чем переходить к task 2
 
 ### Task 2: Route-based code splitting в `router.tsx` + Suspense-боундари в `AppLayout`
 
@@ -249,10 +249,10 @@ route-based code splitting бюджетировать «per-route chunk» из �
 - Modify: `src/app/layouts/AppLayout.tsx`
 - Create: `src/app/router.test.tsx`
 
-- [ ] заменить все 6 статических импортов страниц в `router.tsx` на
+- [x] заменить все 6 статических импортов страниц в `router.tsx` на
       `lazyNamed(() => import('../pages/home'), 'HomePage')` и аналогично для остальных пяти
       (`MoviePage`, `FavoritesPage`, `PopularPage`, `RecommendationsPage`, `SearchPage`)
-- [ ] обернуть `<Outlet />` в `AppLayout.tsx` (строка 222) в `<Suspense fallback={<Spinner
+- [x] обернуть `<Outlet />` в `AppLayout.tsx` (строка 222) в `<Suspense fallback={<Spinner
       />}>` (`Spinner` уже есть в `@shared/ui`) — единая точка на всё дерево роутов, отдельно от
       `AsyncBoundary`-Suspense внутри каждой страницы (тот про данные, этот про JS-чанк)
 - [ ] **Осознанное решение по риску "Suspense во время react-router transition"**: навигации

@@ -1,0 +1,1 @@
+export { lazyNamed } from './lazyNamed'
