@@ -431,7 +431,7 @@ route-based code splitting бюджетировать «per-route chunk» из �
 
 - Modify: `.github/workflows/ci.yml`
 
-- [ ] добавить job `size` (по образцу существующего `audit`: `actions/checkout` →
+- [x] добавить job `size` (по образцу существующего `audit`: `actions/checkout` →
       `pnpm/action-setup` → `actions/setup-node` (кэш `pnpm`) → `pnpm install --frozen-lockfile`
       с `HUSKY: '0'`) — запускает `make build-only` (нужен реальный `dist/` для size-limit) и
       `make size`. **Без Sentry-секретов** (в отличие от job `build`) — размер чанков не зависит
@@ -439,15 +439,16 @@ route-based code splitting бюджетировать «per-route chunk» из �
       PR ещё раз аплоадить сорсмапы под тем же `release`-тегом — двойной расход квоты и времени
       без всякой пользы (`isAnalyzeEnabled`/`isSentryEnabled` в этом случае просто скипнут
       соответствующие плагины, билд не падает)
-- [ ] добавить job `knip` (тот же паттерн setup) — `make knip`, без нужды в билде (работает по
+- [x] добавить job `knip` (тот же паттерн setup) — `make knip`, без нужды в билде (работает по
       исходникам, быстрее `size`)
-- [ ] оба job — самостоятельные (свой `pnpm install`), не `needs: [build]` — по образцу `audit`,
+- [x] оба job — самостоятельные (свой `pnpm install`), не `needs: [build]` — по образцу `audit`,
       чтобы не удлинять критический путь `build` (`needs: [lint, typecheck, test]`)
-- [ ] тест не пишем — CI YAML; проверка — синтаксис + реальный прогон на первом PR
+- [x] тест не пишем — CI YAML; проверка — синтаксис + реальный прогон на первом PR
       (Post-Completion, до пуша недостижимо)
-- [ ] локально проверить `.github/workflows/ci.yml` на валидный YAML (`pnpm exec` любого
+- [x] локально проверить `.github/workflows/ci.yml` на валидный YAML (`pnpm exec` любого
       YAML-линтера, если есть, иначе визуальная сверка со структурой существующих jobs) — перед
-      task 8
+      task 8. Проверено: `js-yaml`/`python3+PyYAML` парсят файл без ошибок, `jobs` содержит
+      `lint, typecheck, test, audit, size, knip, build`
 
 ### Task 8: Roadmap + AGENTS.md — фиксация решений
 
