@@ -112,8 +112,8 @@ report-uri https://o4512052151844864.ingest.us.sentry.io/api/4512052165607429/se
 **Files:**
 - Modify: `vercel.json`
 
-- [ ] добавить `"headers": [{ "source": "/(.*)", "headers": [...] }]` с `Content-Security-Policy-Report-Only` (значение — строка из Technical Details выше, дословно), `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Content-Type-Options: nosniff`
-- [ ] убедиться, что JSON валиден (`node -e "JSON.parse(require('fs').readFileSync('vercel.json','utf8'))"` или `make check`) и существующий `ignoreCommand` не задет
+- [x] добавить `"headers": [{ "source": "/(.*)", "headers": [...] }]` с `Content-Security-Policy-Report-Only` (значение — строка из Technical Details выше, дословно), `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Content-Type-Options: nosniff`
+- [x] убедиться, что JSON валиден (`node -e "JSON.parse(require('fs').readFileSync('vercel.json','utf8'))"` или `make check`) и существующий `ignoreCommand` не задет
 
 ### Task 2: `vercel-headers.test.ts` — тест-инвариант против `vercel.json`
 
