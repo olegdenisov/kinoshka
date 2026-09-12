@@ -1,4 +1,4 @@
-.PHONY: dev build typecheck build-only lint format format-check preview install hooks clean check generate-api test test-watch coverage audit analyze size
+.PHONY: dev build typecheck build-only lint format format-check preview install hooks clean check generate-api test test-watch coverage audit analyze size knip
 
 dev:
 	pnpm dev
@@ -56,3 +56,6 @@ analyze:
 
 size:
 	pnpm exec size-limit
+
+knip:
+	pnpm exec knip

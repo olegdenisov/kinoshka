@@ -1,4 +1,6 @@
-export type SessionCacheEntry<T> = {
+// не публичный тип: используется только внутри этого файла (knip флагует export как мёртвый —
+// не реэкспортируется через публичный @shared/lib барель, который отдаёт только createSessionCache)
+type SessionCacheEntry<T> = {
   data: T
   timestamp: number
   isError: boolean

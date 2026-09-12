@@ -10,7 +10,9 @@
  * `getGenreLabel` возвращает исходное русское название как фолбэк, а не
  * бросает/пропускает.
  */
-export const GENRE_LABELS: Record<string, string> = {
+// не публичный экспорт: используется только в getGenreLabel ниже (knip флагует export как
+// мёртвый — не реэкспортируется через публичный барель catalog-filter/index.ts)
+const GENRE_LABELS: Record<string, string> = {
   боевик: 'Action',
   драма: 'Drama',
   фантастика: 'Sci-Fi',

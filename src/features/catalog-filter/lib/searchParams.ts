@@ -11,8 +11,12 @@ export const FILTER_URL_KEYS = [
   'rating',
 ] as const
 
-/** Фильтры + сортировка — полный набор ключей, которые нужно зачищать при входе в текстовый поиск. */
-export const FILTER_AND_SORT_URL_KEYS = [...FILTER_URL_KEYS, 'sort'] as const
+/**
+ * Фильтры + сортировка — полный набор ключей, которые нужно зачищать при входе в текстовый
+ * поиск. Не публичный экспорт: используется только в stripFilterAndSortParams ниже (knip
+ * флагует export как мёртвый — не реэкспортируется через публичный барель).
+ */
+const FILTER_AND_SORT_URL_KEYS = [...FILTER_URL_KEYS, 'sort'] as const
 
 /** Пустой FilterState — дефолт как для пустого URL, так и для мусорных значений в нём. */
 export const EMPTY_FILTERS: FilterState = {

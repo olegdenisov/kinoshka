@@ -66,7 +66,9 @@ const fetchCursorStep = async ({
 // даёт 403-cooldown и session-persist бесплатно.
 const cachedCursorStep = createCachedFetcher('catalog-cursor', fetchCursorStep)
 
-export const fetchCatalogCursor = (
+// не публичный экспорт: используется только ниже в walkToPage (knip флагует export как
+// мёртвый — единственный потребитель внутри этого же файла)
+const fetchCatalogCursor = (
   params: CatalogParams,
   cursor?: string,
 ): Promise<CursorStepResult> => cachedCursorStep({ params, cursor })
