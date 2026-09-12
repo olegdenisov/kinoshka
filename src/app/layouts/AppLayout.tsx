@@ -1,9 +1,9 @@
 import { trackPageview, useViewport } from '@shared/lib'
-import { IconButton, ShareIcon } from '@shared/ui'
+import { IconButton, ShareIcon, Spinner } from '@shared/ui'
 import { Header } from '@widgets/header'
 import { BottomNav, MobileHeader } from '@widgets/mobile-chrome'
 import type { ReactNode } from 'react'
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import {
   Outlet,
   useLocation,
@@ -219,7 +219,13 @@ export const AppLayout = () => {
         <Header variant={headerVariant} activeNav={headerActiveNav} />
       )}
 
-      <Outlet />
+      {/* Suspense-боундари здесь — про загрузку JS-чанка страницы (route-based code
+      splitting, роадмап 2.5.3), не про данные: каждая страница уже оборачивает свою
+      async-секцию в собственный `<AsyncBoundary>` (см. AGENTS.md, "Loading / Empty / Error
+      везде"). Единая точка на всё дерево роутов — как и сам `<Outlet/>`. */}
+      <Suspense fallback={<Spinner />}>
+        <Outlet />
+      </Suspense>
 
       {isMobile && config && <BottomNav active={config.active} />}
     </>
