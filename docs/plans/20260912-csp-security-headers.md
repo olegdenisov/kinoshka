@@ -120,13 +120,13 @@ report-uri https://o4512052151844864.ingest.us.sentry.io/api/4512052165607429/se
 **Files:**
 - Create: `vercel-headers.test.ts`
 
-- [ ] прочитать и распарсить `vercel.json`, извлечь значение заголовка `Content-Security-Policy-Report-Only` для `source: "/(.*)"`
-- [ ] распарсить CSP-строку на директивы (`split('; ')` → `Map<string, Set<string>>`) и утверждать: `default-src` = `'self'`; `script-src` содержит `'self'`, `https://plausible.io`, хеш-источник **и не содержит** `'unsafe-inline'`; `style-src` содержит `'self'`, `'unsafe-inline'`, `https://fonts.googleapis.com`; `font-src` = `'self' https://fonts.gstatic.com`; `img-src` = `'self' https://avatars.mds.yandex.net https://st.kp.yandex.net`; `connect-src` содержит `'self'`, `https://api.poiskkino.dev`, `https://plausible.io`, `https://o4512052151844864.ingest.us.sentry.io`; `object-src` = `'none'`; `base-uri`/`form-action` = `'self'`; `frame-ancestors` = `'none'`
-- [ ] прочитать `index.html`, утверждать, что в нём **ровно один** `<script>`-тег без атрибута `src` (защита от будущего второго инлайн-скрипта, который тест иначе молча пропустит), извлечь его текстовое содержимое и независимо пересчитать `sha256-<base64>` через `node:crypto` — сравнить с хеш-источником, найденным в `script-src` (не с захардкоженной строкой — так тест реально ловит рассинхрон при правке скрипта)
-- [ ] утверждать наличие `report-uri` в CSP-строке со значением, содержащим `o4512052151844864.ingest.us.sentry.io` и `sentry_key=`
-- [ ] утверждать точные значения `X-Frame-Options`, `Referrer-Policy`, `X-Content-Type-Options`
-- [ ] написать edge-case тест: намеренно испорченный/отсутствующий заголовок (мок распарсенного JSON без нужного ключа) → тест-хелпер бросает понятную ошибку, а не падает с невнятным `undefined`
-- [ ] запустить `make test` — должно пройти перед Task 3
+- [x] прочитать и распарсить `vercel.json`, извлечь значение заголовка `Content-Security-Policy-Report-Only` для `source: "/(.*)"`
+- [x] распарсить CSP-строку на директивы (`split('; ')` → `Map<string, Set<string>>`) и утверждать: `default-src` = `'self'`; `script-src` содержит `'self'`, `https://plausible.io`, хеш-источник **и не содержит** `'unsafe-inline'`; `style-src` содержит `'self'`, `'unsafe-inline'`, `https://fonts.googleapis.com`; `font-src` = `'self' https://fonts.gstatic.com`; `img-src` = `'self' https://avatars.mds.yandex.net https://st.kp.yandex.net`; `connect-src` содержит `'self'`, `https://api.poiskkino.dev`, `https://plausible.io`, `https://o4512052151844864.ingest.us.sentry.io`; `object-src` = `'none'`; `base-uri`/`form-action` = `'self'`; `frame-ancestors` = `'none'`
+- [x] прочитать `index.html`, утверждать, что в нём **ровно один** `<script>`-тег без атрибута `src` (защита от будущего второго инлайн-скрипта, который тест иначе молча пропустит), извлечь его текстовое содержимое и независимо пересчитать `sha256-<base64>` через `node:crypto` — сравнить с хеш-источником, найденным в `script-src` (не с захардкоженной строкой — так тест реально ловит рассинхрон при правке скрипта)
+- [x] утверждать наличие `report-uri` в CSP-строке со значением, содержащим `o4512052151844864.ingest.us.sentry.io` и `sentry_key=`
+- [x] утверждать точные значения `X-Frame-Options`, `Referrer-Policy`, `X-Content-Type-Options`
+- [x] написать edge-case тест: намеренно испорченный/отсутствующий заголовок (мок распарсенного JSON без нужного ключа) → тест-хелпер бросает понятную ошибку, а не падает с невнятным `undefined`
+- [x] запустить `make test` — должно пройти перед Task 3
 
 ### Task 3: Документация — AGENTS.md и `plans/roadmap.md`
 
