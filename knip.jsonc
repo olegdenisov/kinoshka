@@ -13,7 +13,7 @@
     "vite.config.ts",
     "sentry.config.ts",
     "apicraft.config.ts",
-    "bundle.config.ts"
+    "bundle.config.ts",
   ],
   "project": ["src/**/*.{ts,tsx}"],
   "ignore": [
@@ -32,6 +32,6 @@
     "src/features/catalog-filter/index.ts",
     "src/features/favorites/index.ts",
     "src/features/theme/index.ts",
-    "src/shared/ui/index.ts"
-  ]
+    "src/shared/ui/index.ts",
+  ],
 }
