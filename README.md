@@ -34,6 +34,9 @@ make generate-api # регенерировать API-клиент из OpenAPI-�
 make check        # lint + build (полная проверка)
 make hooks        # установить git-хуки husky
 make audit        # pnpm audit (prod-зависимости, high severity)
+make analyze      # визуализация состава бандла (dist/stats.html)
+make size         # бюджеты размера бандла (size-limit)
+make knip         # детектор неиспользуемого кода/зависимостей
 make clean        # удалить dist и node_modules
 ```
 

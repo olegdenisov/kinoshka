@@ -300,6 +300,33 @@ test: /node_modules/ }` + по одной явной записи на кажд�
       проверка — сам факт появления ожидаемых чанков в `dist/`
 - [x] воспроизводимый `make build-only` (стабильный набор чанков, без "плавающих" суффиксов от
       коллизии имён) — обязательное условие перед task 4
+- ➕ **[review phase 1] CRITICAL-фикс: добавлена группа `shared`.** Исходная версия (без
+  `shared`) реально не изолировала per-route код: `test`-паттерны покрывали только `vendor` и
+  6 страничных директорий, а весь межстраничный общий код (`Header`/`MobileHeader`/`BottomNav`
+  из `AppLayout`, `Card`/`Poster` из `@entities/movie`, и т.д.) не match'ился ни одним — Rolldown
+  произвольно приписывал его первой по порядку странице (`page-home`), и поскольку `AppLayout`
+  (часть eager entry, не за `lazy()`) статически импортирует часть этого кода, `page-home-*.js`
+  оказывался статически заимпортирован из `index-*.js` и из всех остальных 5 page-чанков —
+  т.е. грузился eagerly на каждый роут, а не только на `/`. Обнаружено ревью (3 из 5 агентов
+  независимо, с воспроизведением через `grep` по `dist/assets/*.js`), исправлено добавлением
+  `{ name: 'shared', test: /\/(widgets|features|entities|shared)\// }` перед страничными
+  группами. Проверено после фикса: `index-*.js` и все 6 page-чанков импортируют только
+  `rolldown-runtime`/`vendor`/`shared`, ни один page-чанк не импортирует другой page-чанк.
+  Task 5's 8 бюджетов пересняты под новую структуру (9-я запись на `shared`) — см. Task 5.
+- ➕ **[review phase 4] MAJOR-фикс: добавлена группа `web-vitals`.** Catch-all `vendor`
+  (`test: /node_modules/`) без разбора матчил и пакет `web-vitals`, несмотря на то что
+  `reportWebVitals.ts` (`src/shared/lib/analytics/`) намеренно грузит его через
+  `await import('web-vitals')`, а не статический импорт — именно чтобы не тащить в
+  вечно-грузящийся чанк (см. AGENTS.md "Web Vitals + Analytics"). Проверено на реальной
+  сборке до фикса: `vendor-*.js` содержал web-vitals-код (грепом по идентификаторам
+  `onHidden`/`PerformanceObserver`), отдельного `web-vitals-*.js` не было вовсе, и
+  `dist/index.html` `modulepreload`-ил `vendor-*.js` — т.е. динамический импорт ничего не
+  давал, пакет всё равно грузился eagerly на каждой странице. Исправлено добавлением
+  `{ name: 'web-vitals', test: /node_modules\/web-vitals\// }` перед `vendor`. После фикса:
+  отдельный `web-vitals-*.js` (~3.4 kB gzip) существует, упоминается только динамическим
+  `import()` внутри `shared-*.js`, отсутствует в `modulepreload`-списке `index.html`;
+  `vendor` полегчал с ~140.4 kB до ~137.4 kB gzip. Task 5's 9 бюджетов пересняты под новую
+  структуру (10-я запись на `web-vitals`) — см. Task 5.
 
 ### Task 4: `rollup-plugin-visualizer` — визуализация состава бандла
 
@@ -373,6 +400,24 @@ template: 'treemap' })` в `plugins`, включать по `isAnalyzeEnabled({ 
 - [x] тест не пишем — числовые пороги, не код с бизнес-логикой; зелёный `make size` — сама
       проверка
 - [x] зелёный `make size` — обязательное условие перед task 6
+- ➕ **[review phase 1] Пересняты после CRITICAL-фикса Task 3 (группа `shared`).** Добавление
+  `shared`-группы поменяло реальный вес каждого чанка — общий код (`Header`/`Card`/сторедж
+  favorites/theme/genres и т.д.) переехал из `page-home`/дублирования в один `shared`-чанк.
+  Новые измеренные gzip-размеры: entry 2.40 kB, vendor 140.43 kB (без изменений), **shared
+  19.64 kB (новый)**, page-home 2.57 kB (было 18.70 — Header/Card и т.п. больше не в нём),
+  page-movie 7.61 kB, page-favorites 1.09 kB, page-popular 1.07 kB, page-recommendations
+  1.15 kB, page-search 6.07 kB (было 8.52 — BottomNav переехал в shared). Секция `size-limit`
+  в `package.json` теперь содержит **9 записей** (добавлен `shared`), лимиты пересчитаны
+  измеренный+15%: entry 2.8 kB, vendor 162 kB, shared 22.6 kB, page-home 3 kB, page-movie
+  8.75 kB, page-favorites 1.3 kB, page-popular 1.25 kB, page-recommendations 1.35 kB,
+  page-search 7 kB. `make size` зелёный на всех 9.
+- ➕ **[review phase 4] Пересняты после MAJOR-фикса Task 3 (группа `web-vitals`).** `vendor`
+  полегчал с 140.43 kB до **137.41 kB** gzip (web-vitals-код переехал в свой чанк), новый
+  чанк **`web-vitals` — 3.40 kB** gzip измерено. Секция `size-limit` теперь содержит **10
+  записей**: лимит `vendor` снижен 162 kB → **158 kB** (137.41 × 1.15), добавлена 10-я
+  запись `web-vitals` — лимит **3.95 kB** (3.40 × 1.15). Остальные 8 записей не изменились
+  (web-vitals-код никогда не пересекался с `shared`/page-чанками). `make size` зелёный на
+  всех 10.
 
 ### Task 6: `knip` — детектор unused exports/deps/files
 
@@ -465,7 +510,7 @@ template: 'treemap' })` в `plugins`, включать по `isAnalyzeEnabled({ 
       Suspense-боундари в `AppLayout` (код vs данные) и принятый риск задержки
       `activeNav`/`trackPageview()` при transition-навигации (см. Task 2), `codeSplitting.groups`
       и почему не `advancedChunks`/`chunkFileNames`, `ANALYZE`-флаг и `make analyze`, реально
-      измеренные size-limit-бюджеты (8 записей) и что они baseline+15% (не «с потолка»), почему
+      измеренные size-limit-бюджеты (9 записей) и что они baseline+15% (не «с потолка»), почему
       `@size-limit/file` вместо `@size-limit/preset-app`, `knip.json` и его `entry`/`ignore` с
       причиной каждой записи, обновить строку `Makefile`-команд в AGENTS.md (`analyze`/`size`/
       `knip` — новые `.PHONY`-таргеты)
@@ -494,8 +539,9 @@ template: 'treemap' })` в `plugins`, включать по `isAnalyzeEnabled({ 
 - [x] `make analyze` генерирует `dist/stats.html`, отражающий новую структуру чанков —
       перепроверено: команда прошла успешно, `dist/stats.html` сгенерирован (486 KB, содержит
       treemap с новыми чанками)
-- [x] `make size` — зелёный — перепроверено: все 8 бюджетов (entry, vendor, 6 страниц) проходят
-      (например vendor 138.82 kB / лимит 162 kB, page-home 18.52 kB / лимит 21.5 kB)
+- [x] `make size` — зелёный — перепроверено: все 9 бюджетов (entry, vendor, shared, 6 страниц)
+      проходят (например vendor 138.83 kB / лимит 162 kB, shared 19.42 kB / лимит 22.6 kB,
+      page-home 2.57 kB / лимит 3 kB)
 - [x] `make knip` — чистый или осознанно заигноренный — перепроверено: 0 находок unused
       exports/deps/files, только 2 информационные "Configuration hints" про избыточные entry-паттерны
       (`src/main.tsx`, `vite.config.ts`), как и задокументировано в Task 6; заодно `oxfmt --write`
@@ -528,7 +574,7 @@ template: 'treemap' })` в `plugins`, включать по `isAnalyzeEnabled({ 
       (строки 255-267) и секция `plans/roadmap.md:417-433` точно описывают реализацию —
       `lazyNamed<P extends object>`, все 6 `lazyNamed()`-вызовов в `router.tsx`,
       `codeSplitting.groups` (vendor + 6 page-групп, без `advancedChunks`/`chunkFileNames`),
-      `isAnalyzeEnabled`/`ANALYZE`-флаг в `bundle.config.ts`, 8 записей `size-limit`
+      `isAnalyzeEnabled`/`ANALYZE`-флаг в `bundle.config.ts`, 9 записей `size-limit`
       (`@size-limit/file`, не `preset-app`), `knip.jsonc` (entry/project/ignore ровно как
       описано), CI-job'ы `size` (`make build-only` → `make size`) и `knip` — расхождений не
       найдено, доописывать ничего не потребовалось
@@ -563,3 +609,11 @@ _Пункты, требующие внешних действий — без ч�
   лучше" роадмапа, но не входит в явный чек-лист `2.5.3`; `size-limit`'s CI-fail уже даёт
   основной сигнал о превышении. Кандидат в будущий backlog-пункт, если понадобится более
   наглядный per-PR diff.
+- **CSS-чанки тоже расщепились (Task 3), но не бюджетируются.** `codeSplitting.groups`
+  группирует только JS; побочным эффектом CSS расщепился на entry `index-*.css` (~1.16 kB gzip)
+  плюс по файлу на каждую группу (`shared-*.css` ~4.8 kB gzip, `page-movie-*.css` ~3.0 kB gzip,
+  `page-search-*.css` ~2.0 kB gzip, `page-home-*.css` ~1.5 kB gzip, `page-favorites-*.css`/
+  `page-popular-*.css`/`page-recommendations-*.css` ~0.35 kB gzip каждый — измерено после review
+  phase 1's `shared`-группы фикса). `size-limit`'s `path`-глобы в Task 5 покрывают только `.js`.
+  Осознанный пробел, а не забытая работа — не заводим бюджет на CSS сейчас, кандидат в будущий
+  backlog-пункт вместе с `bundle-stats-action` выше.

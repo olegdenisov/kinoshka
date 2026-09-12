@@ -112,9 +112,35 @@ export default defineConfig(({ mode, command }) => {
           // одинаковый барель index.tsx, что иначе рискует коллизией имён
           // (page-index-*.js, page-index2-*.js, ...). Отдельный chunkFileNames
           // не нужен — [name]-[hash].js подхватывает имя группы сам.
+          //
+          // ВАЖНО: группа `shared` идёт ПЕРЕД page-группами и ловит весь код
+          // `@widgets`/`@features`/`@entities`/`@shared` — межстраничный общий
+          // код (Header/MobileHeader/BottomNav из AppLayout, Card/Poster из
+          // @entities/movie и т.д.). Без неё Rolldown's common-chunk эвристика
+          // произвольно приписывает этот общий код одной из page-групп (в
+          // порядке объявления — раньше это была page-home, затем page-search),
+          // и поскольку сам entry (AppLayout, не лежащий за lazy()) статически
+          // импортирует Header/BottomNav, эта «страничная» группа оказывается
+          // статически импортированной из entry и из ВСЕХ остальных
+          // page-чанков — т.е. eagerly грузится на каждый роут, а не только на
+          // свою страницу. Это было обнаружено ревью (см. AGENTS.md) —
+          // `shared` — реальный, всегда-один-раз-грузящийся общий чанк.
           codeSplitting: {
             groups: [
+              // `web-vitals` идёт ПЕРЕД `vendor` и ловит именно этот пакет — иначе
+              // catch-all `test: /node_modules/` в `vendor` забирает и его, несмотря на
+              // то, что reportWebVitals.ts (src/shared/lib/analytics/) намеренно грузит
+              // его через `await import('web-vitals')`, а не статический импорт, именно
+              // чтобы он НЕ попал в вечно-загружаемый чанк (см. AGENTS.md "Web Vitals +
+              // Analytics"). До этого фикса `vendor-*.js` содержал web-vitals-код
+              // (проверено грепом по `onHidden`/`PerformanceObserver`) и eagerly
+              // прелоадился из index.html — динамический импорт ничего не давал.
+              { name: 'web-vitals', test: /node_modules\/web-vitals\// },
               { name: 'vendor', test: /node_modules/ },
+              {
+                name: 'shared',
+                test: /\/(widgets|features|entities|shared)\//,
+              },
               { name: 'page-home', test: /\/pages\/home\// },
               { name: 'page-movie', test: /\/pages\/movie\// },
               { name: 'page-favorites', test: /\/pages\/favorites\// },

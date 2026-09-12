@@ -73,19 +73,31 @@
       "name": "entry",
       "path": "dist/assets/index-*.js",
       "gzip": true,
-      "limit": "2.75 KB"
+      "limit": "2.8 KB"
     },
     {
       "name": "vendor",
       "path": "dist/assets/vendor-*.js",
       "gzip": true,
-      "limit": "162 KB"
+      "limit": "158 KB"
+    },
+    {
+      "name": "web-vitals",
+      "path": "dist/assets/web-vitals-*.js",
+      "gzip": true,
+      "limit": "3.95 KB"
+    },
+    {
+      "name": "shared",
+      "path": "dist/assets/shared-*.js",
+      "gzip": true,
+      "limit": "22.6 KB"
     },
     {
       "name": "page-home",
       "path": "dist/assets/page-home-*.js",
       "gzip": true,
-      "limit": "21.5 KB"
+      "limit": "3 KB"
     },
     {
       "name": "page-movie",
@@ -109,13 +121,13 @@
       "name": "page-recommendations",
       "path": "dist/assets/page-recommendations-*.js",
       "gzip": true,
-      "limit": "1.65 KB"
+      "limit": "1.35 KB"
     },
     {
       "name": "page-search",
       "path": "dist/assets/page-search-*.js",
       "gzip": true,
-      "limit": "9.8 KB"
+      "limit": "7 KB"
     }
   ]
 }

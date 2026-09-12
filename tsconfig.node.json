@@ -23,6 +23,8 @@
   "include": [
     "vite.config.ts",
     "sentry.config.ts",
-    "sentry.config.test.ts"
+    "sentry.config.test.ts",
+    "bundle.config.ts",
+    "bundle.config.test.ts"
   ]
 }
