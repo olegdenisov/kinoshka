@@ -255,7 +255,7 @@ route-based code splitting бюджетировать «per-route chunk» из �
 - [x] обернуть `<Outlet />` в `AppLayout.tsx` (строка 222) в `<Suspense fallback={<Spinner
       />}>` (`Spinner` уже есть в `@shared/ui`) — единая точка на всё дерево роутов, отдельно от
       `AsyncBoundary`-Suspense внутри каждой страницы (тот про данные, этот про JS-чанк)
-- [ ] **Осознанное решение по риску "Suspense во время react-router transition"**: навигации
+- [x] **Осознанное решение по риску "Suspense во время react-router transition"**: навигации
       react-router оборачиваются в `startTransition` (тот же механизм, что уже описан в
       AGENTS.md для `useDeferredValue`/`useSearchParams`). Из-за этого при **переходе между
       страницами** (не при первой загрузке) React не показывает `fallback` немедленно — он
@@ -265,18 +265,19 @@ route-based code splitting бюджетировать «per-route chunk» из �
       на первой загрузке приложения, не при переходах — на медленной сети переход временно
       выглядит как зависший UI без индикации. План принимает это поведение как есть (страничные
       чанки — единицы KB, не секунды загрузки), но фиксирует WHY-заметку про это в AGENTS.md
-      (Task 8) — не как молчаливый побочный эффект
-- [ ] добавить MSW-хендлеры для `*/v1.5/movie` и `*/v1.5/list/:slug` в
+      (Task 8) — не как молчаливый побочный эффект. Решение зафиксировано здесь; сама
+      WHY-заметка в AGENTS.md добавляется в Task 8, как и запланировано
+- [x] добавить MSW-хендлеры для `*/v1.5/movie` и `*/v1.5/list/:slug` в
       `src/app/router.test.tsx` (по образцу `src/pages/home/ui/Home/Home.test.tsx`) — `src/test/setup.ts`
       запускает MSW с `onUnhandledRequest: 'error'`, и smoke-тест ниже реально рендерит
       `HomePage` (через настоящий `router.tsx`), которая бьёт в оба этих эндпоинта
-- [ ] написать smoke-тест `src/app/router.test.tsx`: рендер настоящего `router` (импорт из
+- [x] написать smoke-тест `src/app/router.test.tsx`: рендер настоящего `router` (импорт из
       `./router`, не мок) в `<RouterProvider>` на `/`, дождаться (`findBy`, не `getBy` — контент
       приходит асинхронно после загрузки чанка) отрисовки контента `HomePage`
-- [ ] `make test` — убедиться, что `AppLayout.test.tsx`/`providers.test.tsx` (используют
+- [x] `make test` — убедиться, что `AppLayout.test.tsx`/`providers.test.tsx` (используют
       плейсхолдеры/полный мок роутера, этим изменением не задеты) и весь остальной набор
       страничных тестов остаются зелёными
-- [ ] `make test` зелёный — обязательное условие перед task 3 (самое рискованное изменение
+- [x] `make test` зелёный — обязательное условие перед task 3 (самое рискованное изменение
       плана — роутинг всего приложения)
 
 ### Task 3: Vendor-чанк + явные имена страничных чанков (`vite.config.ts`)
