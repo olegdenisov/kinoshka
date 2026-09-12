@@ -3,10 +3,17 @@ title = "kinoshka gitleaks config"
 [extend]
 useDefault = true
 
-[allowlist]
+[[allowlists]]
 paths = ['''\.env\.example$''']
+
 # Sentry DSN public key (project 4512052165607429, org o4512052151844864) embedded in
 # vercel.json's CSP report-uri. Public keys in a Sentry DSN are meant to be exposed
 # client-side (see AGENTS.md, "Error tracking (Sentry)") — same value already ships in
 # every production JS bundle via VITE_SENTRY_DSN, so this is not a leaked secret.
+# Scoped to vercel.json specifically (condition = "and" requires BOTH paths and regexes
+# to match) — an unscoped regex-only allowlist would silently mask this same literal
+# anywhere else in the repo, which is what code review flagged.
+[[allowlists]]
+condition = "and"
+paths = ['''^vercel\.json$''']
 regexes = ['''ba5e2436894e905aa0a71618112e7c1b''']
