@@ -31,6 +31,7 @@
     "@rolldown/plugin-babel": "^0.2.3",
     "@sentry/vite-plugin": "^5.4.0",
     "@siberiacancode/apicraft": "^1.11.1",
+    "@size-limit/file": "^13.0.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -50,6 +51,7 @@
     "oxfmt": "^0.62.0",
     "oxlint": "1.78.0",
     "rollup-plugin-visualizer": "^7.1.1",
+    "size-limit": "^13.0.3",
     "typescript": "~7.0.2",
     "vite": "^8.0.12",
     "vitest": "^4.1.9"
@@ -64,5 +66,55 @@
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
-  }
+  },
+  "size-limit": [
+    {
+      "name": "entry",
+      "path": "dist/assets/index-*.js",
+      "gzip": true,
+      "limit": "2.75 KB"
+    },
+    {
+      "name": "vendor",
+      "path": "dist/assets/vendor-*.js",
+      "gzip": true,
+      "limit": "162 KB"
+    },
+    {
+      "name": "page-home",
+      "path": "dist/assets/page-home-*.js",
+      "gzip": true,
+      "limit": "21.5 KB"
+    },
+    {
+      "name": "page-movie",
+      "path": "dist/assets/page-movie-*.js",
+      "gzip": true,
+      "limit": "8.75 KB"
+    },
+    {
+      "name": "page-favorites",
+      "path": "dist/assets/page-favorites-*.js",
+      "gzip": true,
+      "limit": "1.3 KB"
+    },
+    {
+      "name": "page-popular",
+      "path": "dist/assets/page-popular-*.js",
+      "gzip": true,
+      "limit": "1.25 KB"
+    },
+    {
+      "name": "page-recommendations",
+      "path": "dist/assets/page-recommendations-*.js",
+      "gzip": true,
+      "limit": "1.65 KB"
+    },
+    {
+      "name": "page-search",
+      "path": "dist/assets/page-search-*.js",
+      "gzip": true,
+      "limit": "9.8 KB"
+    }
+  ]
 }
