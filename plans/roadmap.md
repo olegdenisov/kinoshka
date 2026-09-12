@@ -418,7 +418,7 @@
 
 - [x] `pnpm add -D size-limit @size-limit/preset-app rollup-plugin-visualizer`. Реализовано с `@size-limit/file`, не `@size-limit/preset-app` — у `preset-app` есть плагин `@size-limit/time` (headless Chrome/`estimo`), не нужный, когда бюджет — только байты, не время выполнения.
 - [x] `pnpm add -D knip` — детектор unused exports/deps/files, job в CI.
-- [x] `size-limit` config в `package.json`: лимиты на entry bundle, vendor, per-route chunk. Реализовано как 8 отдельных записей (entry/vendor + по одной на каждую из 6 страниц) вместо одного суммирующего glob на все страничные чанки — см. AGENTS.md.
+- [x] `size-limit` config в `package.json`: лимиты на entry bundle, vendor, per-route chunk. Реализовано как 9 отдельных записей (entry/vendor/shared + по одной на каждую из 6 страниц) вместо одного суммирующего glob на все страничные чанки — см. AGENTS.md.
 - [x] `size-limit` job в CI — fail при превышении.
 - [x] `rollup-plugin-visualizer` в `vite.config.ts` (mode `--analyze` → `dist/stats.html`). Реализовано через `ANALYZE=true`-env-флаг (`make analyze`), не через CLI-режим `--analyze` — композится с уже существующим `loadEnv`/`isSentryEnabled`-паттерном в `vite.config.ts`.
 - [x] Route-based code splitting через `React.lazy` (если ещё не сделано). Сделано через `lazyNamed` — адаптер над `React.lazy` для страниц с именованным (не `default`) экспортом.

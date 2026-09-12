@@ -27,4 +27,11 @@ describe('isAnalyzeEnabled', () => {
       isAnalyzeEnabled({ command: 'build', env: { ANALYZE: 'false' } }),
     ).toBe(false)
   })
+
+  // [review phase 1] Оба условия одновременно false (command==='serve' И пустой env) — до этого
+  // теста комбинация не была явно покрыта (только 'serve'+ANALYZE:'true' и 'build'+{}
+  // покрывались отдельно).
+  it('false при command === "serve" и пустом env (обе части предиката false одновременно)', () => {
+    expect(isAnalyzeEnabled({ command: 'serve', env: {} })).toBe(false)
+  })
 })
