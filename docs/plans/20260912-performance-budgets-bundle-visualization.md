@@ -312,29 +312,34 @@ route-based code splitting бюджетировать «per-route chunk» из �
 - Modify: `Makefile` (не забыть добавить новый таргет и в строку `.PHONY: ...` на первой строке
   файла — сейчас там перечислены все существующие таргеты явным списком)
 
-- [ ] `pnpm add -D rollup-plugin-visualizer`
-- [ ] вынести `isAnalyzeEnabled({ command, env })` — чистый предикат `command === 'build' &&
+- [x] `pnpm add -D rollup-plugin-visualizer`
+- [x] вынести `isAnalyzeEnabled({ command, env })` — чистый предикат `command === 'build' &&
       env.ANALYZE === 'true'` — в тестируемый модуль, по образцу `isSentryEnabled` (см. Context
       про прецедент `sentry.config.ts`): либо добавить туда же (тот же файл, та же причина
       тестируемости), либо в новый `bundle.config.ts` в корне, если хочется не мешать
-      Sentry-специфичный модуль с bundle-специфичным — выбрать по факту, не критично
-- [ ] написать тест на `isAnalyzeEnabled`: `true` только при `command==='build' &&
+      Sentry-специфичный модуль с bundle-специфичным — выбрать по факту, не критично.
+      Реализовано в новом `bundle.config.ts`, отдельно от `sentry.config.ts`
+- [x] написать тест на `isAnalyzeEnabled`: `true` только при `command==='build' &&
       ANALYZE==='true'`, `false` в остальных комбинациях (dev, test, `ANALYZE` не задан/не
-      `'true'`)
-- [ ] добавить `visualizer({ filename: 'dist/stats.html', gzipSize: true, brotliSize: true,
+      `'true'`). Реализовано в `bundle.config.test.ts`
+- [x] добавить `visualizer({ filename: 'dist/stats.html', gzipSize: true, brotliSize: true,
       template: 'treemap' })` в `plugins`, включать по `isAnalyzeEnabled({ command, env })`
-- [ ] ⚠️ **риск совместимости**: `rollup-plugin-visualizer` — Rollup-плагин
+- [x] ⚠️ **риск совместимости**: `rollup-plugin-visualizer` — Rollup-плагин
       (`renderChunk`/`generateBundle`/`getModuleInfo`), Rolldown-совместимость не гарантирована
       на 100%. Если `make analyze` не даёт вменяемого module-level breakdown (падает, либо
       treemap пустой/некорректный) — фоллбэк: `vite-bundle-visualizer` (обёртка, у которой уже
       есть отдельная Rolldown-поддержка) или собственный вывод Rolldown (`--profile`/аналог,
       уточнить в `rolldown.rs` на момент реализации). Не блокировать план на этом — зафиксировать
-      выбор и идти дальше
-- [ ] добавить `analyze` в `Makefile`: `ANALYZE=true pnpm exec vite build`
-- [ ] прогнать `make analyze`, глазами убедиться, что `dist/stats.html` открывается и treemap
-      отражает `vendor`/`page-*` чанки из Task 3 (не один монолитный блок)
-- [ ] `make test` — новый тест на `isAnalyzeEnabled` зелёный, весь набор не сломан
-- [ ] `make analyze` генерирует валидный `stats.html`, `make test` зелёный — обязательные
+      выбор и идти дальше.
+      Риск не реализовался: `rollup-plugin-visualizer` отработал на Rolldown-сборке без ошибок,
+      фоллбэк не потребовался
+- [x] добавить `analyze` в `Makefile`: `ANALYZE=true pnpm exec vite build`
+- [x] прогнать `make analyze`, глазами убедиться, что `dist/stats.html` открывается и treemap
+      отражает `vendor`/`page-*` чанки из Task 3 (не один монолитный блок).
+      Подтверждено: `dist/stats.html` (486 KB) сгенерирован, в нём присутствуют отдельные
+      top-level узлы `vendor-*.js` и все 6 `page-*-*.js` чанков (не единый монолитный блок)
+- [x] `make test` — новый тест на `isAnalyzeEnabled` зелёный, весь набор не сломан
+- [x] `make analyze` генерирует валидный `stats.html`, `make test` зелёный — обязательные
       условия перед task 5
 
 ### Task 5: `size-limit` — бюджеты на entry/vendor/каждую страницу

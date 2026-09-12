@@ -49,6 +49,7 @@
     "msw": "^2.14.6",
     "oxfmt": "^0.62.0",
     "oxlint": "1.78.0",
+    "rollup-plugin-visualizer": "^7.1.1",
     "typescript": "~7.0.2",
     "vite": "^8.0.12",
     "vitest": "^4.1.9"
