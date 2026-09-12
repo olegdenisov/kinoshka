@@ -1,0 +1,37 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // src/main.tsx — единственная точка входа приложения (Vite bootstrap).
+  // *.test.{ts,tsx} — без этого knip считает тестовые файлы и большинство
+  // devDependencies (vitest, msw, testing-library, ...) неиспользуемыми.
+  // Root-конфиги (vite.config.ts/sentry.config.ts/apicraft.config.ts) — иначе
+  // apicraft/husky/commitlint и т.п. тоже попадают в unused deps. bundle.config.ts
+  // добавлен по той же причине (введён в Task 4 этого плана, после того как этот
+  // раздел плана был написан).
+  "entry": [
+    "src/main.tsx",
+    "**/*.test.{ts,tsx}",
+    "vite.config.ts",
+    "sentry.config.ts",
+    "apicraft.config.ts",
+    "bundle.config.ts"
+  ],
+  "project": ["src/**/*.{ts,tsx}"],
+  "ignore": [
+    // Сгенерированные файлы — AGENTS.md прямо запрещает их редактировать
+    // ("Generated files — never edit manually, regenerate instead").
+    "src/shared/api/*.gen.ts",
+    // AGENTS.md, "Feature flag not wired": весь модуль useFeatureFlag()/FeatureGate/
+    // FeatureName документирован как намеренно без текущего потребителя — тот же
+    // прецедент, что popularThisWeek/toggleTheme, оставленные false без подключения.
+    "src/shared/config/**",
+    // Публичные барели слайсов (AGENTS.md, "Key public APIs") — реэкспортируют
+    // getFilterFromSearchParams/CatalogQueryParams, UseFavoritesResult, useTheme/
+    // UseThemeResult/Theme, ErrorBoundary как часть намеренного публичного API,
+    // даже если у конкретного экспорта пока нет внешнего потребителя за пределами
+    // самого слайса (та же причина, что у add(id) в useFavorites).
+    "src/features/catalog-filter/index.ts",
+    "src/features/favorites/index.ts",
+    "src/features/theme/index.ts",
+    "src/shared/ui/index.ts"
+  ]
+}

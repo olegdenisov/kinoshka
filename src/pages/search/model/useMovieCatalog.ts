@@ -8,7 +8,9 @@ import { filtersToParams } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
 import { use } from 'react'
 
-export type CatalogMode = 'search' | 'catalog'
+// не публичный тип: используется только ниже в MovieCatalogResult (knip флагует export как
+// мёртвый — этот файл page-internal, не реэкспортируется через публичный index.ts)
+type CatalogMode = 'search' | 'catalog'
 
 export type MovieCatalogParams = {
   query: string

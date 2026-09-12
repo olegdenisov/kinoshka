@@ -378,28 +378,52 @@ route-based code splitting бюджетировать «per-route chunk» из �
 
 **Files:**
 
-- Create: `knip.json`
+- Create: `knip.jsonc` (JSON с комментариями — план называет `knip.json`, но knip поддерживает
+  `.jsonc` из коробки, и обычный `.json` не может нести обязательные комментарии-ссылки на
+  AGENTS.md для `ignore`-записей)
 - Modify: `package.json` (devDependencies)
-- Modify: `Makefile` (не забыть добавить новый таргет и в строку `.PHONY: ...` на первой строке
-  файла — сейчас там перечислены все существующие таргеты явным списком)
+- Modify: `Makefile` (новый таргет `knip` + добавлен в строку `.PHONY: ...`)
+- Modify: `src/entities/movie/api/getMoviesPage.ts`, `src/features/catalog-filter/lib/genreMap.ts`,
+  `src/features/catalog-filter/lib/searchParams.ts`,
+  `src/features/catalog-filter/ui/YearRangeSlider/index.tsx`,
+  `src/pages/search/model/useMovieCatalog.ts`, `src/shared/lib/sessionCache/index.ts`,
+  `src/shared/lib/sessionCache/sessionCache.ts` — точечно убран лишний `export`/реэкспорт у
+  символов, у которых не было ни одного потребителя за пределами их же файла
+- Deleted: `src/App.tsx`, `src/App.css`, `src/assets/hero.png`, `src/assets/react.svg`,
+  `src/assets/vite.svg` — нетронутый Vite-скаффолд, ни один файл проекта на него не ссылался
 
-- [ ] `pnpm add -D knip`
-- [ ] создать `knip.json`: `entry` — `src/main.tsx` **+** `*.test.{ts,tsx}` **+** root-конфиги
-      (`vite.config.ts`, `sentry.config.ts`, `apicraft.config.ts`) — без этого knip массово
-      считает тестовые файлы неиспользуемыми файлами, а большинство devDependencies (vitest,
-      msw, testing-library, oxlint, husky, commitlint, apicraft) неиспользуемыми зависимостями
-      (см. Technical Details); `project: ['src/**/*.{ts,tsx}']`; `ignore` для сгенерированных
-      файлов (`src/shared/api/*.gen.ts` — `AGENTS.md` явно запрещает их трогать, значит и
-      чистить как "unused" нельзя)
-- [ ] добавить `knip` в `Makefile`: `pnpm exec knip`
-- [ ] прогнать `make knip`, разобрать реальный вывод: настоящие unused exports/deps/files —
-      точечно вычистить отдельными правками; **экспорты, которые AGENTS.md документирует как
-      намеренно без потребителя** (например `add(id)` в `useFavorites`, `FeatureName`-флаги,
-      оставленные `false`) — НЕ удалять, заносить в `ignore` в `knip.json` с комментарием-ссылкой
-      на конкретный раздел AGENTS.md; прочие ложные срабатывания (например, lazy-импорты из
-      Task 2, если knip их не резолвит) — туда же
-- [ ] тест не пишем — детектор мёртвого кода, не прикладная логика
-- [ ] чистый (или осознанно заигноренный) `make knip` — обязательное условие перед task 7
+- [x] `pnpm add -D knip`
+- [x] создать `knip.json` (реализовано как `knip.jsonc`, см. выше): `entry` — `src/main.tsx`
+      **+** `*.test.{ts,tsx}` **+** root-конфиги (`vite.config.ts`, `sentry.config.ts`,
+      `apicraft.config.ts`, и дополнительно `bundle.config.ts`, появившийся в Task 4 уже после
+      того, как был написан этот раздел плана) — без этого knip массово считает тестовые файлы
+      неиспользуемыми файлами, а большинство devDependencies (vitest, msw, testing-library,
+      oxlint, husky, commitlint, apicraft) неиспользуемыми зависимостями (см. Technical Details);
+      `project: ['src/**/*.{ts,tsx}']`; `ignore` для сгенерированных файлов
+      (`src/shared/api/*.gen.ts` — `AGENTS.md` явно запрещает их трогать, значит и чистить как
+      "unused" нельзя)
+- [x] добавить `knip` в `Makefile`: `pnpm exec knip`
+- [x] прогнать `make knip`, разобрать реальный вывод: настоящие unused exports/deps/files —
+      точечно вычищены (`src/App.tsx` + его CSS/ассеты — забытый Vite-скаффолд без единого
+      импортёра; сняли лишний `export` у `fetchCatalogCursor`, `GENRE_LABELS`,
+      `FILTER_AND_SORT_URL_KEYS`, `CatalogMode`, `SessionCacheEntry`, у которых был ровно один
+      потребитель — тот же файл; убрали мёртвый реэкспорт `YEAR_SLIDER_MAX`/`YEAR_SLIDER_MIN` и
+      `SessionCache`/`SessionCacheEntry` из барелей, чьи реальные потребители импортируют напрямую
+      из исходного модуля, минуя барель); **экспорты, которые AGENTS.md документирует как
+      намеренно без потребителя** (весь `@shared/config` — `useFeatureFlag()`/`FeatureGate`/
+      `FeatureName`, см. AGENTS.md "Feature flag not wired") и барели публичного API слайсов
+      (`getFilterFromSearchParams`/`CatalogQueryParams` в `catalog-filter`, `UseFavoritesResult` в
+      `favorites`, `useTheme`/`UseThemeResult`/`Theme` в `theme`, `ErrorBoundary` в `shared/ui` —
+      все они перечислены в AGENTS.md "Key public APIs" как намеренная публичная поверхность
+      слайса) — НЕ удалены, занесены в `ignore` в `knip.jsonc` с комментариями-ссылками на
+      конкретные разделы AGENTS.md
+- [x] тест не пишем — детектор мёртвого кода, не прикладная логика
+- [x] чистый `make knip` — 0 находок (кроме двух информационных "Configuration hints" про
+      избыточность `src/main.tsx`/`vite.config.ts` в `entry`, которые не влияют на exit code и
+      оставлены как есть, поскольку сам план явно требует эти два пути в `entry`) —
+      обязательное условие перед task 7 выполнено; дополнительно проверены `pnpm exec tsc -b`,
+      `make test` (81 файлов, 664 теста), `oxlint` (правленые файлы + весь репозиторий) и
+      `pnpm exec vite build`/`make size` — всё зелёное
 
 ### Task 7: CI — jobs `size` и `knip` в `.github/workflows/ci.yml`
 
