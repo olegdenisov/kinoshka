@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
+import { JSDOM } from 'jsdom'
 import { describe, expect, it } from 'vitest'
 
 type VercelHeaderEntry = { key: string; value: string }
@@ -194,23 +195,22 @@ describe('vercel.json — Content-Security-Policy-Report-Only', () => {
     // Пересчитываем хеш заново из исходного index.html (а не сравниваем с захардкоженной
     // строкой) — так тест сам ловит рассинхрон при будущей правке инлайн-скрипта.
     const html = readFileSync(path.join(ROOT, 'index.html'), 'utf-8')
-    // /i — CodeQL (js/bad-tag-filter) корректно указал, что без флага регэксп не матчит
-    // <SCRIPT>/<Script> в верхнем/смешанном регистре, который браузер парсит как тег наравне
-    // с нижним регистром.
-    const scriptTags = [
-      ...html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/gi),
-    ]
-    // `src=` substring check намеренно избегается — ловит и будущий `data-src=`. Инлайн-скрипт
-    // определяется отсутствием атрибута `src` как отдельного токена в списке атрибутов тега.
-    const inlineScripts = scriptTags.filter(([, attrs]) => {
-      const attrNames = [...attrs.matchAll(/([a-zA-Z-]+)\s*=/g)].map(m => m[1])
-      return !attrNames.includes('src')
-    })
+    // Разбор через jsdom, а не регэксп по тегам — CodeQL (js/bad-tag-filter) справедливо
+    // указывал, что регэксп над HTML ловит один edge-case и пропускает следующий (сначала
+    // верхний регистр <SCRIPT>, затем `</script >` с пробелом перед `>` — оба валидны для
+    // браузерного парсера). jsdom — тот самый "well-tested parser", который рекомендует сама
+    // эта CodeQL-проверка, и не завязан на конкретный синтаксис тега. Используется пакет
+    // `jsdom` напрямую (а не глобальный `DOMParser`), т.к. этот файл типизируется
+    // `tsconfig.node.json`, у которого `lib` намеренно без `DOM` (см. `vite.config.ts` рядом).
+    const { window } = new JSDOM(html)
+    const inlineScripts = [
+      ...window.document.querySelectorAll('script'),
+    ].filter(script => !script.hasAttribute('src'))
 
     // Защита от будущего второго инлайн-скрипта, который иначе тест молча пропустит.
     expect(inlineScripts).toHaveLength(1)
 
-    const [, , content] = inlineScripts[0]
+    const content = inlineScripts[0].textContent ?? ''
     const recomputedHash = createHash('sha256').update(content).digest('base64')
     const expectedSource = `'sha256-${recomputedHash}'`
 
