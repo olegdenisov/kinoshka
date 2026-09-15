@@ -26,6 +26,8 @@
     "sentry.config.test.ts",
     "bundle.config.ts",
     "bundle.config.test.ts",
-    "vercel-headers.test.ts"
+    "vercel-headers.test.ts",
+    "playwright.config.ts",
+    "e2e/**/*.ts"
   ]
 }
