@@ -20,13 +20,11 @@
     "playwright.config.ts",
     "e2e/**/*.spec.ts",
   ],
-  "project": ["src/**/*.{ts,tsx}"],
-  // @axe-core/playwright — установлен в Task 1 (скаффолд), но реально
-  // импортируется только в Task 3 (e2e/utils/a11y.ts, ещё не существует на
-  // этом шаге плана) — без этого knip красный между Task 1 и Task 3. Убрать
-  // этот пункт, как только e2e/utils/a11y.ts появится и станет реальным
-  // потребителем пакета.
-  "ignoreDependencies": ["@axe-core/playwright"],
+  // e2e/**/*.ts (helper-модули типа e2e/utils/a11y.ts, не сами *.spec.ts,
+  // те уже entry выше) — без этого knip не резолвит импорты внутри e2e/utils/
+  // как часть графа зависимостей и продолжает считать @axe-core/playwright
+  // unused, даже когда a11y.ts его реально импортирует.
+  "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts"],
   "ignore": [
     // Сгенерированные файлы — AGENTS.md прямо запрещает их редактировать
     // ("Generated files — never edit manually, regenerate instead").
