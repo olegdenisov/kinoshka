@@ -261,10 +261,10 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 - Modify: `plans/roadmap.md`
 - Move: `docs/plans/20260912-e2e-playwright-axe.md` → `docs/plans/completed/`
 
-- [ ] добавить раздел «E2E тесты (Playwright + axe-core)» в `AGENTS.md`: решение по реальному API + риск квоты + почему job ограничен `if: github.event_name == 'pull_request'` и не запускается на форк-PR, `vite preview`-стратегия, a11y-baseline фиксы из Task 2 (с полным списком: Header × 2, Card, MobileHeader, Pagination, ActiveFilterChips, BottomSheet), разделение desktop/mobile через `testDir`, `test.exclude` в Vitest через `configDefaults`, требование secrets в CI, отклонение `--shard=N/4` от буквального `--workers=4` из roadmap, а также решение расширить покрытие с буквальных 6 journeys roadmap до всех 6 SPA-роутов (Task 7 `/popular`, Task 8 `/recommendations`, явный переход на `/favorites` в Task 6)
-- [ ] добавить `make e2e`/`make e2e-install` в таблицу команд `AGENTS.md` (раздел Commands)
-- [ ] отметить `[x]` пункты `2.5.5` в `plans/roadmap.md` (кроме тех, что реально не сделаны, например перевод job'а в required-check)
-- [ ] переместить этот файл в `docs/plans/completed/`
+- [x] добавить раздел «E2E тесты (Playwright + axe-core)» в `AGENTS.md`: решение по реальному API + риск квоты + почему job ограничен `if: github.event_name == 'pull_request'` и не запускается на форк-PR, `vite preview`-стратегия, a11y-baseline фиксы из Task 2 (с полным списком: Header × 2, Card, MobileHeader, Pagination, ActiveFilterChips, BottomSheet), разделение desktop/mobile через `testDir`, `test.exclude` в Vitest через `configDefaults`, требование secrets в CI, отклонение `--shard=N/4` от буквального `--workers=4` из roadmap, а также решение расширить покрытие с буквальных 6 journeys roadmap до всех 6 SPA-роутов (Task 7 `/popular`, Task 8 `/recommendations`, явный переход на `/favorites` в Task 6) — раздел добавлен перед «Key public APIs», проверен на фактическую точность грепом по `e2e/*.spec.ts`, `playwright.config.ts`, `ci.yml`, `vite.config.ts`, `knip.jsonc`, `tsconfig.node.json`, `.gitignore`, `Makefile`
+- [x] добавить `make e2e`/`make e2e-install` в таблицу команд `AGENTS.md` (раздел Commands)
+- [x] отметить `[x]` пункты `2.5.5` в `plans/roadmap.md` (кроме тех, что реально не сделаны, например перевод job'а в required-check) — все пункты чек-листа `2.5.5` отмечены `[x]` (required-check в branch protection нигде не фигурирует как отдельный пункт чек-листа — только в Post-Completion этого плана, значит вычёркивать было нечего; сама формулировка последнего пункта дополнена уточнением про `--shard`/`pull_request`-only/не-required-check)
+- [x] move deferred to harness (never move the plan file mid-run) — перемещение `docs/plans/20260912-e2e-playwright-axe.md` в `docs/plans/completed/` выполняется харнессом после review/external-review/finalize фаз, не в рамках этого таска
 
 ## Post-Completion
 
