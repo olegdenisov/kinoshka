@@ -18,7 +18,11 @@ test('search: submitting a query from the hero navigates to /search with results
   await input.fill('batman')
   await input.press('Enter')
 
-  await expect(page).toHaveURL(/\/search\?.*q=/)
+  // Проверяем не только что параметр `q` появился, но что он реально несёт
+  // введённый текст — без этого no-op сабмит-хендлер, ведущий на
+  // `/search?q=` с пустым/неверным значением, тоже прошёл бы тест, пока
+  // где-то рендерится результаты-или-empty-state.
+  await expect(page).toHaveURL(/\/search\?.*q=batman/)
   await expect(resultsOrEmptyState(page)).toBeVisible()
 
   await checkA11y(page)

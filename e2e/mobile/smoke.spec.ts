@@ -27,7 +27,7 @@ test('mobile home: renders mobile chrome (BottomNav) + first rail card, no criti
   await checkA11y(page)
 })
 
-test('mobile search: renders mobile filter bar + results, no critical a11y violations', async ({
+test('mobile search: renders mobile filter bar + results, opens/closes the Filters BottomSheet, no critical a11y violations', async ({
   page,
 }) => {
   await page.goto('/search')
@@ -35,7 +35,8 @@ test('mobile search: renders mobile filter bar + results, no critical a11y viola
   // Sticky filter-bar (кнопки Filters/Sort + BottomSheet) — genuinely different
   // UX-паттерн от десктопного SearchSidebar/SearchControls, ветвится через
   // `isMobile` внутри Search.tsx (см. AGENTS.md "Responsive pattern", пункт 2).
-  await expect(page.getByRole('button', { name: /^Filters/ })).toBeVisible()
+  const filtersBtn = page.getByRole('button', { name: /^Filters/ })
+  await expect(filtersBtn).toBeVisible()
   await expect(page.getByRole('button', { name: /^Sort/ })).toBeVisible()
 
   const resultsOrEmptyState = page
@@ -44,6 +45,31 @@ test('mobile search: renders mobile filter bar + results, no critical a11y viola
   await expect(resultsOrEmptyState).toBeVisible()
 
   await checkA11y(page)
+
+  // Открываем Filters-BottomSheet — единственный способ покрыть регрессию
+  // Task 2 (a11y-фикс .closeBtn -> aria-label='Dismiss'), т.к. ни один спек
+  // в сьюте раньше не открывал BottomSheet вообще. Стоит 0 доп. запросов к
+  // API (чисто клиентский тоггл состояния).
+  await filtersBtn.click()
+
+  // Обе панели (Filters и Sort) смонтированы одновременно (см. AGENTS.md/план,
+  // "на мобильном /search смонтированы два BottomSheet одновременно") —
+  // закрытая остаётся в DOM/a11y-дереве (translateY(100%), не display:none),
+  // поэтому `toBeVisible()` не различает открытое/закрытое состояние. Реальный
+  // визуальный признак открытости — пересечение с viewport, отсюда
+  // `toBeInViewport()` вместо `toBeVisible()`.
+  const showResultsBtn = page.getByRole('button', { name: 'Show results' })
+  await expect(showResultsBtn).toBeInViewport()
+
+  await checkA11y(page)
+
+  // Filters — первый в DOM из двух BottomSheet (JSX-порядок в Search.tsx),
+  // Sort — второй; оба .closeBtn имеют одинаковый aria-label='Dismiss', поэтому
+  // скоупим по document order через .first(), не по CSS-классам.
+  const dismissBtn = page.getByRole('button', { name: 'Dismiss' }).first()
+  await dismissBtn.click()
+
+  await expect(showResultsBtn).not.toBeInViewport()
 })
 
 test('mobile movie detail: navigate from home, back button + Overview content, no critical a11y violations', async ({
