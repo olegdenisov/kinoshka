@@ -217,11 +217,11 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 **Files:**
 - Create: `e2e/theme.spec.ts`
 
-- [ ] `/`, снять исходный `data-theme` с `<html>` (`page.locator('html').getAttribute('data-theme')`)
-- [ ] клик `getByRole('button', { name: /switch to (light|dark) theme/i })`, проверка что `data-theme` изменился
-- [ ] повторный клик — проверка возврата к исходному значению
-- [ ] `checkA11y(page)`
-- [ ] прогнать `make build-only`, затем `pnpm exec playwright test e2e/theme.spec.ts` — должен пройти
+- [x] `/`, снять исходный `data-theme` с `<html>` (`page.locator('html').getAttribute('data-theme')`)
+- [x] клик `getByRole('button', { name: /switch to (light|dark) theme/i })`, проверка что `data-theme` изменился
+- [x] повторный клик — проверка возврата к исходному значению
+- [x] `checkA11y(page)`
+- [x] прогнать `make build-only`, затем `pnpm exec playwright test e2e/theme.spec.ts` — должен пройти — прошёл (3.8s) против реального API
 
 ### Task 10: Mobile-viewport project + урезанный smoke-набор
 
