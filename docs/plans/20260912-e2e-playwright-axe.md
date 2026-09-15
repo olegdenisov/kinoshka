@@ -196,10 +196,10 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 **Files:**
 - Create: `e2e/popular.spec.ts`
 
-- [ ] `page.goto('/popular')`, дождаться видимости первой карточки (`page.locator('a[href^="/movie/"]').first()`, см. Technical Details)
-- [ ] проверить rank-бейдж первой карточки — `PopularBadge` (`src/entities/movie/ui/PopularBadge/PopularBadge.tsx`) рендерит `<div role='img' aria-label='Position 1'>` (либо `'Position 1, change ...'`, если `positionDiff` ненулевой) для первой позиции списка: `page.getByRole('img', { name: /^Position 1/ })`
-- [ ] `checkA11y(page)`
-- [ ] прогнать `make build-only`, затем `pnpm exec playwright test e2e/popular.spec.ts` — должен пройти
+- [x] `page.goto('/popular')`, дождаться видимости первой карточки (`page.locator('a[href^="/movie/"]').first()`, см. Technical Details)
+- [x] проверить rank-бейдж первой карточки — `PopularBadge` (`src/entities/movie/ui/PopularBadge/PopularBadge.tsx`) рендерит `<div role='img' aria-label='Position 1'>` (либо `'Position 1, change ...'`, если `positionDiff` ненулевой) для первой позиции списка: `page.getByRole('img', { name: /^Position 1/ })` — `[deviation]` буквальный regex `/^Position 1/` на живых данных (список из 10 позиций) резолвился в 2 элемента ("Position 1" и "Position 10, change ...") — strict-mode violation; заменён на `/^Position 1(,|$)/`, явно якорящий границу числа (после "1" либо запятая перед "change", либо конец строки)
+- [x] `checkA11y(page)`
+- [x] прогнать `make build-only`, затем `pnpm exec playwright test e2e/popular.spec.ts` — должен пройти — прошёл (2.4s) против реального API
 
 ### Task 8: Страница `/recommendations`
 
