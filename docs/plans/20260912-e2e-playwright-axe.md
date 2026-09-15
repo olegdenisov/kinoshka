@@ -206,11 +206,11 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 **Files:**
 - Create: `e2e/recommendations.spec.ts`
 
-- [ ] `page.goto('/recommendations')` в свежем (пустом) браузерном контексте — `Recommendations.tsx` проверяет `ids.length === 0` **до** `AsyncBoundary`/`useFavoriteMovies()` (`src/pages/recommendations/ui/Recommendations/Recommendations.tsx:73-79`), поэтому пустое избранное рендерит `EmptyState` `'No favorites yet'` без единого запроса к API — самый дешёвый по квоте способ подтвердить, что роут реально существует, рендерится и доступен
-- [ ] проверить видимость `EmptyState` с заголовком `'No favorites yet'`
-- [ ] `checkA11y(page)`
-- [ ] прогнать `make build-only`, затем `pnpm exec playwright test e2e/recommendations.spec.ts` — должен пройти
-- [ ] ⚠️ «заполненный» сценарий (избранное → реальная подборка через `computeRecommendationQuery` → `getMoviesPage`) намеренно не тестируется — он дублировал бы add-to-favorites-логику Task 6 ради ещё одного API-запроса без ощутимого прироста покрытия; при необходимости переиспользовать паттерн Task 6 (favorite + `goto('/recommendations')`) в отдельном спеке
+- [x] `page.goto('/recommendations')` в свежем (пустом) браузерном контексте — `Recommendations.tsx` проверяет `ids.length === 0` **до** `AsyncBoundary`/`useFavoriteMovies()` (`src/pages/recommendations/ui/Recommendations/Recommendations.tsx:73-79`), поэтому пустое избранное рендерит `EmptyState` `'No favorites yet'` без единого запроса к API — самый дешёвый по квоте способ подтвердить, что роут реально существует, рендерится и доступен — Playwright's default per-test browser context уже изолирован/пуст, отдельной настройки storageState не потребовалось
+- [x] проверить видимость `EmptyState` с заголовком `'No favorites yet'` — `EmptyState` рендерит `title` как простой `<p>` без ARIA-роли (см. `src/shared/ui/EmptyState/EmptyState.tsx`), поэтому используется `page.getByText('No favorites yet')`, не `getByRole`
+- [x] `checkA11y(page)`
+- [x] прогнать `make build-only`, затем `pnpm exec playwright test e2e/recommendations.spec.ts` — должен пройти — прошёл (3.6s) против реального API (сама страница не делает ни одного запроса при пустом избранном)
+- [x] ⚠️ «заполненный» сценарий (избранное → реальная подборка через `computeRecommendationQuery` → `getMoviesPage`) намеренно не тестируется — он дублировал бы add-to-favorites-логику Task 6 ради ещё одного API-запроса без ощутимого прироста покрытия; при необходимости переиспользовать паттерн Task 6 (favorite + `goto('/recommendations')`) в отдельном спеке — документационная заметка, зафиксирована как есть, кода не требует
 
 ### Task 9: Theme toggle
 
