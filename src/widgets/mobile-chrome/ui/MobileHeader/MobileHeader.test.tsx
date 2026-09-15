@@ -33,6 +33,16 @@ describe('MobileHeader', () => {
     expect(screen.getByRole('button', { name: /theme/i })).toBeInTheDocument()
   })
 
+  it('кнопка "назад" (onBack передан) имеет aria-label="Back" (a11y baseline, Task 2)', () => {
+    render(
+      <MemoryRouter>
+        <MobileHeader onBack={vi.fn()} />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
+  })
+
   it('клик по тогглу темы меняет document.documentElement.dataset.theme', () => {
     render(
       <MemoryRouter>

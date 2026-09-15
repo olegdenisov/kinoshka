@@ -193,6 +193,12 @@ describe('Card', () => {
     expect(screen.queryByText('·')).not.toBeInTheDocument()
   })
 
+  it('кнопка предпросмотра (Eye, variant="grid") имеет aria-label="Preview" (a11y baseline, Task 2)', () => {
+    renderCard(baseMovie)
+
+    expect(screen.getByRole('button', { name: 'Preview' })).toBeInTheDocument()
+  })
+
   it('edge case: постер отсутствует И rankBadge не передан — рендерится fallback-плейсхолдер без бейджа ранга', () => {
     renderCard(baseMovie)
 

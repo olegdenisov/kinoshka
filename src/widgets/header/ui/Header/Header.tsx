@@ -201,11 +201,14 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
 
         <div className={s.actions}>
           {variant !== 'search' && (
-            <IconButton onClick={() => navigate('/search')}>
+            <IconButton
+              onClick={() => navigate('/search')}
+              aria-label='Open search'
+            >
               <SearchIcon />
             </IconButton>
           )}
-          <IconButton>
+          <IconButton aria-label='Notifications'>
             <BellIcon />
             <span className={s.notificationDot} />
           </IconButton>

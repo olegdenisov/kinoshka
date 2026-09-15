@@ -40,6 +40,7 @@ export const ActiveFilterChips = ({
             <button
               type='button'
               onClick={c.onRemove}
+              aria-label={`Remove ${c.label}`}
               className={s.chipCompactRemove}
             >
               <CloseIcon size={8} />
@@ -55,7 +56,12 @@ export const ActiveFilterChips = ({
       {chips.map((c, i) => (
         <span key={i} className={s.chip}>
           {c.label}
-          <button type='button' onClick={c.onRemove} className={s.chipRemove}>
+          <button
+            type='button'
+            onClick={c.onRemove}
+            aria-label={`Remove ${c.label}`}
+            className={s.chipRemove}
+          >
             <CloseIcon size={10} />
           </button>
         </span>
