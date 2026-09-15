@@ -183,13 +183,13 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 **Files:**
 - Create: `e2e/favorites.spec.ts`
 
-- [ ] `/`, взять первую карточку (`page.locator('a[href^="/movie/"]').first()`, см. Technical Details) и **прочитать её `textContent` как `title`** — рейлы рендерятся в фиксированном DOM-порядке (`Home.tsx`), но четыре Suspense-границы резолвятся независимо, поэтому карточка идентифицируется по названию, а не по голой позиции после reload
-- [ ] найти favorite-кнопку именно этой карточки через `page.locator('div').filter({ has: page.getByRole('link', { name: title, exact: true }) }).filter({ has: page.getByRole('button', { name: /favorites$/ }) }).getByRole('button', { name: /favorites$/ })` (см. Technical Details — комбинированный `filter({ has })`, без обращения к CSS-классам), кликнуть, проверить что accessible name сменился на `"Remove from favorites"`
-- [ ] `page.reload()`, тем же комбинированным локатором (по сохранённому `title`) снова найти favorite-кнопку и проверить, что она резолвится как `"Remove from favorites"` (доказывает персист через `localStorage`/`kinoshka:favorites`, не зависит от того, что рендерится первым после reload)
-- [ ] `checkA11y(page)` на `/`
-- [ ] `page.goto('/favorites')`, убедиться что карточка с сохранённым `title` присутствует в гриде (`getByRole('link', { name: title, exact: true })`) — доказывает, что сама страница `/favorites` реально отображает избранные фильмы, а не только что флаг сохраняется в `localStorage`
-- [ ] `checkA11y(page)` на `/favorites`
-- [ ] прогнать `make build-only`, затем `pnpm exec playwright test e2e/favorites.spec.ts` — должен пройти
+- [x] `/`, взять первую карточку (`page.locator('a[href^="/movie/"]').first()`, см. Technical Details) и **прочитать её `textContent` как `title`** — рейлы рендерятся в фиксированном DOM-порядке (`Home.tsx`), но четыре Suspense-границы резолвятся независимо, поэтому карточка идентифицируется по названию, а не по голой позиции после reload
+- [x] найти favorite-кнопку именно этой карточки через `page.locator('div').filter({ has: page.getByRole('link', { name: title, exact: true }) }).filter({ has: page.getByRole('button', { name: /favorites$/ }) }).getByRole('button', { name: /favorites$/ })` (см. Technical Details — комбинированный `filter({ has })`, без обращения к CSS-классам), кликнуть, проверить что accessible name сменился на `"Remove from favorites"` — `[deviation]` буквальный локатор из Technical Details резолвился в 10 элементов (strict-mode violation) вместо одного: `filter({ has })` матчит не только `.card`, а всю цепочку предков `.card` вплоть до корня страницы — каждый предок тоже «содержит» и конкретную ссылку (только в `.card`), и (какую-нибудь) favorite-кнопку среди потомков (их много, по одной на каждую карточку рейла). Добавлен `.last()` перед финальным `.getByRole('button', ...)` — среди совпавших div'ов `.last()` в document order берёт самый глубоко вложенный, то есть именно `.card` (предки идут раньше потомков в document order), что эмпирически подтверждено прогоном (10 элементов → 1)
+- [x] `page.reload()`, тем же комбинированным локатором (по сохранённому `title`) снова найти favorite-кнопку и проверить, что она резолвится как `"Remove from favorites"` (доказывает персист через `localStorage`/`kinoshka:favorites`, не зависит от того, что рендерится первым после reload)
+- [x] `checkA11y(page)` на `/`
+- [x] `page.goto('/favorites')`, убедиться что карточка с сохранённым `title` присутствует в гриде (`getByRole('link', { name: title, exact: true })`) — доказывает, что сама страница `/favorites` реально отображает избранные фильмы, а не только что флаг сохраняется в `localStorage`
+- [x] `checkA11y(page)` на `/favorites`
+- [x] прогнать `make build-only`, затем `pnpm exec playwright test e2e/favorites.spec.ts` — должен пройти — прошёл (6.1-6.8s) против реального API
 
 ### Task 7: Страница `/popular`
 
