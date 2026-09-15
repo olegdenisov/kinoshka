@@ -1,0 +1,75 @@
+name: E2E
+
+# Отдельный workflow (не job внутри ci.yml) специально для того, чтобы
+# `on:` был изолирован от общего pull_request-триггера ci.yml — иначе
+# добавление `types: [labeled]` туда заставило бы lint/typecheck/test/build
+# тоже перезапускаться на каждое навешивание лейбла. Гоняем только по
+# ручному запросу через лейбл `run-e2e` на PR — тесты бьют в живой
+# demo-API (квота 200 запросов/день, см. AGENTS.md), поэтому запуск не
+# автоматический.
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    # Срабатывает именно на добавление лейбла run-e2e (не на любой label-
+    # event) и не на форк-PR — там secrets недоступны, VITE_API_KEY будет
+    # пустым и все спеки упадут на 401/403. needs: на job'ы из ci.yml не
+    # используется — GitHub Actions не поддерживает `needs` между разными
+    # workflow-файлами без обвязки через workflow_run, а лейбл — осознанное
+    # ручное действие уже после того, как остальные проверки видны в PR.
+    if: github.event.label.name == 'run-e2e' && github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    concurrency:
+      # matrix.shard обязателен в группе — без него все 4 шарда одного
+      # прогона попадают в одну concurrency-группу, и cancel-in-progress
+      # заставляет их отменять друг друга.
+      group: e2e-${{ github.ref }}-${{ matrix.shard }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # github.event.pull_request.head.sha, а не github.ref — на
+          # pull_request:labeled github.ref указывает на merge-ref PR,
+          # но нам нужен именно код ветки, к которой добавили лейбл.
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: pnpm/action-setup@v5
+        with:
+          version: '11'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
+      - id: playwright-version
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+      # Безусловно (не только на cache miss) — кеш не покрывает системные
+      # библиотеки, которые ставит --with-deps (apt-пакеты для WebKit и
+      # т.п.); playwright install сам пропускает повторную загрузку уже
+      # закешированных бинарников браузеров.
+      - run: make e2e-install
+      - run: make build-only
+        env:
+          VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
+          # не секрет (публичный API-хост, см. .env.example), тот же
+          # прецедент, что уже принят для SENTRY_URL в build-job'е ci.yml.
+          VITE_BASE_URL: https://api.poiskkino.dev
+      - run: pnpm exec playwright test --shard=${{ matrix.shard }}/4
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.shard }}
+          path: playwright-report/
+          retention-days: 7
