@@ -1,4 +1,4 @@
-.PHONY: dev build typecheck build-only lint format format-check preview install hooks clean check generate-api test test-watch coverage audit analyze size knip
+.PHONY: dev build typecheck build-only lint format format-check preview install hooks clean check generate-api test test-watch coverage audit analyze size knip e2e e2e-install
 
 dev:
 	pnpm dev
@@ -59,3 +59,9 @@ size:
 
 knip:
 	pnpm exec knip
+
+e2e:
+	pnpm exec playwright test
+
+e2e-install:
+	pnpm exec playwright install --with-deps chromium webkit

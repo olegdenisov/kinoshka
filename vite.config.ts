@@ -1,5 +1,3 @@
-/// <reference types="vitest/config" />
-
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import path from 'path'
@@ -9,6 +7,11 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig, loadEnv, type PluginOption } from 'vite'
+// import (не triple-slash reference) — oxlint's typescript(triple-slash-reference)
+// запрещает `/// <reference types="vitest/config" />` при наличии обычного import из
+// того же модуля; этот именованный импорт сам подтягивает vitest/config's ambient-
+// augmentation UserConfig['test'], так что отдельная reference-директива больше не нужна.
+import { configDefaults } from 'vitest/config'
 
 import { isAnalyzeEnabled } from './bundle.config'
 import {
@@ -159,6 +162,11 @@ export default defineConfig(({ mode, command }) => {
       environment: 'jsdom',
       setupFiles: ['./src/test/setup.ts'],
       globals: true,
+      // e2e/**/*.spec.ts — Playwright-спеки, не Vitest-тесты; дефолтный
+      // include Vitest'а (**/*.{test,spec}.*) иначе бы их захватил.
+      // Спред configDefaults.exclude, а не копия списка вручную — чтобы не
+      // рассинхронизироваться при апдейте Vitest.
+      exclude: [...configDefaults.exclude, 'e2e/**'],
     },
   }
 })

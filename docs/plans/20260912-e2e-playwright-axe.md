@@ -5,7 +5,7 @@
 Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проекта. Сейчас в репозитории есть только unit/integration-тесты на Vitest+jsdom+MSW (`src/**/*.test.{ts,tsx}`) — ни одного теста, реально запускающего браузер против собранного приложения, не существует. Нужно:
 
 - добавить `@playwright/test` + `@axe-core/playwright`;
-- завести `e2e/` со smoke-тестами на 6 ключевых user journeys (главная, поиск, фильтры, деталь фильма с табами, favorites persist, theme toggle);
+- завести `e2e/` со smoke-тестами на 6 ключевых user journeys из roadmap (главная, поиск, фильтры, деталь фильма с табами, favorites persist, theme toggle) **плюс отдельные smoke-тесты на `/popular` и `/recommendations`, а также явную проверку самой страницы `/favorites`** — эти три роута не входят в буквальный список roadmap, но без них в SPA остаются непокрытые страницы (см. Context/Solution Overview);
 - в каждый тест добавить a11y-проверку через `AxeBuilder`;
 - отдельный Playwright project с mobile-viewport эмуляцией (`devices['iPhone 13']`) хотя бы на `/`, `/search`, `/movie/:id`;
 - CI job с шардингом на каждый PR.
@@ -35,7 +35,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
   - `BottomSheet.tsx` (`src/widgets/mobile-chrome/ui/BottomSheet`) — `.closeBtn` (крестик в `.titleRow`) только с `CloseIcon`, без `aria-label` (backdrop-кнопка рядом уже имеет `aria-label='Close'` — это нормально, нарушение именно в `.closeBtn`). Закрытое состояние — `transform: translateY(100%)`, не `display:none`, поэтому остаётся в a11y-дереве даже закрытым. На мобильном `/search` смонтированы два `BottomSheet` одновременно — блокирует Task 8.
   - Это не полный список — `ArrowBtn`/`BottomNav`/`GenreSelector` и т.п. проверены точечно и уже имеют `aria-label`/видимый текст, но полную гарантию даёт только реальный прогон axe (см. Task 2).
 - Env: `VITE_API_KEY`/`VITE_BASE_URL` читаются из `.env.local` (в `.gitignore`, не в CI). Для E2E с реальным API билд в CI должен получить `VITE_API_KEY` как secret; `VITE_BASE_URL` — публичное значение (`https://api.poiskkino.dev`, см. `.env.example`), тот же прецедент, что уже принят для `SENTRY_URL` в `build`-job'е (не секрет, литерал в `env:`).
-- Квота: AGENTS.md фиксирует demo-тир 200 запросов/день. Подсчёт по факту разбора рейлов/страниц: `/` — 4 параллельных рейла (`Home.tsx`: `PopularMoviesRail`, `TrandingSeriesRail`, `TopAnimeRails`, `PersonalRails`), плюс `createSessionCache` не персистит между page-load'ами в prod-сборке (персист — только под `import.meta.env.DEV`) — то есть каждая навигация на `/` в preview-сборке снова бьёт в API. Полный E2E-прогон (все спеки, все projects) — по грубой оценке 35-45 запросов. При шардинге запросы не размножаются (шардинг делит тесты между воркерами), но при триггере job'а и на `pull_request`, и на `push: main` — фактически удваивается на каждый смёрженный PR. Решение (см. Technical Details/Task 9): job триггерится **только на `pull_request`** (не на `push: main` — `push` дублирует уже пройденную PR-проверку) + `concurrency`-группа с `cancel-in-progress`, чтобы повторные пуши в PR не копили квоту от устаревших прогонов. Это даёт ~35-45 запросов на один прогон PR — примерно 4-5 прогонов в день укладываются в квоту, но `retries: 1` в CI удваивает стоимость упавшего спека, а локальная разработка бьёт в тот же ключ параллельно с CI; при исчерпании квоты job будет красным недетерминированно (403 от API, не баг теста) — см. Post-Completion. Отдельно: Task 2 (ручные прогоны axe против `make preview`, до появления автоматических спеков) сам по себе бьёт в тот же живой API — два прохода × 5 роутов/состояний ≈ 30-40 запросов за день реализации Task 2, из той же дневной квоты; не стоит планировать Task 2 и первый прогон Task 3 в один календарный день.
+- Квота: AGENTS.md фиксирует demo-тир 200 запросов/день. Подсчёт по факту разбора рейлов/страниц: `/` — 4 параллельных рейла (`Home.tsx`: `PopularMoviesRail`, `TrandingSeriesRail`, `TopAnimeRails`, `PersonalRails`), плюс `createSessionCache` не персистит между page-load'ами в prod-сборке (персист — только под `import.meta.env.DEV`) — то есть каждая навигация на `/` в preview-сборке снова бьёт в API. Полный E2E-прогон (все спеки, все projects) — по грубой оценке 35-45 запросов. При шардинге запросы не размножаются (шардинг делит тесты между воркерами), но при триггере job'а и на `pull_request`, и на `push: main` — фактически удваивается на каждый смёрженный PR. Решение (см. Technical Details/Task 11): job триггерится **только на `pull_request`** (не на `push: main` — `push` дублирует уже пройденную PR-проверку) + `concurrency`-группа с `cancel-in-progress`, чтобы повторные пуши в PR не копили квоту от устаревших прогонов. Это даёт ~35-45 запросов на один прогон PR — примерно 4-5 прогонов в день укладываются в квоту, но `retries: 1` в CI удваивает стоимость упавшего спека, а локальная разработка бьёт в тот же ключ параллельно с CI; при исчерпании квоты job будет красным недетерминированно (403 от API, не баг теста) — см. Post-Completion. Отдельно: Task 2 (ручные прогоны axe против `make preview`, до появления автоматических спеков) сам по себе бьёт в тот же живой API — два прохода × 5 роутов/состояний ≈ 30-40 запросов за день реализации Task 2, из той же дневной квоты; не стоит планировать Task 2 и первый прогон Task 3 в один календарный день. Добавление Task 7/8 (`/popular`, `/recommendations`) и /favorites-перехода в Task 6 увеличивает оценку на ~3-5 запросов (`/popular` — 1 запрос к `GET /v1.5/list/popular`; `/recommendations` в пустом состоянии — 0 запросов, ветка `ids.length === 0` в `Recommendations.tsx` не доходит до `AsyncBoundary`/`useFavoriteMovies()`; повторный `getMoviesByIds` на `/favorites` после `reload()` — 1 запрос, in-memory-кэш сбрасывается вместе с JS-рантаймом страницы) — общая оценка полного прогона обновляется до ~40-50 запросов.
 
 ## Development Approach
 
@@ -59,12 +59,13 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 
 ## Solution Overview
 
-- **Реальный API, без MSW-мока в браузере.** Playwright бьёт в тот же живой `https://api.poiskkino.dev`, что и прод — максимально реалистично, без отдельной инфраструктуры `msw/browser` + service worker. Риск — квота 200 req/день; митигируется малым числом smoke-сценариев, отказом от дублирующего `push`-триггера и `concurrency`-отменой устаревших прогонов (см. Context/Task 9). HAR-replay (`page.routeFromHAR`) рассматривался как более дешёвая по квоте альтернатива, но отклонён — он меняет саму суть уже согласованного решения «бить в реальный API»; зафиксирован как возможный fallback в Post-Completion, если квота всё равно не выдержит.
+- **Реальный API, без MSW-мока в браузере.** Playwright бьёт в тот же живой `https://api.poiskkino.dev`, что и прод — максимально реалистично, без отдельной инфраструктуры `msw/browser` + service worker. Риск — квота 200 req/день; митигируется малым числом smoke-сценариев, отказом от дублирующего `push`-триггера и `concurrency`-отменой устаревших прогонов (см. Context/Task 11). HAR-replay (`page.routeFromHAR`) рассматривался как более дешёвая по квоте альтернатива, но отклонён — он меняет саму суть уже согласованного решения «бить в реальный API»; зафиксирован как возможный fallback в Post-Completion, если квота всё равно не выдержит.
 - **`vite preview` (production-сборка), не `vite dev`.** Playwright's `webServer` поднимает `vite preview` над уже собранным `dist/` — так E2E проверяет то же самое, что реально задеплоится (code-splitting, минификация), и совпадает по духу с 2.5.6 (Lighthouse тоже будет гонять по preview/deploy URL). **Не проверяет** CSP-заголовки — `vercel.json`'s `headers` применяется хостингом (Vercel), а не `vite preview`; это не покрывается E2E из этого плана.
 - **`e2e/` — Node-контекст, свой `tsconfig.node.json`-include, свой `test.exclude` в Vitest.** Спеки не импортируют `src/**` напрямую (никаких path-алиасов `@shared/*` в e2e) — все селекторы через `role`/`label`/`placeholder`/текст, без завязки на внутренние константы приложения.
 - **Разделение desktop/mobile через `testDir`, а не дублирование всего сьюта.** Roadmap просит mobile-project «хотя бы» на 3 роутах (`/`, `/search`, `/movie/:id`), не на всём сьюте — поэтому `e2e/mobile/` — отдельная директория с отдельным, урезанным набором спеков, а не второй прогон всех спеков под `devices['iPhone 13']` (который просто удвоил бы расход квоты без пользы).
-- **CI job шардится (`--shard=N/M`), каждый шард сам поднимает build+preview** (не шарит `dist/` через artifacts) — проще, чем artifact-плюмбинг, а билд SPA — секунды. Roadmap буквально просит `--workers=4` (параллельные воркеры на одной машине); в CI с несколькими независимыми job'ами `--shard=N/4` — прямой аналог с тем же уровнем параллелизма, но между машинами, а не потоками внутри одной — сознательное отклонение от буквальной формулировки, задокументированное в AGENTS.md (Task 11).
+- **CI job шардится (`--shard=N/M`), каждый шард сам поднимает build+preview** (не шарит `dist/` через artifacts) — проще, чем artifact-плюмбинг, а билд SPA — секунды. Roadmap буквально просит `--workers=4` (параллельные воркеры на одной машине); в CI с несколькими независимыми job'ами `--shard=N/4` — прямой аналог с тем же уровнем параллелизма, но между машинами, а не потоками внутри одной — сознательное отклонение от буквальной формулировки, задокументированное в AGENTS.md (Task 13).
 - **Не передавать `VITE_SENTRY_DSN`/`VITE_PLAUSIBLE_DOMAIN` на build-шаге e2e job'а.** Оба флага-инициализации (`initSentry()`/`initAnalytics()`, см. AGENTS.md) — no-op при пустом значении; если E2E-билд не получает эти два secret'а, preview не шлёт реальный error/analytics-шум от прогонов CI в прод-проекты Sentry/Plausible. Только `VITE_API_KEY`/`VITE_BASE_URL` передаются в build-шаг e2e job'а.
+- **Покрытие расширено до всех 6 SPA-роутов, не только буквальных 6 journeys roadmap.** Roadmap 2.5.5 перечисляет 6 сценариев (главная, поиск, фильтры, деталь, favorites persist, theme toggle), но в приложении 6 роутов (`/`, `/search`, `/movie/:id`, `/favorites`, `/popular`, `/recommendations`) — `/popular` и `/recommendations` не покрывались ни одним из них, а исходный Task 6 (favorites) проверял только тумблер на `/`, ни разу не открывая саму страницу `/favorites`. Добавлены Task 7 (`/popular`) и Task 8 (`/recommendations`), плюс явный переход на `/favorites` внутри Task 6 — решение зафиксировано здесь, чтобы не потерять его при следующем чтении плана.
 
 ## Technical Details
 
@@ -90,8 +91,8 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
   - `strategy.fail-fast: false`, `matrix.shard: [1, 2, 3, 4]`.
   - Кеш браузеров Playwright: `actions/cache` по ключу с версией `@playwright/test` из `pnpm-lock.yaml`, путь `~/.cache/ms-playwright`. **Кеш не покрывает системные библиотеки, которые ставит `--with-deps`** (apt-пакеты для WebKit и т.п.) — поэтому `make e2e-install` (полный `playwright install --with-deps chromium webkit`) выполняется **всегда, безусловно**, а не только при cache miss; `playwright install` сам по себе пропускает повторную загрузку уже закешированных бинарников браузеров, так что кеш всё равно даёт реальный выигрыш по времени без риска сломать WebKit на cache hit.
   - Шаги: checkout → pnpm/node setup → `pnpm install --frozen-lockfile` → `make e2e-install` → `make build-only` (env: **только** `VITE_API_KEY`, `VITE_BASE_URL` из secrets/vars — без `SENTRY_*`/`VITE_PLAUSIBLE_DOMAIN`, см. Solution Overview) → `pnpm exec playwright test --shard=${{ matrix.shard }}/4` → `actions/upload-artifact` с **уникальным именем на шард** (`name: playwright-report-${{ matrix.shard }}`) для `playwright-report/` при `failure()`.
-  - ⚠️ Этот job не может быть зелёным, пока в репозитории не заведены secrets `VITE_API_KEY` (и, при желании, `VITE_BASE_URL` как repo variable) — см. Post-Completion. Task 9 добавляет конфиг, но включение job'а как required-check откладывается до появления secrets.
-- **Свежий `dist/` перед каждым прогоном.** `webServer.command` намеренно не билдит (см. выше) — значит каждый чекбокс, вызывающий `pnpm exec playwright test`, обязан идти после `make build-only`, иначе `vite preview` поднимется над устаревшей сборкой (например, без a11y-фиксов из Task 2). Каждая из Tasks 3-8 явно включает `make build-only` перед прогоном спека.
+  - ⚠️ Этот job не может быть зелёным, пока в репозитории не заведены secrets `VITE_API_KEY` (и, при желании, `VITE_BASE_URL` как repo variable) — см. Post-Completion. Task 11 добавляет конфиг, но включение job'а как required-check откладывается до появления secrets.
+- **Свежий `dist/` перед каждым прогоном.** `webServer.command` намеренно не билдит (см. выше) — значит каждый чекбокс, вызывающий `pnpm exec playwright test`, обязан идти после `make build-only`, иначе `vite preview` поднимется над устаревшей сборкой (например, без a11y-фиксов из Task 2). Каждая из Tasks 3-10 явно включает `make build-only` перед прогоном спека.
 
 ## What Goes Where
 
@@ -111,17 +112,17 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 - Modify: `Makefile`
 - Modify: `knip.jsonc`
 
-- [ ] `pnpm add -D @playwright/test @axe-core/playwright`
-- [ ] `pnpm exec playwright install --with-deps chromium webkit` (локально, для разработки)
-- [ ] создать `playwright.config.ts` с двумя projects (`chromium` с `testIgnore: '**/mobile/**'`, `Mobile Safari` с `testDir: './e2e/mobile'`), `webServer` над `vite preview --port 4173 --strictPort`, `baseURL`, `expect.timeout: 10_000`, `retries`/`reporter` по `process.env.CI`
-- [ ] добавить `playwright.config.ts`, `e2e/**/*.ts` в `include` у `tsconfig.node.json`
-- [ ] в `vite.config.ts` добавить `test.exclude: [...configDefaults.exclude, 'e2e/**']` (импорт `configDefaults` из `'vitest/config'`)
-- [ ] добавить `playwright-report/`, `test-results/`, `blob-report/`, `playwright/.cache/` в `.gitignore`
-- [ ] добавить таргеты `e2e` (`pnpm exec playwright test`) и `e2e-install` (`pnpm exec playwright install --with-deps chromium webkit`) в `Makefile` + `.PHONY`
-- [ ] добавить `playwright.config.ts` и `e2e/**/*.spec.ts` в `entry` у `knip.jsonc` (с комментарием-обоснованием) — сразу здесь, а не в Task 9, иначе `make knip` краснеет с момента появления новых devDependencies
-- [ ] прогнать `make typecheck` — должен пройти чисто
-- [ ] прогнать `make knip` — не должно быть unused-warnings по `@playwright/test`/`@axe-core/playwright`
-- [ ] прогнать `make test` перед и после правки `test.exclude`, сравнить число прогнанных файлов/тестов — должно совпасть (создать временный `e2e/tmp.spec.ts` с валидным Playwright-тестом, убедиться что `vitest run` его игнорирует, затем удалить файл)
+- [x] `pnpm add -D @playwright/test @axe-core/playwright`
+- [x] `pnpm exec playwright install --with-deps chromium webkit` (локально, для разработки) — chromium установлен полностью; WebKit в этом окружении (macOS 14.4, `mac14-arm64`) Playwright отказался ставить как «frozen» с предупреждением обновить ОС — известное ограничение локальной машины, не блокирует конфиг (CI на `ubuntu-latest` ставит WebKit нормально, см. Task 11)
+- [x] создать `playwright.config.ts` с двумя projects (`chromium` с `testIgnore: '**/mobile/**'`, `Mobile Safari` с `testDir: './e2e/mobile'`), `webServer` над `vite preview --port 4173 --strictPort`, `baseURL`, `expect.timeout: 10_000`, `retries`/`reporter` по `process.env.CI`
+- [x] добавить `playwright.config.ts`, `e2e/**/*.ts` в `include` у `tsconfig.node.json`
+- [x] в `vite.config.ts` добавить `test.exclude: [...configDefaults.exclude, 'e2e/**']` (импорт `configDefaults` из `'vitest/config'`) — попутно пришлось убрать существовавший `/// <reference types="vitest/config" />` в шапке файла: oxlint's `typescript(triple-slash-reference)` запрещает reference-директиву на модуль, который в файле уже импортируется обычным `import` (здесь — новый `import { configDefaults } from 'vitest/config'`); именованный импорт сам подтягивает нужную ambient-аугментацию `UserConfig['test']`, `make typecheck` подтверждает, что типизация `test`-поля не потерялась — см. `[decision]` в progress-логе
+- [x] добавить `playwright-report/`, `test-results/`, `blob-report/`, `playwright/.cache/` в `.gitignore`
+- [x] добавить таргеты `e2e` (`pnpm exec playwright test`) и `e2e-install` (`pnpm exec playwright install --with-deps chromium webkit`) в `Makefile` + `.PHONY`
+- [x] добавить `playwright.config.ts` и `e2e/**/*.spec.ts` в `entry` у `knip.jsonc` (с комментарием-обоснованием) — сразу здесь, а не в Task 11, иначе `make knip` краснеет с момента появления новых devDependencies — также пришлось временно добавить `@axe-core/playwright` в `ignoreDependencies` (с комментарием), т.к. его единственный потребитель, `e2e/utils/a11y.ts`, появляется только в Task 3 — см. `[decision]` в progress-логе
+- [x] прогнать `make typecheck` — должен пройти чисто
+- [x] прогнать `make knip` — не должно быть unused-warnings по `@playwright/test`/`@axe-core/playwright`
+- [x] прогнать `make test` перед и после правки `test.exclude`, сравнить число прогнанных файлов/тестов — должно совпасть (создать временный `e2e/tmp.spec.ts` с валидным Playwright-тестом, убедиться что `vitest run` его игнорирует, затем удалить файл) — подтверждено: 82 файла/687 тестов и с `exclude`, и без временного файла; с `exclude` снятым и файлом на месте vitest пытается его прогнать и падает (`Playwright Test did not expect test() to be called here`), доказывая что `exclude` реально нужен
 
 ### Task 2: A11y-baseline — устранить существующие critical-нарушения
 
@@ -133,7 +134,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 - Modify: `src/features/catalog-filter/ui/ActiveFilterChips/ActiveFilterChips.tsx`
 - Modify: `src/widgets/mobile-chrome/ui/BottomSheet/BottomSheet.tsx`
 
-- [ ] прогнать axe вручную (временный ad-hoc спек с `AxeBuilder` и `page.goto`) против `make build-only && make preview` на `/`, `/search`, `/search` с открытым mobile-фильтром/сортировкой (`BottomSheet`), `/movie/:id` (любой валидный id, найденный вручную), `/favorites` — зафиксировать полный список `critical`-нарушений
+- [ ] прогнать axe вручную (временный ad-hoc спек с `AxeBuilder` и `page.goto`) против `make build-only && make preview` на `/`, `/search`, `/search` с открытым mobile-фильтром/сортировкой (`BottomSheet`), `/movie/:id` (любой валидный id, найденный вручную), `/favorites`, `/popular`, `/recommendations` — зафиксировать полный список `critical`-нарушений
 - [ ] `Header.tsx:204` — добавить `aria-label='Open search'` на `IconButton` с `SearchIcon`
 - [ ] `Header.tsx:208` — добавить `aria-label='Notifications'` на `IconButton` с `BellIcon`
 - [ ] `Card.tsx` — добавить `ariaLabel='Preview'` на `CardBtn` с `EyeIcon` (`square` вариант, единственный без видимого текста и без `ariaLabel`)
@@ -177,7 +178,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 - [ ] `checkA11y(page)` один раз после первичной загрузки (не на каждом табе — экономим квоту)
 - [ ] прогнать `make build-only`, затем `pnpm exec playwright test e2e/movie-detail.spec.ts` — должен пройти
 
-### Task 6: Favorites — добавить → перезагрузить → присутствует
+### Task 6: Favorites — добавить → перезагрузить → присутствует на `/favorites`
 
 **Files:**
 - Create: `e2e/favorites.spec.ts`
@@ -185,10 +186,33 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 - [ ] `/`, взять первую карточку (`page.locator('a[href^="/movie/"]').first()`, см. Technical Details) и **прочитать её `textContent` как `title`** — рейлы рендерятся в фиксированном DOM-порядке (`Home.tsx`), но четыре Suspense-границы резолвятся независимо, поэтому карточка идентифицируется по названию, а не по голой позиции после reload
 - [ ] найти favorite-кнопку именно этой карточки через `page.locator('div').filter({ has: page.getByRole('link', { name: title, exact: true }) }).filter({ has: page.getByRole('button', { name: /favorites$/ }) }).getByRole('button', { name: /favorites$/ })` (см. Technical Details — комбинированный `filter({ has })`, без обращения к CSS-классам), кликнуть, проверить что accessible name сменился на `"Remove from favorites"`
 - [ ] `page.reload()`, тем же комбинированным локатором (по сохранённому `title`) снова найти favorite-кнопку и проверить, что она резолвится как `"Remove from favorites"` (доказывает персист через `localStorage`/`kinoshka:favorites`, не зависит от того, что рендерится первым после reload)
-- [ ] `checkA11y(page)`
+- [ ] `checkA11y(page)` на `/`
+- [ ] `page.goto('/favorites')`, убедиться что карточка с сохранённым `title` присутствует в гриде (`getByRole('link', { name: title, exact: true })`) — доказывает, что сама страница `/favorites` реально отображает избранные фильмы, а не только что флаг сохраняется в `localStorage`
+- [ ] `checkA11y(page)` на `/favorites`
 - [ ] прогнать `make build-only`, затем `pnpm exec playwright test e2e/favorites.spec.ts` — должен пройти
 
-### Task 7: Theme toggle
+### Task 7: Страница `/popular`
+
+**Files:**
+- Create: `e2e/popular.spec.ts`
+
+- [ ] `page.goto('/popular')`, дождаться видимости первой карточки (`page.locator('a[href^="/movie/"]').first()`, см. Technical Details)
+- [ ] проверить rank-бейдж первой карточки — `PopularBadge` (`src/entities/movie/ui/PopularBadge/PopularBadge.tsx`) рендерит `<div role='img' aria-label='Position 1'>` (либо `'Position 1, change ...'`, если `positionDiff` ненулевой) для первой позиции списка: `page.getByRole('img', { name: /^Position 1/ })`
+- [ ] `checkA11y(page)`
+- [ ] прогнать `make build-only`, затем `pnpm exec playwright test e2e/popular.spec.ts` — должен пройти
+
+### Task 8: Страница `/recommendations`
+
+**Files:**
+- Create: `e2e/recommendations.spec.ts`
+
+- [ ] `page.goto('/recommendations')` в свежем (пустом) браузерном контексте — `Recommendations.tsx` проверяет `ids.length === 0` **до** `AsyncBoundary`/`useFavoriteMovies()` (`src/pages/recommendations/ui/Recommendations/Recommendations.tsx:73-79`), поэтому пустое избранное рендерит `EmptyState` `'No favorites yet'` без единого запроса к API — самый дешёвый по квоте способ подтвердить, что роут реально существует, рендерится и доступен
+- [ ] проверить видимость `EmptyState` с заголовком `'No favorites yet'`
+- [ ] `checkA11y(page)`
+- [ ] прогнать `make build-only`, затем `pnpm exec playwright test e2e/recommendations.spec.ts` — должен пройти
+- [ ] ⚠️ «заполненный» сценарий (избранное → реальная подборка через `computeRecommendationQuery` → `getMoviesPage`) намеренно не тестируется — он дублировал бы add-to-favorites-логику Task 6 ради ещё одного API-запроса без ощутимого прироста покрытия; при необходимости переиспользовать паттерн Task 6 (favorite + `goto('/recommendations')`) в отдельном спеке
+
+### Task 9: Theme toggle
 
 **Files:**
 - Create: `e2e/theme.spec.ts`
@@ -199,7 +223,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 - [ ] `checkA11y(page)`
 - [ ] прогнать `make build-only`, затем `pnpm exec playwright test e2e/theme.spec.ts` — должен пройти
 
-### Task 8: Mobile-viewport project + урезанный smoke-набор
+### Task 10: Mobile-viewport project + урезанный smoke-набор
 
 **Files:**
 - Create: `e2e/mobile/smoke.spec.ts`
@@ -209,7 +233,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 - [ ] тест `/movie/:id` на mobile viewport — переход с главной по клику на `page.locator('a[href^="/movie/"]').first()` (см. Technical Details, без хардкода id), видимость Overview-контента, `checkA11y`
 - [ ] прогнать `make build-only`, затем `pnpm exec playwright test --project="Mobile Safari"` — должен пройти
 
-### Task 9: CI-интеграция
+### Task 11: CI-интеграция
 
 **Files:**
 - Modify: `.github/workflows/ci.yml`
@@ -219,23 +243,25 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 - [ ] шаги: install deps → `make e2e-install` (**безусловно**, кеш не покрывает системные библиотеки `--with-deps`) → `make build-only` (env только `VITE_API_KEY`/`VITE_BASE_URL` из secrets/vars) → `pnpm exec playwright test --shard=${{ matrix.shard }}/4` → `actions/upload-artifact` с `name: playwright-report-${{ matrix.shard }}` для `playwright-report/` при `failure()`
 - [ ] прогнать `make format-check` и `make lint` — новые файлы (`playwright.config.ts`, `e2e/**`) должны проходить без ошибок (при необходимости — `pnpm format`)
 
-### Task 10: Verify acceptance criteria
+### Task 12: Verify acceptance criteria
 
 - [ ] все 6 smoke-сценариев из roadmap 2.5.5 покрыты и проходят: главная, поиск, фильтр, деталь+табы, favorites persist, theme toggle
+- [ ] `/popular` и `/recommendations` тоже покрыты и проходят (Task 7, Task 8) — не входят в буквальный список roadmap 2.5.5, но закрывают оставшиеся SPA-роуты
+- [ ] `/favorites` покрыта как отдельная страница (не только тумблер избранного на `/`) — Task 6
 - [ ] в каждом спеке есть `checkA11y` без critical violations
 - [ ] mobile project существует и проходит хотя бы на `/`, `/search`, `/movie/:id`
 - [ ] `pnpm exec playwright test` (все projects, без шардинга) проходит локально целиком против реального API
 - [ ] `make check` (format-check + lint + build) и `make test` проходят без регрессий
 - [ ] CI-конфиг синтаксически валиден (визуальная проверка YAML/`actionlint` при наличии)
 
-### Task 11: Документация и закрытие плана
+### Task 13: Документация и закрытие плана
 
 **Files:**
 - Modify: `AGENTS.md`
 - Modify: `plans/roadmap.md`
 - Move: `docs/plans/20260912-e2e-playwright-axe.md` → `docs/plans/completed/`
 
-- [ ] добавить раздел «E2E тесты (Playwright + axe-core)» в `AGENTS.md`: решение по реальному API + риск квоты + почему job ограничен `if: github.event_name == 'pull_request'` и не запускается на форк-PR, `vite preview`-стратегия, a11y-baseline фиксы из Task 2 (с полным списком: Header × 2, Card, MobileHeader, Pagination, ActiveFilterChips, BottomSheet), разделение desktop/mobile через `testDir`, `test.exclude` в Vitest через `configDefaults`, требование secrets в CI, отклонение `--shard=N/4` от буквального `--workers=4` из roadmap
+- [ ] добавить раздел «E2E тесты (Playwright + axe-core)» в `AGENTS.md`: решение по реальному API + риск квоты + почему job ограничен `if: github.event_name == 'pull_request'` и не запускается на форк-PR, `vite preview`-стратегия, a11y-baseline фиксы из Task 2 (с полным списком: Header × 2, Card, MobileHeader, Pagination, ActiveFilterChips, BottomSheet), разделение desktop/mobile через `testDir`, `test.exclude` в Vitest через `configDefaults`, требование secrets в CI, отклонение `--shard=N/4` от буквального `--workers=4` из roadmap, а также решение расширить покрытие с буквальных 6 journeys roadmap до всех 6 SPA-роутов (Task 7 `/popular`, Task 8 `/recommendations`, явный переход на `/favorites` в Task 6)
 - [ ] добавить `make e2e`/`make e2e-install` в таблицу команд `AGENTS.md` (раздел Commands)
 - [ ] отметить `[x]` пункты `2.5.5` в `plans/roadmap.md` (кроме тех, что реально не сделаны, например перевод job'а в required-check)
 - [ ] переместить этот файл в `docs/plans/completed/`

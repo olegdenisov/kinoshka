@@ -6,7 +6,10 @@
   // Root-конфиги (vite.config.ts/sentry.config.ts/apicraft.config.ts) — иначе
   // apicraft/husky/commitlint и т.п. тоже попадают в unused deps. bundle.config.ts
   // добавлен по той же причине (введён в Task 4 этого плана, после того как этот
-  // раздел плана был написан).
+  // раздел плана был написан). playwright.config.ts + e2e/**/*.spec.ts — иначе
+  // @playwright/test/@axe-core/playwright считаются unused devDependencies (knip
+  // умеет автоопределять Playwright по playwright.config.ts, но явная запись — в
+  // духе уже принятого в проекте стиля "explicit decision", см. AGENTS.md 2.5.3).
   "entry": [
     "src/main.tsx",
     "**/*.test.{ts,tsx}",
@@ -14,8 +17,16 @@
     "sentry.config.ts",
     "apicraft.config.ts",
     "bundle.config.ts",
+    "playwright.config.ts",
+    "e2e/**/*.spec.ts",
   ],
   "project": ["src/**/*.{ts,tsx}"],
+  // @axe-core/playwright — установлен в Task 1 (скаффолд), но реально
+  // импортируется только в Task 3 (e2e/utils/a11y.ts, ещё не существует на
+  // этом шаге плана) — без этого knip красный между Task 1 и Task 3. Убрать
+  // этот пункт, как только e2e/utils/a11y.ts появится и станет реальным
+  // потребителем пакета.
+  "ignoreDependencies": ["@axe-core/playwright"],
   "ignore": [
     // Сгенерированные файлы — AGENTS.md прямо запрещает их редактировать
     // ("Generated files — never edit manually, regenerate instead").
