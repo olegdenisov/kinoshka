@@ -1,16 +1,14 @@
 import { expect, test } from '@playwright/test'
 
 import { checkA11y } from './utils/a11y'
+import { firstMovieCard } from './utils/movieCard'
 
 test('popular page renders rank badge on first card and has no critical a11y violations', async ({
   page,
 }) => {
   await page.goto('/popular')
 
-  // Стабильный селектор карточки фильма — по href-паттерну react-router
-  // (/movie/:id), не голый getByRole('link').first(). См. Technical Details
-  // в плане.
-  const firstCard = page.locator('a[href^="/movie/"]').first()
+  const firstCard = firstMovieCard(page)
   await expect(firstCard).toBeVisible()
 
   // PopularBadge рендерит <div role='img' aria-label='Position 1'> (либо

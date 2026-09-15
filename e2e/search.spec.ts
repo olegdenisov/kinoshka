@@ -1,13 +1,7 @@
 import { expect, test } from '@playwright/test'
-import type { Page } from '@playwright/test'
 
 import { checkA11y } from './utils/a11y'
-
-// Либо результаты нашлись (счётчик "N shown · page X of Y" в Search.tsx), либо
-// показан EmptyState 'Nothing found' — оба исхода подтверждают, что грид
-// действительно завершил перерендер по новым параметрам (не завис в loading).
-const resultsOrEmptyState = (page: Page) =>
-  page.getByText(/shown · page \d+ of \d+/).or(page.getByText('Nothing found'))
+import { resultsOrEmptyState } from './utils/search'
 
 test('search: submitting a query from the hero navigates to /search with results or empty state', async ({
   page,
