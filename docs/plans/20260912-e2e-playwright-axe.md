@@ -171,12 +171,12 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 **Files:**
 - Create: `e2e/movie-detail.spec.ts`
 
-- [ ] `/`, клик по `page.locator('a[href^="/movie/"]').first()` (см. Technical Details) — переход на `/movie/:id` без хардкода id
-- [ ] проверка контента вкладки Overview по умолчанию
-- [ ] клик `getByRole('button', { name: 'Cast' })`, проверка что появился хотя бы один участник кастинга
-- [ ] клик `getByRole('button', { name: 'Media' })`, проверка рендера медиа-секции (или её empty-state)
-- [ ] `checkA11y(page)` один раз после первичной загрузки (не на каждом табе — экономим квоту)
-- [ ] прогнать `make build-only`, затем `pnpm exec playwright test e2e/movie-detail.spec.ts` — должен пройти
+- [x] `/`, клик по `page.locator('a[href^="/movie/"]').first()` (см. Technical Details) — переход на `/movie/:id` без хардкода id
+- [x] проверка контента вкладки Overview по умолчанию — `getByText('Synopsis', { exact: true })` (section-head, уникальный для `OverviewTab` — `MovieHero` тоже рендерит synopsis, но без этого лейбла)
+- [x] клик `getByRole('button', { name: 'Cast' })`, проверка что появился хотя бы один участник кастинга — паттерн текста `/^as /` (`CastTab`'s `as {role}`), уникален для карточек каста
+- [x] клик `getByRole('button', { name: 'Media' })`, проверка рендера медиа-секции (или её empty-state) — `[decision]` у `MediaTab` нет отдельного UI для «нет трейлера/скриншотов» (пустой контейнер без текста при отсутствии обоих), поэтому детерминированная часть проверки — что контент предыдущего (Cast) таба исчез (доказывает реальное переключение), плюс опциональная проверка `Trailer`/`Screenshots` section-head, только если один из них присутствует в DOM
+- [x] `checkA11y(page)` один раз после первичной загрузки (не на каждом табе — экономим квоту)
+- [x] прогнать `make build-only`, затем `pnpm exec playwright test e2e/movie-detail.spec.ts` — должен пройти — прошёл (3.7s) против реального API
 
 ### Task 6: Favorites — добавить → перезагрузить → присутствует на `/favorites`
 
