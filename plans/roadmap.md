@@ -451,18 +451,18 @@
 
 ### 2.5.5 E2E тесты (Playwright) с axe-core
 
-- [ ] `pnpm add -D @playwright/test @axe-core/playwright`.
-- [ ] `npx playwright install` — установка браузеров.
-- [ ] `e2e/` папка с smoke-тестами:
-  - [ ] Главная грузится, rails отрисованы.
-  - [ ] Поиск работает (введи → результаты).
-  - [ ] Фильтр работает (выбери жанр → URL обновился → результаты изменились).
-  - [ ] Деталь открывается, табы переключаются.
-  - [ ] Favorites: добавить → перезагрузить → присутствует.
-  - [ ] Theme toggle меняет атрибут на `<html>`.
-- [ ] A11y-проверка через `AxeBuilder` в каждом E2E-тесте (нет critical violations).
-- [ ] Отдельный Playwright project с mobile viewport emulation (`devices['iPhone 13']`) — хотя бы smoke на `/`, `/search`, `/movie/:id`.
-- [ ] E2E job в CI на каждый PR (параллельные шарды, `--workers=4`).
+- [x] `pnpm add -D @playwright/test @axe-core/playwright`.
+- [x] `npx playwright install` — установка браузеров. Реализовано через `make e2e-install` (`playwright install --with-deps chromium webkit`, firefox не ставим — не используется ни одним project).
+- [x] `e2e/` папка с smoke-тестами:
+  - [x] Главная грузится, rails отрисованы.
+  - [x] Поиск работает (введи → результаты).
+  - [x] Фильтр работает (выбери жанр → URL обновился → результаты изменились).
+  - [x] Деталь открывается, табы переключаются.
+  - [x] Favorites: добавить → перезагрузить → присутствует. Плюс явная проверка самой страницы `/favorites`, сверх буквальной формулировки — см. AGENTS.md.
+  - [x] Theme toggle меняет атрибут на `<html>`.
+- [x] A11y-проверка через `AxeBuilder` в каждом E2E-тесте (нет critical violations). Также потребовала предварительного фикса 7 существующих a11y-нарушений в прод-коде — см. AGENTS.md "E2E тесты (Playwright + axe-core)".
+- [x] Отдельный Playwright project с mobile viewport emulation (`devices['iPhone 13']`) — хотя бы smoke на `/`, `/search`, `/movie/:id`. Реализовано через отдельный `testDir` (`e2e/mobile/`), не дублирование всего сьюта.
+- [x] E2E job в CI на каждый PR (параллельные шарды, `--workers=4`). Реализовано как `--shard=N/4` (4 независимых CI-job'а, не потоки на одной машине) — сознательное отклонение от буквальной формулировки, задокументировано в AGENTS.md. Job ограничен `pull_request`-триггером (не `push: main`, не форк-PR) и пока не подключён как required branch-protection check — см. Post-Completion плана.
 
 **Как лучше:** только critical user journeys в E2E. Не пытайся покрыть всё — это будет hell maintenance. Edge-cases — unit/integration тесты. Используй `data-testid` только когда нет семантического селектора — приоритет: role > label > text > testid.
 
