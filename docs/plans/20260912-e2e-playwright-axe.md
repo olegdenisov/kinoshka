@@ -153,9 +153,9 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 - Create: `e2e/utils/a11y.ts`
 - Create: `e2e/home.spec.ts`
 
-- [ ] `checkA11y(page)` в `e2e/utils/a11y.ts` — `AxeBuilder` + assert отсутствия violations с `impact === 'critical'`
-- [ ] `home.spec.ts`: `page.goto('/')`, ждать видимость hero-заголовка и первой карточки рейла (`page.locator('a[href^="/movie/"]').first()`, см. Technical Details — не голый `getByRole('link')`, чтобы не поймать логотип шапки), `checkA11y(page)`
-- [ ] прогнать `make build-only`, затем `pnpm exec playwright test --project=chromium e2e/home.spec.ts` — должен пройти против реального API
+- [x] `checkA11y(page)` в `e2e/utils/a11y.ts` — `AxeBuilder` + assert отсутствия violations с `impact === 'critical'`
+- [x] `home.spec.ts`: `page.goto('/')`, ждать видимость hero-заголовка и первой карточки рейла (`page.locator('a[href^="/movie/"]').first()`, см. Technical Details — не голый `getByRole('link')`, чтобы не поймать логотип шапки), `checkA11y(page)`
+- [x] прогнать `make build-only`, затем `pnpm exec playwright test --project=chromium e2e/home.spec.ts` — должен пройти против реального API
 
 ### Task 4: Поиск и фильтры
 
