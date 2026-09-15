@@ -14,6 +14,7 @@
 - **React Router 7** — клиентская маршрутизация
 - **React Compiler** — автоматическая мемоизация (`babel-plugin-react-compiler`); ручные `useMemo` / `useCallback` / `memo` не нужны
 - **Vitest** + **Testing Library** + **MSW** — юнит и интеграционные тесты, мокирование API-запросов
+- **Playwright** + **axe-core** — E2E-тесты в реальном браузере против production preview-сборки (`vite preview`) и реального API, с a11y-проверкой (`AxeBuilder`) в каждом сценарии; отдельный mobile-viewport project (`devices['iPhone 13']`) на `/`, `/search`, `/movie/:id`
 - **Zod** — валидация данных (localStorage, API-границы)
 - **oxlint** — Rust-линтер (TS/React/jsx-a11y правила)
 - **husky** + **lint-staged** + **commitlint** — pre-commit линтинг и conventional commits (`pnpm commit`)
@@ -30,6 +31,8 @@ make preview      # раздача production-сборки локально
 make test         # запустить тесты один раз
 make test-watch   # тесты в watch-режиме
 make coverage     # отчёт покрытия
+make e2e          # E2E-тесты (Playwright) против production preview-сборки
+make e2e-install  # установить браузеры Playwright (chromium + webkit)
 make generate-api # регенерировать API-клиент из OpenAPI-спецификации
 make check        # lint + build (полная проверка)
 make hooks        # установить git-хуки husky
