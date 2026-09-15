@@ -63,7 +63,9 @@ export const Card = ({
         <div className={s.actions}>
           <CardBtn icon={<StarIcon size={10} />} label='Rate' />
           <CardBtn icon={<PlusIcon />} label='Add' />
-          {variant === 'grid' && <CardBtn icon={<EyeIcon />} square />}
+          {variant === 'grid' && (
+            <CardBtn icon={<EyeIcon />} square ariaLabel='Preview' />
+          )}
         </div>
 
         {/*

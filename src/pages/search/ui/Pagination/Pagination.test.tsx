@@ -72,6 +72,17 @@ describe('Pagination', () => {
     expect(buttons[buttons.length - 1]).toBeDisabled()
   })
 
+  it('prev/next кнопки имеют aria-label "Previous page"/"Next page" (a11y baseline, Task 2)', () => {
+    render(<Pagination page={5} totalPages={10} onChange={vi.fn()} />)
+
+    expect(
+      screen.getByRole('button', { name: 'Previous page' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Next page' }),
+    ).toBeInTheDocument()
+  })
+
   it('edge: page > totalPages клэмпится для рендера — не крашит, подсвечивает последнюю страницу', () => {
     render(<Pagination page={999} totalPages={5} onChange={vi.fn()} />)
 

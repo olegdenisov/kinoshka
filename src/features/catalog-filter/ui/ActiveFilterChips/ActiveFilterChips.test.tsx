@@ -32,6 +32,14 @@ describe('ActiveFilterChips — обычный вариант (compact не за
     expect(onRemove).toHaveBeenCalledTimes(1)
   })
 
+  it('кнопка удаления чипа имеет aria-label "Remove <label>" (a11y baseline, Task 2)', () => {
+    render(<ActiveFilterChips chips={[makeChip('Movies')]} />)
+
+    expect(
+      screen.getByRole('button', { name: 'Remove Movies' }),
+    ).toBeInTheDocument()
+  })
+
   it('"Clear all" рендерится только когда есть чипы и передан onClearAll, клик вызывает его', () => {
     const onClearAll = vi.fn()
     const { rerender } = render(
@@ -75,6 +83,14 @@ describe('ActiveFilterChips — компактный вариант (compact, м
     expect(screen.getByText('Chip 5')).toBeInTheDocument()
     expect(screen.queryByText('Chip 6')).not.toBeInTheDocument()
     expect(screen.queryByText('Chip 7')).not.toBeInTheDocument()
+  })
+
+  it('кнопка удаления компактного чипа имеет aria-label "Remove <label>" (a11y baseline, Task 2)', () => {
+    render(<ActiveFilterChips chips={[makeChip('Movies')]} compact />)
+
+    expect(
+      screen.getByRole('button', { name: 'Remove Movies' }),
+    ).toBeInTheDocument()
   })
 
   it('клик по крестику компактного чипа вызывает его onRemove (ветка chipCompactRemove)', () => {

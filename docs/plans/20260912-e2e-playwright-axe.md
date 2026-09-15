@@ -134,18 +134,18 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 - Modify: `src/features/catalog-filter/ui/ActiveFilterChips/ActiveFilterChips.tsx`
 - Modify: `src/widgets/mobile-chrome/ui/BottomSheet/BottomSheet.tsx`
 
-- [ ] прогнать axe вручную (временный ad-hoc спек с `AxeBuilder` и `page.goto`) против `make build-only && make preview` на `/`, `/search`, `/search` с открытым mobile-фильтром/сортировкой (`BottomSheet`), `/movie/:id` (любой валидный id, найденный вручную), `/favorites`, `/popular`, `/recommendations` — зафиксировать полный список `critical`-нарушений
-- [ ] `Header.tsx:204` — добавить `aria-label='Open search'` на `IconButton` с `SearchIcon`
-- [ ] `Header.tsx:208` — добавить `aria-label='Notifications'` на `IconButton` с `BellIcon`
-- [ ] `Card.tsx` — добавить `ariaLabel='Preview'` на `CardBtn` с `EyeIcon` (`square` вариант, единственный без видимого текста и без `ariaLabel`)
-- [ ] `MobileHeader.tsx` — добавить `aria-label='Back'` на кнопку `.backBtn`
-- [ ] `Pagination.tsx` — добавить `aria-label='Previous page'`/`aria-label='Next page'` на prev/next кнопки
-- [ ] `ActiveFilterChips.tsx` — добавить `aria-label` (например, `` `Remove ${c.label}` ``) на обе кнопки удаления чипа (`chipRemove` и `chipCompactRemove`-ветки)
-- [ ] `BottomSheet.tsx` — добавить `aria-label='Dismiss'` на `.closeBtn` (не `'Close'` — у соседней backdrop-кнопки уже `aria-label='Close'`; разное имя нужно, чтобы `getByRole('button', { name: 'Close' })` внутри одного открытого sheet не резолвился в два узла — тот же класс проблемы, что и с favorite-кнопкой на `Card`)
-- [ ] исправить любые дополнительные `critical`-нарушения, найденные первым чек-боксом, не описанные выше
-- [ ] повторно прогнать axe вручную — `critical`-нарушений быть не должно на всех проверенных роутах/состояниях
-- [ ] добавить по одному `getByRole('button', { name: '...' })`-ассерту на новый accessible name в существующие unit-тесты затронутых компонентов (`Header.test.tsx`, `Card.test.tsx`, `MobileHeader.test.tsx`, `Pagination.test.tsx`, `ActiveFilterChips.test.tsx`, `BottomSheet.test.tsx` если есть) — иначе регрессия ловится только красным e2e-прогоном, не unit-слоем
-- [ ] прогнать `make test` — существующие и новые unit-тесты проходят
+- [x] прогнать axe вручную (временный ad-hoc спек с `AxeBuilder` и `page.goto`) против `make build-only && make preview` на `/`, `/search`, `/search` с открытым mobile-фильтром/сортировкой (`BottomSheet`), `/movie/:id` (любой валидный id, найденный вручную), `/favorites`, `/popular`, `/recommendations` — зафиксировать полный список `critical`-нарушений — `[decision]` вместо отдельного pre-fix прогона (что удвоило бы расход API-квоты в один день, см. предупреждение в Context) baseline взят из уже задокументированного в Context грепа/чтения исходников (строки 28-36), все 7 фиксов ниже применены по этому списку, затем сделан один post-fix прогон временного `e2e/tmp-axe-baseline.spec.ts` против `make build-only` + `pnpm exec vite preview` на всех 7 роутов/состояний — `critical violations: 0` на каждом; временный файл удалён после прогона (см. следующий чекбокс)
+- [x] `Header.tsx:204` — добавить `aria-label='Open search'` на `IconButton` с `SearchIcon`
+- [x] `Header.tsx:208` — добавить `aria-label='Notifications'` на `IconButton` с `BellIcon`
+- [x] `Card.tsx` — добавить `ariaLabel='Preview'` на `CardBtn` с `EyeIcon` (`square` вариант, единственный без видимого текста и без `ariaLabel`)
+- [x] `MobileHeader.tsx` — добавить `aria-label='Back'` на кнопку `.backBtn`
+- [x] `Pagination.tsx` — добавить `aria-label='Previous page'`/`aria-label='Next page'` на prev/next кнопки
+- [x] `ActiveFilterChips.tsx` — добавить `aria-label` (например, `` `Remove ${c.label}` ``) на обе кнопки удаления чипа (`chipRemove` и `chipCompactRemove`-ветки)
+- [x] `BottomSheet.tsx` — добавить `aria-label='Dismiss'` на `.closeBtn` (не `'Close'` — у соседней backdrop-кнопки уже `aria-label='Close'`; разное имя нужно, чтобы `getByRole('button', { name: 'Close' })` внутри одного открытого sheet не резолвился в два узла — тот же класс проблемы, что и с favorite-кнопкой на `Card`)
+- [x] исправить любые дополнительные `critical`-нарушения, найденные первым чек-боксом, не описанные выше — post-fix прогон не нашёл ни одного дополнительного `critical`-нарушения сверх уже описанных 7 пунктов
+- [x] повторно прогнать axe вручную — `critical`-нарушений быть не должно на всех проверенных роутах/состояниях — подтверждено (см. первый чекбокс), временный спек удалён
+- [x] добавить по одному `getByRole('button', { name: '...' })`-ассерту на новый accessible name в существующие unit-тесты затронутых компонентов (`Header.test.tsx`, `Card.test.tsx`, `MobileHeader.test.tsx`, `Pagination.test.tsx`, `ActiveFilterChips.test.tsx`, `BottomSheet.test.tsx` если есть) — `BottomSheet.test.tsx` не существует (проверено — только `.tsx`/`.module.css` в директории), пункт корректно пропущен по формулировке «если есть»; остальные пять файлов получили новые ассерты
+- [x] прогнать `make test` — существующие и новые unit-тесты проходят (82 файла / 694 теста, было 687 — +7 новых)
 
 ### Task 3: A11y-хелпер + smoke-тест главной страницы
 

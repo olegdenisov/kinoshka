@@ -34,6 +34,7 @@ export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
         type='button'
         disabled={safePage <= 1}
         onClick={() => onChange(Math.max(1, safePage - 1))}
+        aria-label='Previous page'
         className={s.btn}
       >
         <ChevronLeftIcon size={11} />
@@ -58,6 +59,7 @@ export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
         type='button'
         disabled={safePage >= safeTotalPages}
         onClick={() => onChange(Math.min(safeTotalPages, safePage + 1))}
+        aria-label='Next page'
         className={s.btn}
       >
         <ChevronRightIcon size={11} />

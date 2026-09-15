@@ -496,6 +496,32 @@ describe('Header — пункт навигации Picks', () => {
   })
 })
 
+describe('Header — accessible names на иконках без видимого текста (a11y baseline, Task 2)', () => {
+  it('кнопка открытия поиска (variant="default") имеет aria-label="Open search"', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Header variant='default' />
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('button', { name: 'Open search' }),
+    ).toBeInTheDocument()
+  })
+
+  it('кнопка уведомлений имеет aria-label="Notifications"', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Header variant='default' />
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('button', { name: 'Notifications' }),
+    ).toBeInTheDocument()
+  })
+})
+
 describe('Header — переключатель темы (ThemeToggle)', () => {
   it('кнопка-тоггл темы присутствует в actions', () => {
     render(

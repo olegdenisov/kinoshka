@@ -41,7 +41,12 @@ export const BottomSheet = ({
         </div>
         <div className={s.titleRow}>
           <div className={s.title}>{title}</div>
-          <button type='button' onClick={onClose} className={s.closeBtn}>
+          <button
+            type='button'
+            onClick={onClose}
+            aria-label='Dismiss'
+            className={s.closeBtn}
+          >
             <CloseIcon />
           </button>
         </div>
