@@ -3,9 +3,4 @@ export { createStorageSlot, useStorageSlot } from './storage'
 export { createSessionCache } from './sessionCache'
 export { useDebouncedValue } from './debounce'
 export { lazyNamed } from './lazyNamed'
-export {
-  initAnalytics,
-  trackEvent,
-  trackPageview,
-  reportWebVitals,
-} from './analytics'
+export { initAnalytics, trackEvent, trackPageview } from './analytics'

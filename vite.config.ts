@@ -130,15 +130,6 @@ export default defineConfig(({ mode, command }) => {
           // `shared` — реальный, всегда-один-раз-грузящийся общий чанк.
           codeSplitting: {
             groups: [
-              // `web-vitals` идёт ПЕРЕД `vendor` и ловит именно этот пакет — иначе
-              // catch-all `test: /node_modules/` в `vendor` забирает и его, несмотря на
-              // то, что reportWebVitals.ts (src/shared/lib/analytics/) намеренно грузит
-              // его через `await import('web-vitals')`, а не статический импорт, именно
-              // чтобы он НЕ попал в вечно-загружаемый чанк (см. AGENTS.md "Web Vitals +
-              // Analytics"). До этого фикса `vendor-*.js` содержал web-vitals-код
-              // (проверено грепом по `onHidden`/`PerformanceObserver`) и eagerly
-              // прелоадился из index.html — динамический импорт ничего не давал.
-              { name: 'web-vitals', test: /node_modules\/web-vitals\// },
               { name: 'vendor', test: /node_modules/ },
               {
                 name: 'shared',
