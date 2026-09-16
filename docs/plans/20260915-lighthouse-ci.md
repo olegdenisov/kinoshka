@@ -251,13 +251,13 @@ lighthouse: build-only
 - Create: `lighthouse-config.test.ts`
 - Modify: `tsconfig.node.json`
 
-- [ ] создать `lighthouserc.cjs` в корне: `categories:accessibility`/`categories:best-practices` — `error` с порогами 0.95/0.9; `categories:performance` — `warn` с порогом 0.9 (временно, см. Technical Details); `ci.collect.numberOfRuns: 1`; `ci.collect.settings.preset: 'desktop'` — каждое решение с WHY-комментарием. **Пока без `categories:seo`** — этот ассерт заводится в Task 4 не как категория целиком, а как набор per-audit ассертов (см. Task 4/Technical Details) — в Task 1 достаточно зафиксировать комментарием-заглушкой, почему его здесь ещё нет
-- [ ] явно НЕ добавлять `collect.url`/`collect.startServerCommand` в конфиг — зафиксировать комментарием в файле, почему (CLI-флаги по контексту запуска)
-- [ ] написать `lighthouse-config.test.ts` (root): читать `lighthouserc.cjs` через `createRequire(import.meta.url)` + `require('./lighthouserc.cjs')` (не `'../...'` — оба файла в корне) + локальный `type LighthouseRc` + `as`-каст
-- [ ] тест: `categories:performance` === `'warn'`, `categories:accessibility`/`categories:best-practices` === `'error'` (не унифицированная проверка «все error» — раз severity намеренно разная); `ci.collect.settings.preset === 'desktop'` — отдельным ассертом (ключевое антифлейк-решение, случайное удаление не должно проходить незамеченным)
-- [ ] тест: точные пороги 0.9/0.95/0.9 (мандат роадмапа, для трёх заведённых в Task 1 category-ассертов) + `numberOfRuns` — целое число ≥ 1
-- [ ] добавить `lighthouse-config.test.ts` в `tsconfig.node.json`'s `include`
-- [ ] `make test`, `make typecheck`, `make lint`, `make format-check` — все четыре должны пройти (в т.ч. новый `.cjs`-файл — не покрыт `lint-staged`'s glob; проверить, не ругается ли oxlint на `module`/`require` при отсутствующем `node`-env в `.oxlintrc.json`, и если да — точечное решение)
+- [x] создать `lighthouserc.cjs` в корне: `categories:accessibility`/`categories:best-practices` — `error` с порогами 0.95/0.9; `categories:performance` — `warn` с порогом 0.9 (временно, см. Technical Details); `ci.collect.numberOfRuns: 1`; `ci.collect.settings.preset: 'desktop'` — каждое решение с WHY-комментарием. **Пока без `categories:seo`** — этот ассерт заводится в Task 4 не как категория целиком, а как набор per-audit ассертов (см. Task 4/Technical Details) — в Task 1 достаточно зафиксировать комментарием-заглушкой, почему его здесь ещё нет
+- [x] явно НЕ добавлять `collect.url`/`collect.startServerCommand` в конфиг — зафиксировать комментарием в файле, почему (CLI-флаги по контексту запуска)
+- [x] написать `lighthouse-config.test.ts` (root): читать `lighthouserc.cjs` через `createRequire(import.meta.url)` + `require('./lighthouserc.cjs')` (не `'../...'` — оба файла в корне) + локальный `type LighthouseRc` + `as`-каст
+- [x] тест: `categories:performance` === `'warn'`, `categories:accessibility`/`categories:best-practices` === `'error'` (не унифицированная проверка «все error» — раз severity намеренно разная); `ci.collect.settings.preset === 'desktop'` — отдельным ассертом (ключевое антифлейк-решение, случайное удаление не должно проходить незамеченным)
+- [x] тест: точные пороги 0.9/0.95/0.9 (мандат роадмапа, для трёх заведённых в Task 1 category-ассертов) + `numberOfRuns` — целое число ≥ 1
+- [x] добавить `lighthouse-config.test.ts` в `tsconfig.node.json`'s `include`
+- [x] `make test`, `make typecheck`, `make lint`, `make format-check` — все четыре должны пройти (в т.ч. новый `.cjs`-файл — не покрыт `lint-staged`'s glob; проверить, не ругается ли oxlint на `module`/`require` при отсутствующем `node`-env в `.oxlintrc.json`, и если да — точечное решение). `oxlint`/`oxfmt --check` прошли чисто на новых файлах; предсуществующие `format-check`-находки в `docs/plans/*.md`/`.revmux/profile.md` не связаны с этой задачей и не трогались
 
 ### Task 2: `make lighthouse` — локальный dev-smoke-луп
 
