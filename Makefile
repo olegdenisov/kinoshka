@@ -1,4 +1,4 @@
-.PHONY: dev build typecheck build-only lint format format-check preview install hooks clean check generate-api test test-watch coverage audit analyze size knip e2e e2e-install
+.PHONY: dev build typecheck build-only lint format format-check preview install hooks clean check generate-api test test-watch coverage audit analyze size knip e2e e2e-install sentry-telemetry
 
 dev:
 	pnpm dev
@@ -65,3 +65,10 @@ e2e:
 
 e2e-install:
 	pnpm exec playwright install --with-deps chromium webkit
+
+# Требует предварительного `sentry auth login` (см. docs/telemetry-runbook.md) — на машине,
+# где писался этот план, уже выполнено. Создаёт Metric Alert (error rate)/Metric Alert (LCP
+# P75)/Dashboard "Kinoshka Telemetry" в реальном Sentry-аккаунте (create-if-missing, не полная
+# синхронизация — см. sentry-telemetry.config.ts).
+sentry-telemetry:
+	node --env-file-if-exists=.env.local provision-sentry-telemetry.ts

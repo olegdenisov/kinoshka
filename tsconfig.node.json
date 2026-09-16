@@ -28,6 +28,10 @@
     "bundle.config.test.ts",
     "vercel-headers.test.ts",
     "playwright.config.ts",
-    "e2e/**/*.ts"
+    "e2e/**/*.ts",
+    "sentry-telemetry.config.ts",
+    "sentry-telemetry.config.test.ts",
+    "provision-sentry-telemetry.ts",
+    "provision-sentry-telemetry.test.ts"
   ]
 }
