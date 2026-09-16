@@ -230,18 +230,18 @@ Roadmap-пункт `2.5.7` (`plans/roadmap.md`) требует три вещи:
 - Modify: `package.json` (удалить зависимость `web-vitals`, удалить `size-limit`-запись `web-vitals`)
 - Modify: `vite.config.ts` (удалить `web-vitals` group из `codeSplitting.groups`)
 
-- [ ] удалить `reportWebVitals.ts` и его тест
-- [ ] убрать `export { reportWebVitals } from './reportWebVitals'` из `src/shared/lib/analytics/index.ts`, поправить вводный комментарий модуля (он объясняет реэкспорт через единственного потребителя, которого больше нет)
-- [ ] убрать реэкспорт `reportWebVitals` из публичного барела `src/shared/lib/index.ts`
-- [ ] убрать вызов `reportWebVitals()` и его импорт из `src/app/providers.tsx`
-- [ ] обновить комментарий про очередь `.q` в `analytics.ts` — убрать упоминание "ранние web-vitals (LCP) терялись бы", оставить только обоснование про `trackPageview()`
-- [ ] снять `export` с `isAnalyticsEnabled` в `analytics.ts`, если после удаления `reportWebVitals.ts` у неё не остаётся кросс-файловых потребителей (по прецеденту AGENTS.md 2.5.3 — "снимать лишний `export`, а не заводить knip-ignore")
-- [ ] `pnpm remove web-vitals`
-- [ ] удалить запись `web-vitals` из `package.json`'s `"size-limit"` массива
-- [ ] удалить `{ name: 'web-vitals', test: /node_modules\/web-vitals\// }` группу из `vite.config.ts`'s `codeSplitting.groups`
-- [ ] обновить `providers.test.tsx` — переименовать `it('вызывает initAnalytics и reportWebVitals...')` в `it('вызывает initAnalytics...')`, убрать `reportWebVitals` из ассертов и из `vi.mock('@shared/lib', ...)`
-- [ ] прогнать `make test` и `make typecheck` — не должно остаться dangling-импортов на `reportWebVitals`/`web-vitals`
-- [ ] прогнать тесты — должны пройти перед Task 6
+- [x] удалить `reportWebVitals.ts` и его тест
+- [x] убрать `export { reportWebVitals } from './reportWebVitals'` из `src/shared/lib/analytics/index.ts`, поправить вводный комментарий модуля (он объясняет реэкспорт через единственного потребителя, которого больше нет)
+- [x] убрать реэкспорт `reportWebVitals` из публичного барела `src/shared/lib/index.ts`
+- [x] убрать вызов `reportWebVitals()` и его импорт из `src/app/providers.tsx`
+- [x] обновить комментарий про очередь `.q` в `analytics.ts` — убрать упоминание "ранние web-vitals (LCP) терялись бы", оставить только обоснование про `trackPageview()`
+- [x] снять `export` с `isAnalyticsEnabled` в `analytics.ts`, если после удаления `reportWebVitals.ts` у неё не остаётся кросс-файловых потребителей (по прецеденту AGENTS.md 2.5.3 — "снимать лишний `export`, а не заводить knip-ignore") — **не снят**: `analytics.test.ts` (отдельный файл) по-прежнему импортирует `isAnalyticsEnabled` напрямую из `./analytics` для собственного `describe('isAnalyticsEnabled', ...)` блока — это кросс-файловый потребитель, условие чекбокса не выполняется, `export` оставлен
+- [x] `pnpm remove web-vitals`
+- [x] удалить запись `web-vitals` из `package.json`'s `"size-limit"` массива
+- [x] удалить `{ name: 'web-vitals', test: /node_modules\/web-vitals\// }` группу из `vite.config.ts`'s `codeSplitting.groups`
+- [x] обновить `providers.test.tsx` — переименовать `it('вызывает initAnalytics и reportWebVitals...')` в `it('вызывает initAnalytics...')`, убрать `reportWebVitals` из ассертов и из `vi.mock('@shared/lib', ...)`
+- [x] прогнать `make test` и `make typecheck` — не должно остаться dangling-импортов на `reportWebVitals`/`web-vitals`
+- [x] прогнать тесты — должны пройти перед Task 6
 
 ### Task 6: Раннбук для Plausible Custom Goals (конверсия по flows)
 

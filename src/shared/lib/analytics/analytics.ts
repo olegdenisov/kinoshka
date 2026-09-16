@@ -28,7 +28,7 @@ export const initAnalytics = (): void => {
   // Критично: стаб ставится СИНХРОННО, до вставки <script> в DOM. Динамически вставленный
   // <script> исполняется асинхронно независимо от defer, поэтому без стаба window.plausible
   // не определена ещё несколько миллисекунд после initAnalytics() — trackPageview() из
-  // AppLayout's mount-эффекта и ранние web-vitals (LCP) терялись бы почти на каждой сессии.
+  // AppLayout's mount-эффекта терялся бы почти на каждой сессии.
   window.plausible = window.plausible || plausibleStub
 
   // Защита от повторного вызова (напр. HMR) — не вставлять второй <script>.
