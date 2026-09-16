@@ -94,3 +94,7 @@ import { Header } from '@widgets/header/ui/Header' // ✗
 - **Стили:** CSS Modules (`ComponentName.module.css`), hover-состояния через `:hover`, не через `useState`
 - **Иконки:** SVG-спрайт `public/icons.svg`; ссылка через `<use href="/icons.svg#<id>" />`
 - **Шрифты:** Instrument Serif, Instrument Sans, JetBrains Mono (Google Fonts, загружаются в `index.html`) — новые шрифты не добавлять
+
+## Sentry MCP
+
+В корне репозитория закоммичен `.mcp.json` с project-scoped Sentry MCP-сервером (`https://mcp.sentry.dev/mcp`). После клонирования репозитория Claude Code предложит авторизовать этот MCP-сервер через OAuth — подтвердите авторизацию, чтобы получить доступ к Sentry-инструментам (issues, alerts, dashboards) прямо из сессии. Опционально можно локально (не в коммите) сузить `url` до `https://mcp.sentry.dev/mcp/mycomp-ey/kinoshka`, ограничив MCP-сервер конкретными org/project.

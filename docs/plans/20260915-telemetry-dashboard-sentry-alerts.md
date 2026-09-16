@@ -211,10 +211,10 @@ Roadmap-пункт `2.5.7` (`plans/roadmap.md`) требует три вещи:
 - Modify: `README.md`
 - Modify: `tsconfig.node.json` (добавить `mcp-config.test.ts` в `include`)
 
-- [ ] создать `.mcp.json` в корне репо с `mcpServers.sentry = { type: 'http', url: 'https://mcp.sentry.dev/mcp' }`
-- [ ] написать `mcp-config.test.ts` — читает `.mcp.json`, парсит JSON, проверяет `mcpServers.sentry.type === 'http'` и `mcpServers.sentry.url.startsWith('https://mcp.sentry.dev/mcp')` (не точное равенство — переживает локальный org/project-скоуп из Post-Completion)
-- [ ] добавить в `README.md` короткую заметку: после клонирования репозитория Claude Code предложит авторизовать Sentry MCP через OAuth; опционально можно локально сузить URL до `/mycomp-ey/kinoshka`, не коммитя это изменение
-- [ ] прогнать тесты — должны пройти перед Task 5
+- [x] создать `.mcp.json` в корне репо с `mcpServers.sentry = { type: 'http', url: 'https://mcp.sentry.dev/mcp' }`
+- [x] написать `mcp-config.test.ts` — читает `.mcp.json`, парсит JSON, проверяет `mcpServers.sentry.type === 'http'` и `mcpServers.sentry.url.startsWith('https://mcp.sentry.dev/mcp')` (не точное равенство — переживает локальный org/project-скоуп из Post-Completion)
+- [x] добавить в `README.md` короткую заметку: после клонирования репозитория Claude Code предложит авторизовать Sentry MCP через OAuth; опционально можно локально сузить URL до `/mycomp-ey/kinoshka`, не коммитя это изменение
+- [x] прогнать тесты — должны пройти перед Task 5
 
 ### Task 5: Снести Web Vitals→Plausible пайплайн (заменён Sentry Performance)
 

@@ -32,6 +32,7 @@
     "sentry-telemetry.config.ts",
     "sentry-telemetry.config.test.ts",
     "provision-sentry-telemetry.ts",
-    "provision-sentry-telemetry.test.ts"
+    "provision-sentry-telemetry.test.ts",
+    "mcp-config.test.ts"
   ]
 }
