@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { Suspense, useEffect } from 'react'
 import {
   Outlet,
+  ScrollRestoration,
   useLocation,
   useMatch,
   useNavigate,
@@ -228,6 +229,13 @@ export const AppLayout = () => {
       </Suspense>
 
       {isMobile && config && <BottomNav active={config.active} />}
+
+      {/* Без этого React Router не сбрасывает/не восстанавливает scrollTop при клиентской
+      навигации — баг: прокрутка вниз на /movie/:id, переход на /, открытие другого фильма
+      наследовало прежнюю позицию скролла вместо сброса к началу страницы. `ScrollRestoration`
+      по умолчанию ключуется по `location.key`: сбрасывает скролл на новых записях истории
+      (обычная навигация вперёд) и восстанавливает сохранённую позицию на back/forward. */}
+      <ScrollRestoration />
     </>
   )
 }
