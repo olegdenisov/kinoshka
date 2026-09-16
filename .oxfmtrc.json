@@ -9,5 +9,8 @@
   "bracketSpacing": true,
   "arrowParens": "avoid",
   "sortImports": { "newlinesBetween": true },
-  "ignorePatterns": ["src/shared/api/*.gen.ts"]
+  "ignorePatterns": [
+    "src/shared/api/*.gen.ts",
+    "docs/plans/completed/20260827-mobile-first-adaptive-layout.md"
+  ]
 }

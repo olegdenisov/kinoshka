@@ -54,11 +54,11 @@
     пишет по явному сабмиту, см. Технические детали).
 - **Найденные паттерны:**
   - `FilterState.type` использует ключи в единственном числе `'movie' |
-    'series' | 'anime'` (см. `TYPE_MAP` в
+'series' | 'anime'` (см. `TYPE_MAP` в
     `src/features/catalog-filter/lib/filtersToParams.ts`), что совпадает с
     чипами типа в `SearchMobile.tsx` (`{ key: 'movie', label: 'Movies' }` и
     т.д., строка ~487). Текущие ключи `CHIPS` в хиро (`'all' | 'movies' |
-    'series' | 'anime'`) с этим не совпадают и должны быть приведены к
+'series' | 'anime'`) с этим не совпадают и должны быть приведены к
     единому контракту, а не получить отдельную таблицу маппинга.
   - `src/widgets/header/ui/Header/Header.test.tsx` задаёт паттерн проверки
     реальной навигации: рендер внутри `MemoryRouter`, монтирование
@@ -83,7 +83,7 @@
     которая раньше не встречалась ни в одном тесте.
   - **Несогласованность min-length между `Header` и хиро (критично для
     корректности):** `Header` пишет `?q` только при `trimmed.length >=
-    QUERY_MIN_LENGTH` (константа `= 2`,
+QUERY_MIN_LENGTH` (константа `= 2`,
     `src/widgets/header/ui/Header/Header.tsx:12`). Если хиро при сабмите
     ставит `q` при любом непустом значении (без этого же гейта), однобуквенный
     запрос типа `/search?q=d` после навигации тут же попадает на `/search`,
@@ -148,7 +148,7 @@
 
 - Привести ключи `CHIPS` к контракту `FilterState.type`: `null` для
   "Everything" (соответствует "без фильтра типа" — `FilterState.type:
-  string | null`), `'movie'`, `'series'`, `'anime'` для остальных.
+string | null`), `'movie'`, `'series'`, `'anime'` для остальных.
   Тип состояния `activeFilter` меняется на `FilterState['type']` (было
   `string`), начальное значение `null`. React-`key` в `CHIPS.map` переносится
   на `c.label` (уникален и стабилен), а не `c.key`, — иначе `null`-ключ
@@ -241,18 +241,18 @@
 
 - [x] В `Header.tsx` добавить `export` к `QUERY_MIN_LENGTH`; в
       `src/widgets/header/index.ts` добавить `export { QUERY_MIN_LENGTH }
-      from './ui/Header'` (также потребовалось прокинуть реэкспорт через
+from './ui/Header'` (также потребовалось прокинуть реэкспорт через
       промежуточный `src/widgets/header/ui/Header/index.tsx`, который до
       этого реэкспортировал только `Header` — иначе `QUERY_MIN_LENGTH`
       приходил `undefined` через публичный API виджета)
 - [x] В `src/features/catalog-filter/index.ts` добавить `export {
-      EMPTY_FILTERS } from './lib/searchParams'`
+EMPTY_FILTERS } from './lib/searchParams'`
 - [x] Импортировать `filtersToSearchParams`, `EMPTY_FILTERS` из
       `@features/catalog-filter` и `QUERY_MIN_LENGTH` из `@widgets/header` в
       `HeroSection.tsx`
 - [x] Обновить `CHIPS` до `{ key: null, label: 'Everything' }, { key:
-      'movie', label: 'Movies' }, { key: 'series', label: 'Series' }, {
-      key: 'anime', label: 'Anime' }`; поменять состояние `activeFilter` на
+'movie', label: 'Movies' }, { key: 'series', label: 'Series' }, {
+key: 'anime', label: 'Anime' }`; поменять состояние `activeFilter` на
       `useState<FilterState['type']>(null)`; в `CHIPS.map` использовать
       `key={c.label}` вместо `key={c.key}` (значение `key` теперь может
       быть `null`)
@@ -296,7 +296,7 @@
       `mockCatalog([catalogDoc(...)])` (`onUnhandledRequest: 'error'` в MSW
       требует мока перед рендером)
 - [x] Ассерт: `within(document.querySelector('aside')!).getByRole('button',
-      { name: /^Movies/ })` — `className` матчит `/radioRowActive/`
+{ name: /^Movies/ })` — `className` матчит `/radioRowActive/`
       (прецедент class-based ассерта на активный элемент —
       `SearchDesktop.test.tsx:436`, `SearchDesktop.test.tsx:545` для
       обращения к кнопке типа в сайдбаре)
@@ -311,7 +311,7 @@
       переключатель типа реально управляют навигацией на `/search`) —
       подтверждено чтением `HeroSection.tsx`: `handleSubmit` собирает
       `URLSearchParams` через `filtersToSearchParams({ ...EMPTY_FILTERS,
-      type: activeFilter })`, гейтит `q` через `QUERY_MIN_LENGTH`, вызывает
+type: activeFilter })`, гейтит `q` через `QUERY_MIN_LENGTH`, вызывает
       `navigate`; оба обработчика (`onKeyDown` Enter, `onClick` кнопки
       Search) привязаны к `handleSubmit`
 - [x] Проверить граничные случаи (пустой запрос, тип не выбран, оба
