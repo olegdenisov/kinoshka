@@ -1,0 +1,158 @@
+name: Lighthouse CI
+
+# Отдельный workflow (не job внутри ci.yml), тот же паттерн, что и e2e.yml —
+# `on:` изолирован от общего pull_request-триггера ci.yml, иначе `types:
+# [labeled]` там перезапускал бы lint/typecheck/test/build на каждое
+# навешивание лейбла. Гоняем только по ручному запросу через лейбл
+# `run-lighthouse` — прогон бьёт по живому demo-API (см. AGENTS.md) через
+# реальные страницы Vercel preview и делит квоту 200 запросов/день с E2E.
+on:
+  pull_request:
+    types: [labeled]
+
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    # Срабатывает именно на добавление лейбла run-lighthouse (не на любой
+    # label-event) и не на форк-PR — vercel.json's ignoreCommand всё равно не
+    # создаст preview-деплой для чужого коммита (см. план, Post-Completion),
+    # и на форк-PR secrets.GITHUB_TOKEN имеет урезанные права.
+    if: github.event.label.name == 'run-lighthouse' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+      deployments: read
+      statuses: read
+    steps:
+      # Нет setup-node/pnpm install — намеренно: treosh/lighthouse-ci-action
+      # вендорит собственный @lhci/cli, ничего из package.json ему не нужно
+      # (см. план, Context).
+      - uses: actions/checkout@v7
+        with:
+          # github.event.pull_request.head.sha, а не github.ref — на
+          # pull_request:labeled github.ref указывает на merge-ref PR, не на
+          # ветку, к которой добавили лейбл (тот же прецедент, что в e2e.yml).
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Wait for Vercel preview
+        id: wait
+        # v1.3.3 — запинена явно, не floating-тег v1: v1 у этого экшена
+        # исторически отстаёт от последнего патча (проверено при подготовке
+        # этой задачи — v1 резолвится в более старый коммит, чем v1.3.3).
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          max_timeout: 300
+          # Раскомментировать только если реальный прогон на тестовом PR
+          # (см. план, Post-Completion / Ручная проверка) покажет, что
+          # preview-окружение защищено Vercel Authentication / Deployment
+          # Protection — без визита в Vercel dashboard, недоступного в этом
+          # автономном прогоне, это не подтверждено ни в ту, ни в другую
+          # сторону (см. план, Task 4, первые два пункта).
+          # vercel_protection_bypass_header: ${{ secrets.VERCEL_PROTECTION_BYPASS }}
+          # — этот шаг сам делает HTTP-проверку готовности preview ДО
+          # Lighthouse, и без bypass'а именно здесь упадёт/зависнет по
+          # таймауту раньше, чем дело дойдёт до lhci-шага (см. ревизия #3
+          # плана) — это отдельная точка конфигурации, не заменяется
+          # extraHeaders у Lighthouse ниже.
+
+      - name: Run Lighthouse CI
+        id: lhci
+        # continue-on-error, чтобы шаг комментария выполнился и при упавших
+        # assertion'ах — финальный шаг ниже фейлит job по steps.lhci.outcome.
+        continue-on-error: true
+        # v12 (сейчас резолвится в 12.6.2, последний релиз на момент
+        # подготовки задачи) — floating major-тег, тот же принцип пиновки,
+        # что уже принят в репо для официальных экшенов (actions/checkout@v7
+        # и т.п., см. e2e.yml).
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            ${{ steps.wait.outputs.url }}
+            ${{ steps.wait.outputs.url }}/search
+            ${{ steps.wait.outputs.url }}/movie/666
+          configPath: ./lighthouserc.cjs
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Comment PR with results
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const marker = '<!-- lighthouse-ci-comment -->'
+
+            const links = process.env.LHCI_LINKS
+              ? JSON.parse(process.env.LHCI_LINKS)
+              : null
+            const results = process.env.LHCI_ASSERTION_RESULTS
+              ? JSON.parse(process.env.LHCI_ASSERTION_RESULTS)
+              : null
+
+            let body = `${marker}\n## Lighthouse CI\n\n`
+
+            if (!links && !results) {
+              // lhci упал ещё на сборе данных (например 401 от Deployment
+              // Protection, сетевая ошибка ожидания preview) — а не на
+              // assertion'ах. Пустая таблица тут была бы вводящей в
+              // заблуждение — явно говорим, что прогон не дошёл до сравнения
+              // с порогами.
+              body +=
+                'Lighthouse run failed before assertions ran (no report links or assertion results were produced). Check the job logs for details.\n'
+            } else {
+              if (links) {
+                body += '### Reports\n\n'
+                for (const [url, link] of Object.entries(links)) {
+                  body += `- [${url}](${link})\n`
+                }
+                body += '\n'
+              }
+
+              if (results && results.length > 0) {
+                body += '### Assertion results\n\n'
+                body += '| URL | Audit | Expected | Actual |\n'
+                body += '| --- | --- | --- | --- |\n'
+                for (const r of results) {
+                  body += `| ${r.url} | ${r.auditProperty ?? r.auditId} | ${r.operator} ${r.expected} | ${r.actual} |\n`
+                }
+              } else {
+                body += 'All assertions passed.\n'
+              }
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+
+            const existing = comments.find((c) => c.body?.includes(marker))
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              })
+            }
+        env:
+          LHCI_LINKS: ${{ steps.lhci.outputs.links }}
+          LHCI_ASSERTION_RESULTS: ${{ steps.lhci.outputs.assertionResults }}
+
+      - name: Fail on Lighthouse assertion failure
+        # outcome (не conclusion) остаётся 'failure' при continue-on-error:
+        # true — conclusion станет 'success' и не заметит провал.
+        if: steps.lhci.outcome == 'failure'
+        run: exit 1

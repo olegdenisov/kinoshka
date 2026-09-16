@@ -32,16 +32,27 @@ module.exports = {
         'categories:accessibility': ['error', { minScore: 0.95 }],
         'categories:best-practices': ['error', { minScore: 0.9 }],
         // Нет 'categories:seo' — намеренно. Vercel помечает preview-деплои
-        // X-Robots-Tag: noindex, что гарантированно валит Lighthouse-аудит
-        // is-crawlable (часть категории SEO) на любом preview независимо от контента
-        // страницы. Категорийный 'categories:seo': ['error', {minScore: 0.95}] здесь не
-        // работает даже с 'is-crawlable': 'off' рядом — LHCI-ассерт на конкретный аудит
-        // выключает только ПРОВЕРКУ этого аудита, а не пересчитывает сам
-        // categories.seo.score, который Lighthouse считает внутри себя по весам всех
-        // аудитов категории (включая проваленный is-crawlable с нулём). Правильная
-        // замена — набор per-audit ассертов по всем SEO-аудитам категории кроме
-        // is-crawlable — заводится в Task 4, после подтверждения `curl -I` реального
-        // preview-URL, что Vercel действительно шлёт этот заголовок.
+        // X-Robots-Tag: noindex (подтверждено ревью #2/#3 как задокументированное
+        // платформенное поведение, см. план Task 4), что гарантированно валит
+        // Lighthouse-аудит is-crawlable (часть категории SEO) на любом preview
+        // независимо от контента страницы. Категорийный 'categories:seo':
+        // ['error', {minScore: 0.95}] здесь не работает даже с 'is-crawlable':
+        // ['off', {}] рядом — LHCI-ассерт на конкретный аудит выключает только
+        // ПРОВЕРКУ этого аудита, а не пересчитывает сам categories.seo.score,
+        // который Lighthouse считает внутри себя по весам всех аудитов категории
+        // (включая проваленный is-crawlable с нулём) — агрегат всё равно не
+        // дотянет до 0.95. Замена — явные per-audit ассерты по всем остальным
+        // SEO-аудитам категории (всё, что реально зависит от приложения) плюс
+        // явное 'off' на is-crawlable (единственный платформенный false positive):
+        'document-title': 'error',
+        'meta-description': 'error',
+        'http-status-code': 'error',
+        'link-text': 'error',
+        'crawlable-anchors': 'error',
+        'robots-txt': 'error',
+        canonical: 'error',
+        viewport: 'error',
+        'is-crawlable': ['off', {}],
       },
     },
   },
