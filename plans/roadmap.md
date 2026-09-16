@@ -546,7 +546,7 @@
 - [ ] Memoized derived atoms (явная демонстрация — `plans/main.md` 3.9).
 - [ ] README ветки.
 
-**Как лучше:** Reatom v3 — granular reactivity, не пытайся повторить redux-паттерны.
+**Как лучше:** Reatom — granular reactivity, не пытайся повторить redux-паттерны.
 
 **📚 Refs:**
 
