@@ -39,3 +39,6 @@ playwright/.cache/
 *-documentation-json.json
 
 plans/problems.md
+
+# Lighthouse CI local reports (make lighthouse)
+.lighthouseci/

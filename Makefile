@@ -1,4 +1,4 @@
-.PHONY: dev build typecheck build-only lint format format-check preview install hooks clean check generate-api test test-watch coverage audit analyze size knip e2e e2e-install sentry-telemetry
+.PHONY: dev build typecheck build-only lint format format-check preview install hooks clean check generate-api test test-watch coverage audit analyze size knip e2e e2e-install sentry-telemetry lighthouse
 
 dev:
 	pnpm dev
@@ -78,3 +78,19 @@ e2e-install:
 # "из коробки" — прежде чем полагаться на её результат, см. три пути решения в Post-Completion.
 sentry-telemetry:
 	node --env-file-if-exists=.env.local provision-sentry-telemetry.ts
+
+# Локальный dev-smoke-луп Lighthouse CI (не авторитетный источник порогов — см.
+# lighthouserc.cjs и AGENTS.md/docs/plans/20260915-lighthouse-ci.md). Требует
+# системный Chrome (lhci запускает его через chrome-launcher) — на машине только
+# с Playwright-бандлованным Chromium упадёт с NO_USABLE_CHROME; это известное
+# предусловие, не решается этим таргетом. @lhci/cli намеренно не в
+# package.json'а devDependencies (см. план) — версия запинена прямо здесь.
+lighthouse: build-only
+	pnpm dlx @lhci/cli@0.15.1 autorun --config=./lighthouserc.cjs \
+	  --upload.target=filesystem \
+	  --upload.outputDir=.lighthouseci \
+	  --collect.startServerCommand='pnpm exec vite preview --port 4173 --strictPort' \
+	  --collect.startServerReadyPattern='Local:' \
+	  --collect.url=http://localhost:4173 \
+	  --collect.url=http://localhost:4173/search \
+	  --collect.url=http://localhost:4173/movie/666
