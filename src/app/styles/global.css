@@ -65,14 +65,23 @@
   --text-primary: #221a16;
   --text-secondary: #5c4f49;
   --text-muted: #61544e;
-  --text-faint: #b0a29a;
+  /* было #b0a29a — Lighthouse a11y (axe color-contrast, serious) на light-теме
+     нашёл контраст 2.0-2.24:1 на --bg-primary/--bg-secondary при пороге 4.5:1
+     (footer copyright, search-hint, radio-count, pagination count-text).
+     #6f6259 даёт ~4.8-5.3:1 на обоих фонах с запасом — см. docs/plans/20260915-lighthouse-ci.md, Task 3 */
+  --text-faint: #6f6259;
   --text-disabled: #d3c7bf;
 
-  --accent-warm: #9c5a30;
-  --accent-warm-hover: #7f4726;
-  --accent-warm-tint: rgba(156, 90, 48, 0.12);
-  --accent-warm-soft: rgba(156, 90, 48, 0.15);
-  --accent-warm-border: rgba(156, 90, 48, 0.35);
+  /* было #9c5a30/#7f4726 — тот же color-contrast-провал на активном NavPill
+     (4.16:1 на composited --accent-warm-tint/-soft, 4.37:1 на прямом
+     --bg-secondary) при пороге 4.5:1. #864c28 даёт ~4.7-5.6:1 с запасом;
+     -hover и rgba-производные (tint/soft/border/glow/shadow) пересчитаны от
+     того же RGB-триплета для консистентности — см. Task 3 плана выше */
+  --accent-warm: #864c28;
+  --accent-warm-hover: #6d3c20;
+  --accent-warm-tint: rgba(134, 76, 40, 0.12);
+  --accent-warm-soft: rgba(134, 76, 40, 0.15);
+  --accent-warm-border: rgba(134, 76, 40, 0.35);
   --accent-cool: #1f7a8c;
   --accent-rating: #89642b;
 
@@ -92,8 +101,8 @@
   --bg-glass-secondary: rgba(238, 231, 224, 0.6);
   --bg-glass-secondary-strong: rgba(238, 231, 224, 0.7);
 
-  --accent-warm-glow: rgba(156, 90, 48, 0.18);
-  --accent-warm-shadow: rgba(156, 90, 48, 0.3);
+  --accent-warm-glow: rgba(134, 76, 40, 0.18);
+  --accent-warm-shadow: rgba(134, 76, 40, 0.3);
   --accent-rating-border: rgba(184, 134, 58, 0.25);
 
   --shadow-color: rgba(35, 27, 23, 0.18);

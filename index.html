@@ -4,13 +4,39 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Lighthouse SEO's meta-description audit — не связано с is-crawlable/
+         X-Robots-Tag (см. AGENTS.md, Lighthouse CI); отсутствовало, найдено
+         при discovery этого плана -->
+    <meta
+      name="description"
+      content="Kinoshka is a movie catalog app — browse trending and top-rated titles, search and filter by genre, year, and rating, and explore detailed movie pages with cast, crew, and media."
+    />
     <title>kinoshka</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- preconnect к живому API — первый рейл на CSR-главной ждёт этот ответ
+         для LCP; connect-src в vercel.json уже разрешает этот origin, так что
+         сам resource hint не требует правок CSP (см. AGENTS.md, Lighthouse CI
+         Task 3) -->
+    <link rel="preconnect" href="https://api.poiskkino.dev" crossorigin />
+    <!-- media="print" + отложенный своп на "all" (public/font-swap.js) убирает
+         Google Fonts CSS из цепочки, блокирующей первый рендер (Lighthouse
+         render-blocking-resources — см. Lighthouse CI Task 3). Своп — внешний
+         same-origin файл, не инлайн-скрипт: script-src в vercel.json уже
+         разрешает 'self' без изменения CSP-хэша (см. AGENTS.md, CSP headers) -->
     <link
+      id="gfonts-stylesheet"
       href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
+      media="print"
     />
+    <script src="/font-swap.js" defer></script>
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <script>
       ;(function () {
         try {
