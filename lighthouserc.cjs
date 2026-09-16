@@ -41,9 +41,26 @@ module.exports = {
         // ПРОВЕРКУ этого аудита, а не пересчитывает сам categories.seo.score,
         // который Lighthouse считает внутри себя по весам всех аудитов категории
         // (включая проваленный is-crawlable с нулём) — агрегат всё равно не
-        // дотянет до 0.95. Замена — явные per-audit ассерты по всем остальным
-        // SEO-аудитам категории (всё, что реально зависит от приложения) плюс
-        // явное 'off' на is-crawlable (единственный платформенный false positive):
+        // дотянет до 0.95. Замена — явные per-audit ассерты по остальным
+        // взвешенным SEO-аудитам категории (всё, что реально зависит от
+        // приложения) плюс явное 'off' на is-crawlable (единственный
+        // платформенный false positive). Список сверен построчным чтением
+        // установленного lighthouse@12.6.1's core/config/default-config.js
+        // (categories.seo.auditRefs), а не по памяти:
+        //   is-crawlable (weight 93/23), document-title (1), meta-description (1),
+        //   http-status-code (1), link-text (1), crawlable-anchors (1),
+        //   robots-txt (1), image-alt (1), hreflang (1), canonical (1),
+        //   structured-data (weight 0, manual-only — не гейтится).
+        // 'hreflang' — реальный взвешенный SEO-аудит (weight 1); был пропущен в
+        // ревизии #3, восполнено (обнаружено code review). 'image-alt' — тоже
+        // взвешенный SEO-аудит (weight 1), но НЕ продублирован здесь: тот же
+        // аудит входит и в категорию accessibility с weight 10 (см. default-config.js),
+        // уже гейтится через 'categories:accessibility': error/0.95 выше — отдельный
+        // per-audit assert не добавляет реальной защиты. 'viewport' сюда
+        // намеренно НЕ включён (в отличие от более ранней ревизии) — по факту
+        // это не аудит категории SEO вовсе: в lighthouse@12.6.1 viewport числится
+        // только в best-practices (weight 1) и в performance-diagnostics
+        // (weight 0), уже гейтится через 'categories:best-practices': error/0.9.
         'document-title': 'error',
         'meta-description': 'error',
         'http-status-code': 'error',
@@ -51,7 +68,7 @@ module.exports = {
         'crawlable-anchors': 'error',
         'robots-txt': 'error',
         canonical: 'error',
-        viewport: 'error',
+        hreflang: 'error',
         'is-crawlable': ['off', {}],
       },
     },

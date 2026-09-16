@@ -33,8 +33,9 @@ make test-watch       # тесты в watch-режиме
 make coverage         # отчёт покрытия
 make e2e              # E2E-тесты (Playwright) против production preview-сборки
 make e2e-install      # установить браузеры Playwright (chromium + webkit)
+make lighthouse       # Lighthouse CI dev-smoke локально (не авторитетный источник порогов, см. AGENTS.md)
 make generate-api     # регенерировать API-клиент из OpenAPI-спецификации
-make check            # lint + build (полная проверка)
+make check            # format-check + lint + build (полная проверка)
 make hooks            # установить git-хуки husky
 make audit            # pnpm audit (prod-зависимости, high severity)
 make analyze          # визуализация состава бандла (dist/stats.html)

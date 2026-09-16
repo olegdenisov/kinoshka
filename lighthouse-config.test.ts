@@ -6,19 +6,16 @@ import { describe, expect, it } from 'vitest'
 // (в отличие от того теста, пересчитывающего SHA-256 из index.html), а хардкодит те же
 // пороги, что и сам конфиг — он ловит «забыли обновить тест при правке конфига», не «порог
 // сам по себе неверный» (см. план, Testing Strategy).
-// Task 4 добавило SEO per-audit ассерты — часть значений теперь плоская строка
-// ('error'), не только [severity, options]-кортеж (см. Technical Details).
-type LighthouseAssertions = Record<
-  string,
-  string | [string, Record<string, unknown>]
->
+// Один плоский тип вместо двух (LighthouseAssertions/LighthouseRc) — минимально необходимая
+// типизация для .cjs, загруженного через createRequire (см. ниже); значения ассертов — либо
+// плоская строка ('error'/'off', per-audit SEO-замена из Task 4), либо
+// [severity, options]-кортеж (категорийные ассерты, см. Technical Details).
 type LighthouseRc = {
   ci: {
-    collect: {
-      numberOfRuns: number
-      settings: { preset: string }
+    collect: { numberOfRuns: number; settings: { preset: string } }
+    assert: {
+      assertions: Record<string, string | [string, Record<string, unknown>]>
     }
-    assert: { assertions: LighthouseAssertions }
   }
 }
 
@@ -33,20 +30,18 @@ const lighthouserc = require('./lighthouserc.cjs') as LighthouseRc
 
 // Категорийные ассерты (categories:*) всегда [severity, options] в этом конфиге,
 // в отличие от плоских per-audit SEO-ассертов ('error' без options) — этот хелпер
-// сужает union-тип LighthouseAssertions[string] обратно к кортежу в местах, где
-// это заведомо так.
-const asCategoryAssertion = (assertion: LighthouseAssertions[string]) =>
-  assertion as [string, Record<string, unknown>]
+// сужает union-тип обратно к кортежу в местах, где это заведомо так.
+const asCategoryAssertion = (
+  assertion: LighthouseRc['ci']['assert']['assertions'][string],
+) => assertion as [string, Record<string, unknown>]
 
 describe('lighthouserc.cjs', () => {
   it('preset: "desktop" — ключевое антифлейк-решение, случайное удаление не должно проходить незамеченным', () => {
     expect(lighthouserc.ci.collect.settings.preset).toBe('desktop')
   })
 
-  it('numberOfRuns — целое число ≥ 1', () => {
-    const { numberOfRuns } = lighthouserc.ci.collect
-    expect(Number.isInteger(numberOfRuns)).toBe(true)
-    expect(numberOfRuns).toBeGreaterThanOrEqual(1)
+  it('numberOfRuns — ровно 1 (квота demo-тарифа 200 запросов/сутки, см. Context/Post-Completion)', () => {
+    expect(lighthouserc.ci.collect.numberOfRuns).toBe(1)
   })
 
   it('categories:performance — warn (временно, см. Post-Completion), с порогом 0.9', () => {
@@ -85,9 +80,17 @@ describe('lighthouserc.cjs', () => {
     'crawlable-anchors',
     'robots-txt',
     'canonical',
-    'viewport',
+    'hreflang',
   ])('SEO-аудит %s — error (per-audit замена categories:seo)', audit => {
     expect(lighthouserc.ci.assert.assertions[audit]).toBe('error')
+  })
+
+  it('viewport НЕ ассертится здесь — это не SEO-аудит в lighthouse@12.6.1 (best-practices/performance-diagnostics), уже гейтится через categories:best-practices', () => {
+    expect(lighthouserc.ci.assert.assertions.viewport).toBeUndefined()
+  })
+
+  it('image-alt НЕ продублирован per-audit-ассертом — тот же аудит уже входит в categories:accessibility (weight 10)', () => {
+    expect(lighthouserc.ci.assert.assertions['image-alt']).toBeUndefined()
   })
 
   it('is-crawlable — явно off (единственный платформенный false positive на Vercel preview, X-Robots-Tag: noindex)', () => {
