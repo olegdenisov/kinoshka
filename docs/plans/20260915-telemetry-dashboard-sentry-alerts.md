@@ -140,13 +140,13 @@ Roadmap-пункт `2.5.7` (`plans/roadmap.md`) требует три вещи:
 - Modify: `src/app/providers.tsx`
 - Modify: `src/app/providers.test.tsx`
 
-- [ ] создать `src/app/sentry-bootstrap.ts`: импортирует `initSentry` из `./sentry` и вызывает его на верхнем уровне модуля, с WHY-комментарием, объясняющим требование порядка (см. Technical Details/Context — реальный тихий баг в `reactrouter-compat-utils`, а не гипотетический)
-- [ ] добавить `import './app/sentry-bootstrap'` первой строкой в `src/main.tsx`, раньше `import { Providers } from './app/providers'`, с WHY-комментарием прямо у этой строки (следующий редактор может переставить импорты не глядя)
-- [ ] убрать `initSentry` импорт/вызов из `src/app/providers.tsx` (переехал в `sentry-bootstrap.ts`) — `initAnalytics()` остаётся
-- [ ] написать тест на `sentry-bootstrap.ts`: мокнуть `./sentry`, убедиться, что `initSentry` вызван ровно один раз при импорте модуля
-- [ ] написать `src/main.test.ts`: прочитать исходный текст `src/main.tsx` (`fs.readFileSync`), убедиться, что первый `import`-путь в файле — `'./app/sentry-bootstrap'`
-- [ ] обновить `providers.test.tsx` — убрать тест/мок `initSentry` (он больше не импортируется из `providers.tsx`)
-- [ ] прогнать тесты — должны пройти перед Task 2b
+- [x] создать `src/app/sentry-bootstrap.ts`: импортирует `initSentry` из `./sentry` и вызывает его на верхнем уровне модуля, с WHY-комментарием, объясняющим требование порядка (см. Technical Details/Context — реальный тихий баг в `reactrouter-compat-utils`, а не гипотетический)
+- [x] добавить `import './app/sentry-bootstrap'` первой строкой в `src/main.tsx`, раньше `import { Providers } from './app/providers'`, с WHY-комментарием прямо у этой строки (следующий редактор может переставить импорты не глядя)
+- [x] убрать `initSentry` импорт/вызов из `src/app/providers.tsx` (переехал в `sentry-bootstrap.ts`) — `initAnalytics()` остаётся
+- [x] написать тест на `sentry-bootstrap.ts`: мокнуть `./sentry`, убедиться, что `initSentry` вызван ровно один раз при импорте модуля
+- [x] написать `src/main.test.ts`: прочитать исходный текст `src/main.tsx` (`fs.readFileSync`), убедиться, что первый `import`-путь в файле — `'./app/sentry-bootstrap'`
+- [x] обновить `providers.test.tsx` — убрать тест/мок `initSentry` (он больше не импортируется из `providers.tsx`)
+- [x] прогнать тесты — должны пройти перед Task 2b
 
 ### Task 2b: Включить Sentry Performance tracing (integrations + router wrap)
 
