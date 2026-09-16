@@ -13,6 +13,8 @@ Kinoshka — CSR SPA, поэтому любая навигация Lighthouse п
 3. `lighthouse-config.test.ts`'s эскиз читал `require('../lighthouserc.cjs')`, а файл теста лежит в корне (как и конфиг) — должно быть `./lighthouserc.cjs`.
 4. Утверждение в Context «`e2e/movie-detail.spec.ts` уже использует id `666`» было неверным — этот спек ходит по первой карточке с главной (`firstMovieCard`, динамический id) и использует `9999999` для 404-кейса; `666` нигде под `e2e/` не встречается. Единственное упоминание `666` в репозитории — одноразовый ручной `curl`/`GET` во время CSP-задачи (см. AGENTS.md), не закреплённая тестовая фикстура.
 
+**Ревизия #3 (внешнее ревью, codex)** нашла, что фикс из ревизии №2 для находки №1 сам был неверным: `'is-crawlable': ['off', {}]` рядом с `'categories:seo': ['error', {minScore: 0.95}]` не решает проблему — LHCI-ассерт на конкретный аудит выключает только проверку этого аудита, а не пересчитывает `categories.seo.score`, который Lighthouse считает сам по весам всех аудитов категории; проваленный `is-crawlable` с нулём остаётся в агрегате, и категорийный порог 0.95 всё равно не достигается. Исправлено — вместо категорийного `categories:seo`-ассерта заводится набор явных per-audit ассертов (все SEO-аудиты категории кроме `is-crawlable`), см. Task 4/Technical Details. Заодно нашла, что `wait-for-vercel-preview` сам делает HTTP-проверку готовности preview до Lighthouse — если preview защищён Deployment Protection, bypass-заголовок нужен и в его собственных входах (`vercel_protection_bypass_header`/`vercel_password`), не только в Lighthouse-конфиге (см. Task 4). И третье — `lighthouse-config.test.ts` не проверял `ci.collect.settings.preset === 'desktop'`, ключевое антифлейк-решение, которое могло быть случайно удалено незамеченным — добавлен отдельный ассерт.
+
 Всё это исправлено ниже.
 
 ## Context (from discovery)
@@ -20,7 +22,7 @@ Kinoshka — CSR SPA, поэтому любая навигация Lighthouse п
 - **CI-инфраструктура**: `.github/workflows/{ci,e2e,codeql}.yml`. `e2e.yml` — отдельный файл, лейбл-триггер `run-e2e`, исключает форк-PR, чекаутит `github.event.pull_request.head.sha`. Тот же паттерн — под лейблом `run-lighthouse`.
 - **`permissions`-блок** не подразумевается по умолчанию в этом репо: `codeql.yml` явно объявляет свой набор. `lighthouse.yml` должен сделать то же самое (`pull-requests: write` для комментария, `deployments`/`statuses: read` для ожидания Vercel-деплоя).
 - **Деплой**: Vercel, `vercel.json`'s `ignoreCommand` **ограничивает preview-деплои коммитами автора `olegdenisov`** — на PR от бота/другого автора preview не создастся вообще. Job должен ждать деплой через GitHub Deployments API и корректно фейлиться по таймауту, если его не будет (см. Post-Completion). Это предполагает, что Vercel вообще создаёт GitHub Deployments для этого репо (обычное поведение официальной GitHub-интеграции Vercel, не CLI-деплоя) — проверяется вместе с Deployment Protection одним визитом в дашборд (Task 4).
-- **Vercel добавляет `X-Robots-Tag: noindex` на все preview-деплои** (стандартное поведение платформы, не специфика этого проекта) — Lighthouse's `is-crawlable`-аудит (SEO) читает этот заголовок и провалит его на любом preview независимо от контента страницы. Это нужно подтвердить `curl -I` по реальному preview и явно исключить аудит из assertion'ов с WHY-комментарием, а не подгонять порог всей категории (Task 4).
+- **Vercel добавляет `X-Robots-Tag: noindex` на все preview-деплои** (стандартное поведение платформы, не специфика этого проекта) — Lighthouse's `is-crawlable`-аудит (SEO) читает этот заголовок и провалит его на любом preview независимо от контента страницы. Это нужно подтвердить `curl -I` по реальному preview и, если подтверждено, уйти от категорийного `categories:seo`-ассерта к набору per-audit ассертов, исключающему только `is-crawlable` — простое `'is-crawlable': ['off', {}]` рядом с категорийным ассертом **не работает**: оно выключает проверку этого одного аудита, но не меняет `categories.seo.score`, который Lighthouse считает сам по весам всех аудитов категории, включая проваленный (см. ревизия #3, Task 4/Technical Details).
 - **Vercel Deployment Protection не проверена** — если preview защищён Vercel Authentication, Lighthouse проаудитит страницу логина, а не приложение. Проверяется тем же визитом в дашборд, до первого реального прогона (Task 4).
 - **Root-level конфиги с юнит-тестами** — устоявшийся паттерн: `sentry.config.ts`/`bundle.config.ts` (программная логика, TS) + тест, `vercel-headers.test.ts` (статичный JSON) — читает `vercel.json` напрямую, не дублирует его в отдельном `*.config.ts`. `lighthouserc.cjs` ближе ко второму случаю (статичные данные), но выбран формат `.cjs`, а не `lighthouserc.json` — **почему**: `@lhci/cli` поддерживает оба, но JSON не может нести inline WHY-комментарии к каждому порогу/решению (квота, `preset`, `is-crawlable`-исключение), а этот репозиторий уже один раз делал ровно этот выбор явно — `knip.jsonc` выбран вместо `knip.json` «специально, потому что `knip.json` не может нести комментарии» (см. AGENTS.md, 2.5.3). Тот же прецедент применяется здесь.
 - **`package.json` имеет `"type": "module"`**, а `@lhci/cli` грузит конфиг через `require()` — обычный `lighthouserc.js` упадёт с `ERR_REQUIRE_ESM`. `.cjs` — расширение, которое Node всегда трактует как CommonJS независимо от `"type"`, и единственное, которое `@lhci/cli` сегодня реально поддерживает (проверено через `GoogleChrome/lighthouse-ci#973` — `.cjs` добавлен, `.mjs`/полноценный ESM-конфиг там до сих пор открытый feature request). Отклонение от буквального имени `lighthouserc.js` из roadmap-приложения фиксируется явно.
@@ -53,7 +55,7 @@ Kinoshka — CSR SPA, поэтому любая навигация Lighthouse п
 
 ## Solution Overview
 
-1. **`lighthouserc.cjs`** (root) — `ci.assert`/`ci.collect.numberOfRuns`/`ci.collect.settings`. `categories:accessibility`/`categories:seo`/`categories:best-practices` — `error`; `categories:performance` — **временно `warn`** (не `error`) на период «soak»: единственный прогон (`numberOfRuns: 1`) живой CSR-страницы на shared CI-раннере даёт статистически шумный Performance-скор, и жёсткий `error`-гейт на нём при отсутствии медианы из нескольких прогонов будет чаще ловить шум раннера, чем реальные регрессии — поднимается до `error` одновременно с переводом `lighthouse`-job'а в required check (тот же отложенный шаг, что уже принят для `e2e`-job'а, см. Post-Completion). `collect.url`/`collect.startServerCommand` в общий конфиг не идут — оба контекстно-зависимы и передаются CLI-флагами отдельно в CI и локально.
+1. **`lighthouserc.cjs`** (root) — `ci.assert`/`ci.collect.numberOfRuns`/`ci.collect.settings`. `categories:accessibility`/`categories:best-practices` — `error`; SEO гейтится не категорией целиком, а набором per-audit ассертов, заводимых в Task 4 (см. п.4 ниже и Technical Details — категорийный `categories:seo`-ассерт несовместим с гарантированным `is-crawlable`-провалом на Vercel preview); `categories:performance` — **временно `warn`** (не `error`) на период «soak»: единственный прогон (`numberOfRuns: 1`) живой CSR-страницы на shared CI-раннере даёт статистически шумный Performance-скор, и жёсткий `error`-гейт на нём при отсутствии медианы из нескольких прогонов будет чаще ловить шум раннера, чем реальные регрессии — поднимается до `error` одновременно с переводом `lighthouse`-job'а в required check (тот же отложенный шаг, что уже принят для `e2e`-job'а, см. Post-Completion). `collect.url`/`collect.startServerCommand` в общий конфиг не идут — оба контекстно-зависимы и передаются CLI-флагами отдельно в CI и локально.
 2. **`make lighthouse`** — локальный dev-smoke-луп через `pnpm dlx @lhci/cli`, поднимает `vite preview` через встроенный `--collect.startServerCommand`, апает отчёты на `filesystem` (не наружу). **Не авторитетный источник порогов** — среда отличается от Vercel preview (заголовки, сжатие, `X-Robots-Tag`).
 3. **Замер базлайна локально** (Task 3) — быстрая итерация на дешёвых, средово-независимых проблемах (`<meta name="description">`, `robots.txt`, a11y `color-contrast`, очевидные perf-узкие места), не сам факт готовности к гейту.
 4. **`.github/workflows/lighthouse.yml`** (Task 4) — включает: проверку Vercel Deployment Protection/GitHub Deployments, проверку `X-Robots-Tag` и `is-crawlable`-исключение, проверку живости `/movie/666`, и **авторитетный** замер базлайна на реальном preview — только после него пороги считаются зафиксированными.
@@ -84,13 +86,23 @@ module.exports = {
           // error — см. Solution Overview, п.1. Поднять до error одновременно с
           // переводом lighthouse-job'а в required check (см. Post-Completion).
         'categories:accessibility': ['error', { minScore: 0.95 }],
-        'categories:seo': ['error', { minScore: 0.95 }],
         'categories:best-practices': ['error', { minScore: 0.9 }],
-        // 'is-crawlable': ['off', {}], — добавляется в Task 4 ПОСЛЕ подтверждения
-        // через `curl -I` реального preview-URL, что Vercel шлёт X-Robots-Tag:
-        // noindex на все preview-деплои (см. Context) — это платформенное
-        // поведение, не регрессия приложения, и единственный способ не ловить
-        // гарантированный false negative на categories:seo при error@0.95.
+        // Нет 'categories:seo' — намеренно, добавляется в Task 4 не как
+        // категория целиком, а как набор ассертов по отдельным SEO-аудитам,
+        // ПОСЛЕ подтверждения через `curl -I` реального preview-URL, что
+        // Vercel шлёт X-Robots-Tag: noindex на все preview-деплои (см.
+        // Context). Категорийный 'categories:seo': ['error', {minScore:
+        // 0.95}] здесь не работает даже с 'is-crawlable': 'off' рядом —
+        // LHCI-ассерт на конкретный аудит выключает только ПРОВЕРКУ этого
+        // аудита, а не пересчитывает сам categories.seo.score, который
+        // Lighthouse считает внутри себя по весам всех аудитов категории
+        // (включая проваленный is-crawlable с нулём) — агрегат всё равно
+        // не дотянет до 0.95. Правильная замена — 'document-title': 'error',
+        // 'meta-description': 'error', 'http-status-code': 'error',
+        // 'link-text': 'error', 'crawlable-anchors': 'error',
+        // 'robots-txt': 'error', 'canonical': 'error', 'viewport': 'error',
+        // 'is-crawlable': 'off' — гейт по всему, что реально зависит от
+        // приложения, минус единственный платформенный false positive.
       },
     },
   },
@@ -118,10 +130,15 @@ type LighthouseRc = {
 const require = createRequire(import.meta.url)
 const lighthouserc = require('./lighthouserc.cjs') as LighthouseRc
 
-// ... проверки: ровно 4 categories:*-ключа (+ опционально is-crawlable после Task 4);
-// categories:performance === 'warn' (с комментарием "временно, см. Post-Completion"),
-// остальные 3 === 'error'; точные пороги 0.9/0.95/0.95/0.9 (мандат роадмапа);
-// numberOfRuns — целое ≥ 1; если is-crawlable присутствует — severity==='off'
+// ... проверки: ci.collect.settings.preset === 'desktop' (ключевое антифлейк-решение,
+// случайное удаление не должно проходить незамеченным); categories:performance ===
+// 'warn' (с комментарием "временно, см. Post-Completion"), categories:accessibility/
+// categories:best-practices === 'error'; НЕТ ключа categories:seo (после Task 4 —
+// вместо него набор per-audit ассертов, см. Technical Details); точные пороги
+// 0.9/0.95/0.9 (мандат роадмапа) для трёх оставшихся category-ассертов; numberOfRuns
+// — целое ≥ 1; после Task 4 — is-crawlable исключительно 'off', остальные
+// перечисленные SEO-аудиты (document-title/meta-description/http-status-code/
+// link-text/crawlable-anchors/robots-txt/canonical/viewport) — 'error'
 ```
 
 **Workflow `.github/workflows/lighthouse.yml`** (эскиз):
@@ -162,6 +179,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           max_timeout: 300
+          # Только если Task 4 подтвердит Deployment Protection на preview:
+          # vercel_protection_bypass_header: ${{ secrets.VERCEL_PROTECTION_BYPASS }}
+          # — этот шаг сам делает HTTP-проверку готовности preview ДО Lighthouse,
+          # без bypass'а здесь упадёт/зависнет по таймауту раньше, чем дело дойдёт
+          # до lhci-шага (см. ревизия #3) — это отдельная точка конфигурации,
+          # не заменяется extraHeaders у Lighthouse ниже
 
       - name: Run Lighthouse CI
         id: lhci
@@ -226,11 +249,11 @@ lighthouse: build-only
 - Create: `lighthouse-config.test.ts`
 - Modify: `tsconfig.node.json`
 
-- [ ] создать `lighthouserc.cjs` в корне: `categories:accessibility`/`categories:seo`/`categories:best-practices` — `error` с порогами 0.95/0.95/0.9; `categories:performance` — `warn` с порогом 0.9 (временно, см. Technical Details); `ci.collect.numberOfRuns: 1`; `ci.collect.settings.preset: 'desktop'` — каждое решение с WHY-комментарием
+- [ ] создать `lighthouserc.cjs` в корне: `categories:accessibility`/`categories:best-practices` — `error` с порогами 0.95/0.9; `categories:performance` — `warn` с порогом 0.9 (временно, см. Technical Details); `ci.collect.numberOfRuns: 1`; `ci.collect.settings.preset: 'desktop'` — каждое решение с WHY-комментарием. **Пока без `categories:seo`** — этот ассерт заводится в Task 4 не как категория целиком, а как набор per-audit ассертов (см. Task 4/Technical Details) — в Task 1 достаточно зафиксировать комментарием-заглушкой, почему его здесь ещё нет
 - [ ] явно НЕ добавлять `collect.url`/`collect.startServerCommand` в конфиг — зафиксировать комментарием в файле, почему (CLI-флаги по контексту запуска)
 - [ ] написать `lighthouse-config.test.ts` (root): читать `lighthouserc.cjs` через `createRequire(import.meta.url)` + `require('./lighthouserc.cjs')` (не `'../...'` — оба файла в корне) + локальный `type LighthouseRc` + `as`-каст
-- [ ] тест: `categories:performance` === `'warn'`, остальные 3 категории === `'error'` (не унифицированная проверка «все error» — раз severity намеренно разная)
-- [ ] тест: точные пороги 0.9/0.95/0.95/0.9 (мандат роадмапа) + `numberOfRuns` — целое число ≥ 1
+- [ ] тест: `categories:performance` === `'warn'`, `categories:accessibility`/`categories:best-practices` === `'error'` (не унифицированная проверка «все error» — раз severity намеренно разная); `ci.collect.settings.preset === 'desktop'` — отдельным ассертом (ключевое антифлейк-решение, случайное удаление не должно проходить незамеченным)
+- [ ] тест: точные пороги 0.9/0.95/0.9 (мандат роадмапа, для трёх заведённых в Task 1 category-ассертов) + `numberOfRuns` — целое число ≥ 1
 - [ ] добавить `lighthouse-config.test.ts` в `tsconfig.node.json`'s `include`
 - [ ] `make test`, `make typecheck`, `make lint`, `make format-check` — все четыре должны пройти (в т.ч. новый `.cjs`-файл — не покрыт `lint-staged`'s glob; проверить, не ругается ли oxlint на `module`/`require` при отсутствующем `node`-env в `.oxlintrc.json`, и если да — точечное решение)
 
@@ -270,8 +293,8 @@ lighthouse: build-only
 - Modify: `lighthouse-config.test.ts`
 
 - [ ] **до** написания workflow — один визит в Vercel dashboard: (а) подтвердить, что для этого репо преview-деплои создаются через официальную GitHub-интеграцию (появляются как GitHub Deployments — предпосылка для `wait-for-vercel-preview`), (б) подтвердить статус Vercel Authentication/Deployment Protection на preview-окружении
-- [ ] если preview защищён — решить: отключить protection для preview-окружения, либо прокинуть `x-vercel-protection-bypass` секретом через `collect.settings.extraHeaders`. Задокументировать выбор здесь (⚠️ при отклонении от эскиза)
-- [ ] `curl -I` по любому реальному текущему preview-URL, подтвердить заголовок `X-Robots-Tag: noindex`; если подтверждено — добавить `'is-crawlable': ['off', {}]` в `lighthouserc.cjs` с WHY-комментарием (см. Technical Details), обновить `lighthouse-config.test.ts` (проверка, что исключение присутствует и что оно не «error», а именно выключено)
+- [ ] если preview защищён — решить: отключить protection для preview-окружения, либо прокинуть bypass-секрет **в двух независимых местах** (это не одна настройка, а две): (а) `patrickedqvist/wait-for-vercel-preview`'s собственные входы `vercel_protection_bypass_header`/`vercel_password` — сам этот шаг делает HTTP-проверку готовности preview *до* Lighthouse, и без bypass'а именно здесь упадёт/зависнет по таймауту, ещё до того как до Lighthouse вообще дойдёт очередь; (б) `collect.settings.extraHeaders` в `lighthouserc.cjs` — отдельно для самого Lighthouse-прогона. Задокументировать выбор здесь (⚠️ при отклонении от эскиза)
+- [ ] `curl -I` по любому реальному текущему preview-URL, подтвердить заголовок `X-Robots-Tag: noindex`; если подтверждено — **не** отключать assert конкретного аудита (`'is-crawlable': ['off', {}]` рядом с `'categories:seo': ['error', {minScore: 0.95}]`) — LHCI-ассерт на аудит только выключает проверку конкретно этого аудита, но не меняет сам `categories.seo.score`, который Lighthouse считает внутри себя по весам всех аудитов категории, включая проваленный `is-crawlable` с нулём; агрегированный `categories:seo`-порог 0.95 продолжит падать даже с выключенным ассертом на `is-crawlable`. Правильный фикс — **заменить** `'categories:seo': ['error', {minScore: 0.95}]` на явные ассерты по отдельным SEO-аудитам категории кроме `is-crawlable` (`'document-title': 'error'`, `'meta-description': 'error'`, `'http-status-code': 'error'`, `'link-text': 'error'`, `'crawlable-anchors': 'error'`, `'robots-txt': 'error'`, `'canonical': 'error'`, `'viewport': 'error'`, `'is-crawlable': 'off'`) — с WHY-комментарием (см. Technical Details), обновить `lighthouse-config.test.ts` (проверка: `categories:seo`-ключа больше нет, каждый из перечисленных аудитов явно `error`, `is-crawlable` явно `off`)
 - [ ] проверить живьём `GET /v1.5/movie/666` возвращает 200 (не 404) — если нет, подобрать другой стабильный id перед тем, как вписывать его в `urls`
 - [ ] создать `lighthouse.yml` с собственным `on: pull_request: types: [labeled]` (не трогать `ci.yml`)
 - [ ] `if:` на `github.event.label.name == 'run-lighthouse'` и `github.event.pull_request.head.repo.full_name == github.repository`
