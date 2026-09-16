@@ -104,6 +104,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 1: Playwright-скаффолд (deps, config, tsconfig, vitest exclude, Makefile)
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `playwright.config.ts`
 - Modify: `tsconfig.node.json`
@@ -127,6 +128,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 2: A11y-baseline — устранить существующие critical-нарушения
 
 **Files:**
+
 - Modify: `src/widgets/header/ui/Header/Header.tsx`
 - Modify: `src/entities/movie/ui/Card/Card.tsx`
 - Modify: `src/widgets/mobile-chrome/ui/MobileHeader/MobileHeader.tsx`
@@ -150,6 +152,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 3: A11y-хелпер + smoke-тест главной страницы
 
 **Files:**
+
 - Create: `e2e/utils/a11y.ts`
 - Create: `e2e/home.spec.ts`
 
@@ -160,6 +163,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 4: Поиск и фильтры
 
 **Files:**
+
 - Create: `e2e/search.spec.ts`
 
 - [x] сценарий «поиск»: `/`, `getByPlaceholder(/films from 2024/i)` → ввод текста → Enter, ожидание перехода на `/search?q=...`, проверка что результаты (или empty-state) отрендерились, `checkA11y`
@@ -169,6 +173,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 5: Деталь фильма и табы
 
 **Files:**
+
 - Create: `e2e/movie-detail.spec.ts`
 
 - [x] `/`, клик по `page.locator('a[href^="/movie/"]').first()` (см. Technical Details) — переход на `/movie/:id` без хардкода id
@@ -181,6 +186,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 6: Favorites — добавить → перезагрузить → присутствует на `/favorites`
 
 **Files:**
+
 - Create: `e2e/favorites.spec.ts`
 
 - [x] `/`, взять первую карточку (`page.locator('a[href^="/movie/"]').first()`, см. Technical Details) и **прочитать её `textContent` как `title`** — рейлы рендерятся в фиксированном DOM-порядке (`Home.tsx`), но четыре Suspense-границы резолвятся независимо, поэтому карточка идентифицируется по названию, а не по голой позиции после reload
@@ -194,6 +200,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 7: Страница `/popular`
 
 **Files:**
+
 - Create: `e2e/popular.spec.ts`
 
 - [x] `page.goto('/popular')`, дождаться видимости первой карточки (`page.locator('a[href^="/movie/"]').first()`, см. Technical Details)
@@ -204,6 +211,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 8: Страница `/recommendations`
 
 **Files:**
+
 - Create: `e2e/recommendations.spec.ts`
 
 - [x] `page.goto('/recommendations')` в свежем (пустом) браузерном контексте — `Recommendations.tsx` проверяет `ids.length === 0` **до** `AsyncBoundary`/`useFavoriteMovies()` (`src/pages/recommendations/ui/Recommendations/Recommendations.tsx:73-79`), поэтому пустое избранное рендерит `EmptyState` `'No favorites yet'` без единого запроса к API — самый дешёвый по квоте способ подтвердить, что роут реально существует, рендерится и доступен — Playwright's default per-test browser context уже изолирован/пуст, отдельной настройки storageState не потребовалось
@@ -215,6 +223,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 9: Theme toggle
 
 **Files:**
+
 - Create: `e2e/theme.spec.ts`
 
 - [x] `/`, снять исходный `data-theme` с `<html>` (`page.locator('html').getAttribute('data-theme')`)
@@ -226,6 +235,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 10: Mobile-viewport project + урезанный smoke-набор
 
 **Files:**
+
 - Create: `e2e/mobile/smoke.spec.ts`
 
 - [x] тест `/` на mobile viewport — видимость мобильного шапки/rails, `checkA11y` — `BottomNav`'s `<nav>` (единственный `<nav>` на странице, когда `AppLayout` выбрал mobile chrome — desktop `Header` не мультирует свой собственный `<nav>` на этом брейкпоинте) + кнопка `'Home'` внутри него, плюс первая карточка рейла (`page.locator('a[href^="/movie/"]').first()`, см. Technical Details)
@@ -236,6 +246,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 11: CI-интеграция
 
 **Files:**
+
 - Modify: `.github/workflows/ci.yml`
 
 - [x] добавить job `e2e` в `ci.yml`: `if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository` (**не** `on:` — этого ключа на уровне job'а не существует), `concurrency: { group: e2e-${{ github.ref }}-${{ matrix.shard }}, cancel-in-progress: true }` (**группа с `matrix.shard`**, иначе шарды отменяют друг друга), `timeout-minutes: 15`, `needs: [lint, typecheck, test]`, `strategy.fail-fast: false`, matrix `shard: [1,2,3,4]`
@@ -257,6 +268,7 @@ Roadmap `2.5.5` (`plans/roadmap.md`): первая E2E-обвязка проек
 ### Task 13: Документация и закрытие плана
 
 **Files:**
+
 - Modify: `AGENTS.md`
 - Modify: `plans/roadmap.md`
 - Move: `docs/plans/20260912-e2e-playwright-axe.md` → `docs/plans/completed/`

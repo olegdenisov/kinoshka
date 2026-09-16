@@ -45,7 +45,7 @@ Kinoshka — CSR SPA, поэтому любая навигация Lighthouse п
 
 ## Testing Strategy
 
-- **Unit-тесты**: `lighthouse-config.test.ts` (Vitest) — проверяет структуру/пороги `lighthouserc.cjs` напрямую из файла через `createRequire`, по прецеденту `vercel-headers.test.ts`. Важная оговорка (в отличие от `vercel-headers.test.ts`, который *пересчитывает* SHA-256 хэш из `index.html`): этот тест не выводит числа из независимого источника, а хардкодит те же 4 порога, что и конфиг, — он ловит только «забыли обновить тест при правке конфига», не «порог сам по себе неверный». Единственная реальная защита от тихого занижения порога — правило Task 3/Task 4 «не занижать молча, документировать разрыв».
+- **Unit-тесты**: `lighthouse-config.test.ts` (Vitest) — проверяет структуру/пороги `lighthouserc.cjs` напрямую из файла через `createRequire`, по прецеденту `vercel-headers.test.ts`. Важная оговорка (в отличие от `vercel-headers.test.ts`, который _пересчитывает_ SHA-256 хэш из `index.html`): этот тест не выводит числа из независимого источника, а хардкодит те же 4 порога, что и конфиг, — он ловит только «забыли обновить тест при правке конфига», не «порог сам по себе неверный». Единственная реальная защита от тихого занижения порога — правило Task 3/Task 4 «не занижать молча, документировать разрыв».
 - **E2E**: не требуется — отдельная инфраструктура, не связана с Lighthouse.
 - **Ручная/CI-проверка workflow**: `.github/workflows/lighthouse.yml` проверяется реальным прогоном на тестовом PR (Task 4 — предварительный, Task 6 — финальный) — GitHub Actions workflow нельзя юнит-тестировать локально без реального раннера.
 
@@ -72,7 +72,7 @@ module.exports = {
   ci: {
     collect: {
       numberOfRuns: 1, // квота demo-тарифа — без медианы из 3 прогонов, но в 3 раза
-                        // меньше нагрузки на живой API за то же покрытие роутов
+      // меньше нагрузки на живой API за то же покрытие роутов
       settings: {
         preset: 'desktop', // mobile-preset с simulated throttling — известный источник
         // флейков на shared CI-раннерах; desktop стабильнее и воспроизводимее для
@@ -83,8 +83,8 @@ module.exports = {
     assert: {
       assertions: {
         'categories:performance': ['warn', { minScore: 0.9 }], // временно warn, не
-          // error — см. Solution Overview, п.1. Поднять до error одновременно с
-          // переводом lighthouse-job'а в required check (см. Post-Completion).
+        // error — см. Solution Overview, п.1. Поднять до error одновременно с
+        // переводом lighthouse-job'а в required check (см. Post-Completion).
         'categories:accessibility': ['error', { minScore: 0.95 }],
         'categories:best-practices': ['error', { minScore: 0.9 }],
         // Нет 'categories:seo' — намеренно, добавляется в Task 4 не как
@@ -188,8 +188,9 @@ jobs:
 
       - name: Run Lighthouse CI
         id: lhci
-        continue-on-error: true # чтобы шаг комментария выполнился и при
-                                 # упавших assertion'ах
+        continue-on-error:
+          true # чтобы шаг комментария выполнился и при
+          # упавших assertion'ах
         uses: treosh/lighthouse-ci-action@<pin-latest-tag>
         with:
           urls: |
@@ -245,6 +246,7 @@ lighthouse: build-only
 ### Task 1: `lighthouserc.cjs` — бюджеты Lighthouse CI + юнит-тест
 
 **Files:**
+
 - Create: `lighthouserc.cjs`
 - Create: `lighthouse-config.test.ts`
 - Modify: `tsconfig.node.json`
@@ -260,6 +262,7 @@ lighthouse: build-only
 ### Task 2: `make lighthouse` — локальный dev-smoke-луп
 
 **Files:**
+
 - Modify: `Makefile`
 - Modify: `.gitignore`
 
@@ -272,6 +275,7 @@ lighthouse: build-only
 ### Task 3: Замер базлайна локально + починка выявленных разрывов
 
 **Files:**
+
 - Modify: `index.html`
 - Create: `public/robots.txt`
 
@@ -288,12 +292,13 @@ lighthouse: build-only
 ### Task 4: `.github/workflows/lighthouse.yml` + авторитетный базлайн на реальном preview
 
 **Files:**
+
 - Create: `.github/workflows/lighthouse.yml`
 - Modify: `lighthouserc.cjs`
 - Modify: `lighthouse-config.test.ts`
 
 - [ ] **до** написания workflow — один визит в Vercel dashboard: (а) подтвердить, что для этого репо преview-деплои создаются через официальную GitHub-интеграцию (появляются как GitHub Deployments — предпосылка для `wait-for-vercel-preview`), (б) подтвердить статус Vercel Authentication/Deployment Protection на preview-окружении
-- [ ] если preview защищён — решить: отключить protection для preview-окружения, либо прокинуть bypass-секрет **в двух независимых местах** (это не одна настройка, а две): (а) `patrickedqvist/wait-for-vercel-preview`'s собственные входы `vercel_protection_bypass_header`/`vercel_password` — сам этот шаг делает HTTP-проверку готовности preview *до* Lighthouse, и без bypass'а именно здесь упадёт/зависнет по таймауту, ещё до того как до Lighthouse вообще дойдёт очередь; (б) `collect.settings.extraHeaders` в `lighthouserc.cjs` — отдельно для самого Lighthouse-прогона. Задокументировать выбор здесь (⚠️ при отклонении от эскиза)
+- [ ] если preview защищён — решить: отключить protection для preview-окружения, либо прокинуть bypass-секрет **в двух независимых местах** (это не одна настройка, а две): (а) `patrickedqvist/wait-for-vercel-preview`'s собственные входы `vercel_protection_bypass_header`/`vercel_password` — сам этот шаг делает HTTP-проверку готовности preview _до_ Lighthouse, и без bypass'а именно здесь упадёт/зависнет по таймауту, ещё до того как до Lighthouse вообще дойдёт очередь; (б) `collect.settings.extraHeaders` в `lighthouserc.cjs` — отдельно для самого Lighthouse-прогона. Задокументировать выбор здесь (⚠️ при отклонении от эскиза)
 - [ ] `curl -I` по любому реальному текущему preview-URL, подтвердить заголовок `X-Robots-Tag: noindex`; если подтверждено — **не** отключать assert конкретного аудита (`'is-crawlable': ['off', {}]` рядом с `'categories:seo': ['error', {minScore: 0.95}]`) — LHCI-ассерт на аудит только выключает проверку конкретно этого аудита, но не меняет сам `categories.seo.score`, который Lighthouse считает внутри себя по весам всех аудитов категории, включая проваленный `is-crawlable` с нулём; агрегированный `categories:seo`-порог 0.95 продолжит падать даже с выключенным ассертом на `is-crawlable`. Правильный фикс — **заменить** `'categories:seo': ['error', {minScore: 0.95}]` на явные ассерты по отдельным SEO-аудитам категории кроме `is-crawlable` (`'document-title': 'error'`, `'meta-description': 'error'`, `'http-status-code': 'error'`, `'link-text': 'error'`, `'crawlable-anchors': 'error'`, `'robots-txt': 'error'`, `'canonical': 'error'`, `'viewport': 'error'`, `'is-crawlable': 'off'`) — с WHY-комментарием (см. Technical Details), обновить `lighthouse-config.test.ts` (проверка: `categories:seo`-ключа больше нет, каждый из перечисленных аудитов явно `error`, `is-crawlable` явно `off`)
 - [ ] проверить живьём `GET /v1.5/movie/666` возвращает 200 (не 404) — если нет, подобрать другой стабильный id перед тем, как вписывать его в `urls`
 - [ ] создать `lighthouse.yml` с собственным `on: pull_request: types: [labeled]` (не трогать `ci.yml`)
@@ -320,6 +325,7 @@ lighthouse: build-only
 ### Task 6: [Final] Документация
 
 **Files:**
+
 - Modify: `AGENTS.md`
 - Modify: `README.md`
 - Modify: `plans/roadmap.md`
@@ -334,9 +340,11 @@ lighthouse: build-only
 ## Post-Completion
 
 **Ручная проверка** (обязательна, без неё Task 6 не закрыт):
+
 - реальный прогон workflow на живом PR с лейблом `run-lighthouse` (уже сделан один раз в Task 4 ради базлайна — здесь финальное подтверждение, что комментарий обновляется корректно при повторном прогоне на том же PR)
 
 **Известные ограничения / осознанно принятые компромиссы:**
+
 - **Dependabot/чужие PR с лейблом `run-lighthouse` будут таймаутиться на шаге ожидания preview** — `vercel.json`'s `ignoreCommand` не создаёт деплой для коммитов не от `olegdenisov`. Тот же прецедент, что у `e2e.yml`.
 - **`numberOfRuns: 1`** — экономия квоты ценой статистической стабильности. Пересмотреть, если квота перестанет быть узким местом.
 - **`categories:performance: 'warn'`, не `'error'`** — временно, до перевода `lighthouse`-job'а в required check (см. следующий пункт); момент перехода — одновременное действие, не забыть про оба при промоушене.

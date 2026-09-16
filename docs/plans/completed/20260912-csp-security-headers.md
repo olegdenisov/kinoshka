@@ -111,6 +111,7 @@ report-uri https://o4512052151844864.ingest.us.sentry.io/api/4512052165607429/se
 ### Task 1: `vercel.json` — заголовки
 
 **Files:**
+
 - Modify: `vercel.json`
 
 - [x] добавить `"headers": [{ "source": "/(.*)", "headers": [...] }]` с `Content-Security-Policy-Report-Only` (значение — строка из Technical Details выше, дословно), `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Content-Type-Options: nosniff`
@@ -119,6 +120,7 @@ report-uri https://o4512052151844864.ingest.us.sentry.io/api/4512052165607429/se
 ### Task 2: `vercel-headers.test.ts` — тест-инвариант против `vercel.json`
 
 **Files:**
+
 - Create: `vercel-headers.test.ts`
 
 - [x] прочитать и распарсить `vercel.json`, извлечь значение заголовка `Content-Security-Policy-Report-Only` для `source: "/(.*)"`
@@ -132,6 +134,7 @@ report-uri https://o4512052151844864.ingest.us.sentry.io/api/4512052165607429/se
 ### Task 3: Документация — AGENTS.md и `plans/roadmap.md`
 
 **Files:**
+
 - Modify: `AGENTS.md`
 - Modify: `plans/roadmap.md`
 
@@ -156,7 +159,7 @@ report-uri https://o4512052151844864.ingest.us.sentry.io/api/4512052165607429/se
 
 ## Post-Completion
 
-*Пункты без чекбоксов — требуют ручных действий или реального времени наблюдения.*
+_Пункты без чекбоксов — требуют ручных действий или реального времени наблюдения._
 
 **Ручная проверка:**
 

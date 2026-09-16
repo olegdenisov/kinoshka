@@ -12,7 +12,7 @@
   закреплено тестом `BottomNav.test.tsx:54` («клик не навигирует») и вторым ассертом в тесте
   «6 колонок» (`BottomNav.test.tsx:87`);
 - `AppLayout.tsx` в своей таблице соответствия chrome уже держит строку `profile → activeNav нет
-  соответствия, active='profile'`, но записи `/profile` в `ROUTE_CHROME` нет, потому что нет роута.
+соответствия, active='profile'`, но записи `/profile` в `ROUTE_CHROME` нет, потому что нет роута.
 
 Цель — заменить эти три заглушки настоящим, работающим блоком профиля, не дожидаясь Фазы 5
 (BFF/OAuth/WebAuthn), и не выдумывая фиктивную авторизацию. Ключевой принцип плана: **каждый
@@ -284,7 +284,7 @@ export const PROFILE_NAME_MAX_LENGTH = 40
 // не пройти валидацию на ровно допустимой длине, либо пройти и быть обрезано setName неровно
 const profileNameSchema = z
   .string()
-  .refine((value) => Array.from(value).length <= PROFILE_NAME_MAX_LENGTH)
+  .refine(value => Array.from(value).length <= PROFILE_NAME_MAX_LENGTH)
 
 export const profileNameSlot = createStorageSlot(
   'kinoshka:profile',
@@ -327,7 +327,9 @@ export type UseProfileResult = {
 
 ```ts
 // src/features/profile/lib/getInitials.ts
-export const getInitials = (name: string): string => { /* ... */ }
+export const getInitials = (name: string): string => {
+  /* ... */
+}
 ```
 
 Правила:
@@ -633,7 +635,7 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 
 ## Post-Completion
 
-*Пункты, требующие ручных действий или внешних систем — без чекбоксов, информационно.*
+_Пункты, требующие ручных действий или внешних систем — без чекбоксов, информационно._
 
 **Ручная проверка:**
 

@@ -134,7 +134,13 @@ plan-review-агента):**
 `routeErrorFallback` — локальная функция в `AppLayout.tsx`:
 
 ```tsx
-const routeErrorFallback = ({ error, reset }: { error: Error | null; reset: () => void }) => (
+const routeErrorFallback = ({
+  error,
+  reset,
+}: {
+  error: Error | null
+  reset: () => void
+}) => (
   <ErrorState
     title='Something went wrong'
     description={error?.message || 'Please try again later'}
@@ -214,6 +220,7 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 ### Task 1: `onError`-проп в `shared/ui/ErrorBoundary`
 
 **Files:**
+
 - Modify: `src/shared/ui/ErrorBoundary/ErrorBoundary.tsx`
 - Create: `src/shared/ui/ErrorBoundary/ErrorBoundary.test.tsx`
 
@@ -229,6 +236,7 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 ### Task 2: `captureRouteError` в `src/app/sentry.ts`
 
 **Files:**
+
 - Modify: `src/app/sentry.ts`
 - Modify: `src/app/sentry.test.ts`
 
@@ -241,6 +249,7 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 ### Task 3: `secondaryAction`-слот в `shared/ui/ErrorState`
 
 **Files:**
+
 - Modify: `src/shared/ui/ErrorState/ErrorState.tsx`
 - Modify: `src/shared/ui/ErrorState/ErrorState.module.css`
 - Create: `src/shared/ui/ErrorState/ErrorState.test.tsx`
@@ -256,6 +265,7 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 ### Task 4: Per-route `ErrorBoundary` в `AppLayout`
 
 **Files:**
+
 - Create: `src/app/layouts/AppLayout.module.css`
 - Modify: `src/app/layouts/AppLayout.tsx`
 - Modify: `src/app/layouts/AppLayout.test.tsx`
@@ -275,6 +285,7 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 ### Task 5: `registerChunkPreloadRecovery` — авто-перезагрузка при сбое загрузки чанка
 
 **Files:**
+
 - Create: `src/app/chunkPreloadRecovery.ts`
 - Create: `src/app/chunkPreloadRecovery.test.ts`
 - Modify: `src/app/providers.tsx`
@@ -287,6 +298,7 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 - [ ] прогнать тесты — должны проходить перед Task 6
 
 ### Task 6: Verify acceptance criteria
+
 - [ ] проверить все три пункта роадмапа 2.6: global boundary в `app/` (уже было, `GlobalErrorBoundary`), per-route boundary через `pages/*`-контент (реализовано на уровне `AppLayout`, не дублируя код по 6 страницам — согласованное отклонение от буквальной формулировки), fallback с retry + ссылкой на главную
 - [ ] вручную (`make dev`) проверить: временно бросить ошибку в одной из страниц, убедиться что Header/BottomNav не пропадают, retry и ссылка «На главную» работают
 - [ ] прогнать полный набор тестов: `make test`
@@ -294,6 +306,7 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 - [ ] `make coverage` — убедиться, что новые ветки (`onError`, `secondaryAction`, `key={pathname}`-сброс, `captureRouteError`, `registerChunkPreloadRecovery`) покрыты (в проекте нет глобального порога coverage — проверка вручную по отчёту, не автоматический gate)
 
 ### Task 7: Обновить документацию и роадмап
+
 - [ ] обновить `AGENTS.md`: добавить короткую заметку в раздел про `AsyncBoundary`/error-состояния — упомянуть per-route `ErrorBoundary` в `AppLayout`, `onError`→Sentry (с `componentStack`), `secondaryAction`-слот в `ErrorState` (и почему не `homeLink`/`Link` внутри самого компонента), `registerChunkPreloadRecovery`/`vite:preloadError`, почему граница на уровне layout, а не в каждой странице; принятые ограничения (ошибки внутри `AsyncBoundary` в Sentry не идут, `key={pathname}` ремаунтит страницу при смене pathname — включая `/movie/:id`)
 - [ ] проверить и, если нужно, уточнить существующий абзац в разделе «Performance budgets» AGENTS.md про «Accepted risk» `<Suspense>` в `AppLayout` (react-router `startTransition`, отложенный коммит дерева) — по факту теста из Task 4 (навигация `/movie/1 → /movie/2`), не разошлось ли поведение с тем, что там описано, после появления `key={pathname}`
 - [ ] обновить `plans/roadmap.md`: пункт `### 2.6 Error boundaries` → отметить чекбоксы `[x]`, добавить заголовок `— done, см. docs/plans/20260916-per-route-error-boundaries.md` (по прецеденту 2.3/2.4/2.5.3/2.5.4), зафиксировать отклонение от буквального «в pages/*» в сторону единой точки в `AppLayout`

@@ -23,7 +23,7 @@ production as a static build (Vite), with Sentry error tracking wired for prod b
 - **Secret/PII leakage**: `VITE_API_KEY` is deliberately inlined into the client bundle (accepted,
   documented limitation until a BFF exists) — do not flag this as a vulnerability. The one real
   scrubbing concern is `X-API-KEY`/`x-api-key` leaking into Sentry events via `beforeSend
-  (scrubApiKeyHeader)`, and source maps (`sourcemap: 'hidden'`) never being published to `dist/`
+(scrubApiKeyHeader)`, and source maps (`sourcemap: 'hidden'`) never being published to `dist/`
   even though they contain that inlined key.
 - **Broken FSD import direction**: any import that goes "upward" (e.g. `entities/` importing from
   `features/` or `widgets/`) is a real architectural defect, not a style nit — it's enforced by
@@ -65,7 +65,7 @@ production as a static build (Vite), with Sentry error tracking wired for prod b
   Vitest + MSW + Testing Library, `globals: true`, with Zod validated only at the storage boundary.
   A missing test for a pure CSS/layout change is not worth flagging.
 - `pnpm exec tsc -b` is the only real type-check gate (root `tsconfig.json` used by `make
-  typecheck` was previously a no-op checking 0 files — this was fixed as of the Sentry
+typecheck` was previously a no-op checking 0 files — this was fixed as of the Sentry
   error-tracking work, see `docs/plans/completed/20260905-*`). If reviewing an older diff/commit
   predating that fix, don't assume `make typecheck`/CI green means types are actually checked —
   verify with `tsc -b` yourself before trusting a "type-safe" claim in that range.

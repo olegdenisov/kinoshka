@@ -20,7 +20,7 @@
 ### Решения из уточняющих вопросов
 
 - **Nav-размещение**: расширить `BottomNav` до 6 колонок (не заменять `profile`-заглушку, не ограничиваться только desktop `Header`).
-- **Формула рейтинга**: `rating.kp = [\`\${avg - 1}-10\`]` — буфер `-1` для более широкой выдачи (не точное среднее).
+- **Формула рейтинга**: `rating.kp = [\`\${avg - 1}-10\`]`— буфер`-1` для более широкой выдачи (не точное среднее).
 - **Тестирование**: Regular (сначала код, потом тесты) — как в остальных задачах Фазы 2.
 
 ## Development Approach
@@ -47,15 +47,15 @@
 
 ## Solution Overview
 
-Слой | Ответственность
----|---
-`src/features/recommendations/lib/computeRecommendationQuery.ts` | Чистое правило: `Movie[]` (избранное) → `NonNullable<CatalogParams> \| null`
-`src/features/recommendations/index.ts` | Публичный API среза (экспорт `computeRecommendationQuery`)
-`src/pages/recommendations/model/useRecommendedMovies.ts` | Композиция `useFavoriteMovies()` + `computeRecommendationQuery()` + `getMoviesPage()` — page-slice facade; экспортирует также companion-инвалидатор `invalidateRecommendations(ids)`
-`src/pages/recommendations/ui/RecommendationsDesktop/` `.../RecommendationsMobile/` | UI, зеркалит `PopularDesktop`/`PopularMobile` + double-empty-state паттерн `FavoritesDesktop`; без кнопки-сердечка (см. Technical Details)
-`src/pages/recommendations/RecommendationsPage.tsx` + `index.tsx` | viewport-переключатель, паттерн `PopularPage`
-`src/app/router.tsx` | добавление `/recommendations`
-`Header.tsx` / `BottomNav.tsx` | nav-пункт «Picks»
+| Слой                                                                                | Ответственность                                                                                                                                                                      |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/features/recommendations/lib/computeRecommendationQuery.ts`                    | Чистое правило: `Movie[]` (избранное) → `NonNullable<CatalogParams> \| null`                                                                                                         |
+| `src/features/recommendations/index.ts`                                             | Публичный API среза (экспорт `computeRecommendationQuery`)                                                                                                                           |
+| `src/pages/recommendations/model/useRecommendedMovies.ts`                           | Композиция `useFavoriteMovies()` + `computeRecommendationQuery()` + `getMoviesPage()` — page-slice facade; экспортирует также companion-инвалидатор `invalidateRecommendations(ids)` |
+| `src/pages/recommendations/ui/RecommendationsDesktop/` `.../RecommendationsMobile/` | UI, зеркалит `PopularDesktop`/`PopularMobile` + double-empty-state паттерн `FavoritesDesktop`; без кнопки-сердечка (см. Technical Details)                                           |
+| `src/pages/recommendations/RecommendationsPage.tsx` + `index.tsx`                   | viewport-переключатель, паттерн `PopularPage`                                                                                                                                        |
+| `src/app/router.tsx`                                                                | добавление `/recommendations`                                                                                                                                                        |
+| `Header.tsx` / `BottomNav.tsx`                                                      | nav-пункт «Picks»                                                                                                                                                                    |
 
 **Ключевое архитектурное решение**: `computeRecommendationQuery` возвращает `null`, когда на входе пустой `favorites` (после `getMoviesByIds` — часть избранных id могла 404-нуться и список оказался пуст, даже если `ids.length > 0`). `useRecommendedMovies()` пробрасывает это различие дальше: `null` → «не удалось построить рекомендации по избранному», `[]` (запрос выполнился, но каталог ничего не вернул) → «пока нечего порекомендовать». Так UI различает два разных пустых состояния вместо одного общего.
 

@@ -47,7 +47,7 @@ production-сборке SPA:
 - Нет `src/vite-env.d.ts` — типы `import.meta.env` идут только из `vite/client` (в
   `tsconfig.app.json`), кастомных ambient-деклараций в проекте пока нет.
 - **Родовая проблема репозитория, важная для этого плана**: `make typecheck` = `pnpm exec tsc
-  --noEmit` против корневого `tsconfig.json` (`{ "files": [], "references": [...] }`) —
+--noEmit` против корневого `tsconfig.json` (`{ "files": [], "references": [...] }`) —
   проверено: `pnpm exec tsc --noEmit --listFiles` возвращает **0 файлов**. Solution-style
   конфиг без `-b` не типизирует ничего, в т.ч. не видит ни `vite.config.ts`
   (`tsconfig.node.json`), ни `src/**`. CI (`.github/workflows/ci.yml`) держит на этом отдельную
@@ -58,7 +58,7 @@ production-сборке SPA:
   единственный надёжный gate, а не `make typecheck`.
 - Читать версию пакета в `vite.config.ts` лучше не через `process.env.npm_package_version` —
   эта переменная гарантированно доступна только когда сборка запущена именно как npm/pnpm
-  *script* (`pnpm build`/`make build` — да; `make build-only` → `pnpm exec vite build` — не
+  _script_ (`pnpm build`/`make build` — да; `make build-only` → `pnpm exec vite build` — не
   гарантированно; CI's `build` job именно `make build-only`). Вместо этого — прямое чтение
   `package.json` через `fs.readFileSync` в Node-контексте конфига: работает одинаково в любом
   пути запуска, без специального документирования ограничений.
@@ -82,7 +82,7 @@ production-сборке SPA:
   `execSync('git rev-parse --short HEAD')` с fallback `'unknown'` в try/catch (билд не должен
   падать, если `.git` недоступен, напр. в некоторых Docker-образах). Ровно эта же строка
   передаётся и в `Sentry.init({ release })` (через define), и в `sentryVitePlugin({ release:
-  { name } })` — иначе SDK и аплоад sourcemaps тегируют разные releases в Sentry (плагин по
+{ name } })` — иначе SDK и аплоад sourcemaps тегируют разные releases в Sentry (плагин по
   умолчанию берёт полный git SHA, если `release.name` не задан явно) и метаданные события не
   находят свой sourcemap. Строить release-строку через отдельный тестируемый модуль,
   импортируемый и в Node (`vite.config.ts`), и в браузерный код — лишняя связанность
@@ -92,7 +92,7 @@ production-сборке SPA:
 - **Sentry-vite-plugin подключается только при `command === 'build'` и наличии всех трёх
   кредов**, и всегда — **последним** в массиве `plugins` (требование самого плагина — должен
   видеть финальный вывод rollup/vite). Без гварда на `command` плагин цеплялся бы и на `vite
-  dev`/Vitest, как только в `.env.local` появятся настоящие креды (Post-Completion). Плагину
+dev`/Vitest, как только в `.env.local` появятся настоящие креды (Post-Completion). Плагину
   задаётся `errorHandler`, который не роняет билд, если аплоад упал (невалидный токен, сетевая
   ошибка) — так неудачный аплоад sourcemaps не блокирует деплой.
 - **`build.sourcemap` завязан на то же условие, что и сам плагин, а не на `true`
@@ -172,18 +172,18 @@ plans/roadmap.md                        — отметить чекбоксы 2.
       вызвать `loadEnv(mode, process.cwd(), '')` (пустой префикс — иначе `SENTRY_*` без
       `VITE_`-префикса не попадут в результат) и получить `env`.
 - [x] Прочитать версию пакета через `JSON.parse(readFileSync(new URL('./package.json',
-      import.meta.url), 'utf-8')).version` (`node:fs`) — не через
+import.meta.url), 'utf-8')).version` (`node:fs`) — не через
       `process.env.npm_package_version` (см. Context/Solution Overview).
 - [x] Добавить чтение git SHA через `execSync('git rev-parse --short HEAD', { encoding: 'utf-8'
-      }).trim()`, обёрнутое в `try/catch` с fallback `'unknown'`.
+}).trim()`, обёрнутое в `try/catch` с fallback `'unknown'`.
 - [x] Собрать `const release = \`kinoshka@${version}+${gitSha}\`` — одна строка на весь конфиг.
 - [x] Вычислить `const sentryEnabled = command === 'build' && Boolean(env.SENTRY_AUTH_TOKEN &&
-      env.SENTRY_ORG && env.SENTRY_PROJECT)`.
+env.SENTRY_ORG && env.SENTRY_PROJECT)`.
 - [x] Собрать массив `plugins` императивно: `[react(), babel({...})]`, и только если
       `sentryEnabled` — запушить в конец `sentryVitePlugin({ org: env.SENTRY_ORG, project:
-      env.SENTRY_PROJECT, authToken: env.SENTRY_AUTH_TOKEN, release: { name: release },
-      sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] }, errorHandler: (error) => {
-      console.warn('[sentry-vite-plugin]', error) } })` (импорт `sentryVitePlugin` из
+env.SENTRY_PROJECT, authToken: env.SENTRY_AUTH_TOKEN, release: { name: release },
+sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] }, errorHandler: (error) => {
+console.warn('[sentry-vite-plugin]', error) } })` (импорт `sentryVitePlugin` из
       `@sentry/vite-plugin`) — `errorHandler` не даёт неудачному аплоаду (невалидный токен,
       сеть) уронить сборку.
 - [x] Добавить `define: { __APP_RELEASE__: JSON.stringify(release) }` — задаётся безусловно
@@ -212,19 +212,17 @@ plans/roadmap.md                        — отметить чекбоксы 2.
       — если `event.request?.headers` существует, удаляет ключи `X-API-KEY`/`x-api-key`;
       возвращает `event` без мутации остальных полей.
 - [x] `export const initSentry = (): void => {...}` — читает `const dsn =
-      import.meta.env.VITE_SENTRY_DSN`; при `!import.meta.env.PROD || !dsn` — сразу `return`.
+import.meta.env.VITE_SENTRY_DSN`; при `!import.meta.env.PROD || !dsn` — сразу `return`.
       Иначе вызывает `Sentry.init({ dsn, release: __APP_RELEASE__, environment:
-      import.meta.env.MODE, sendDefaultPii: false, beforeSend: scrubApiKeyHeader })`. Без
+import.meta.env.MODE, sendDefaultPii: false, beforeSend: scrubApiKeyHeader })`. Без
       `integrations`/`tracesSampleRate` — трейсинг вне скоупа (см. Overview).
 - [x] Написать тесты на `scrubApiKeyHeader`: событие с `request.headers['X-API-KEY']` →
       заголовок вырезан, остальные заголовки не тронуты; событие без `request` → возвращается
       как есть, без исключения.
-- [x] Написать тесты на `initSentry` с `vi.mock('@sentry/react')`:
-      - `vi.stubEnv('PROD', false)` (или `VITE_SENTRY_DSN` пуст при `PROD=true`) → `Sentry.init`
-        не вызван;
-      - `vi.stubEnv('PROD', true)` + непустой `VITE_SENTRY_DSN` → `Sentry.init` вызван ровно
-        один раз с объектом, содержащим `dsn`, `release: __APP_RELEASE__`, `sendDefaultPii:
-        false`, `beforeSend: scrubApiKeyHeader`, и **без** `tracesSampleRate`/`integrations`.
+- [x] Написать тесты на `initSentry` с `vi.mock('@sentry/react')`: - `vi.stubEnv('PROD', false)` (или `VITE_SENTRY_DSN` пуст при `PROD=true`) → `Sentry.init`
+      не вызван; - `vi.stubEnv('PROD', true)` + непустой `VITE_SENTRY_DSN` → `Sentry.init` вызван ровно
+      один раз с объектом, содержащим `dsn`, `release: __APP_RELEASE__`, `sendDefaultPii:
+false`, `beforeSend: scrubApiKeyHeader`, и **без** `tracesSampleRate`/`integrations`.
 - [x] `make test` — проходит.
 
 ### Task 3: `GlobalErrorBoundary` — Sentry.ErrorBoundary поверх всего приложения
@@ -238,12 +236,12 @@ plans/roadmap.md                        — отметить чекбоксы 2.
 
 - [x] `export const GlobalErrorBoundary = ({ children }: PropsWithChildren) => (...)` — рендерит
       `<Sentry.ErrorBoundary fallback={({ resetError }) => <ErrorState title='...'
-      description='...' onRetry={resetError} />}>{children}</Sentry.ErrorBoundary>` (импорт
+description='...' onRetry={resetError} />}>{children}</Sentry.ErrorBoundary>` (импорт
       `ErrorState` из `@shared/ui`).
 - [x] В `src/app/providers.tsx`: вызвать `initSentry()` один раз на верхнем уровне модуля (до
       определения компонента `Providers`), обернуть `<RouterProvider>` в `<GlobalErrorBoundary>`.
 - [x] Написать тест на `GlobalErrorBoundary` — **[deviation]**: план предлагал `vi.mock(
-      '@sentry/react', ..., { captureException: vi.fn() })` и проверку "captureException
+'@sentry/react', ..., { captureException: vi.fn() })` и проверку "captureException
       вызван". Эмпирически проверено, что `Sentry.ErrorBoundary` (@sentry/react@10.71.0)
       репортит ошибку через внутренний `captureReactException` (bundle-файл `error.js` внутри
       самого пакета), который импортирует `captureException` напрямую из `'@sentry/browser'` —
@@ -298,7 +296,7 @@ plans/roadmap.md                        — отметить чекбоксы 2.
       плагин активируется только при `command === 'build'` + все три заданы); что release
       строится один раз в `vite.config.ts` (версия из `package.json` через `fs.readFileSync`,
       не `process.env.npm_package_version` — работает одинаково в `make build`/`make
-      build-only`/CI) и одна и та же строка идёт и в `Sentry.init`, и в
+build-only`/CI) и одна и та же строка идёт и в `Sentry.init`, и в
       `sentryVitePlugin({ release })`; что `sourcemap` — `'hidden'` только когда плагин
       активен, иначе `false`, и `filesToDeleteAfterUpload` подчищает `dist/`; что `beforeSend`
       вырезает `X-API-KEY` как defense-in-depth, и отдельно — принятое ограничение про
@@ -314,12 +312,12 @@ plans/roadmap.md                        — отметить чекбоксы 2.
 - [x] `make test` — весь набор тестов проходит (74 test files, 612 tests, все зелёные).
 - [x] `make build` без `SENTRY_*` в окружении (текущее состояние `.env.local` — плейсхолдеры):
       плагин не подключается (`sentryEnabled === false`), билд не падает, `find dist -name
-      '*.map'` — пусто, ни в одном чанке нет `//# sourceMappingURL=`. Подтверждено: билд прошёл
+'*.map'` — пусто, ни в одном чанке нет `//# sourceMappingURL=`. Подтверждено: билд прошёл
       (`✓ built in 2.11s`), `find dist -name '*.map'` вернул пусто, `grep -r sourceMappingURL
-      dist/` — ничего не найдено.
+dist/` — ничего не найдено.
 - [x] Собрать ещё раз с фиктивными `SENTRY_AUTH_TOKEN`/`SENTRY_ORG`/`SENTRY_PROJECT` (заведомо
       невалидные значения) — убедиться, что `sentryVitePlugin` реально активируется (в логе
-      сборки видны его сообщения) и *не* роняет билд на невалидном токене (401) благодаря
+      сборки видны его сообщения) и _не_ роняет билд на невалидном токене (401) благодаря
       `errorHandler`; `find dist -name '*.map'` — пусто и в этом сценарии (файлы должны быть
       удалены после — неудачной — попытки аплоада; если `sentry-cli` не подчищает их при
       ошибке сети/авторизации, зафиксировать это как ⚠️ и решить по месту — либо явный
@@ -356,5 +354,5 @@ _Требует ручных действий вне этого репозито
   - в событии ошибки нет заголовка `X-API-KEY` (спровоцировать реальную ошибку с фейковым
     API-вызовом и проверить `request.headers` в Sentry UI).
 - (Опционально, по желанию) — оценить целесообразность `2.5.2`-работы (`wrapCreateBrowserRouter`
-  + `reactRouterBrowserTracingIntegration`) отдельным пунктом, когда дойдёт очередь до Web
-  Vitals/трейсинга — не мешать в этот план.
+  - `reactRouterBrowserTracingIntegration`) отдельным пунктом, когда дойдёт очередь до Web
+    Vitals/трейсинга — не мешать в этот план.

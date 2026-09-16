@@ -61,7 +61,7 @@ favorite added), отправляемые в privacy-friendly аналитику
     в списке из четырёх событий → не трекается.
   - **favorite added** — `useFavorites.ts` (`src/features/favorites/model/useFavorites.ts`).
     `add()` не имеет ни одного вызывающего в `.tsx` (проверено: `grep -rn "\.toggle(\|
-    onToggleFavorite" src`), реальная точка добавления в избранное — ветка `toggle()`, где id
+onToggleFavorite" src`), реальная точка добавления в избранное — ветка `toggle()`, где id
     ещё не было в списке. Трекать именно там, не в `add()`.
 - Ни одна из этих четырёх точек не лежит в `@entities`/`@features`, которым нельзя импортировать
   вверх, кроме `useFilterState`/`useFavorites` — оба легально импортируют `@shared/lib` вниз по
@@ -74,7 +74,7 @@ favorite added), отправляемые в privacy-friendly аналитику
 ## Development Approach
 
 - **Testing approach**: Regular (код → тесты), по образцу `docs/plans/completed/
-  20260905-sentry-error-tracking.md`.
+20260905-sentry-error-tracking.md`.
 - Каждая задача завершается полным набором тестов и `make test` перед переходом к следующей.
 - `pnpm exec tsc -b` как реальный typecheck-гейт (не `make typecheck` — см. `AGENTS.md`,
   раздел "Sentry", про solution-style `tsconfig.json`; на момент этого плана `make typecheck`
@@ -102,9 +102,9 @@ favorite added), отправляемые в privacy-friendly аналитику
 - **`analytics.ts`** — `isAnalyticsEnabled()`, `initAnalytics()` (ставит Plausible's queue-stub
   на `window.plausible` **синхронно**, затем инжектит `script.manual.js` в `<head>`, прод-only +
   `VITE_PLAUSIBLE_DOMAIN` обязателен — тот же гейт, что `initSentry`), `trackEvent(name,
-  props?)`, `trackPageview()`. `.manual.js`-вариант Plausible-скрипта отключает автоматический
+props?)`, `trackPageview()`. `.manual.js`-вариант Plausible-скрипта отключает автоматический
   pageview/outbound-tracking — вместо этого `trackPageview()` дергает `window.plausible(
-  'pageview')` явно на каждую смену роута (SPA-стандартный паттерн для Plausible, без него
+'pageview')` явно на каждую смену роута (SPA-стандартный паттерн для Plausible, без него
   сработал бы только первый заход). Queue-stub гарантирует, что вызовы `trackEvent`/
   `trackPageview` до фактической загрузки скрипта не теряются, а складываются в
   `window.plausible.q` и доотправляются самим скриптом при загрузке — без стаба самый первый
@@ -181,7 +181,7 @@ interface Window {
       `VITE_SENTRY_DSN`).
 - [x] В `.env.example` добавить `VITE_PLAUSIBLE_DOMAIN=<plausible-domain>`.
 - [x] В `src/vite-env.d.ts` добавить `interface Window { plausible?: ((event: string, options?:
-      { props?: Record<string, string | number | boolean> }) => void) & { q?: unknown[] } }` —
+{ props?: Record<string, string | number | boolean> }) => void) & { q?: unknown[] } }` —
       `q` — очередь событий, которую ставит queue-stub из Task 2 (см. там). Файл остаётся
       без единого `import`/`export` (иначе он перестанет быть ambient-декларацией, как и с
       `__APP_RELEASE__`). **Осознанное исключение из правила `type`, не `interface`**
@@ -201,7 +201,7 @@ interface Window {
 - Modify: `src/shared/lib/index.ts`
 
 - [x] `export const isAnalyticsEnabled = (): boolean => import.meta.env.PROD &&
-      Boolean(import.meta.env.VITE_PLAUSIBLE_DOMAIN)` — **не** реэкспортируется из публичного
+Boolean(import.meta.env.VITE_PLAUSIBLE_DOMAIN)` — **не** реэкспортируется из публичного
       `src/shared/lib/index.ts` (см. ниже), остаётся внутренней деталью модуля `analytics/` —
       у неё нет потребителей за пределами `analytics.ts`/`reportWebVitals.ts`.
 - [x] **Критично**: `initAnalytics()` должен поставить Plausible's queue-stub на `window` ДО
@@ -212,21 +212,21 @@ interface Window {
       Task 5) и ранние web-vitals (LCP) теряются практически на каждой сессии — это не edge
       case, а фактическая поломка главного события. Официальный стаб Plausible для
       `script.manual.js`:
-      ```ts
-      window.plausible = window.plausible || function () {
-        (window.plausible!.q = window.plausible!.q || []).push(arguments)
-      }
-      ```
+      `ts
+window.plausible = window.plausible || function () {
+(window.plausible!.q = window.plausible!.q || []).push(arguments)
+}
+`
       (тип `Window.plausible` из Task 1 дополнить необязательным `q?: unknown[]`, чтобы стаб
       типизировался без `any`).
 - [x] `export const initAnalytics = (): void => {...}` — при `!isAnalyticsEnabled()` — `return`.
       Иначе: поставить стаб (см. выше); если `document.getElementById(
-      'plausible-analytics-script')` уже существует — `return` (защита от повторного вызова,
+'plausible-analytics-script')` уже существует — `return` (защита от повторного вызова,
       напр. HMR); иначе создать `<script>` с `id`, `defer = true`, `dataset.domain =
-      import.meta.env.VITE_PLAUSIBLE_DOMAIN`, `src = 'https://plausible.io/js/script.manual.js'`,
+import.meta.env.VITE_PLAUSIBLE_DOMAIN`, `src = 'https://plausible.io/js/script.manual.js'`,
       добавить в `document.head`.
 - [x] `export const trackEvent = (name: string, props?: Record<string, string | number |
-      boolean>): void => {...}` — при `!isAnalyticsEnabled()` — `return`. Иначе
+boolean>): void => {...}` — при `!isAnalyticsEnabled()` — `return`. Иначе
       `window.plausible?.(name, props ? { props } : undefined)`.
 - [x] `export const trackPageview = (): void => trackEvent('pageview')` — `'pageview'` —
       зарезервированное имя события в Plausible (не custom event), вызывает реальную запись
@@ -235,7 +235,7 @@ interface Window {
       `trackPageview`, `isAnalyticsEnabled` (последняя — для использования внутри
       `reportWebVitals.ts`, Task 3, тот же модуль).
 - [x] В `src/shared/lib/index.ts` добавить `export { initAnalytics, trackEvent, trackPageview }
-      from './analytics'` — без `isAnalyticsEnabled` (см. первый пункт выше).
+from './analytics'` — без `isAnalyticsEnabled` (см. первый пункт выше).
 - [x] Написать тесты на `isAnalyticsEnabled`/`initAnalytics` через `vi.stubEnv('PROD', ...)` +
       `vi.stubEnv('VITE_PLAUSIBLE_DOMAIN', ...)`: `!PROD` → скрипт не создан, стаб не
       установлен; `PROD` без домена → скрипт не создан; `PROD` + домен → в `document.head`
@@ -251,8 +251,8 @@ interface Window {
       ожидаемыми `(name, options)`; аналитика выключена (`!PROD`) → `window.plausible` не
       вызван, даже если он определён.
 - [x] **Изоляция тестов**: добавить `afterEach(() => { document.getElementById(
-      'plausible-analytics-script')?.remove(); delete (window as { plausible?: unknown
-      }).plausible; vi.unstubAllEnvs() })` (по образцу `src/app/sentry.test.ts:9`) — иначе
+'plausible-analytics-script')?.remove(); delete (window as { plausible?: unknown
+}).plausible; vi.unstubAllEnvs() })` (по образцу `src/app/sentry.test.ts:9`) — иначе
       `<script>`/стаб, оставленные одним тестом, ломают независимость последующих ("скрипт не
       создан" может ложно пройти из-за уже существующего элемента от предыдущего кейса).
 - [x] `make test` — проходит.
@@ -270,22 +270,22 @@ interface Window {
       `return`. Модульный флаг `let reported = false` — если уже `true`, тоже `return` (защита
       от двойной регистрации callback'ов при повторном вызове/HMR, симметрично
       `initAnalytics()`'s `getElementById`-гейту в Task 2). Иначе `reported = true` и `void
-      import('web-vitals').then(({ onLCP, onINP, onCLS }) => { onLCP(reportMetric);
-      onINP(reportMetric); onCLS(reportMetric) })` — **динамический импорт**, не статический
+import('web-vitals').then(({ onLCP, onINP, onCLS }) => { onLCP(reportMetric);
+onINP(reportMetric); onCLS(reportMetric) })` — **динамический импорт**, не статический
       `import ... from 'web-vitals'` в начале файла: `analytics/index.ts` реэкспортируется через
       публичный барел `src/shared/lib/index.ts`, который тянется почти из всех модулей
       приложения — статический импорт затащил бы `web-vitals` в основной чанк ради одной
       прод-only точки вызова (актуально для бюджетов бандла из `2.5.3`).
-- [x] Приватная `reportMetric = (metric: Metric): void => trackEvent(\`web vital: 
+- [x] Приватная `reportMetric = (metric: Metric): void => trackEvent(\`web vital:
       ${metric.name.toLowerCase()}\`, { value: Math.round(metric.name === 'CLS' ? metric.value *
       1000 : metric.value), rating: metric.rating })` — имя события в нижнем регистре
-      (`web vital: lcp`), единообразно с `'search submitted'`/`'filter changed'`/`'favorite
+(`web vital: lcp`), единообразно с `'search submitted'`/`'filter changed'`/`'favorite
       added'` (см. Solution Overview) — Plausible-голы это буквальные строки, их болезненно
       переименовывать после накопления данных, поэтому регистр фиксируется один раз здесь.
 - [x] Ре-экспортировать `reportWebVitals` из `src/shared/lib/analytics/index.ts` и
       `src/shared/lib/index.ts`.
 - [x] Написать тесты через `vi.mock('web-vitals', () => ({ onLCP: vi.fn(), onINP: vi.fn(),
-      onCLS: vi.fn() }))` и `vi.mock('./analytics', ...)` (сохраняя `isAnalyticsEnabled` мокнутым
+onCLS: vi.fn() }))` и `vi.mock('./analytics', ...)` (сохраняя `isAnalyticsEnabled` мокнутым
       `true`/`false` по кейсу): аналитика выключена → ни один `on*` не вызван; аналитика включена
       → все три вызваны ровно по разу (дождаться `await vi.dynamicImportSettled()` или
       `await Promise.resolve()`/`flushPromises` — импорт `web-vitals` асинхронный); повторный
@@ -328,7 +328,7 @@ interface Window {
       сценария дают тривиально по 1 вызову. Для этой задачи нужна отдельная тестовая обвязка
       (не переиспользующая `renderAt`), которая монтирует роутер один раз и затем реально
       навигирует внутри того же дерева — например `createMemoryRouter([{ element: <AppLayout
-      />, children: [...] }], { initialEntries: [...] })` + `<RouterProvider router={router} />`
+/>, children: [...] }], { initialEntries: [...] })` + `<RouterProvider router={router} />`
       (`react-router`), и дальше `router.navigate('/favorites')` / `router.navigate('/?x=1')`
       внутри `act()`/`await waitFor`.
 - [x] Написать тест: `vi.mock('@shared/lib', ... trackPageview: vi.fn())` (с
@@ -355,13 +355,13 @@ interface Window {
       Поэтому `useSearchAnalytics` сначала прогоняет `query` через `useDebouncedValue` (
       `@shared/lib`, уже используется в `Header`) с бо́льшей задержкой — **800мс** — прежде чем
       сравнивать с последним затреканным значением: `const settledQuery =
-      useDebouncedValue(query, 800)`. Это гасит серию быстрых промежуточных коммитов `?q` в одно
+useDebouncedValue(query, 800)`. Это гасит серию быстрых промежуточных коммитов `?q` в одно
       "устоявшееся" значение перед трекингом.
 - [x] `src/pages/search/model/useSearchAnalytics.ts`: `export const useSearchAnalytics = (query:
-      string): void => {...}` — `useRef<string>('')` хранит последний затреканный (непустой)
+string): void => {...}` — `useRef<string>('')` хранит последний затреканный (непустой)
       query; `useEffect` на `[settledQuery]`: `const trimmed = settledQuery.trim(); if (trimmed
-      && trimmed !== lastTrackedRef.current) { trackEvent('search submitted');
-      lastTrackedRef.current = trimmed } else if (!trimmed) { lastTrackedRef.current = '' }`
+&& trimmed !== lastTrackedRef.current) { trackEvent('search submitted');
+lastTrackedRef.current = trimmed } else if (!trimmed) { lastTrackedRef.current = '' }`
       (сброс рефа на пустой query — иначе повторный ввод того же текста после очистки поля не
       затрекается снова).
 - [x] Не отправлять сам текст запроса как prop (`trackEvent('search submitted')` без `props`) —
@@ -390,12 +390,12 @@ interface Window {
 - [x] Импортировать `trackEvent` из `@shared/lib`.
 - [x] В `applyFilters` (единственная точка коммита `FilterState` в URL — вызывается из
       `setFilters`/`toggleGenre`/сброса диапазона года/рейтинга) добавить `trackEvent('filter
-      changed')` до или после `setSearchParams` (порядок не важен — `trackEvent` не зависит от
+changed')` до или после `setSearchParams` (порядок не важен — `trackEvent` не зависит от
       результата навигации).
 - [x] Не трекать `setSort` — роадмап называет только "filter changed" в списке из четырёх
       событий, сортировка не входит.
 - [x] Дополнить существующие тесты `useFilterState.test.tsx`: `vi.mock('@shared/lib', ...
-      trackEvent: vi.fn())` (сохраняя остальные реальные экспорты через `vi.importActual`) —
+trackEvent: vi.fn())` (сохраняя остальные реальные экспорты через `vi.importActual`) —
       вызов `setFilters(...)`/`toggleGenre(...)` → `trackEvent` вызван с `'filter changed'`;
       вызов `setSort(...)` → `trackEvent` НЕ вызван.
 - [x] `make test` — проходит.
@@ -415,7 +415,7 @@ interface Window {
       есть без трекинга до появления реального потребителя, чтобы не выдумывать событие для
       мёртвого пути).
 - [x] Дополнить существующие тесты `useFavorites.test.ts`: `vi.mock('@shared/lib', ...
-      trackEvent: vi.fn())` — `toggle(id)` на отсутствующем id → `trackEvent('favorite added')`
+trackEvent: vi.fn())` — `toggle(id)` на отсутствующем id → `trackEvent('favorite added')`
       вызван; `toggle(id)` на уже избранном id (удаление) → `trackEvent` НЕ вызван.
 - [x] `make test` — проходит.
 
@@ -468,14 +468,14 @@ interface Window {
       `make preview` + DevTools Network — manual test (skipped - not automatable).
 - [x] Проверить все чекбоксы плана и `plans/roadmap.md` отмечены.
 - ➕ [x] **Не связано с 2.5.2, напоминание от пользователя (2026-09-10) — выполнить, если ещё не
-      сделано**: добавить `.claude/worktrees/` в `.gitignore`; завести `.worktreeinclude` в
-      корне репозитория со списком файлов, которых нет в git, но которые нужны каждому
-      worktree (`.env.local`) — тогда они будут копироваться в каждый новый worktree
-      автоматически. Проверено на момент создания этого пункта: ни `.gitignore`, ни
-      `.worktreeinclude` этого ещё не содержат/не существуют. Выполнено: `.gitignore` дополнен
-      строкой `.claude/worktrees/`; создан `.worktreeinclude` в корне репозитория со списком
-      `.env.local` (по одному пути на строку — существующей конвенции для этого типа файла в
-      репозитории не найдено).
+  сделано**: добавить `.claude/worktrees/` в `.gitignore`; завести `.worktreeinclude` в
+  корне репозитория со списком файлов, которых нет в git, но которые нужны каждому
+  worktree (`.env.local`) — тогда они будут копироваться в каждый новый worktree
+  автоматически. Проверено на момент создания этого пункта: ни `.gitignore`, ни
+  `.worktreeinclude` этого ещё не содержат/не существуют. Выполнено: `.gitignore` дополнен
+  строкой `.claude/worktrees/`; создан `.worktreeinclude` в корне репозитория со списком
+  `.env.local` (по одному пути на строку — существующей конвенции для этого типа файла в
+  репозитории не найдено).
 - [x] Переместить этот файл в `docs/plans/completed/` — manual test (skipped - not automatable,
       выполняется harness-процессом после завершения всех фаз, не этим агентом).
 

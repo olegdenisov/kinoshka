@@ -3,6 +3,7 @@ worth: yes
 where: src/pages/movie/ui/tabs/MediaTab/MediaTab.tsx:26
 added: 2026-08-25
 ---
+
 # трейлер нельзя воспроизвести — play-кнопка просто открывает ссылку в новой вкладке
 
 На `/movie/:id` кнопка play в блоке трейлера — это `<a href={m.trailerUrl} target='_blank'>`

@@ -90,7 +90,7 @@
 
 - **Вариант 1 (выбран): новый entity-слайс `@entities/person`.** Данные персоны — самостоятельный домен: свой DTO, свой эндпоинт, свой маппер, свой Suspense-хук. Полностью повторяет уже работающую схему `@entities/movie` (`getMovieDetail` тоже используется ровно одной страницей — это не аргумент против entity-слоя, а действующий прецедент репозитория). Плюсы: соответствует конвенции FSD и существующему коду; фетчер сразу получает TTL/cooldown/инвалидацию через `createCachedFetcher`; будущий `/person/search` или карусель «другие работы» подключится без переездов. Минус: `@entities/person` попадёт в чанк `shared` (группа `{ name: 'shared', test: /\/(widgets|features|entities|shared)\// }` стоит раньше page-групп), то есть ~1 kB маппера/фетчера будет грузиться на всех роутах, включая те, где персон нет. Принято как компромисс — переупорядочивать группы ради одного слайса нельзя, это сломает всю схему `shared` (см. AGENTS.md, «Performance budgets»).
 - **Вариант 2 (отклонён): держать данные персоны внутри `@entities/movie`.** Формально «работает» (там уже лежат `CastMember`/`CrewMember`), но смешивает два домена в одном слайсе и делает барель `@entities/movie` свалкой. Отклонён.
-- **Вариант 3 (отклонён): всё в page-слайсе `src/pages/person/` (api + model прямо там, без entity).** Единственный реальный плюс — весь код персоны попал бы в ленивый чанк `page-person`, а не в `shared`. Минусы перевешивают: нарушает конвенцию «данные домена живут в `entities`», запрещает переиспользование из любого другого слайса, и `model/`-фасад в page-слайсе конвенцией предназначен для *композиции нескольких нижних слайсов* (как `useMovieCatalog`), а не для единственного доменного фетча. Отклонён.
+- **Вариант 3 (отклонён): всё в page-слайсе `src/pages/person/` (api + model прямо там, без entity).** Единственный реальный плюс — весь код персоны попал бы в ленивый чанк `page-person`, а не в `shared`. Минусы перевешивают: нарушает конвенцию «данные домена живут в `entities`», запрещает переиспользование из любого другого слайса, и `model/`-фасад в page-слайсе конвенцией предназначен для _композиции нескольких нижних слайсов_ (как `useMovieCatalog`), а не для единственного доменного фетча. Отклонён.
 
 **Выбранный формат фильмографии: Вариант C — компактный текстовый список кредитов со ссылками, без постеров.**
 
@@ -219,6 +219,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 1: Типы `PersonDetail`/`PersonMovieCredit` и маппер DTO → `PersonDetail`
 
 **Файлы:**
+
 - Create: `src/entities/person/model/types.ts`
 - Create: `src/entities/person/api/mapDtoToPersonDetail.ts`
 - Create: `src/entities/person/api/mapDtoToPersonDetail.test.ts`
@@ -236,6 +237,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 2: Перенести `createCachedFetcher` в `@shared/lib` (устранить кросс-импорт entity↔entity)
 
 **Файлы:**
+
 - Create: `src/shared/lib/cachedFetcher/createCachedFetcher.ts`
 - Create: `src/shared/lib/cachedFetcher/createCachedFetcher.test.ts`
 - Create: `src/shared/lib/cachedFetcher/index.ts`
@@ -260,6 +262,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 3: Фетчер `getPersonDetail` с кешем и `ApiError`
 
 **Файлы:**
+
 - Create: `src/entities/person/api/getPersonDetail.ts`
 - Create: `src/entities/person/api/getPersonDetail.test.ts`
 
@@ -274,6 +277,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 4: Suspense-хук `usePersonDetail` + `invalidatePersonDetail` + публичный барель слайса
 
 **Файлы:**
+
 - Create: `src/entities/person/hooks/usePersonDetail.ts`
 - Create: `src/entities/person/hooks/index.ts`
 - Create: `src/entities/person/hooks/usePersonDetail.test.tsx`
@@ -292,6 +296,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 5: Скелет страницы `PersonPage` + `PersonDetailSkeleton`
 
 **Файлы:**
+
 - Create: `src/pages/person/PersonPage.tsx`
 - Create: `src/pages/person/index.tsx`
 - Create: `src/pages/person/ui/PersonDetailSkeleton/index.tsx`
@@ -318,6 +323,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 6: Компонент `PersonHero` — фото, имя, профессии, биометрия
 
 **Файлы:**
+
 - Create: `src/pages/person/ui/PersonHero/index.tsx`
 - Create: `src/pages/person/ui/PersonHero/PersonHero.tsx`
 - Create: `src/pages/person/ui/PersonHero/PersonHero.module.css`
@@ -338,6 +344,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 7: Фильмография — группировка и список кредитов со ссылками
 
 **Файлы:**
+
 - Create: `src/pages/person/lib/groupCreditsByProfession.ts`
 - Create: `src/pages/person/lib/groupCreditsByProfession.test.ts`
 - Create: `src/pages/person/ui/Filmography/index.tsx`
@@ -366,6 +373,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 8: Секция фактов `PersonFacts`
 
 **Файлы:**
+
 - Create: `src/pages/person/ui/PersonFacts/index.tsx`
 - Create: `src/pages/person/ui/PersonFacts/PersonFacts.tsx`
 - Create: `src/pages/person/ui/PersonFacts/PersonFacts.module.css`
@@ -382,6 +390,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 9: Композиция `Person` и раскладка страницы
 
 **Файлы:**
+
 - Modify: `src/pages/person/ui/Person/Person.tsx`
 - Modify: `src/pages/person/ui/Person/Person.module.css`
 - Create: `src/pages/person/ui/Person/Person.test.tsx`
@@ -396,6 +405,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 10: Роут `/person/:id` и chrome-конфиг в `AppLayout`
 
 **Файлы:**
+
 - Modify: `src/app/router.tsx`
 - Modify: `src/app/layouts/AppLayout.tsx`
 - Modify: `src/app/layouts/AppLayout.test.tsx`
@@ -414,6 +424,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 11: Карточки актёров в `CastTab` становятся ссылками на `/person/:id`
 
 **Файлы:**
+
 - Modify: `src/pages/movie/ui/tabs/CastTab/CastTab.tsx`
 - Modify: `src/pages/movie/ui/tabs/CastTab/CastTab.module.css`
 - Create: `src/pages/movie/ui/tabs/CastTab/CastTab.test.tsx`
@@ -433,6 +444,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 12: Имена съёмочной группы в `OverviewTab` становятся ссылками
 
 **Файлы:**
+
 - Modify: `src/pages/movie/lib/groupCrewByProfession.ts`
 - Modify: `src/pages/movie/lib/groupCrewByProfession.test.ts`
 - Modify: `src/pages/movie/ui/tabs/OverviewTab/OverviewTab.tsx`
@@ -451,6 +463,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 13: Группа код-сплиттинга `page-person` и бюджет `size-limit`
 
 **Файлы:**
+
 - Modify: `vite.config.ts`
 - Modify: `package.json`
 
@@ -467,6 +480,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 ### Задача 14: E2E-спек `person-detail.spec.ts` с a11y-проверкой
 
 **Файлы:**
+
 - Create: `e2e/person-detail.spec.ts`
 
 - [ ] написать сценарий навигации: `page.goto('/movie/<стабильный id>')` → клик по табу `Cast` → клик по первой карточке актёра → URL совпадает с `/\/person\/.+/`, виден `heading` уровня 1
@@ -505,9 +519,11 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - [ ] перенести этот план в `docs/plans/completed/`
 
 ## После завершения
-*Пункты, требующие ручного вмешательства или внешних систем — без чекбоксов, информационно*
+
+_Пункты, требующие ручного вмешательства или внешних систем — без чекбоксов, информационно_
 
 **Ручная проверка:**
+
 - Открыть `/person/:id` для нескольких реальных персон разного профиля: плодовитый актёр (94+ кредита, например id 6317), режиссёр (кредиты в группе `director`), персона без фото, персона без фактов, живущая персона (нет `death`, есть `age`).
 - Проверить обе темы: переключить на светлую (`data-theme='light'`) и убедиться, что ни один цвет не «залип» тёмным — это главный симптом хардкоженного hex/rgba вместо `var(--token)`.
 - Проверить на реальном мобильном устройстве / в device toolbar: кнопка «назад» в `MobileHeader`, `BottomNav` с активным `search`, сетка фильмографии в одну колонку.
@@ -515,14 +531,17 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - Проверить клавиатурную навигацию: Tab по карточкам каста и ссылкам фильмографии даёт видимый `:focus-visible`, Enter переходит; Tab по кнопкам «Show all» в разных группах — доступные имена не совпадают.
 
 **Стоимость квоты API:**
+
 - Демо-тариф — 200 запросов/день. Выбранный вариант фильмографии добавляет **0** запросов сверх одного `GET /v1.5/person/{id}` на визит. Новый e2e-спек добавляет ~3-4 запроса к полному прогону (сейчас ~40-50). Если после релиза окажется, что квоты не хватает, первым кандидатом на сокращение остаётся e2e (он и так запускается только по лейблу `run-e2e`).
 
 **Возможные улучшения (отдельными пунктами бэклога, не в этом плане):**
+
 - **Реальные постеры в фильмографии** (отклонённый вариант B): секция «Known for» с top-N кредитов, догруженных через `getMoviesByIds()` и отрендеренных существующим `Card`. Стоит N запросов на каждую новую персону — заводить только если квота позволит или появится не-демо-тариф.
 - **Награды персоны**: `apiClient.getV15PersonAwards` уже сгенерирован (`PersonControllerFindManyAwardsV15`), сейчас показываем только счётчик `countAwards`. Отдельный запрос — отдельная задача.
 - **Галерея фото персоны**: отдельного эндпоинта нет — `/v1.5/image` фильтруется только по `movieId` (см. `getMovieImages.ts`), поэтому «фото» из формулировки бэклога закрыто единственным полем `photo`. Галерея потребует другого источника данных.
 - **Поиск по персонам**: `apiClient.getV15PersonSearch` сгенерирован и не используется — потенциальная вкладка в `/search`.
 
 **Внешние системы:**
+
 - Изменений в `vercel.json` (CSP/заголовки безопасности) **не требуется** — подтверждено живым запросом: `photo` приходит с `https://avatars.mds.yandex.net`, хост уже в `img-src`; `st.kp.yandex.net` (второй возможный домен фото персон) там тоже уже есть. Если в будущем фото начнут отдаваться с третьего домена, `img-src` придётся обновить вручную — это внешний факт, который никакой тест не поймает.
 - После деплоя проверить в Sentry, что на `/person/:id` не посыпались новые ошибки, и в Plausible — что pageview для нового маршрута регистрируется (`AppLayout` вызывает `trackPageview()` по смене `pathname`, отдельной проводки не нужно).
