@@ -125,9 +125,9 @@ Roadmap-пункт `2.5.7` (`plans/roadmap.md`) требует три вещи:
 - Modify: `sentry.config.ts`
 - Modify: `sentry.config.test.ts`
 
-- [ ] добавить `export const SENTRY_TRACES_SAMPLE_RATE = 0.2` с WHY-комментарием про trade-off квота/данные-для-P75 (см. Technical Details — без внутреннего противоречия "это только про квоту")
-- [ ] написать тест: `SENTRY_TRACES_SAMPLE_RATE === 0.2`
-- [ ] прогнать тесты — должны пройти перед Task 2a
+- [x] добавить `export const SENTRY_TRACES_SAMPLE_RATE = 0.2` с WHY-комментарием про trade-off квота/данные-для-P75 (см. Technical Details — без внутреннего противоречия "это только про квоту")
+- [x] написать тест: `SENTRY_TRACES_SAMPLE_RATE === 0.2`
+- [x] прогнать тесты — должны пройти перед Task 2a
 
 ### Task 2a: Исправить порядок инициализации Sentry относительно роутера
 

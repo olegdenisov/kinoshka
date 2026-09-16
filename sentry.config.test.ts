@@ -4,6 +4,7 @@ import {
   buildRelease,
   isSentryEnabled,
   resolveBuildSourcemap,
+  SENTRY_TRACES_SAMPLE_RATE,
 } from './sentry.config'
 
 describe('buildRelease', () => {
@@ -65,5 +66,11 @@ describe('resolveBuildSourcemap', () => {
 
   it('false, когда sentry выключен — .map не должен попасть в dist/', () => {
     expect(resolveBuildSourcemap(false)).toBe(false)
+  })
+})
+
+describe('SENTRY_TRACES_SAMPLE_RATE', () => {
+  it('равен 0.2 — верхняя граница согласованного диапазона 0.1–0.2', () => {
+    expect(SENTRY_TRACES_SAMPLE_RATE).toBe(0.2)
   })
 })
