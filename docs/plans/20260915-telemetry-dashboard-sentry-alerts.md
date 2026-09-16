@@ -157,12 +157,12 @@ Roadmap-пункт `2.5.7` (`plans/roadmap.md`) требует три вещи:
 - Modify: `src/app/router.tsx`
 - Modify: `src/app/router.test.tsx`
 
-- [ ] обернуть `createBrowserRouter(...)` в `router.tsx` через `Sentry.wrapCreateBrowserRouter`
-- [ ] добавить в `Sentry.init(...)` (`sentry.ts`): `integrations: [Sentry.reactRouterBrowserTracingIntegration({ useEffect, useLocation, useNavigationType, createRoutesFromChildren, matchRoutes })]`, `tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE` — **`tracePropagationTargets` не добавлять**
-- [ ] обновить мок `vi.mock('@sentry/react', ...)` в `sentry.test.ts`, добавив `reactRouterBrowserTracingIntegration`/`wrapCreateBrowserRouter` как `vi.fn()`
-- [ ] обновить тест "Sentry.init вызван с ожидаемым конфигом" — добавить `integrations`/`tracesSampleRate` в ожидаемый объект, добавить отдельный тест-регрессию "`tracePropagationTargets` НЕ присутствует среди ключей вызова"
-- [ ] обновить `router.test.tsx`, если обёртка `wrapCreateBrowserRouter` меняет поведение рендера роутов (успешный кейс — роутинг работает как раньше)
-- [ ] прогнать тесты — должны пройти перед Task 2c
+- [x] обернуть `createBrowserRouter(...)` в `router.tsx` через `Sentry.wrapCreateBrowserRouter`
+- [x] добавить в `Sentry.init(...)` (`sentry.ts`): `integrations: [Sentry.reactRouterBrowserTracingIntegration({ useEffect, useLocation, useNavigationType, createRoutesFromChildren, matchRoutes })]`, `tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE` — **`tracePropagationTargets` не добавлять**
+- [x] обновить мок `vi.mock('@sentry/react', ...)` в `sentry.test.ts`, добавив `reactRouterBrowserTracingIntegration`/`wrapCreateBrowserRouter` как `vi.fn()`
+- [x] обновить тест "Sentry.init вызван с ожидаемым конфигом" — добавить `integrations`/`tracesSampleRate` в ожидаемый объект, добавить отдельный тест-регрессию "`tracePropagationTargets` НЕ присутствует среди ключей вызова"
+- [x] обновить `router.test.tsx`, если обёртка `wrapCreateBrowserRouter` меняет поведение рендера роутов (успешный кейс — роутинг работает как раньше) — не потребовалось: без `Sentry.init()` (PROD=false в тестах) `wrapCreateBrowserRouter` возвращает необёрнутую функцию, `router.test.tsx` прошёл без изменений
+- [x] прогнать тесты — должны пройти перед Task 2c
 
 ### Task 2c: Перемерить бюджеты `size-limit` после включения tracing
 

@@ -1,7 +1,16 @@
+import * as Sentry from '@sentry/react'
 import { lazyNamed } from '@shared/lib'
 import { createBrowserRouter } from 'react-router'
 
 import { AppLayout } from './layouts/AppLayout'
+
+// Sentry.wrapCreateBrowserRouter (Task 2b, план 20260915-telemetry-dashboard-sentry-alerts.md) —
+// вместе с reactRouterBrowserTracingIntegration (sentry.ts) группирует параметризованные роуты
+// (/movie/:id) в один transaction name вместо одного transaction на конкретный фильм. Порядок
+// инициализации (initSentry() ДО этого модуля) обеспечен sentry-bootstrap.ts/main.tsx — см.
+// WHY-комментарий там.
+const wrappedCreateBrowserRouter =
+  Sentry.wrapCreateBrowserRouter(createBrowserRouter)
 
 // Все шесть роутов теперь под `AppLayout` (Task 10 плана
 // docs/plans/20260827-mobile-first-adaptive-layout.md завершила перенос `/search` — последнего
@@ -25,7 +34,7 @@ const RecommendationsPage = lazyNamed(
 )
 const SearchPage = lazyNamed(() => import('../pages/search'), 'SearchPage')
 
-export const router = createBrowserRouter([
+export const router = wrappedCreateBrowserRouter([
   {
     element: <AppLayout />,
     children: [

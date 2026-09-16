@@ -1,9 +1,16 @@
 import type { ErrorEvent as SentryErrorEvent } from '@sentry/react'
 import * as Sentry from '@sentry/react'
 
+import { SENTRY_TRACES_SAMPLE_RATE } from '../../sentry.config'
 import { initSentry, scrubApiKeyHeader } from './sentry'
 
-vi.mock('@sentry/react', () => ({ init: vi.fn() }))
+vi.mock('@sentry/react', () => ({
+  init: vi.fn(),
+  reactRouterBrowserTracingIntegration: vi.fn(() => ({
+    name: 'ReactRouterBrowserTracing',
+  })),
+  wrapCreateBrowserRouter: vi.fn(fn => fn),
+}))
 
 beforeEach(() => vi.clearAllMocks())
 afterEach(() => vi.unstubAllEnvs())
@@ -103,6 +110,19 @@ describe('initSentry', () => {
       environment: import.meta.env.MODE,
       sendDefaultPii: false,
       beforeSend: scrubApiKeyHeader,
+      integrations: [{ name: 'ReactRouterBrowserTracing' }],
+      tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
     })
+  })
+
+  it('tracePropagationTargets НЕ присутствует среди ключей вызова Sentry.init', () => {
+    vi.stubEnv('PROD', true)
+    vi.stubEnv('VITE_SENTRY_DSN', 'https://example.test/1')
+
+    initSentry()
+
+    const callArgs = vi.mocked(Sentry.init).mock.calls[0]?.[0]
+    expect(callArgs).toBeDefined()
+    expect(Object.keys(callArgs ?? {})).not.toContain('tracePropagationTargets')
   })
 })
