@@ -44,3 +44,10 @@ export const isSentryEnabled = ({
 export const resolveBuildSourcemap = (
   sentryEnabled: boolean,
 ): 'hidden' | false => (sentryEnabled ? 'hidden' : false)
+
+// 0.2 — верхняя граница диапазона 0.1–0.2, рассмотренного ещё в 2.5.1. Компромисс, а не чистая
+// экономия квоты: слишком низкий rate экономит транзакционную квоту Sentry на обычном трафике,
+// но рискует не набрать сэмплов для надёжного P75/failure_rate() в окне алерта (портфолио-проект,
+// низкий трафик) — при очень низком трафике оба соображения могут не сойтись одновременно, это
+// принятый риск (см. docs/plans/20260915-telemetry-dashboard-sentry-alerts.md, Post-Completion).
+export const SENTRY_TRACES_SAMPLE_RATE = 0.2
