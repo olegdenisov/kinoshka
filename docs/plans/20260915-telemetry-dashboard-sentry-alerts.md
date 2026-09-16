@@ -187,20 +187,20 @@ Roadmap-пункт `2.5.7` (`plans/roadmap.md`) требует три вещи:
 - Modify: `tsconfig.node.json` (добавить все четыре новых root-файла в `include`)
 - Modify: `knip.jsonc` (добавить `sentry-telemetry.config.ts` и `provision-sentry-telemetry.ts` в `entry` — тестовые файлы уже покрыты существующим глобом `**/*.test.{ts,tsx}`)
 
-- [ ] прогнать `sentry alert metrics create <org> --name '__probe__' --query '' --aggregate 'failure_rate()' --dataset transactions --time-window 60 --project <project> --trigger '[{"alertThreshold":5,...}]' --dry-run` и (если `--dry-run` не валидирует удалённо — см. WHY-комментарий рядом, основано на наблюдении в Context, что `--dry-run` у `alert issues create` не бьёт по серверу) при необходимости создать/удалить тестовое правило, чтобы подтвердить: (а) числовой масштаб `alertThreshold` для `failure_rate()` (0-100 vs 0-1), (б) что `--query ''` (без фильтра) валиден для этого агрегата — зафиксировать находки в комментарии у `ERROR_ALERT_FAILURE_RATE_THRESHOLD_PERCENT`
-- [ ] `sentry-telemetry.config.ts`: `ERROR_ALERT_FAILURE_RATE_THRESHOLD_PERCENT = 5`, `ERROR_ALERT_WINDOW_MINUTES = 60`, `LCP_P75_THRESHOLD_MS = 2500`, `LCP_ALERT_WINDOW_MINUTES = 60` (оба окна подняты с изначальных 15 минут — см. Technical Details, "данные есть, но статистически незначимы")
-- [ ] `sentry-telemetry.config.ts`: `DASHBOARD_WIDGETS` — типизированный массив спецификаций виджетов (name, display, dataset, query, col/row/width/height); датасет/query для INP/CLS виджетов помечен `TODO: подтвердить после появления ingested-данных`
-- [ ] `sentry-telemetry.config.ts`: `type TelemetryContext = { org: string; project: string; teamId: string }`; чистые функции `buildErrorRateMetricAlertArgs(ctx, config)`, `buildLcpMetricAlertArgs(ctx, config)`, `buildDashboardCreateArgs(ctx, title)`, `buildWidgetArgs(ctx, dashboardTitle, widget)` — каждая возвращает `string[]` (argv)
-- [ ] `sentry-telemetry.config.ts`: `buildIssueAlertListArgs(ctx)`, `buildMetricAlertListArgs(ctx)`, `buildDashboardListArgs(ctx)` — argv для трёх `--json --fresh` list-вызовов, с точной грамматикой target (см. Technical Details — `<org>/<project>` для issues, `<org>/` для metrics/dashboard)
-- [ ] `sentry-telemetry.config.ts`: `shouldCreate(existingNames: string[], desiredName: string): boolean` — простая exists-проверка (`!existingNames.includes(desiredName)`)
-- [ ] `provision-sentry-telemetry.ts`: `validateEnv()` — читает `process.env.SENTRY_ORG`/`SENTRY_PROJECT`, кидает понятную ошибку, если пусто
-- [ ] `provision-sentry-telemetry.ts`: эффектная `main()` — `validateEnv()` → резолвит team через `sentry team list <org>/ --json --fresh` → для error-rate alert / LCP alert / dashboard (+виджеты, только если дашборд создаётся впервые) — `sentry ... list --json --fresh` → `shouldCreate` → при true `child_process.execFileSync('sentry', buildXArgs(...), { stdio: 'inherit' })`; импорты между root `.ts`-файлами — с явным расширением `.ts` (см. Context)
-- [ ] добавить `sentry-telemetry` в `Makefile`: `node --env-file-if-exists=.env.local provision-sentry-telemetry.ts`, с комментарием, что требует предварительного `sentry auth login` (на этой машине уже выполнено); добавить `sentry-telemetry` в `.PHONY`
-- [ ] написать тесты для всех `buildXArgs`/`buildXListArgs` функций (успешный кейс — ожидаемый argv на фиксированной тестовой `TelemetryContext`, включая точный target с завершающим слэшем там, где он нужен)
-- [ ] написать тест на `DASHBOARD_WIDGETS`: сумма `width` виджетов в каждой строке сетки равна 6, размеры соответствуют типу `display` (`big_number` 2×1, `line` 3×2, `table` 6×2)
-- [ ] написать тесты для `shouldCreate` (успех: имени нет в списке → `true`; edge: имя уже есть → `false`)
-- [ ] написать тест для `validateEnv()` (edge: `SENTRY_ORG`/`SENTRY_PROJECT` не заданы → понятная ошибка, не `undefined` в argv дальше по цепочке)
-- [ ] прогнать тесты — должны пройти перед Task 4
+- [x] прогнать `sentry alert metrics create <org> --name '__probe__' --query '' --aggregate 'failure_rate()' --dataset transactions --time-window 60 --project <project> --trigger '[{"alertThreshold":5,...}]' --dry-run` и (если `--dry-run` не валидирует удалённо — см. WHY-комментарий рядом, основано на наблюдении в Context, что `--dry-run` у `alert issues create` не бьёт по серверу) при необходимости создать/удалить тестовое правило, чтобы подтвердить: (а) числовой масштаб `alertThreshold` для `failure_rate()` (0-100 vs 0-1), (б) что `--query ''` (без фильтра) валиден для этого агрегата — зафиксировать находки в комментарии у `ERROR_ALERT_FAILURE_RATE_THRESHOLD_PERCENT` — живой пробный вызов проведён (org `mycomp-ey`/project `kinoshka`, sentry CLI 0.44.1, 2026-09-16): (б) подтверждено однозначно — `--query ''` невалидна (`--dry-run` бьёт по клиентской валидации CLI мгновенно: "Error: query cannot be empty."), билдеры используют непустой `METRIC_ALERT_QUERY = 'event.type:transaction'`. (а) НЕ подтверждено живым созданием — обнаружен более глубокий блокер: реальное (non-dry-run) создание на `--dataset transactions` отклоняется сервером целиком ("Creation of transaction-based alerts is disabled, as we migrate to the span dataset..."), а единственная альтернатива, которую принимает клиентская валидация CLI (`--dataset spans`), не мапится в ожидаемый сервером `eventsanalyticsplatform`/`performancemetrics` ("Invalid dataset for this query type"). `ERROR_ALERT_FAILURE_RATE_THRESHOLD_PERCENT` оставлен как документированное best-effort-допущение (0-100 шкала, по прецеденту публичной Sentry-документации для процентных aggregate), с явным WHY-комментарием и флагом "требует живой проверки в Post-Completion" — см. новый подраздел в Post-Completion. Ни один пробный вызов не создал реальный объект (все падали на 400/клиентской валидации до персиста) — подтверждено повторным `sentry alert metrics list mycomp-ey/ --json --fresh` → `{"data":[]}`, убирать нечего. Полный лог команд — в прогресс-файле задачи.
+- [x] `sentry-telemetry.config.ts`: `ERROR_ALERT_FAILURE_RATE_THRESHOLD_PERCENT = 5`, `ERROR_ALERT_WINDOW_MINUTES = 60`, `LCP_P75_THRESHOLD_MS = 2500`, `LCP_ALERT_WINDOW_MINUTES = 60` (оба окна подняты с изначальных 15 минут — см. Technical Details, "данные есть, но статистически незначимы")
+- [x] `sentry-telemetry.config.ts`: `DASHBOARD_WIDGETS` — типизированный массив спецификаций виджетов (name, display, dataset, query, col/row/width/height); датасет/query для INP/CLS виджетов помечен `TODO: подтвердить после появления ingested-данных`
+- [x] `sentry-telemetry.config.ts`: `type TelemetryContext = { org: string; project: string; teamId: string }`; чистые функции `buildErrorRateMetricAlertArgs(ctx, config)`, `buildLcpMetricAlertArgs(ctx, config)`, `buildDashboardCreateArgs(ctx, title)`, `buildWidgetArgs(ctx, dashboardTitle, widget)` — каждая возвращает `string[]` (argv)
+- [x] `sentry-telemetry.config.ts`: `buildIssueAlertListArgs(ctx)`, `buildMetricAlertListArgs(ctx)`, `buildDashboardListArgs(ctx)` — argv для трёх `--json --fresh` list-вызовов, с точной грамматикой target (см. Technical Details — `<org>/<project>` для issues, `<org>/` для metrics/dashboard)
+- [x] `sentry-telemetry.config.ts`: `shouldCreate(existingNames: string[], desiredName: string): boolean` — простая exists-проверка (`!existingNames.includes(desiredName)`)
+- [x] `provision-sentry-telemetry.ts`: `validateEnv()` — читает `process.env.SENTRY_ORG`/`SENTRY_PROJECT`, кидает понятную ошибку, если пусто
+- [x] `provision-sentry-telemetry.ts`: эффектная `main()` — `validateEnv()` → резолвит team через `sentry team list <org>/ --json --fresh` → для error-rate alert / LCP alert / dashboard (+виджеты, только если дашборд создаётся впервые) — `sentry ... list --json --fresh` → `shouldCreate` → при true `child_process.execFileSync('sentry', buildXArgs(...), { stdio: 'inherit' })`; импорты между root `.ts`-файлами — с явным расширением `.ts` (см. Context)
+- [x] добавить `sentry-telemetry` в `Makefile`: `node --env-file-if-exists=.env.local provision-sentry-telemetry.ts`, с комментарием, что требует предварительного `sentry auth login` (на этой машине уже выполнено); добавить `sentry-telemetry` в `.PHONY`
+- [x] написать тесты для всех `buildXArgs`/`buildXListArgs` функций (успешный кейс — ожидаемый argv на фиксированной тестовой `TelemetryContext`, включая точный target с завершающим слэшем там, где он нужен)
+- [x] написать тест на `DASHBOARD_WIDGETS`: сумма `width` виджетов в каждой строке сетки равна 6, размеры соответствуют типу `display` (`big_number` 2×1, `line` 3×2, `table` 6×2)
+- [x] написать тесты для `shouldCreate` (успех: имени нет в списке → `true`; edge: имя уже есть → `false`)
+- [x] написать тест для `validateEnv()` (edge: `SENTRY_ORG`/`SENTRY_PROJECT` не заданы → понятная ошибка, не `undefined` в argv дальше по цепочке)
+- [x] прогнать тесты — должны пройти перед Task 4
 
 ### Task 4: Sentry MCP в `.mcp.json`
 
@@ -289,6 +289,36 @@ _Пункты, требующие ручных действий или внеш�
 
 - При следующем запуске Claude Code в этом репозитории — пройти OAuth-авторизацию Sentry MCP.
 - Опционально: локально (не в коммите) заменить URL в `.mcp.json` на скоупленный `https://mcp.sentry.dev/mcp/mycomp-ey/kinoshka`.
+
+**⚠️ Критическая находка живого пробного вызова (Task 3, 2026-09-16) — блокирует реальный запуск `make sentry-telemetry` до разбора:**
+
+- `sentry alert metrics create --dataset transactions` для этого аккаунта **отклоняется сервером
+  целиком** при реальном (не `--dry-run`) создании — независимо от aggregate/query/alertThreshold:
+  `"Creation of transaction-based alerts is disabled, as we migrate to the span dataset. Create
+  span-based alerts (dataset: events_analytics_platform) with the is_transaction:true filter
+  instead."` Установленная версия `sentry` CLI (0.44.1) не принимает `events_analytics_platform`
+  как значение `--dataset` вообще (клиентская валидация ограничивает список: errors, transactions,
+  sessions, events, spans, metrics), а ближайшая альтернатива `--dataset spans` даёт другую ошибку
+  сервера ("Invalid dataset for this query type. Valid datasets are ['eventsanalyticsplatform',
+  'performancemetrics', 'transactions']"). Итог: **нет ни одного значения `--dataset`, доступного в
+  этой версии CLI, которым реально можно создать этот тип алерта на этом аккаунте.**
+- Отдельно: payload, который сервер реально ожидает для триггеров, шире документированного в
+  `--help`/примерах `{"alertThreshold":X,"actions":[...]}` — экспериментально потребовались
+  `type`/`comparison`/`conditionResult` плюс обязательное второе ("resolve") условие. Похоже,
+  аккаунт уже переведён на новый unified Detector/workflow-engine формат, а CLI 0.44.1
+  документирован по старому.
+- Из-за этого числовой масштаб `ERROR_ALERT_FAILURE_RATE_THRESHOLD_PERCENT`
+  (`sentry-telemetry.config.ts`) — **best-effort допущение** (0-100 шкала, не 0-1), не
+  подтверждённое живым созданием (сервер отбрасывает запрос раньше, на этапе выбора датасета).
+  Полный лог пробных команд — в прогресс-файле задачи ("task 3").
+- **Перед реальным запуском `make sentry-telemetry` нужно решить одно из:** (а) обновить `sentry`
+  CLI до версии, поддерживающей `events_analytics_platform`/`eventsanalyticsplatform` как
+  `--dataset`, и обновить `sentry-telemetry.config.ts` под неё; (б) создать оба Metric Alert'а
+  вручную через Sentry UI, затем `sentry alert metrics view <org>/<name>` — прочитать реальный
+  сохранённый `alertThreshold`, подтвердив шкалу, и обновить провижининг-скрипт под фактически
+  работающий payload; (в) дождаться, пока Sentry снова разрешит создание алертов на
+  `dataset: transactions` через API. Ни один из вариантов не был выбран здесь — сознательно, так
+  как выбор зависит от того, что окажется быстрее/доступнее на момент реального запуска.
 
 **Тюнинг после реального трафика (не в рамках этого плана):**
 

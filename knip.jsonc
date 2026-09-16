@@ -19,6 +19,11 @@
     "bundle.config.ts",
     "playwright.config.ts",
     "e2e/**/*.spec.ts",
+    // Task 3, docs/plans/20260915-telemetry-dashboard-sentry-alerts.md — provisioning-скрипт
+    // поверх `sentry` CLI + его чистый конфиг-модуль. Тестовые файлы уже покрыты глобом
+    // "**/*.test.{ts,tsx}" выше.
+    "sentry-telemetry.config.ts",
+    "provision-sentry-telemetry.ts",
   ],
   // e2e/**/*.ts (helper-модули типа e2e/utils/a11y.ts, не сами *.spec.ts,
   // те уже entry выше) — без этого knip не резолвит импорты внутри e2e/utils/
@@ -43,4 +48,8 @@
     "src/features/theme/index.ts",
     "src/shared/ui/index.ts",
   ],
+  // `sentry` — глобально установленный CLI-инструмент (см. AGENTS.md, "sentry CLI — установлен и
+  // авторизован на этой машине"), не npm-зависимость репозитория — knip иначе флагует его как
+  // "Unlisted binary" в provision-sentry-telemetry.ts (execFileSync('sentry', ...)).
+  "ignoreBinaries": ["sentry"],
 }
