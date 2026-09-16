@@ -3,13 +3,13 @@ import { RouterProvider } from 'react-router/dom'
 
 import { GlobalErrorBoundary } from './GlobalErrorBoundary'
 import { router } from './router'
-import { initSentry } from './sentry'
 
-// Один раз на верхнем уровне модуля, до определения Providers — initSentry() рано выходит, если
-// !PROD || !VITE_SENTRY_DSN (см. src/app/sentry.ts), так что no-op в dev/test-окружениях.
-initSentry()
-// Аналогично initSentry(): initAnalytics()/reportWebVitals() рано выходят, если
-// !PROD || !VITE_PLAUSIBLE_DOMAIN (см. src/shared/lib/analytics/analytics.ts) — no-op в dev/test.
+// initSentry() больше не вызывается здесь — переехал в src/app/sentry-bootstrap.ts, импортируемый
+// первой строкой в main.tsx, раньше этого модуля (который транзитивно импортирует ./router и
+// создаёт роутер) — см. WHY-комментарий в sentry-bootstrap.ts про требование порядка инициализации.
+// Один раз на верхнем уровне модуля, до определения Providers — initAnalytics()/reportWebVitals()
+// рано выходят, если !PROD || !VITE_PLAUSIBLE_DOMAIN (см. src/shared/lib/analytics/analytics.ts) —
+// no-op в dev/test-окружениях.
 initAnalytics()
 reportWebVitals()
 
