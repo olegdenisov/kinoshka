@@ -475,10 +475,12 @@
 
 ### 2.5.6 Lighthouse в CI
 
-- [ ] `@lhci/cli` job в CI на preview-deploy URL.
-- [ ] Бюджеты: Performance ≥ 90, A11y ≥ 95, SEO ≥ 95, Best Practices ≥ 90.
-- [ ] Fail PR при просадке.
-- [ ] Lighthouse-bot комментирует diff в PR (опционально).
+- [x] `@lhci/cli` job в CI на preview-deploy URL. Реализовано без `@lhci/cli` как devDependency — `pnpm dlx @lhci/cli@<pinned>` в `Makefile`, `treosh/lighthouse-ci-action` (вендорит свой `@lhci/cli`) в `.github/workflows/lighthouse.yml`, см. AGENTS.md.
+- [x] Бюджеты: Performance ≥ 90, A11y ≥ 95, SEO ≥ 95, Best Practices ≥ 90. Реализовано с двумя отклонениями: `categories:performance` временно `warn` (не `error`) на период soak — переход в `error` синхронизирован с переводом `lighthouse`-job'а в required check (см. Post-Completion плана); SEO гейтится не категорией `categories:seo` целиком, а набором per-audit `error`-ассертов минус `is-crawlable` (Vercel шлёт `X-Robots-Tag: noindex` на все preview, `is-crawlable` иначе гарантированно проваливает всю категорию независимо от контента) — см. `docs/plans/20260915-lighthouse-ci.md`.
+- [x] Fail PR при просадке. Финальный шаг `exit 1` при `steps.lhci.outcome == 'failure'` (`continue-on-error: true` на шаге `lhci`, чтобы шаг с комментарием в PR всё равно выполнился).
+- [x] Lighthouse-bot комментирует diff в PR (опционально). Реализовано — sticky-комментарий (`actions/github-script`) со ссылками на отчёты и таблицей assertion-результатов, обновляется, а не дублируется.
+
+  **Отклонения от исходной формулировки роадмапа** (см. `docs/plans/20260915-lighthouse-ci.md` для полного обоснования): конфиг — `lighthouserc.cjs`, не `.js` (ESM `"type": "module"` в `package.json` + `require()`-загрузка `@lhci/cli`, тот же прецедент, что `knip.jsonc` вместо `knip.json`); триггер — лейбл `run-lighthouse` на PR (`on: pull_request: types: [labeled]`), не автоматический прогон на каждый PR — квота demo-тарифа Kinopoisk API (200 запросов/день, уже разделяемая с E2E); фиксированный URL `/movie/666` вместо динамического выбора карточки — Lighthouse не умеет «кликнуть по первой карточке», нужен литеральный URL (живость проверена `curl`, не гарантирована вечно); `preset: 'desktop'`, не mobile-профиль по умолчанию — mobile-throttling заметно более шумный на shared CI-раннерах; `categories:performance: 'warn'`, не `error`, на период soak — единственный прогон (`numberOfRuns: 1`, квота) без медианы даёт слишком шумный perf-скор для жёсткого гейта.
 
 **Как лучше:** запускай на preview URL, а не локально — реальное сетевое окружение, корректные метрики.
 

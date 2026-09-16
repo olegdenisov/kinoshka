@@ -28,6 +28,7 @@
     "bundle.config.test.ts",
     "vercel-headers.test.ts",
     "lighthouse-config.test.ts",
+    "font-swap.test.ts",
     "playwright.config.ts",
     "e2e/**/*.ts",
     "sentry-telemetry.config.ts",

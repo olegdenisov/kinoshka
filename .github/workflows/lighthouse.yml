@@ -81,75 +81,43 @@ jobs:
           temporaryPublicStorage: true
 
       - name: Comment PR with results
+        # !cancelled() (не bare always()) — шаг должен выполниться и когда
+        # предыдущий "Wait for Vercel preview" упал (Deployment Protection,
+        # таймаут), и когда упал/недошёл до assertion'ов lhci — именно это
+        # утверждает комментарий-фолбэк ниже (см.
+        # .github/scripts/lighthouse-comment.cjs). Раньше здесь не было
+        # никакого if:, из-за чего шаг тихо пропускался при падении
+        # "Wait for Vercel preview" и комментарий вообще не постился — вопреки
+        # собственному назначению этого шага (найдено code review). Не bare
+        # always() — чтобы не пытаться постить комментарий и при отмене джобы
+        # самим GitHub Actions (concurrency: cancel-in-progress).
+        if: ${{ !cancelled() }}
         uses: actions/github-script@v8
         with:
           script: |
-            const marker = '<!-- lighthouse-ci-comment -->'
-
-            const links = process.env.LHCI_LINKS
-              ? JSON.parse(process.env.LHCI_LINKS)
-              : null
-            const results = process.env.LHCI_ASSERTION_RESULTS
-              ? JSON.parse(process.env.LHCI_ASSERTION_RESULTS)
-              : null
-
-            let body = `${marker}\n## Lighthouse CI\n\n`
-
-            if (!links && !results) {
-              // lhci упал ещё на сборе данных (например 401 от Deployment
-              // Protection, сетевая ошибка ожидания preview) — а не на
-              // assertion'ах. Пустая таблица тут была бы вводящей в
-              // заблуждение — явно говорим, что прогон не дошёл до сравнения
-              // с порогами.
-              body +=
-                'Lighthouse run failed before assertions ran (no report links or assertion results were produced). Check the job logs for details.\n'
-            } else {
-              if (links) {
-                body += '### Reports\n\n'
-                for (const [url, link] of Object.entries(links)) {
-                  body += `- [${url}](${link})\n`
-                }
-                body += '\n'
-              }
-
-              if (results && results.length > 0) {
-                body += '### Assertion results\n\n'
-                body += '| URL | Audit | Expected | Actual |\n'
-                body += '| --- | --- | --- | --- |\n'
-                for (const r of results) {
-                  body += `| ${r.url} | ${r.auditProperty ?? r.auditId} | ${r.operator} ${r.expected} | ${r.actual} |\n`
-                }
-              } else {
-                body += 'All assertions passed.\n'
-              }
-            }
-
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            })
-
-            const existing = comments.find((c) => c.body?.includes(marker))
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              })
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              })
-            }
+            const { run } = require('./.github/scripts/lighthouse-comment.cjs')
+            await run({ github, context })
         env:
           LHCI_LINKS: ${{ steps.lhci.outputs.links }}
           LHCI_ASSERTION_RESULTS: ${{ steps.lhci.outputs.assertionResults }}
+
+      - name: Fail if Lighthouse assertions never ran
+        # treosh/lighthouse-ci-action's main() явно проверяет exit code
+        # collect/upload и падает при их ошибке (это уже покрыто следующим
+        # шагом через outcome=='failure') — но exit code отдельного
+        # `lhci assert` подпроцесса нигде не проверяется. Если assert упадёт
+        # (ошибка конфига, версии, кинутое исключение внутри аудита) и не
+        # напишет assertion-results.json, getAssertionResults() у экшена
+        # вернёт null, setAnnotations() тихо не вызовет core.setFailed() — джоба
+        # зазеленеет, хотя assertions вообще не запускались (найдено code
+        # review). Отличаем этот случай от "все прогоны прошли чисто"
+        # (assertionResults — валидный '[]', а не пустая строка/отсутствует):
+        # падаем только когда links заполнен (collect/upload прошли), а
+        # assertionResults пуст.
+        if: steps.lhci.outputs.links != '' && steps.lhci.outputs.assertionResults == ''
+        run: |
+          echo "::error::Lighthouse CI produced report links but no assertion results — the assert step likely crashed without writing assertion-results.json. Treating this as a failure."
+          exit 1
 
       - name: Fail on Lighthouse assertion failure
         # outcome (не conclusion) остаётся 'failure' при continue-on-error:
