@@ -76,13 +76,13 @@
       "name": "entry",
       "path": "dist/assets/index-*.js",
       "gzip": true,
-      "limit": "2.8 KB"
+      "limit": "2.9 KB"
     },
     {
       "name": "vendor",
       "path": "dist/assets/vendor-*.js",
       "gzip": true,
-      "limit": "158 KB"
+      "limit": "184.7 KB"
     },
     {
       "name": "web-vitals",

@@ -170,10 +170,10 @@ Roadmap-пункт `2.5.7` (`plans/roadmap.md`) требует три вещи:
 
 - Modify: `package.json` (`size-limit`, записи `entry` и `vendor`)
 
-- [ ] собрать `make build-only`
-- [ ] перемерить gzip-размер `dist/assets/index-*.js` (`entry`) и `dist/assets/vendor-*.js` (`vendor`) — оба чанка получают новый код (react-router-хуки/`sentry-bootstrap.ts` → `entry`, `@sentry/react`'s tracing-инструментирование → `vendor`, см. Context)
-- [ ] обновить `limit` обеих записей в `package.json`'s `"size-limit"` по правилу measured+15% (см. AGENTS.md 2.5.3)
-- [ ] прогнать `make size` — должен пройти перед Task 3
+- [x] собрать `make build-only`
+- [x] перемерить gzip-размер `dist/assets/index-*.js` (`entry`) и `dist/assets/vendor-*.js` (`vendor`) — оба чанка получают новый код (react-router-хуки/`sentry-bootstrap.ts` → `entry`, `@sentry/react`'s tracing-инструментирование → `vendor`, см. Context). Измерено через `pnpm exec size-limit` (та же метрика, что и проверяющая команда): `entry` 2.52 kB gzip, `vendor` 160.61 kB gzip.
+- [x] обновить `limit` обеих записей в `package.json`'s `"size-limit"` по правилу measured+15% (см. AGENTS.md 2.5.3) — `entry`: 2.52 × 1.15 ≈ 2.9 KB; `vendor`: 160.61 × 1.15 ≈ 184.7 KB
+- [x] прогнать `make size` — должен пройти перед Task 3
 
 ### Task 3: Telemetry-as-code — пороги, argv-builders, provisioning-скрипт
 
