@@ -6,7 +6,12 @@ import { describe, expect, it } from 'vitest'
 // (в отличие от того теста, пересчитывающего SHA-256 из index.html), а хардкодит те же
 // пороги, что и сам конфиг — он ловит «забыли обновить тест при правке конфига», не «порог
 // сам по себе неверный» (см. план, Testing Strategy).
-type LighthouseAssertions = Record<string, [string, Record<string, unknown>]>
+// Task 4 добавило SEO per-audit ассерты — часть значений теперь плоская строка
+// ('error'), не только [severity, options]-кортеж (см. Technical Details).
+type LighthouseAssertions = Record<
+  string,
+  string | [string, Record<string, unknown>]
+>
 type LighthouseRc = {
   ci: {
     collect: {
@@ -26,6 +31,13 @@ type LighthouseRc = {
 const require = createRequire(import.meta.url)
 const lighthouserc = require('./lighthouserc.cjs') as LighthouseRc
 
+// Категорийные ассерты (categories:*) всегда [severity, options] в этом конфиге,
+// в отличие от плоских per-audit SEO-ассертов ('error' без options) — этот хелпер
+// сужает union-тип LighthouseAssertions[string] обратно к кортежу в местах, где
+// это заведомо так.
+const asCategoryAssertion = (assertion: LighthouseAssertions[string]) =>
+  assertion as [string, Record<string, unknown>]
+
 describe('lighthouserc.cjs', () => {
   it('preset: "desktop" — ключевое антифлейк-решение, случайное удаление не должно проходить незамеченным', () => {
     expect(lighthouserc.ci.collect.settings.preset).toBe('desktop')
@@ -38,27 +50,50 @@ describe('lighthouserc.cjs', () => {
   })
 
   it('categories:performance — warn (временно, см. Post-Completion), с порогом 0.9', () => {
-    const [severity, options] =
-      lighthouserc.ci.assert.assertions['categories:performance']
+    const [severity, options] = asCategoryAssertion(
+      lighthouserc.ci.assert.assertions['categories:performance'],
+    )
     expect(severity).toBe('warn')
     expect(options.minScore).toBe(0.9)
   })
 
   it('categories:accessibility — error, с порогом 0.95', () => {
-    const [severity, options] =
-      lighthouserc.ci.assert.assertions['categories:accessibility']
+    const [severity, options] = asCategoryAssertion(
+      lighthouserc.ci.assert.assertions['categories:accessibility'],
+    )
     expect(severity).toBe('error')
     expect(options.minScore).toBe(0.95)
   })
 
   it('categories:best-practices — error, с порогом 0.9', () => {
-    const [severity, options] =
-      lighthouserc.ci.assert.assertions['categories:best-practices']
+    const [severity, options] = asCategoryAssertion(
+      lighthouserc.ci.assert.assertions['categories:best-practices'],
+    )
     expect(severity).toBe('error')
     expect(options.minScore).toBe(0.9)
   })
 
-  it('нет categories:seo — заводится в Task 4 как набор per-audit ассертов, не категория целиком', () => {
+  it('нет categories:seo — заменён набором per-audit ассертов (Task 4), т.к. категорийный порог несовместим с гарантированным провалом is-crawlable на Vercel preview', () => {
     expect(lighthouserc.ci.assert.assertions['categories:seo']).toBeUndefined()
+  })
+
+  it.each([
+    'document-title',
+    'meta-description',
+    'http-status-code',
+    'link-text',
+    'crawlable-anchors',
+    'robots-txt',
+    'canonical',
+    'viewport',
+  ])('SEO-аудит %s — error (per-audit замена categories:seo)', audit => {
+    expect(lighthouserc.ci.assert.assertions[audit]).toBe('error')
+  })
+
+  it('is-crawlable — явно off (единственный платформенный false positive на Vercel preview, X-Robots-Tag: noindex)', () => {
+    const assertion = lighthouserc.ci.assert.assertions['is-crawlable']
+    expect(Array.isArray(assertion)).toBe(true)
+    const [severity] = asCategoryAssertion(assertion)
+    expect(severity).toBe('off')
   })
 })
