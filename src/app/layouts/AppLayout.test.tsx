@@ -1,12 +1,6 @@
 import type * as SharedLib from '@shared/lib'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
-import {
-  createMemoryRouter,
-  MemoryRouter,
-  Route,
-  RouterProvider,
-  Routes,
-} from 'react-router'
+import { createMemoryRouter, RouterProvider } from 'react-router'
 
 import { AppLayout } from './AppLayout'
 
@@ -37,27 +31,42 @@ const setViewportWidth = (width: number) => {
 // chrome + Outlet, а не их бизнес-логику, которая уже покрыта Home.test.tsx/Favorites.test.tsx/
 // Popular.test.tsx/Recommendations.test.tsx/Movie.test.tsx/Search.test.tsx). `/search` — тоже
 // плейсхолдер `<div>`, не реальный `Search`: `path` может включать query (`/search?type=series`),
-// MemoryRouter матчит по pathname, query долетает до `AppLayout`'s `useSearchParams()` как есть.
+// createMemoryRouter матчит по pathname, query долетает до `AppLayout`'s `useSearchParams()` как
+// есть. Data router (createMemoryRouter + RouterProvider), не декларативный <MemoryRouter>, —
+// AppLayout рендерит <ScrollRestoration/>, которая внутри вызывает useMatches() и требует data
+// router, иначе падает с "useMatches must be used within a data router".
 const renderAt = (path: string) =>
   render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route path='/' element={<div>Home page content</div>} />
-          <Route path='/movie/:id' element={<div>Movie page content</div>} />
-          <Route
-            path='/favorites'
-            element={<div>Favorites page content</div>}
-          />
-          <Route path='/popular' element={<div>Popular page content</div>} />
-          <Route
-            path='/recommendations'
-            element={<div>Recommendations page content</div>}
-          />
-          <Route path='/search' element={<div>Search page content</div>} />
-        </Route>
-      </Routes>
-    </MemoryRouter>,
+    <RouterProvider
+      router={createMemoryRouter(
+        [
+          {
+            element: <AppLayout />,
+            children: [
+              { path: '/', element: <div>Home page content</div> },
+              {
+                path: '/movie/:id',
+                element: <div>Movie page content</div>,
+              },
+              {
+                path: '/favorites',
+                element: <div>Favorites page content</div>,
+              },
+              {
+                path: '/popular',
+                element: <div>Popular page content</div>,
+              },
+              {
+                path: '/recommendations',
+                element: <div>Recommendations page content</div>,
+              },
+              { path: '/search', element: <div>Search page content</div> },
+            ],
+          },
+        ],
+        { initialEntries: [path] },
+      )}
+    />,
   )
 
 beforeEach(() => {
