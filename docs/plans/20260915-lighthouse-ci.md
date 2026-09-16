@@ -281,13 +281,36 @@ lighthouse: build-only
 
 Важно: этот прогон — **быстрый dev-smoke-луп, не авторитетный источник порогов** для CI-гейта (`vite preview` не отдаёт заголовки `vercel.json`, не даёт `X-Robots-Tag`/CDN-сжатие — см. Context/Overview). Цель этой задачи — починить дешёвые, средово-независимые проблемы до того, как они замаскируют реальные находки на настоящем preview в Task 4.
 
-- [ ] прогнать `make lighthouse` локально, зафиксировать сырые числа по всем 4 категориям × 3 роутам
-- [ ] добавить `<meta name="description" content="...">` в `<head>` `index.html`
-- [ ] создать `public/robots.txt` (`User-agent: *\nAllow: /`) — реальный статик-файл в `public/` попадает в `dist/` и перехватывается Vercel'ом раньше SPA-rewrite'а (filesystem-check перед rewrites)
-- [ ] проинспектировать accessibility-находки, специально — `color-contrast` (axe severity `serious`, Lighthouse a11y weight 7): E2E-сьют (2.5.5) проверяет только `impact === 'critical'`, `color-contrast` туда не попадает — это реальный, не гипотетический риск нового провала именно здесь
-- [ ] проинспектировать performance-находки, специально — render-blocking Google Fonts (`index.html`'s `<link rel="stylesheet">` на `fonts.googleapis.com`) и LCP на CSR-раскладке (первый рейл ждёт живой API-ответ)
-- [ ] повторно прогнать `make lighthouse`, зафиксировать в этом плане (➕) итоговые числа и что было исправлено
-- [ ] `make test`, `make typecheck` — должны пройти
+- [x] прогнать `make lighthouse` локально, зафиксировать сырые числа по всем 4 категориям × 3 роутам
+- [x] добавить `<meta name="description" content="...">` в `<head>` `index.html`
+- [x] создать `public/robots.txt` (`User-agent: *\nAllow: /`) — реальный статик-файл в `public/` попадает в `dist/` и перехватывается Vercel'ом раньше SPA-rewrite'а (filesystem-check перед rewrites)
+- [x] проинспектировать accessibility-находки, специально — `color-contrast` (axe severity `serious`, Lighthouse a11y weight 7): E2E-сьют (2.5.5) проверяет только `impact === 'critical'`, `color-contrast` туда не попадает — это реальный, не гипотетический риск нового провала именно здесь
+- [x] проинспектировать performance-находки, специально — render-blocking Google Fonts (`index.html`'s `<link rel="stylesheet">` на `fonts.googleapis.com`) и LCP на CSR-раскладке (первый рейл ждёт живой API-ответ)
+- [x] повторно прогнать `make lighthouse`, зафиксировать в этом плане (➕) итоговые числа и что было исправлено
+- [x] `make test`, `make typecheck` — должны пройти
+
+➕ **Фактические числа базлайна (эта машина, локальный `vite preview`, НЕ авторитетный источник — см. Overview/Context выше). "До" — свежий прогон в начале Task 3, не Task 2's превью-числа:**
+
+| Роут | Performance | Accessibility | Best Practices | SEO |
+| --- | --- | --- | --- | --- |
+| `/` | 0.63 | 0.92 | 1.00 | 0.83 |
+| `/search` | 0.89 | 0.87 | 1.00 | 0.83 |
+| `/movie/666` | 0.78 | 0.95 | 1.00 | 0.83 |
+
+**После** фиксов (тот же прогон трёх URL, свежий `build-only`):
+
+| Роут | Performance | Accessibility | Best Practices | SEO |
+| --- | --- | --- | --- | --- |
+| `/` | 0.99 | 0.96 | 1.00 | 1.00 |
+| `/search` | 0.92 | 0.91 | 1.00 | 1.00 |
+| `/movie/666` | 0.95 | 1.00 | 1.00 | 1.00 |
+
+Что было исправлено:
+- **SEO 0.83 → 1.00 на всех трёх роутах** — `<meta name="description">` в `index.html` + `public/robots.txt`. `is-crawlable` локально не проваливается (в отличие от реального Vercel preview, см. Task 4) — `vite preview` не шлёт `X-Robots-Tag: noindex`, поэтому именно на этом локальном прогоне SEO дошёл до 1.00; Task 4 всё равно должен ввести per-audit-исключение `is-crawlable`, когда прогон пойдёт по настоящему preview.
+- **Performance `/` 0.63 → 0.99, `/movie/666` 0.78 → 0.95, `/search` 0.89 → 0.92** — главная находка: `render-blocking-resources` показывал ~2770 мс потерь на Google Fonts stylesheet (est. savings) на `/`, FCP/LCP/Speed Index были в районе 3.2-5.4 с при score 0.02-0.29. Фикс — `media="print"` + отложенный своп на `media="all"` через `link.addEventListener('load', ...)` (или немедленно, если `link.sheet` уже готов), вынесенный в **отдельный same-origin файл** `public/font-swap.js` (не инлайн-скрипт — сознательно, чтобы не трогать CSP sha256-хэш в `vercel.json`/`vercel-headers.test.ts`, см. AGENTS.md "CSP headers"), плюс `<noscript>`-фоллбэк с обычным `<link rel="stylesheet">`. Также добавлен `<link rel="preconnect" href="https://api.poiskkino.dev" crossorigin>` — первый рейл на CSR-главной ждёт этот ответ для LCP, `connect-src` в `vercel.json` уже разрешает этот origin, так что сам resource hint не требует правок CSP. `font-display: swap` в URL Google Fonts уже был (проверено query-строкой), трогать не пришлось.
+- **Accessibility `color-contrast`, серьёзность `serious`, реально нашлась (а не гипотетически) на light-теме** — два токена в `src/app/styles/global.css`'s `:root[data-theme='light']` не проходили 4.5:1: `--text-faint` (`#b0a29a` на `--bg-primary`/`--bg-secondary` — контраст 2.02-2.24:1, встречался в footer copyright, search-hint, radio-count, pagination count-text) и `--accent-warm` (`#9c5a30` на `--bg-secondary`/composited `--accent-warm-tint`/`-soft` — 4.16-4.37:1, активный `NavPill`/toggle). Оба токена пересчитаны (WCAG relative-luminance формула, см. коммит) на `--text-faint: #6f6259` (4.8-5.3:1 с запасом) и `--accent-warm: #864c28` + пересчитанные `-hover`/`-tint`/`-soft`/`-border`/`-glow`/`-shadow` rgba-производные от того же RGB-триплета (4.5-6.2:1 с запасом) — никаких хардкод-цветов в компонентах, только правка самих design tokens в `global.css`, per AGENTS.md Theming pattern. Dark-тема не трогалась — Lighthouse под `chrome-launcher` по умолчанию рендерил light-тему (Chrome's default `prefers-color-scheme`), находок на dark не было.
+- **Остались непокрытыми на `/search` (0.91 против порога 0.95, вне рамок этой задачи по Files-списку):** `link-name` (2 карточки в живом каталоге с пустым `Movie.name` от API — `Card`'s stretched-link `<a class="_title...">` рендерится без текста; это находка про данные живого API/`Card`-компонент, не про CSS-токен или `index.html`/`robots.txt` — не трогалось умышленно, вне заявленных Files этой задачи) и `target-size` (`YearRangeSlider`'s два `<input type=range>`-thumb'а, 218×12px — документированный dual-thumb-паттерн из AGENTS.md, правка размера потребовала бы отдельного пересмотра компонента, не точечного CSS/token фикса). Оба — реальные, не выдуманные находки, задокументированы здесь по правилу «не занижать молча, документировать разрыв»; кандидаты на отдельную a11y-задачу, не на Task 3/4 этого плана.
+- Локальный прогон подтверждает общее направление, но не авторитетен для CI-гейта (см. Overview/Context) — `is-crawlable` на реальном Vercel preview всё равно провалится (Task 4), а performance-числа на shared CI-раннере будут более шумными, чем на этой машине.
 
 ### Task 4: `.github/workflows/lighthouse.yml` + авторитетный базлайн на реальном preview
 
