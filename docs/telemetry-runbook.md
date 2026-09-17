@@ -14,12 +14,12 @@
 Goal** в UI (Site Settings → Goals → Add goal → Custom event), указав **точное** имя события (case
 sensitive, включая пробелы):
 
-| Custom Goal (Plausible UI) | Имя события в коде                    | Где триггерится                                                                 |
-| --------------------------- | -------------------------------------- | -------------------------------------------------------------------------------- |
-| `pageview`                  | `trackEvent('pageview')`               | `src/app/layouts/AppLayout.tsx` — на каждый `location.pathname`                   |
-| `search submitted`          | `trackEvent('search submitted')`       | `src/pages/search/model/useSearchAnalytics.ts` — settled non-empty `?q`          |
-| `filter changed`            | `trackEvent('filter changed')`         | `applyFilters` в `src/features/catalog-filter/model/useFilterState.ts`           |
-| `favorite added`            | `trackEvent('favorite added')`         | ветка добавления в `toggle(id)`, `src/features/favorites/model/useFavorites.ts`  |
+| Custom Goal (Plausible UI) | Имя события в коде               | Где триггерится                                                                 |
+| -------------------------- | -------------------------------- | ------------------------------------------------------------------------------- |
+| `pageview`                 | `trackEvent('pageview')`         | `src/app/layouts/AppLayout.tsx` — на каждый `location.pathname`                 |
+| `search submitted`         | `trackEvent('search submitted')` | `src/pages/search/model/useSearchAnalytics.ts` — settled non-empty `?q`         |
+| `filter changed`           | `trackEvent('filter changed')`   | `applyFilters` в `src/features/catalog-filter/model/useFilterState.ts`          |
+| `favorite added`           | `trackEvent('favorite added')`   | ветка добавления в `toggle(id)`, `src/features/favorites/model/useFavorites.ts` |
 
 Заводить нужно ровно эти четыре строки как имя Custom Goal — без перевода на русский, без
 изменения регистра/пробелов, иначе Goal не увидит событие. `pageview` — зарезервированное имя

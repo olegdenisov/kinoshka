@@ -306,13 +306,28 @@ export const DASHBOARD_WIDGETS: DashboardWidget[] = [
   },
 ]
 
-// `sentry dashboard widget add` — единый variadic-аргумент "[<org/project>] <dashboard> <title>".
+// [Task 7 — сверка с реальным --help] Изначально здесь был баг: `dashboardTitle` склеивался в
+// ОДНУ строку с org/project (`${ctx.org}/${ctx.project}/${dashboardTitle}`), по аналогии с
+// buildDashboardCreateArgs. Живой `sentry dashboard widget add --help` описывает ARGUMENTS как
+// variadic-имя "org/project/dashboard/title..." с расшифровкой "[<org/project>] <dashboard>
+// <title>" — то же соглашение именования, что и у `dashboard list`/`dashboard create` (см. их
+// --help): "..." + перечисление через "/" в ИМЕНИ аргумента означает НЕСКОЛЬКО отдельных
+// позиционных токенов, а не одну склеенную строку; расшифровка в скобках даёт реальное разбиение.
+// Значит здесь три ОТДЕЛЬНЫХ токена: "<org>/<project>" (один токен со слэшем внутри — как у
+// buildDashboardCreateArgs), затем `dashboardTitle` (отдельный токен), затем `widget.name`
+// (отдельный токен) — не два. Старая склеенная форма отправила бы CLI один позиционный токен
+// "org/project/Dashboard Title", который не матчится под `<org/project>` и был бы неверно
+// интерпретирован. Живым вызовом не проверено (у `widget add` нет `--dry-run`, а живой create/add
+// — вне рамок этой задачи, см. Post-Completion), но грамматика надёжно выводится из трёх
+// независимых --help (`dashboard create`, `dashboard list`, `team list`), которые однозначно
+// следуют этому соглашению.
 export const buildWidgetArgs = (
   ctx: TelemetryContext,
   dashboardTitle: string,
   widget: DashboardWidget,
 ): string[] => [
-  `${ctx.org}/${ctx.project}/${dashboardTitle}`,
+  `${ctx.org}/${ctx.project}`,
+  dashboardTitle,
   widget.name,
   '--display',
   widget.display,
