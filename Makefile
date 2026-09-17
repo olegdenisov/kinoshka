@@ -67,8 +67,14 @@ e2e-install:
 	pnpm exec playwright install --with-deps chromium webkit
 
 # Требует предварительного `sentry auth login` (см. docs/telemetry-runbook.md) — на машине,
-# где писался этот план, уже выполнено. Создаёт Metric Alert (error rate)/Metric Alert (LCP
-# P75)/Dashboard "Kinoshka Telemetry" в реальном Sentry-аккаунте (create-if-missing, не полная
+# где писался этот план, уже выполнено. Намерение: создаёт Metric Alert (error rate)/Metric Alert
+# (LCP P75)/Dashboard "Kinoshka Telemetry" в реальном Sentry-аккаунте (create-if-missing, не полная
 # синхронизация — см. sentry-telemetry.config.ts).
+#
+# ⚠️ На момент написания (2026-09-16) оба `alert metrics create`-вызова ГАРАНТИРОВАННО падают на
+# реальном аккаунте — сервер отклоняет dataset=transactions, а --trigger payload не совпадает с
+# ожидаемой сервером схемой (полный разбор — sentry-telemetry.config.ts, buildMetricAlertArgs, и
+# план 20260915-telemetry-dashboard-sentry-alerts.md, Post-Completion). Команда не является рабочей
+# "из коробки" — прежде чем полагаться на её результат, см. три пути решения в Post-Completion.
 sentry-telemetry:
 	node --env-file-if-exists=.env.local provision-sentry-telemetry.ts

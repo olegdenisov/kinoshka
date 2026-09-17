@@ -18,29 +18,30 @@
 - **Zod** — валидация данных (localStorage, API-границы)
 - **oxlint** — Rust-линтер (TS/React/jsx-a11y правила)
 - **husky** + **lint-staged** + **commitlint** — pre-commit линтинг и conventional commits (`pnpm commit`)
-- **Sentry** (`@sentry/react` + `@sentry/vite-plugin`) — error tracking в prod-сборке, аплоад source maps на этапе билда
-- **web-vitals** + **Plausible** — мониторинг Core Web Vitals (LCP/INP/CLS) и privacy-friendly event tracking (page view, search submitted, filter changed, favorite added) в prod-сборке
+- **Sentry** (`@sentry/react` + `@sentry/vite-plugin`) — error tracking и Performance-трейсинг (`tracesSampleRate=0.2`, параметризованные роуты типа `/movie/:id` группируются в один transaction через `reactRouterBrowserTracingIntegration`/`wrapCreateBrowserRouter`) в prod-сборке, аплоад source maps на этапе билда; alert/dashboard-провижининг as code (`make sentry-telemetry`) поверх `sentry` CLI
+- **Plausible** — privacy-friendly event tracking (page view, search submitted, filter changed, favorite added) в prod-сборке; Core Web Vitals (LCP/INP/CLS) теперь собираются через Sentry Performance (см. выше), а не через отдельный `web-vitals`-пайплайн
 
 ## Команды
 
 ```bash
-make dev          # dev-сервер с HMR
-make build        # проверка типов (tsc -b) + production-сборка
-make lint         # oxlint по всем TS/TSX-файлам
-make preview      # раздача production-сборки локально
-make test         # запустить тесты один раз
-make test-watch   # тесты в watch-режиме
-make coverage     # отчёт покрытия
-make e2e          # E2E-тесты (Playwright) против production preview-сборки
-make e2e-install  # установить браузеры Playwright (chromium + webkit)
-make generate-api # регенерировать API-клиент из OpenAPI-спецификации
-make check        # lint + build (полная проверка)
-make hooks        # установить git-хуки husky
-make audit        # pnpm audit (prod-зависимости, high severity)
-make analyze      # визуализация состава бандла (dist/stats.html)
-make size         # бюджеты размера бандла (size-limit)
-make knip         # детектор неиспользуемого кода/зависимостей
-make clean        # удалить dist и node_modules
+make dev              # dev-сервер с HMR
+make build            # проверка типов (tsc -b) + production-сборка
+make lint             # oxlint по всем TS/TSX-файлам
+make preview          # раздача production-сборки локально
+make test             # запустить тесты один раз
+make test-watch       # тесты в watch-режиме
+make coverage         # отчёт покрытия
+make e2e              # E2E-тесты (Playwright) против production preview-сборки
+make e2e-install      # установить браузеры Playwright (chromium + webkit)
+make generate-api     # регенерировать API-клиент из OpenAPI-спецификации
+make check            # lint + build (полная проверка)
+make hooks            # установить git-хуки husky
+make audit            # pnpm audit (prod-зависимости, high severity)
+make analyze          # визуализация состава бандла (dist/stats.html)
+make size             # бюджеты размера бандла (size-limit)
+make knip             # детектор неиспользуемого кода/зависимостей
+make sentry-telemetry # провижининг Sentry alert/dashboard as code (см. sentry-telemetry.config.ts)
+make clean            # удалить dist и node_modules
 ```
 
 ## Архитектура

@@ -4,7 +4,6 @@ import {
   buildDashboardCreateArgs,
   buildDashboardListArgs,
   buildErrorRateMetricAlertArgs,
-  buildIssueAlertListArgs,
   buildLcpMetricAlertArgs,
   buildMetricAlertListArgs,
   buildTeamListArgs,
@@ -14,6 +13,7 @@ import {
   ERROR_RATE_METRIC_ALERT_CONFIG,
   LCP_METRIC_ALERT_CONFIG,
   shouldCreate,
+  type DashboardWidget,
   type TelemetryContext,
 } from './sentry-telemetry.config'
 
@@ -49,7 +49,7 @@ describe('buildErrorRateMetricAlertArgs', () => {
             {
               id: 'sentry.mail.actions.NotifyEmailAction',
               targetType: 'Team',
-              targetIdentifier: 4512052151975936,
+              targetIdentifier: '4512052151975936',
             },
           ],
         },
@@ -89,7 +89,7 @@ describe('buildLcpMetricAlertArgs', () => {
             {
               id: 'sentry.mail.actions.NotifyEmailAction',
               targetType: 'Team',
-              targetIdentifier: 4512052151975936,
+              targetIdentifier: '4512052151975936',
             },
           ],
         },
@@ -108,27 +108,37 @@ describe('buildDashboardCreateArgs', () => {
 })
 
 describe('buildWidgetArgs', () => {
-  it('строит "<org>/<project>/<dashboard>" + все layout/dataset/query флаги', () => {
-    const widget = DASHBOARD_WIDGETS[0]
-    expect(buildWidgetArgs(CTX, DASHBOARD_TITLE, widget)).toEqual([
-      'mycomp-ey/kinoshka/Kinoshka Telemetry',
-      widget.name,
-      '--display',
-      widget.display,
-      '--dataset',
-      widget.dataset,
-      '--query',
-      widget.query,
-      '--col',
-      String(widget.col),
-      '--row',
-      String(widget.row),
-      '--width',
-      String(widget.width),
-      '--height',
-      String(widget.height),
-    ])
-  })
+  // [review phase 1] Изначально проверялся только big_number-виджет — опечатка/регрессия в
+  // построении аргументов для line/table осталась бы незамеченной. Явно перебираем по одному
+  // виджету каждого display-типа, а не полагаемся на структурное сходство builder'а.
+  const widgetsByDisplay = Object.fromEntries(
+    DASHBOARD_WIDGETS.map(w => [w.display, w]),
+  ) as Record<(typeof DASHBOARD_WIDGETS)[number]['display'], DashboardWidget>
+
+  it.each(['big_number', 'line', 'table'] as const)(
+    'строит "<org>/<project>/<dashboard>" + все layout/dataset/query флаги для display=%s',
+    display => {
+      const widget = widgetsByDisplay[display]
+      expect(buildWidgetArgs(CTX, DASHBOARD_TITLE, widget)).toEqual([
+        'mycomp-ey/kinoshka/Kinoshka Telemetry',
+        widget.name,
+        '--display',
+        widget.display,
+        '--dataset',
+        widget.dataset,
+        '--query',
+        widget.query,
+        '--col',
+        String(widget.col),
+        '--row',
+        String(widget.row),
+        '--width',
+        String(widget.width),
+        '--height',
+        String(widget.height),
+      ])
+    },
+  )
 })
 
 describe('DASHBOARD_WIDGETS — инвариант сетки', () => {
@@ -153,17 +163,43 @@ describe('DASHBOARD_WIDGETS — инвариант сетки', () => {
       }
     }
   })
+
+  // [review phase 1] Сумма width в строке равна 6 не гарантирует отсутствие пересечений колонок —
+  // например, два виджета width=3 на col=0 и col=1 тоже дали бы сумму 6 в другой комбинации виджетов
+  // той же строки, но реально перекрывались бы на сетке. Проверяем и границы (col>=0,
+  // col+width<=6), и попарное непересечение интервалов [col, col+width) для виджетов одного row.
+  it('виджеты одного row не пересекаются по колонкам и не выходят за границы сетки (0..6)', () => {
+    const byRow = new Map<number, DashboardWidget[]>()
+    for (const w of DASHBOARD_WIDGETS) {
+      byRow.set(w.row, [...(byRow.get(w.row) ?? []), w])
+    }
+
+    for (const [row, widgets] of byRow) {
+      for (const w of widgets) {
+        expect(
+          w.col,
+          `row ${row} / ${w.name}: col >= 0`,
+        ).toBeGreaterThanOrEqual(0)
+        expect(
+          w.col + w.width,
+          `row ${row} / ${w.name}: col + width <= 6`,
+        ).toBeLessThanOrEqual(6)
+      }
+
+      const sorted = [...widgets].sort((a, b) => a.col - b.col)
+      for (let i = 1; i < sorted.length; i++) {
+        const prev = sorted[i - 1]
+        const curr = sorted[i]
+        expect(
+          curr.col,
+          `row ${row}: "${curr.name}" (col=${curr.col}) перекрывает "${prev.name}" (col=${prev.col}, width=${prev.width})`,
+        ).toBeGreaterThanOrEqual(prev.col + prev.width)
+      }
+    }
+  })
 })
 
 describe('build*ListArgs — грамматика target-аргумента', () => {
-  it('buildIssueAlertListArgs — <org>/<project> без завершающего слэша', () => {
-    expect(buildIssueAlertListArgs(CTX)).toEqual([
-      'mycomp-ey/kinoshka',
-      '--json',
-      '--fresh',
-    ])
-  })
-
   it('buildMetricAlertListArgs — <org>/ с завершающим слэшем (org-scoped)', () => {
     expect(buildMetricAlertListArgs(CTX)).toEqual([
       'mycomp-ey/',

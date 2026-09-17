@@ -122,12 +122,20 @@ export const LCP_METRIC_ALERT_CONFIG: MetricAlertConfig = {
   alertThreshold: LCP_P75_THRESHOLD_MS,
 }
 
-// Форма --trigger — дословно из живого `sentry alert metrics create --help` (см. Technical
-// Details плана). См. находку 3 выше: живой пробный запуск показал, что реальный backend этого
-// аккаунта на самом деле ожидает более широкую форму (type/comparison/conditionResult + resolve-
-// условие) — этот билдер сознательно остаётся на документированной --help форме, а не на
-// экспериментально нащупанной, потому что последняя не была доведена до успешного создания и сама
-// по себе не была бы более надёжным допущением. Обновить после Post-Completion живой проверки.
+// ⚠️ ИТОГ (не смягчать при будущих правках): в текущем виде этот билдер производит argv, которое
+// СЕРВЕР ГАРАНТИРОВАННО ОТКЛОНИТ при реальном запуске `make sentry-telemetry` — это не "порог не
+// проверен", а "создание алерта не работает вообще". Две независимые причины (обе см. находки 2/3
+// выше): (а) `--dataset transactions` отклоняется backend'ом целиком ("Creation of
+// transaction-based alerts is disabled..."), а единственная альтернатива, которую принимает
+// клиентская валидация установленной версии CLI (`--dataset spans`), не совпадает с тем, что
+// ожидает сервер ("Invalid dataset..."); (б) даже если бы датасет прошёл, реальный `--trigger`
+// payload, который принимает backend, шире документированного в `--help` — нужны
+// `type`/`comparison`/`conditionResult` и обязательное второе ("resolve") условие, которых здесь
+// нет. Форма ниже — дословно из живого `sentry alert metrics create --help` (см. Technical Details
+// плана), сознательно НЕ заменена на экспериментально нащупанную форму, потому что последняя не
+// была доведена до успешного создания и сама по себе была бы такой же непроверенной догадкой.
+// Не запускать `make sentry-telemetry` против прода, ожидая рабочего результата, до разрешения
+// одного из трёх путей в Post-Completion плана.
 export const buildMetricAlertArgs = (
   ctx: TelemetryContext,
   config: MetricAlertConfig,
@@ -153,7 +161,12 @@ export const buildMetricAlertArgs = (
         {
           id: 'sentry.mail.actions.NotifyEmailAction',
           targetType: 'Team',
-          targetIdentifier: Number(ctx.teamId),
+          // Строка, не Number(ctx.teamId) — team id из Sentry API снежинко-подобный (снятый живым
+          // team list, см. пример в sentry-telemetry.config.test.ts, 16 цифр) и может в будущем
+          // превысить Number.MAX_SAFE_INTEGER, из-за чего JS Number молча округлил бы значение.
+          // Строка ничего не теряет и не требует представления о реальной ожидаемой схеме сервера
+          // (которая всё равно best-effort, см. комментарий у buildMetricAlertArgs выше).
+          targetIdentifier: ctx.teamId,
         },
       ],
     },
@@ -245,7 +258,7 @@ export const DASHBOARD_WIDGETS: DashboardWidget[] = [
   // дашборде (видимость, не алерт — roadmap просит алерт только на LCP), не гарантированно рабочий
   // API-вызов.
   {
-    name: 'INP P75 (TODO: confirm dataset after ingested data)',
+    name: 'INP P75',
     display: 'line',
     dataset: 'transactions',
     query: 'p75:measurements.inp',
@@ -261,7 +274,7 @@ export const DASHBOARD_WIDGETS: DashboardWidget[] = [
   // (тренд запросов во времени, дополняющий big_number "Throughput" выше), а не заглушка без
   // смысла.
   {
-    name: 'CLS P75 (TODO: confirm dataset after ingested data)',
+    name: 'CLS P75',
     display: 'line',
     dataset: 'transactions',
     query: 'p75:measurements.cls',
@@ -318,15 +331,16 @@ export const buildWidgetArgs = (
 ]
 
 // Грамматика target-аргумента различается по командам (см. Context плана, живой --help):
-// issues — <org>/<project> (без слэша на конце), metrics/dashboard/team — <org>/ (со слэшем,
-// org-scoped, "project part is ignored"). Все — с --json --fresh, чтобы обход кэша CLI не ломал
-// идемпотентность exists-проверки. Принимают Pick<TelemetryContext, ...> вместо полного
-// TelemetryContext — buildTeamListArgs вызывается ДО того, как teamId вообще известен (сам team
-// list его и резолвит), так что требовать полный контекст с teamId было бы некорректно.
-export const buildIssueAlertListArgs = (
-  ctx: Pick<TelemetryContext, 'org' | 'project'>,
-): string[] => [`${ctx.org}/${ctx.project}`, '--json', '--fresh']
-
+// metrics/dashboard/team — <org>/ (со слэшем, org-scoped, "project part is ignored"). Все — с
+// --json --fresh, чтобы обход кэша CLI не ломал идемпотентность exists-проверки. Принимают
+// Pick<TelemetryContext, ...> вместо полного TelemetryContext — buildTeamListArgs вызывается ДО
+// того, как teamId вообще известен (сам team list его и резолвит), так что требовать полный
+// контекст с teamId было бы некорректно.
+//
+// Note: buildIssueAlertListArgs (<org>/<project>, без слэша — грамматика Issue Alert list) была
+// удалена ревью-фиксом — дизайн давно перешёл с Issue Alert на Metric Alert (failure_rate(), см.
+// "Принятые решения" в плане), и main() никогда её не вызывал; неиспользуемый билдер был мёртвым
+// кодом с момента написания, оставленный только потому что был написан раньше пивота.
 export const buildMetricAlertListArgs = (
   ctx: Pick<TelemetryContext, 'org'>,
 ): string[] => [`${ctx.org}/`, '--json', '--fresh']

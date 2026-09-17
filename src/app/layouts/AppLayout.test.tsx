@@ -7,7 +7,9 @@ import { AppLayout } from './AppLayout'
 // Task 5 (docs/plans/20260910-web-vitals-analytics.md): AppLayout вызывает trackPageview() на
 // смену pathname. Мокаем только trackPageview, остальные реальные экспорты (useViewport и т.д.,
 // которые AppLayout уже использует) сохраняем через vi.importActual — тот же паттерн, что
-// providers.test.tsx использует для initAnalytics/reportWebVitals.
+// providers.test.tsx использует для initAnalytics (reportWebVitals с тех пор удалён вместе с
+// пайплайном Web Vitals→Plausible, см. план 20260915-telemetry-dashboard-sentry-alerts.md, Task 5
+// — providers.test.tsx больше не мокает и не проверяет его).
 vi.mock('@shared/lib', async importOriginal => {
   const actual = await importOriginal<typeof SharedLib>()
   return { ...actual, trackPageview: vi.fn() }
