@@ -2,7 +2,8 @@
 
 Раннбук для ручных шагов из roadmap-пункта `2.5.7`, которые не автоматизируются кодом в этом
 репозитории: Plausible Custom Goals/Funnels (UI-конфигурация на стороне Plausible, API для них на
-используемом тарифе нет — см. `docs/plans/completed/20260915-telemetry-dashboard-sentry-alerts.md`),
+используемом тарифе нет — см. `docs/plans/20260915-telemetry-dashboard-sentry-alerts.md`, переедет в
+`docs/plans/completed/` после закрытия таска),
 установка/авторизация `sentry` CLI и запуск provisioning-скрипта, а также зафиксированное решение
 про `tracePropagationTargets`.
 
@@ -75,7 +76,8 @@ make sentry-telemetry
 `--dataset transactions` целиком (миграция на span dataset), а доступный клиенту `--dataset spans`
 не совпадает с ожидаемым сервером датасетом. Полный разбор и три возможных пути решения — в
 Post-Completion соответствующего плана
-(`docs/plans/completed/20260915-telemetry-dashboard-sentry-alerts.md`). Перед реальным запуском
+(`docs/plans/20260915-telemetry-dashboard-sentry-alerts.md`, переедет в `docs/plans/completed/`
+после закрытия таска). Перед реальным запуском
 `make sentry-telemetry` в проде — сначала разобрать этот блокер (обновить CLI до версии, знающей
 `events_analytics_platform`, либо создать алерты вручную через UI и сверить схему, либо дождаться,
 пока Sentry снова разрешит `dataset: transactions`).

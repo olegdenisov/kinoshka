@@ -48,8 +48,8 @@
     "src/features/theme/index.ts",
     "src/shared/ui/index.ts",
   ],
-  // `sentry` — глобально установленный CLI-инструмент (см. AGENTS.md, "sentry CLI — установлен и
-  // авторизован на этой машине"), не npm-зависимость репозитория — knip иначе флагует его как
-  // "Unlisted binary" в provision-sentry-telemetry.ts (execFileSync('sentry', ...)).
+  // `sentry` — глобально установленный CLI-инструмент (см. docs/plans/20260915-telemetry-dashboard-sentry-alerts.md,
+  // "sentry CLI — установлен и авторизован на этой машине"), не npm-зависимость репозитория — knip
+  // иначе флагует его как "Unlisted binary" в provision-sentry-telemetry.ts (execFileSync('sentry', ...)).
   "ignoreBinaries": ["sentry"],
 }
