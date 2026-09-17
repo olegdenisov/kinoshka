@@ -14,9 +14,15 @@ describe('src/main.tsx', () => {
   it('первый import в файле — ./app/sentry-bootstrap', () => {
     const source = readFileSync(path.join(ROOT, 'main.tsx'), 'utf-8')
 
+    // [review phase 1] Изначальный regex был заякорен на начало строки (`^`/`m`-флаг) и матчил
+    // только однострочные import'ы — многострочный `import {\n  Foo,\n} from '...'` не имеет
+    // закрывающей кавычки на первой строке и молча выпал бы из результата, сдвигая индекс [0] на
+    // следующий import без единой ошибки теста. Без `^`/`m`, но с "не-жадным" `[\s\S]*?` между
+    // `import` и `from` (any-char, включая перевод строки) — матчит оба варианта одинаково, не
+    // завися от того, уместился ли import в одну строку.
     const importPaths = [
-      ...source.matchAll(/^import\s+(?:.*?\s+from\s+)?'([^']+)'/gm),
-    ].map(match => match[1])
+      ...source.matchAll(/import\s+(?:'([^']+)'|[\s\S]*?\s+from\s+'([^']+)')/g),
+    ].map(match => match[1] ?? match[2])
 
     expect(importPaths[0]).toBe('./app/sentry-bootstrap')
   })

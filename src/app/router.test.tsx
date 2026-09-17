@@ -1,9 +1,36 @@
+import * as Sentry from '@sentry/react'
 import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
+import { createBrowserRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 
 import { server } from '../test/setup'
 import { router } from './router'
+
+// [review phase 1] router.tsx оборачивает createBrowserRouter через Sentry.wrapCreateBrowserRouter
+// — до этого фикса ни один тест не мокал '@sentry/react', так что удаление/поломка самой обёртки
+// прошла бы все тесты этого файла незамеченной (реальный wrapCreateBrowserRouter в тестовой среде
+// и так возвращает функцию-аргумент без изменений, поскольку Sentry.init() здесь не вызывается —
+// PROD=false — так что поведение теста было бы идентично что с оберткой, что без неё). Мокаем
+// wrapCreateBrowserRouter как spy-обёртку над реальной реализацией (importOriginal) — сохраняем
+// точно то же поведение (pass-through в тестовой среде), но получаем возможность проверить сам
+// факт вызова и его аргумент.
+vi.mock('@sentry/react', async importOriginal => {
+  const actual = await importOriginal<typeof Sentry>()
+  return {
+    ...actual,
+    wrapCreateBrowserRouter: vi.fn(actual.wrapCreateBrowserRouter),
+  }
+})
+
+describe('router.tsx — Sentry.wrapCreateBrowserRouter (regression)', () => {
+  it('createBrowserRouter обёрнут через Sentry.wrapCreateBrowserRouter ровно один раз', () => {
+    expect(Sentry.wrapCreateBrowserRouter).toHaveBeenCalledTimes(1)
+    expect(Sentry.wrapCreateBrowserRouter).toHaveBeenCalledWith(
+      createBrowserRouter,
+    )
+  })
+})
 
 // Route-based code splitting (роадмап 2.5.3, Task 2, docs/plans/
 // 20260912-performance-budgets-bundle-visualization.md): смоук-тест доказывает, что
