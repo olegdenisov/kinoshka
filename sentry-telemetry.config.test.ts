@@ -116,11 +116,12 @@ describe('buildWidgetArgs', () => {
   ) as Record<(typeof DASHBOARD_WIDGETS)[number]['display'], DashboardWidget>
 
   it.each(['big_number', 'line', 'table'] as const)(
-    'строит "<org>/<project>/<dashboard>" + все layout/dataset/query флаги для display=%s',
+    'строит "<org>/<project>", <dashboard>, <title> тремя отдельными токенами + все layout/dataset/query флаги для display=%s',
     display => {
       const widget = widgetsByDisplay[display]
       expect(buildWidgetArgs(CTX, DASHBOARD_TITLE, widget)).toEqual([
-        'mycomp-ey/kinoshka/Kinoshka Telemetry',
+        'mycomp-ey/kinoshka',
+        DASHBOARD_TITLE,
         widget.name,
         '--display',
         widget.display,

@@ -256,11 +256,11 @@ Roadmap-пункт `2.5.7` (`plans/roadmap.md`) требует три вещи:
 
 ### Task 7: Verify acceptance criteria
 
-- [ ] прогнать полный набор тестов: `make test`
-- [ ] прогнать `make check` (lint + build)
-- [ ] прогнать `make size`
-- [ ] прогнать `make knip`
-- [ ] сверить итоговый `provision-sentry-telemetry.ts` с реальными `--help`-выводами команд, использованных в Task 3 — убедиться, что ничего не разошлось за время работы над остальными задачами
+- [x] прогнать полный набор тестов: `make test` — 87 файлов / 724 теста, все прошли
+- [x] прогнать `make check` (lint + build) — `pnpm lint`/`tsc -b`/`vite build` все прошли чисто; `make check`'s `format-check` шаг отдельно упал на 13 файлах, не тронутых этой веткой ни разу (`git diff main...HEAD` пуст для них — `.revmux/profile.md`, `docs/backlog/play-trailer-inline.md`, 4 других незакрытых plan-документа, 5 файлов `docs/plans/completed/`), то есть это repo-wide pre-existing drift на `main`, а не что-то, что внесли Tasks 1–6 этого плана; переформатирование чужих/параллельных plan-документов сознательно не включено в этот коммит (риск конфликтов с другими воркчтри), см. `[decision]` в прогресс-файле — `docs/telemetry-runbook.md`/сам этот plan-файл (единственные файлы этой ветки, попавшие в формат-чек) отформатированы
+- [x] прогнать `make size` — все 8 бюджетов (`entry`/`vendor`/`shared`/6 page-чанков) прошли с запасом
+- [x] прогнать `make knip` — 0 неиспользуемых экспортов/файлов/зависимостей, только 3 config-хинта (redundant entry pattern для `src/main.tsx`/`vite.config.ts`/`playwright.config.ts`) — не блокирующие, вне рамок этой задачи
+- [x] сверить итоговый `provision-sentry-telemetry.ts` с реальными `--help`-выводами команд, использованных в Task 3 — **найден и исправлен реальный дрифт**: `buildWidgetArgs` (`sentry-telemetry.config.ts`) склеивал `dashboardTitle` в ОДНУ строку вместе с `org/project` (`${ctx.org}/${ctx.project}/${dashboardTitle}`), как у `buildDashboardCreateArgs`. Живой `sentry dashboard widget add --help` (CLI 0.44.1, тот же, что в Task 3) показывает ARGUMENTS `org/project/dashboard/title...` → `[<org/project>] <dashboard> <title>` — по тому же соглашению именования, что независимо подтверждается `dashboard create`/`dashboard list`/`team list` (`...` + "/"-перечисление в ИМЕНИ аргумента = НЕСКОЛЬКО отдельных позиционных токенов, не одна склеенная строка), это три ОТДЕЛЬНЫХ токена: `"<org>/<project>"`, затем `dashboardTitle`, затем `widget.name` — не два. Остальное сверено и совпадает без изменений: `alert metrics create`/`alert metrics list`/`dashboard create`/`dashboard list`/`team list` — флаги, датасеты (`errors/transactions/sessions/events/spans/metrics` для alert, синонимы `spans/errors/transactions/metrics/logs/issue/discover` для widget), grammar таргетов (`<org>/` со слэшем для metrics/dashboard/team list) и layout-инварианты (6-колоночная сетка, col 0–5, width 1–6) — всё без расхождений с исходным логом Task 3. Исправлены `buildWidgetArgs` + WHY-комментарий, тест в `sentry-telemetry.config.test.ts` (ожидаемый argv — 3 токена) и индекс-based ассерт в `provision-sentry-telemetry.test.ts` (сдвиг `args[4]`→`args[5]` из-за нового токена) — `make test`/`make lint`/`tsc -b` перепрогнаны, всё зелёное
 
 ### Task 8: [Final] Обновить документацию
 
@@ -297,8 +297,8 @@ _Пункты, требующие ручных действий или внеш�
 - `sentry alert metrics create --dataset transactions` для этого аккаунта **отклоняется сервером
   целиком** при реальном (не `--dry-run`) создании — независимо от aggregate/query/alertThreshold:
   `"Creation of transaction-based alerts is disabled, as we migrate to the span dataset. Create
-  span-based alerts (dataset: events_analytics_platform) with the is_transaction:true filter
-  instead."` Установленная версия `sentry` CLI (0.44.1) не принимает `events_analytics_platform`
+span-based alerts (dataset: events_analytics_platform) with the is_transaction:true filter
+instead."` Установленная версия `sentry` CLI (0.44.1) не принимает `events_analytics_platform`
   как значение `--dataset` вообще (клиентская валидация ограничивает список: errors, transactions,
   sessions, events, spans, metrics), а ближайшая альтернатива `--dataset spans` даёт другую ошибку
   сервера ("Invalid dataset for this query type. Valid datasets are ['eventsanalyticsplatform',

@@ -190,8 +190,9 @@ describe('main', () => {
         args[0] === 'dashboard' &&
         args[1] === 'widget' &&
         args[2] === 'add' &&
-        args[3] === `mycomp-ey/kinoshka/${DASHBOARD_TITLE}` &&
-        args[4] === failingWidgetName
+        args[3] === 'mycomp-ey/kinoshka' &&
+        args[4] === DASHBOARD_TITLE &&
+        args[5] === failingWidgetName
       ) {
         throw new Error('network error')
       }
