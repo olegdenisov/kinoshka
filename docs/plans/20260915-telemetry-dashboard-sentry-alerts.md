@@ -249,10 +249,10 @@ Roadmap-пункт `2.5.7` (`plans/roadmap.md`) требует три вещи:
 
 - Create: `docs/telemetry-runbook.md`
 
-- [ ] задокументировать точные имена Custom Goals в Plausible UI для уже существующих событий (`pageview`, `search submitted`, `filter changed`, `favorite added`)
-- [ ] задокументировать пример funnel'а "конверсия по ключевому flow" (например: `pageview` → `search submitted` → `favorite added`) — с оговоркой, что funnels могут быть платной фичей тарифа
-- [ ] задокументировать установку/авторизацию `sentry` CLI (`curl https://cli.sentry.dev/install -fsS | bash`, `sentry auth login`) и команду `make sentry-telemetry`
-- [ ] задокументировать решение про `tracePropagationTargets` (что не включено и при каком условии можно включить)
+- [x] задокументировать точные имена Custom Goals в Plausible UI для уже существующих событий (`pageview`, `search submitted`, `filter changed`, `favorite added`)
+- [x] задокументировать пример funnel'а "конверсия по ключевому flow" (например: `pageview` → `search submitted` → `favorite added`) — с оговоркой, что funnels могут быть платной фичей тарифа
+- [x] задокументировать установку/авторизацию `sentry` CLI (`curl https://cli.sentry.dev/install -fsS | bash`, `sentry auth login`) и команду `make sentry-telemetry`
+- [x] задокументировать решение про `tracePropagationTargets` (что не включено и при каком условии можно включить)
 
 ### Task 7: Verify acceptance criteria
 
