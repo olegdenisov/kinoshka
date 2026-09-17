@@ -488,11 +488,13 @@
 - Lighthouse CI GitHub Action: https://github.com/treosh/lighthouse-ci-action
 - web.dev Lighthouse guide: https://developer.chrome.com/docs/lighthouse/overview
 
-### 2.5.7 Telemetry дашборд
+### 2.5.7 Telemetry дашборд — done, см. `docs/plans/20260915-telemetry-dashboard-sentry-alerts.md` (переедет в `docs/plans/completed/` после закрытия таска)
 
-- [ ] Sentry — alert на error rate > X%.
-- [ ] Web Vitals в Sentry/PostHog — алёрт на P75 LCP > 2.5s.
-- [ ] PostHog/Plausible — конверсия по ключевым flows.
+- [x] Sentry — alert на error rate > X%. Реализовано как Metric Alert на `failure_rate()` (dataset `transactions`) — после двух отвергнутых итераций: Issue Alert по "≥10 уникальных пользователей" (недокументированный workflow-JSON `type`) и промежуточный count-based Metric Alert (`count()` на `errors` — семантически не rate, найдено внешним ревью). ⚠️ Provisioning-скрипт (`sentry-telemetry.config.ts`/`provision-sentry-telemetry.ts`) написан и юнит-тестирован, но реальное создание алерта на `--dataset transactions` сейчас отклоняется сервером аккаунта целиком (миграция на span dataset) — см. AGENTS.md → «Telemetry дашборд (Sentry)» и Post-Completion плана.
+- [x] Web Vitals в Sentry/PostHog — алёрт на P75 LCP > 2.5s. Web Vitals переехали из Plausible в Sentry Performance (`tracesSampleRate = 0.2`, `reactRouterBrowserTracingIntegration` + `wrapCreateBrowserRouter` группируют `/movie/:id`) — отдельный пакет `web-vitals` и Plausible-события `web vital: *` удалены. LCP P75 Metric Alert (`p75(measurements.lcp)`, порог 2500ms) упирается в тот же дата­сет-блокер, что и error-rate alert выше.
+- [x] PostHog/Plausible — конверсия по ключевым flows. Закрыто раннбуком (`docs/telemetry-runbook.md`) + ручной настройкой Custom Goals/Funnel в Plausible UI — API для этого на используемом тарифе нет.
+
+**Отклонения от буквальной формулировки:** Sentry MCP (`.mcp.json`, `https://mcp.sentry.dev/mcp`) добавлен сверх формулировки roadmap. Error-rate alert реализован как `failure_rate()` Metric Alert на `transactions`-датасете, а не как Issue Alert по уникальным пользователям (см. выше). Дашборд "Kinoshka Telemetry" добавлен сверх трёх пунктов чек-листа (failure rate/issues/throughput/LCP P75/INP P75/CLS P75/top issues).
 
 **Как лучше:** алёрты должны быть actionable. Не «error rate > 0» — это шум. «P95 LCP > 4s в течение 10 мин» — это сигнал.
 
