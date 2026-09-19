@@ -198,6 +198,37 @@ describe('buildCommentBody', () => {
       '| https://example.com/ | document-title | error | == true | false |',
     )
   })
+
+  it('экранирует "|" и переносы строк в ячейках, чтобы значение не разъехало markdown-таблицу', () => {
+    // Сегодня в ячейки попадают только числа и id аудитов, но url/actual
+    // приходят из assertionResults (а значит — из аудируемой страницы и её
+    // URL), ничем от '|' и '\n' не защищённых: одна такая ячейка ломает
+    // разметку всей таблицы в PR-комментарии (найдено code review).
+    const body = buildCommentBody({
+      links: null,
+      results: [
+        {
+          url: 'https://example.com/?a=1|b=2',
+          auditId: 'link-text',
+          operator: '==',
+          expected: true,
+          actual: 'Click here\nRead | more\r\nand again',
+          level: 'error',
+        },
+      ],
+    })
+
+    // Ровно одна строка данных: перенос строки не должен был породить вторую.
+    const dataRows = body
+      .split('\n')
+      .filter(line => line.startsWith('| https://example.com/'))
+    expect(dataRows).toHaveLength(1)
+    expect(dataRows[0]).toBe(
+      '| https://example.com/?a=1\\|b=2 | link-text | error | == true | Click here<br>Read \\| more<br>and again |',
+    )
+    // CRLF не даёт двойной <br>.
+    expect(body).not.toContain('<br><br>')
+  })
 })
 
 describe('findStickyComment', () => {

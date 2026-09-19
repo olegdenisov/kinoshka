@@ -11,6 +11,21 @@
 
 const MARKER = '<!-- lighthouse-ci-comment -->'
 
+// Экранирует произвольное значение для подстановки в ячейку markdown-таблицы.
+// Сегодня в ячейки попадают только числа и id аудитов, но ничто этого не
+// гарантирует: url/actual/expected приходят из assertionResults, то есть в
+// конечном счёте из аудируемой страницы и её URL — одна '|' или перенос
+// строки разъезжают всю таблицу в PR-комментарии (найдено code review).
+// '|' → '\|' (GFM-escape внутри ячейки), перевод строки → '<br>' (ячейка
+// markdown-таблицы не может содержать реальный \n — он завершает строку
+// таблицы), '\r' выкидывается, чтобы CRLF не давал двойной <br>.
+function escapeTableCell(value) {
+  return String(value ?? '')
+    .replace(/\|/g, '\\|')
+    .replace(/\r\n?/g, '\n')
+    .replace(/\n/g, '<br>')
+}
+
 // Рендерит один markdown-раздел таблицы assertion-результатов под данным
 // заголовком (используется отдельно для error- и warn-уровня — см. buildCommentBody).
 function renderResultsTable(heading, rows) {
@@ -18,7 +33,15 @@ function renderResultsTable(heading, rows) {
   section += '| URL | Audit | Level | Expected | Actual |\n'
   section += '| --- | --- | --- | --- | --- |\n'
   for (const r of rows) {
-    section += `| ${r.url} | ${r.auditProperty ?? r.auditId} | ${r.level} | ${r.operator} ${r.expected} | ${r.actual} |\n`
+    const url = escapeTableCell(r.url)
+    const audit = escapeTableCell(r.auditProperty ?? r.auditId)
+    const level = escapeTableCell(r.level)
+    // operator и expected склеиваются в одну ячейку, но экранируются
+    // по отдельности — иначе пробел между ними тоже прошёл бы через
+    // String(), а склейка уже экранированных частей безопасна.
+    const expected = `${escapeTableCell(r.operator)} ${escapeTableCell(r.expected)}`
+    const actual = escapeTableCell(r.actual)
+    section += `| ${url} | ${audit} | ${level} | ${expected} | ${actual} |\n`
   }
   section += '\n'
   return section
