@@ -6,6 +6,35 @@
 // трактует как CommonJS независимо от "type", и единственное, которое @lhci/cli сегодня
 // реально поддерживает (.mjs/полноценный ESM-конфиг там до сих пор открытый feature request,
 // см. GoogleChrome/lighthouse-ci#973).
+
+// Vercel Deployment Protection закрывает preview-деплои 401'ым для любого
+// анонимного запроса — реальный Chrome, который поднимает
+// treosh/lighthouse-ci-action, упирается в ту же стену, что и шаг
+// "Wait for Vercel preview" (тот отдельно решает её своим
+// vercel_protection_bypass_header, см. .github/workflows/lighthouse.yml).
+// Секрет читается из env, а не хардкодится и не навешивается на URL'ы
+// query-параметром `?x-vercel-protection-bypass=...`: URL'ы прогона попадают
+// в steps.lhci.outputs.links, которые публикуются в открытом PR-комментарии
+// (.github/scripts/lighthouse-comment.cjs) — в query-варианте секрет утёк бы
+// туда в открытый доступ. Заголовок — единственный способ передать его так,
+// чтобы он не оказался в публикуемом артефакте.
+//
+// Имя заголовка — `x-vercel-protection-bypass` (сверено с документацией
+// Vercel "Protection Bypass for Automation" и с исходником
+// patrickedqvist/wait-for-vercel-preview@v1.3.3's action.js:65-67, который
+// кладёт значение своего input'а ровно в этот заголовок — то есть оба шага
+// job'а используют один и тот же секрет и один и тот же заголовок).
+// `x-vercel-set-bypass-cookie` намеренно НЕ выставляется: Lighthouse ставит
+// extraHeaders через CDP Network.setExtraHTTPHeaders, то есть заголовок уходит
+// со ВСЕМИ запросами страницы (включая сабресурсы), cookie-механика не нужна,
+// а её редирект с Set-Cookie добавил бы лишний хоп в измеряемый FCP/LCP.
+//
+// Gate по env, а не безусловный заголовок: без секрета (локальный
+// `make lighthouse` против vite preview, форк-PR, ещё не заведённый секрет)
+// отправлять пустой `x-vercel-protection-bypass: ''` бессмысленно, а на
+// незащищённом preview заголовок вообще не нужен.
+const vercelProtectionBypass = process.env.VERCEL_PROTECTION_BYPASS
+
 module.exports = {
   ci: {
     collect: {
@@ -19,6 +48,19 @@ module.exports = {
         // что mobile-first вёрстка проекта (см. AGENTS.md, "Responsive pattern") — это
         // профиль аудита, не целевая аудитория.
         preset: 'desktop',
+        // Спред, а не безусловный ключ — см. WHY-блок про
+        // VERCEL_PROTECTION_BYPASS над module.exports. Объект (а не JSON-строка)
+        // здесь корректен: @lhci/cli сериализует collect.settings в temp-файл и
+        // передаёт его Lighthouse через --cli-flags-path (node-runner.js), а
+        // coerceExtraHeaders в lighthouse@12's cli/cli-flags.js на `typeof
+        // value === 'object'` возвращает значение как есть, без парсинга.
+        ...(vercelProtectionBypass
+          ? {
+              extraHeaders: {
+                'x-vercel-protection-bypass': vercelProtectionBypass,
+              },
+            }
+          : {}),
       },
     },
     assert: {

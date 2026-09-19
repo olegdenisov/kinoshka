@@ -48,18 +48,25 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           max_timeout: 300
-          # Раскомментировать только если реальный прогон на тестовом PR
-          # (см. план, Post-Completion / Ручная проверка) покажет, что
-          # preview-окружение защищено Vercel Authentication / Deployment
-          # Protection — без визита в Vercel dashboard, недоступного в этом
-          # автономном прогоне, это не подтверждено ни в ту, ни в другую
-          # сторону (см. план, Task 4, первые два пункта).
-          # vercel_protection_bypass_header: ${{ secrets.VERCEL_PROTECTION_BYPASS }}
-          # — этот шаг сам делает HTTP-проверку готовности preview ДО
-          # Lighthouse, и без bypass'а именно здесь упадёт/зависнет по
-          # таймауту раньше, чем дело дойдёт до lhci-шага (см. ревизия #3
-          # плана) — это отдельная точка конфигурации, не заменяется
-          # extraHeaders у Lighthouse ниже.
+          # Deployment Protection на этом проекте РЕАЛЬНО включена —
+          # подтверждено упавшим прогоном 35253656170, где этот шаг получил
+          # 401 на все 150 попыток к preview URL и умер по таймауту (раньше
+          # строка ниже была закомментирована «до подтверждения»).
+          # Значение уходит в заголовок x-vercel-protection-bypass (см.
+          # action.js:65-67 у v1.3.3) — тот же секрет и тот же заголовок, что
+          # читает lighthouserc.cjs для самого Lighthouse ниже: это ДВЕ
+          # независимые точки конфигурации (отдельный HTTP-клиент этого шага и
+          # отдельный Chrome у lhci), одна другую не заменяет — починить надо
+          # обе, иначе job просто переносит 401-стену на шаг ниже.
+          #
+          # ⚠️ Секрет VERCEL_PROTECTION_BYPASS в репозитории ещё НЕ заведён —
+          # это требует доступа к Vercel Dashboard (Project Settings →
+          # Deployment Protection → Protection Bypass for Automation) и к
+          # GitHub Settings → Secrets, то есть действия человека, а не этого
+          # workflow (см. AGENTS.md, "Lighthouse CI", список deferred-пунктов).
+          # Пока секрет не заведён, оба места получают пустую строку и job
+          # снова упрётся в 401 — это ожидаемо, не регресс конфига.
+          vercel_protection_bypass_header: ${{ secrets.VERCEL_PROTECTION_BYPASS }}
 
       - name: Run Lighthouse CI
         id: lhci
@@ -79,6 +86,17 @@ jobs:
           configPath: ./lighthouserc.cjs
           uploadArtifacts: true
           temporaryPublicStorage: true
+        env:
+          # lighthouserc.cjs читает этот секрет через process.env и, только
+          # если он непустой, добавляет collect.settings.extraHeaders с
+          # x-vercel-protection-bypass — без него реальный Chrome у lhci бьёт
+          # по тем же защищённым URL'ам и получает 401 (шаг wait выше свой
+          # bypass получает отдельно и Lighthouse'у его не передаёт).
+          # Секрет умышленно не навешивается на urls: выше query-параметром
+          # `?x-vercel-protection-bypass=...`: URL'ы попадают в
+          # steps.lhci.outputs.links, а те публикуются в открытом
+          # PR-комментарии (.github/scripts/lighthouse-comment.cjs).
+          VERCEL_PROTECTION_BYPASS: ${{ secrets.VERCEL_PROTECTION_BYPASS }}
 
       - name: Comment PR with results
         # !cancelled() (не bare always()) — шаг должен выполниться и когда
