@@ -85,9 +85,9 @@ module.exports = {
         // (включая проваленный is-crawlable с нулём) — агрегат всё равно не
         // дотянет до 0.95. Замена — явные per-audit ассерты по остальным
         // взвешенным SEO-аудитам категории (всё, что реально зависит от
-        // приложения) плюс явное 'off' на is-crawlable (единственный
-        // платформенный false positive). Список сверен построчным чтением
-        // установленного lighthouse@12.6.1's core/config/default-config.js
+        // приложения) плюс явное 'off' на is-crawlable/robots-txt (два
+        // платформенных false positive, см. ниже). Список сверен построчным
+        // чтением установленного lighthouse@12.6.1's core/config/default-config.js
         // (categories.seo.auditRefs), а не по памяти:
         //   is-crawlable (weight 93/23), document-title (1), meta-description (1),
         //   http-status-code (1), link-text (1), crawlable-anchors (1),
@@ -108,10 +108,25 @@ module.exports = {
         'http-status-code': 'error',
         'link-text': 'error',
         'crawlable-anchors': 'error',
-        'robots-txt': 'error',
         canonical: 'error',
         hreflang: 'error',
         'is-crawlable': ['off', {}],
+        // 'robots-txt' тоже 'off' — второй платформенный false positive,
+        // найден на реальном прогоне против Deployment-Protection'ного preview
+        // (job 35452468428, все 3 URL, actual: 0). Причина другая, чем у
+        // is-crawlable, но тот же класс проблемы: сам public/robots.txt валиден
+        // ("User-agent: *\nAllow: /"), но lighthouse's robots-txt-гатерер
+        // (core/gather/gatherers/seo/robots-txt.js) фетчит файл НЕ через обычную
+        // навигацию, где действует наш extraHeaders/x-vercel-protection-bypass
+        // (см. WHY-блок про VERCEL_PROTECTION_BYPASS выше) — он идёт через
+        // Fetcher._fetchResourceOverProtocol → CDP Network.loadNetworkResource
+        // (core/gather/fetcher.js), которая НЕ подмешивает
+        // Network.setExtraHTTPHeaders. На защищённом preview этот запрос ловит
+        // 302 на Vercel SSO (проверено вручную: curl -i .../robots.txt без
+        // bypass-заголовка), а не содержимое файла. Явное 'off', а не
+        // ['error', {minScore: 0.9}] с надеждой на будущий фикс — то же решение,
+        // что уже принято для is-crawlable.
+        'robots-txt': ['off', {}],
       },
     },
   },

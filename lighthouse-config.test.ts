@@ -78,7 +78,6 @@ describe('lighthouserc.cjs', () => {
     'http-status-code',
     'link-text',
     'crawlable-anchors',
-    'robots-txt',
     'canonical',
     'hreflang',
   ])('SEO-аудит %s — error (per-audit замена categories:seo)', audit => {
@@ -93,8 +92,15 @@ describe('lighthouserc.cjs', () => {
     expect(lighthouserc.ci.assert.assertions['image-alt']).toBeUndefined()
   })
 
-  it('is-crawlable — явно off (единственный платформенный false positive на Vercel preview, X-Robots-Tag: noindex)', () => {
+  it('is-crawlable — явно off (платформенный false positive на Vercel preview, X-Robots-Tag: noindex)', () => {
     const assertion = lighthouserc.ci.assert.assertions['is-crawlable']
+    expect(Array.isArray(assertion)).toBe(true)
+    const [severity] = asCategoryAssertion(assertion)
+    expect(severity).toBe('off')
+  })
+
+  it("robots-txt — явно off (второй платформенный false positive: CDP Network.loadNetworkResource не подмешивает extraHeaders, найдено на реальном прогоне против Deployment-Protection'ного preview)", () => {
+    const assertion = lighthouserc.ci.assert.assertions['robots-txt']
     expect(Array.isArray(assertion)).toBe(true)
     const [severity] = asCategoryAssertion(assertion)
     expect(severity).toBe('off')
