@@ -229,6 +229,35 @@ describe('buildCommentBody', () => {
     // CRLF не даёт двойной <br>.
     expect(body).not.toContain('<br><br>')
   })
+
+  it('экранирует обратный слеш перед "|" раньше самого "|" (CodeQL: incomplete string escaping)', () => {
+    // Если сначала экранировать только '|' (без обратного слеша), значение
+    // '\|' превратилось бы в '\\|' — в markdown это читается как
+    // экранированный '\', за которым снова следует НЕэкранированный '|',
+    // то есть таблица разъезжается ровно тем способом, который эта функция
+    // должна была починить.
+    const body = buildCommentBody({
+      links: null,
+      results: [
+        {
+          url: 'https://example.com/',
+          auditId: 'link-text',
+          operator: '==',
+          expected: true,
+          actual: 'a\\|b',
+          level: 'error',
+        },
+      ],
+    })
+
+    const dataRows = body
+      .split('\n')
+      .filter(line => line.startsWith('| https://example.com/'))
+    expect(dataRows).toHaveLength(1)
+    expect(dataRows[0]).toBe(
+      '| https://example.com/ | link-text | error | == true | a\\\\\\|b |',
+    )
+  })
 })
 
 describe('findStickyComment', () => {
