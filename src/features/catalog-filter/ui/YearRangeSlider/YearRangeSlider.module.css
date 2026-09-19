@@ -84,16 +84,30 @@
   border: none;
 }
 
+/* Заливка — var(--accent-warm) (в тон track fill), а не var(--text-primary):
+   на light-теме --text-primary — тёмно-коричневый на грани чёрного (#221a16),
+   что поверх тонкого accent-warm-кольца читалось как чёрная точка, выбивающаяся
+   из палитры (найдено при ревью). Кольцо — var(--bg-secondary), реальный фон
+   обоих контейнеров, где рендерится слайдер (SearchSidebar's .sidebar,
+   BottomSheet's .sheet), а не var(--bg-primary) — так кольцо действительно
+   сливается с фоном вокруг, а не создаёт свой контрастный ободок.
+   transform (не width/height) на hover — эти же свойства уже участвуют в
+   базовой раскладке thumb'а, а transform не триггерит layout/reflow при every
+   hover-кадре и не меняет фактическую hit-box-геометрию под курсором (Chromium
+   хит-тестит по трансформированной геометрии) — но НЕ является фиксом для
+   Lighthouse target-size-аудита, тот меряет состояние покоя, не :hover. */
 .input::-webkit-slider-thumb {
   -webkit-appearance: none;
   pointer-events: auto;
   width: 12px;
   height: 12px;
   border-radius: 999px;
-  background: var(--text-primary);
-  border: 2px solid var(--accent-warm);
+  background: var(--accent-warm);
+  border: 2px solid var(--bg-secondary);
   cursor: pointer;
   box-shadow: 0 2px 6px var(--shadow-color);
+  transform-origin: center;
+  transition: transform 150ms ease;
 }
 
 .input::-moz-range-thumb {
@@ -101,10 +115,24 @@
   width: 12px;
   height: 12px;
   border-radius: 999px;
-  background: var(--text-primary);
-  border: 2px solid var(--accent-warm);
+  background: var(--accent-warm);
+  border: 2px solid var(--bg-secondary);
   cursor: pointer;
   box-shadow: 0 2px 6px var(--shadow-color);
+  transform-origin: center;
+  transition: transform 150ms ease;
+}
+
+/* pointer-events: none всюду на .input, кроме самого thumb'а (см. комментарий
+   выше в файле) — значит :hover на .input фактически срабатывает только при
+   наведении на сам thumb, а не на весь трек, ровно как нужно. scale(2):
+   12px base → 24px на hover (минимальная зона тапа по WCAG target-size). */
+.input:hover::-webkit-slider-thumb {
+  transform: scale(2);
+}
+
+.input:hover::-moz-range-thumb {
+  transform: scale(2);
 }
 
 .input:focus-visible::-webkit-slider-thumb {
@@ -137,4 +165,14 @@
 .compact .input::-moz-range-thumb {
   width: 18px;
   height: 18px;
+}
+
+/* compact-база уже 18px, не 12px — тот же целевой размер на hover (24px)
+   даёт другой коэффициент: 24 / 18 ≈ 1.3333. */
+.compact .input:hover::-webkit-slider-thumb {
+  transform: scale(1.3333);
+}
+
+.compact .input:hover::-moz-range-thumb {
+  transform: scale(1.3333);
 }
