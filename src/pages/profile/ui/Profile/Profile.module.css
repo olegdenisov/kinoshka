@@ -1,0 +1,281 @@
+.page {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+.main {
+  padding: 20px 16px 40px;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+}
+
+.name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 1px;
+}
+
+.saveBtn {
+  padding: 10px 16px;
+  background: var(--accent-warm-soft);
+  border: 1px solid var(--accent-warm-border);
+  border-radius: 10px;
+  color: var(--accent-warm);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.saveBtn:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
+}
+
+.saveBtn:disabled {
+  background: var(--bg-chip);
+  border-color: var(--border-soft);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.section {
+  margin-top: 20px;
+}
+
+.saveError {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  /* --danger, не --accent-warm: тот же токен используют CTA/ссылки/выбранный чип темы —
+     единственное сообщение об ошибке на странице читалось бы как акцент, а не как сбой. */
+  color: var(--danger);
+  text-align: center;
+}
+
+.sectionHeading {
+  margin: 0 0 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.linkList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.linkList li + li {
+  border-top: 1px solid var(--border-faint);
+}
+
+.linkRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+
+.linkRow:hover {
+  background: var(--bg-hover);
+}
+
+.linkRow:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: -2px;
+}
+
+.linkIcon {
+  display: flex;
+  color: var(--text-secondary);
+}
+
+.linkLabel {
+  flex: 1;
+}
+
+.linkCount {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.linkChevron {
+  display: flex;
+  color: var(--text-muted);
+}
+
+.appearance {
+  margin: 20px 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.appearanceLegend {
+  padding: 0;
+}
+
+.themeOptions {
+  display: flex;
+  gap: 8px;
+}
+
+.themeOption {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+/* Радио визуально скрыт, но остаётся фокусируемым — рамка и фон рисуются на соседнем .themeLabel */
+.themeRadio {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.themeLabel {
+  flex: 1;
+  padding: 10px 12px;
+  text-align: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+.themeRadio:checked + .themeLabel {
+  background: var(--accent-warm-soft);
+  border-color: var(--accent-warm-border);
+  color: var(--accent-warm);
+}
+
+.themeRadio:focus-visible + .themeLabel {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
+}
+
+.clearBtn {
+  /* button по умолчанию display: inline-block — будучи прямым потомком <main> (секцию-обёртку
+     убрали), базовая линия строчного контекста добавляла снизу «хвостик» под descender шрифта.
+     display: block убирает это; width: fit-content — чтобы кнопка не растянулась на всю ширину
+     <main>, как обычный блочный элемент без явной ширины. */
+  display: block;
+  width: fit-content;
+  margin-top: 20px;
+  padding: 10px 16px;
+  background: var(--bg-chip);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.clearBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.clearBtn:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
+}
+
+.note {
+  margin: 24px 0 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+@media (min-width: 720px) {
+  .page {
+    padding-bottom: 0;
+  }
+
+  .main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 40px 80px;
+  }
+
+  .heading {
+    font-size: 28px;
+    margin: 0 0 24px;
+  }
+
+  .form {
+    max-width: 420px;
+  }
+}
