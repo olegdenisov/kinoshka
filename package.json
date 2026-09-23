@@ -75,7 +75,7 @@
       "name": "entry",
       "path": "dist/assets/index-*.js",
       "gzip": true,
-      "limit": "2.9 KB"
+      "limit": "3.4 KB"
     },
     {
       "name": "vendor",
@@ -124,6 +124,12 @@
       "path": "dist/assets/page-search-*.js",
       "gzip": true,
       "limit": "7 KB"
+    },
+    {
+      "name": "page-profile",
+      "path": "dist/assets/page-profile-*.js",
+      "gzip": true,
+      "limit": "3.1 KB"
     }
   ]
 }
