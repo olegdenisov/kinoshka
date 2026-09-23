@@ -113,8 +113,8 @@
   `MobileHeader.test.tsx`/`ThemeToggle.test.tsx`, иначе выставленная тема протечёт в соседние кейсы
   файла.
 - **e2e-тесты**: добавляется `e2e/profile.spec.ts` (desktop chromium) — AGENTS.md требует
-  e2e-покрытие для UI-изменений, а `/profile` — седьмой маршрут SPA (сейчас их шесть, и у каждого
-  есть своя спека в `e2e/`). **Стоимость по квоте API — ноль запросов**: страница `/profile`
+  e2e-покрытие для UI-изменений, а `/profile` — седьмой маршрут SPA (до этого плана их шесть, и у каждого
+  есть своя спека в `e2e/`; после — семь). **Стоимость по квоте API — ноль запросов**: страница `/profile`
   не делает ни одного обращения к Kinopoisk API (весь стейт локальный), так что спека не влияет на
   лимит 200 запросов/день демо-тарифа. **При локальных прогонах (Task 11, Task 12) запускать
   точечно** — `pnpm exec playwright test e2e/profile.spec.ts --project=chromium`, а не весь
@@ -304,11 +304,13 @@ UI, не пройдёт `safeParse` и деградирует в `''` — тот
 
 ```ts
 // src/features/profile/model/useProfile.ts
-export type UseProfileResult = {
+// (в реализации setName/clearName возвращают boolean — false при отказе записи, — а сам тип
+// наружу не экспортируется)
+type UseProfileResult = {
   name: string
   initials: string
-  setName: (next: string) => void
-  clearName: () => void
+  setName: (next: string) => boolean
+  clearName: () => boolean
 }
 ```
 
@@ -421,13 +423,13 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 - Create: `src/features/profile/lib/getInitials.ts`
 - Create: `src/features/profile/lib/getInitials.test.ts`
 
-- [ ] создать `getInitials(name: string): string` по правилам из Technical Details (пусто → `''`, одно слово → первая буква, два+ слова → первые буквы первых двух слов)
-- [ ] использовать `toLocaleUpperCase()` и `Array.from(word)[0]`, добавить русский WHY-комментарий про кириллицу и суррогатные пары
-- [ ] написать тест: `''`, `'   '`, `'\n\t'` → `''`
-- [ ] написать тест: одно слово (`'oleg'` → `'O'`, `'олег'` → `'О'`)
-- [ ] написать тест: два и более слов (`'oleg denisov'` → `'OD'`, `'олег  денисов'` с двойным пробелом → `'ОД'`, три слова → инициалы первых двух)
-- [ ] написать тест: имя, начинающееся с эмодзи/символа вне BMP, не даёт «половину» суррогатной пары
-- [ ] прогнать `make test` — должно проходить перед Task 2
+- [x] создать `getInitials(name: string): string` по правилам из Technical Details (пусто → `''`, одно слово → первая буква, два+ слова → первые буквы первых двух слов)
+- [x] использовать `toLocaleUpperCase()` и `Array.from(word)[0]`, добавить русский WHY-комментарий про кириллицу и суррогатные пары
+- [x] написать тест: `''`, `'   '`, `'\n\t'` → `''`
+- [x] написать тест: одно слово (`'oleg'` → `'O'`, `'олег'` → `'О'`)
+- [x] написать тест: два и более слов (`'oleg denisov'` → `'OD'`, `'олег  денисов'` с двойным пробелом → `'ОД'`, три слова → инициалы первых двух)
+- [x] написать тест: имя, начинающееся с эмодзи/символа вне BMP, не даёт «половину» суррогатной пары
+- [x] прогнать `make test` — должно проходить перед Task 2
 
 ### Task 2: Storage-слот `kinoshka:profile` и хук `useProfile()`
 
@@ -439,14 +441,14 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 - Create: `src/features/profile/model/useProfile.test.tsx`
 - Create: `src/features/profile/index.ts`
 
-- [ ] создать `profileStorage.ts`: `PROFILE_NAME_MAX_LENGTH = 40`, zod-схема `z.string().refine((value) => Array.from(value).length <= PROFILE_NAME_MAX_LENGTH)` (длина в code points, а не UTF-16 code units — WHY-комментарий на русском), `profileNameSlot = createStorageSlot('kinoshka:profile', schema, '')`
-- [ ] создать `useProfile.ts` с типом `UseProfileResult` (`type`, не `interface`) и реализацией через `useStorageSlot(profileNameSlot)` + `getInitials`
-- [ ] в `setName` тримить и обрезать до `PROFILE_NAME_MAX_LENGTH` символов через `Array.from(trimmed).slice(0, PROFILE_NAME_MAX_LENGTH).join('')` (не `.slice()` по строке — режет суррогатную пару пополам); в `clearName` вызывать `set('')`, а не `remove()` — с русским WHY-комментарием про то, что `remove()` не уведомляет подписчиков в текущей вкладке
-- [ ] создать барель `src/features/profile/index.ts`: `useProfile`, `UseProfileResult`, `PROFILE_NAME_MAX_LENGTH` (`ProfileAvatar` добавится в Task 8)
-- [ ] написать тесты `profileStorage.test.ts`: пустой `localStorage` → `''`; валидное значение читается; значение длиннее лимита в code points → `''`; имя из суррогатных пар (эмодзи) на границе лимита проходит валидацию; невалидный JSON/не-строка → `''`
-- [ ] написать тесты `useProfile.test.tsx`: начальное состояние (`name === ''`, `initials === ''`); `setName('Oleg Denisov')` → `name`/`initials`/запись в `localStorage`; `setName('  Oleg  ')` тримится; имя длиннее лимита обрезается по code points, не разрезая эмодзи; `clearName()` сбрасывает и не ломает подписку
-- [ ] в тестах чистить `localStorage` в `beforeEach` (ради единообразия с `useFavorites.test.ts`/`themeStorage.test.ts` — глобальный `afterEach`-clear уже есть в `src/test/setup.ts`)
-- [ ] прогнать `make test` и `make typecheck` — должны проходить перед Task 3
+- [x] создать `profileStorage.ts`: `PROFILE_NAME_MAX_LENGTH = 40`, zod-схема `z.string().refine((value) => Array.from(value).length <= PROFILE_NAME_MAX_LENGTH)` (длина в code points, а не UTF-16 code units — WHY-комментарий на русском), `profileNameSlot = createStorageSlot('kinoshka:profile', schema, '')`
+- [x] создать `useProfile.ts` с типом `UseProfileResult` (`type`, не `interface`) и реализацией через `useStorageSlot(profileNameSlot)` + `getInitials`
+- [x] в `setName` тримить и обрезать до `PROFILE_NAME_MAX_LENGTH` символов через `Array.from(trimmed).slice(0, PROFILE_NAME_MAX_LENGTH).join('')` (не `.slice()` по строке — режет суррогатную пару пополам); в `clearName` вызывать `set('')`, а не `remove()` — с русским WHY-комментарием про то, что `remove()` не уведомляет подписчиков в текущей вкладке
+- [x] создать барель `src/features/profile/index.ts`: `useProfile`, `UseProfileResult` (позже убран из бареля по ревью — снаружи не используется), `PROFILE_NAME_MAX_LENGTH` (`ProfileAvatar` добавится в Task 8)
+- [x] написать тесты `profileStorage.test.ts`: пустой `localStorage` → `''`; валидное значение читается; значение длиннее лимита в code points → `''`; имя из суррогатных пар (эмодзи) на границе лимита проходит валидацию; невалидный JSON/не-строка → `''`
+- [x] написать тесты `useProfile.test.tsx`: начальное состояние (`name === ''`, `initials === ''`); `setName('Oleg Denisov')` → `name`/`initials`/запись в `localStorage`; `setName('  Oleg  ')` тримится; имя длиннее лимита обрезается по code points, не разрезая эмодзи; `clearName()` сбрасывает и не ломает подписку
+- [x] в тестах чистить `localStorage` в `beforeEach` (ради единообразия с `useFavorites.test.ts`/`themeStorage.test.ts` — глобальный `afterEach`-clear уже есть в `src/test/setup.ts`)
+- [x] прогнать `make test` и `make typecheck` — должны проходить перед Task 3
 
 ### Task 3: Страница `/profile` — каркас, шапка и форма имени
 
@@ -459,15 +461,15 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 - Create: `src/pages/profile/ui/Profile/index.tsx`
 - Create: `src/pages/profile/ui/Profile/Profile.test.tsx`
 
-- [ ] создать страничный слайс по образцу `src/pages/favorites/` (`ProfilePage.tsx` → `<Profile />`, барели `index.tsx`)
-- [ ] в `Profile.tsx` отрисовать `<h1>Profile</h1>`, крупный аватар (инициалы из `useProfile()` либо `<ProfileIcon />`, если `initials === ''`) и отображаемое имя (или `Guest`, если имя не задано)
-- [ ] добавить форму редактирования имени: `<form onSubmit>` + `<input>` с `maxLength={PROFILE_NAME_MAX_LENGTH}` (UI-хинт в UTF-16 code units — сознательно строже схемы, которая считает в code points; источник истины по длине — `setName`, не атрибут), `aria-label`, локальный `draft`-стейт и кнопка `Save`, задизейбленная пока `draft.trim()` совпадает с сохранённым именем
-- [ ] написать `Profile.module.css` mobile-first (база — мобильная вёрстка, десктопные правки в `@media (min-width: 720px)`), только `var(--token)`, включая `--avatar-gradient` для кружка
-- [ ] написать тест: без сохранённого имени показывается `Guest` и нет инициалов
-- [ ] написать тест: ввод имени + сабмит формы сохраняет его (имя и инициалы обновились, значение попало в `localStorage`)
-- [ ] написать тест: кнопка `Save` задизейблена, пока значение не изменилось, и снова активируется после правки
-- [ ] написать тест: ввод из одних пробелов не сохраняется как имя
-- [ ] прогнать `make test` — должно проходить перед Task 4
+- [x] создать страничный слайс по образцу `src/pages/favorites/` (`ProfilePage.tsx` → `<Profile />`, барели `index.tsx`)
+- [x] в `Profile.tsx` отрисовать `<h1>Profile</h1>`, крупный аватар (инициалы из `useProfile()` либо `<ProfileIcon />`, если `initials === ''`) и отображаемое имя (или `Guest`, если имя не задано)
+- [x] добавить форму редактирования имени: `<form onSubmit>` + `<input>` с `maxLength={PROFILE_NAME_MAX_LENGTH}` (UI-хинт в UTF-16 code units — сознательно строже схемы, которая считает в code points; источник истины по длине — `setName`, не атрибут), `aria-label`, локальный `draft`-стейт и кнопка `Save`, задизейбленная пока `draft.trim()` совпадает с сохранённым именем
+- [x] написать `Profile.module.css` mobile-first (база — мобильная вёрстка, десктопные правки в `@media (min-width: 720px)`), только `var(--token)`, включая `--avatar-gradient` для кружка
+- [x] написать тест: без сохранённого имени показывается `Guest` и нет инициалов
+- [x] написать тест: ввод имени + сабмит формы сохраняет его (имя и инициалы обновились, значение попало в `localStorage`)
+- [x] написать тест: кнопка `Save` задизейблена, пока значение не изменилось, и снова активируется после правки
+- [x] написать тест: ввод из одних пробелов не сохраняется как имя
+- [x] прогнать `make test` — должно проходить перед Task 4
 
 ### Task 4: Секция «Быстрый доступ»
 
@@ -477,11 +479,11 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 - Modify: `src/pages/profile/ui/Profile/Profile.module.css`
 - Modify: `src/pages/profile/ui/Profile/Profile.test.tsx`
 
-- [ ] добавить блок «быстрый доступ»: `<Link>`-строки на `/favorites` (со счётчиком `useFavorites().ids.length`), `/popular`, `/recommendations` — с иконками `ListsIcon`/`TrendingIcon`/`StarIcon` и `ChevronRightIcon`
-- [ ] стили блока в `Profile.module.css` — mobile-first, только `var(--token)`
-- [ ] написать тест: счётчик избранного отражает содержимое `localStorage`
-- [ ] написать тест: ссылки ведут на нужные пути (проверять `href`, а не навигацию)
-- [ ] прогнать `make test` — должно проходить перед Task 5
+- [x] добавить блок «быстрый доступ»: `<Link>`-строки на `/favorites` (со счётчиком `useFavorites().ids.length`), `/popular`, `/recommendations` — с иконками `ListsIcon`/`TrendingIcon`/`StarIcon` и `ChevronRightIcon`
+- [x] стили блока в `Profile.module.css` — mobile-first, только `var(--token)`
+- [x] написать тест: счётчик избранного отражает содержимое `localStorage`
+- [x] написать тест: ссылки ведут на нужные пути (проверять `href`, а не навигацию)
+- [x] прогнать `make test` — должно проходить перед Task 5
 
 ### Task 5: Секция «Appearance» (выбор темы)
 
@@ -491,11 +493,11 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 - Modify: `src/pages/profile/ui/Profile/Profile.module.css`
 - Modify: `src/pages/profile/ui/Profile/Profile.test.tsx`
 
-- [ ] добавить блок `Appearance`: трёхпозиционный выбор темы (`light`/`dark`/`system`) через `useTheme().theme`/`setTheme` — семантически группа радиокнопок (`<fieldset>`+`<legend>` либо `role='radiogroup'`), а не три отдельные кнопки, чтобы выбор был озвучен скринридером корректно
-- [ ] в тестах сбрасывать `document.documentElement.removeAttribute('data-theme')` в `afterEach` (тот же приём, что в `MobileHeader.test.tsx`/`ThemeToggle.test.tsx`), иначе выставленная тема протечёт в соседние кейсы файла
-- [ ] написать тест: выбор темы вызывает `setTheme` и отмечает выбранный вариант как активный (включая `system`)
-- [ ] написать тест: клик по `ThemeToggle` в хедере после выбора `system` на `/profile` заменяет его на явный `light`/`dark` (см. Solution Overview, п.6) — задокументированное поведение, не регресс
-- [ ] прогнать `make test` — должно проходить перед Task 6
+- [x] добавить блок `Appearance`: трёхпозиционный выбор темы (`light`/`dark`/`system`) через `useTheme().theme`/`setTheme` — семантически группа радиокнопок (`<fieldset>`+`<legend>` либо `role='radiogroup'`), а не три отдельные кнопки, чтобы выбор был озвучен скринридером корректно
+- [x] в тестах сбрасывать `document.documentElement.removeAttribute('data-theme')` в `afterEach` (тот же приём, что в `MobileHeader.test.tsx`/`ThemeToggle.test.tsx`), иначе выставленная тема протечёт в соседние кейсы файла
+- [x] написать тест: выбор темы вызывает `setTheme` и отмечает выбранный вариант как активный (включая `system`)
+- [x] написать тест: клик по `ThemeToggle` в хедере после выбора `system` на `/profile` заменяет его на явный `light`/`dark` (см. Solution Overview, п.6) — задокументированное поведение, не регресс
+- [x] прогнать `make test` — должно проходить перед Task 6
 
 ### Task 6: Секция «Сброс» (Clear name) и информационная подпись
 
@@ -505,10 +507,10 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 - Modify: `src/pages/profile/ui/Profile/Profile.module.css`
 - Modify: `src/pages/profile/ui/Profile/Profile.test.tsx`
 
-- [ ] добавить кнопку `Clear name`, видимую только когда имя задано, вызывающую `clearName()` из `useProfile()`
-- [ ] добавить информационную подпись про локальный профиль и будущий вход по аккаунту (текст, не контрол — см. решение 1 в Solution Overview)
-- [ ] написать тест: `Clear name` не отображается без имени и очищает имя, когда оно задано
-- [ ] прогнать `make test` — должно проходить перед Task 7
+- [x] добавить кнопку `Clear name`, видимую только когда имя задано, вызывающую `clearName()` из `useProfile()`
+- [x] добавить информационную подпись про локальный профиль и будущий вход по аккаунту (текст, не контрол — см. решение 1 в Solution Overview)
+- [x] написать тест: `Clear name` не отображается без имени и очищает имя, когда оно задано
+- [x] прогнать `make test` — должно проходить перед Task 7
 
 ### Task 7: Роут `/profile`, chrome в `AppLayout`, включение пункта в `BottomNav`, смоук-тест роутинга
 
@@ -522,17 +524,17 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 - Modify: `src/widgets/mobile-chrome/ui/BottomNav/BottomNav.module.css`
 - Modify: `src/widgets/mobile-chrome/ui/BottomNav/BottomNav.test.tsx`
 
-- [ ] добавить в `router.tsx` `ProfilePage` через `lazyNamed(() => import('../pages/profile'), 'ProfilePage')` и маршрут `{ path: '/profile', element: <ProfilePage /> }` под `AppLayout`
-- [ ] добавить в `router.test.tsx` смоук-тест `/profile → ProfilePage`, обновив заголовок существующего `describe` и комментарий над ним с «5» на «6 оставшихся роутов» (после `/` их резолвит первый `describe`) — по образцу теста для `/favorites`, резолв `lazyNamed()`-экспорта без опечатки в имени, единственный gate в CI, ловящий эту ошибку; ассерт делать по уникальному маркеру страницы (тексту информационной подписи из Task 6), а не по слову «Profile» — оно встречается на странице минимум дважды
-- [ ] зарегистрировать `/profile` в собственной route-таблице `AppLayout.test.tsx` (`renderAt`'s `createMemoryRouter([...])` `children`) — плейсхолдер-элемент, как у остальных шести маршрутов; без этого новый тест из этого файла падает с «нет banner», а не с содержательной ошибкой, потому что `createMemoryRouter` не находит матч на `/profile`
-- [ ] добавить в `ROUTE_CHROME` запись `'/profile': { active: 'profile', title: 'Profile' }` (без `activeNav` — у `Header` нет пункта профиля)
-- [ ] обновить докблок `router.tsx` («все шесть роутов») и вводную фразу докблока `ROUTE_CHROME` в `AppLayout.tsx` (список заполненных маршрутов) — теперь их семь
-- [ ] в `BottomNav.tsx` заменить `path: null` на `'/profile'` у пункта `profile`, сузить тип `path: string | null` до `string`, убрать проверку `it.path &&` в `onClick` и класс `navItemDisabled` из `className`
-- [ ] удалить ставший мёртвым `.navItemDisabled` из `BottomNav.module.css`
-- [ ] заменить тест «пункт Profile остаётся задизейбленным» на тест «клик по Profile ведёт на /profile» и добавить тест подсветки активного пункта на `active='profile'`
-- [ ] поправить тест «6 колонок» — убрать ассерт про `navItemDisabled`, оставить проверку количества пунктов
-- [ ] добавить тест в `AppLayout.test.tsx`: на `/profile` рендерится мобильный chrome с заголовком `Profile` и активным пунктом `profile` в `BottomNav`
-- [ ] прогнать `make test` и `make typecheck` — должны проходить перед Task 8
+- [x] добавить в `router.tsx` `ProfilePage` через `lazyNamed(() => import('../pages/profile'), 'ProfilePage')` и маршрут `{ path: '/profile', element: <ProfilePage /> }` под `AppLayout`
+- [x] добавить в `router.test.tsx` смоук-тест `/profile → ProfilePage`, обновив заголовок существующего `describe` и комментарий над ним с «5» на «6 оставшихся роутов» (после `/` их резолвит первый `describe`) — по образцу теста для `/favorites`, резолв `lazyNamed()`-экспорта без опечатки в имени, единственный gate в CI, ловящий эту ошибку; ассерт делать по уникальному маркеру страницы (тексту информационной подписи из Task 6), а не по слову «Profile» — оно встречается на странице минимум дважды
+- [x] зарегистрировать `/profile` в собственной route-таблице `AppLayout.test.tsx` (`renderAt`'s `createMemoryRouter([...])` `children`) — плейсхолдер-элемент, как у остальных шести маршрутов; без этого новый тест из этого файла падает с «нет banner», а не с содержательной ошибкой, потому что `createMemoryRouter` не находит матч на `/profile`
+- [x] добавить в `ROUTE_CHROME` запись `'/profile': { active: 'profile', title: 'Profile' }` (без `activeNav` — у `Header` нет пункта профиля)
+- [x] обновить докблок `router.tsx` («все шесть роутов») и вводную фразу докблока `ROUTE_CHROME` в `AppLayout.tsx` (список заполненных маршрутов) — теперь их семь
+- [x] в `BottomNav.tsx` заменить `path: null` на `'/profile'` у пункта `profile`, сузить тип `path: string | null` до `string`, убрать проверку `it.path &&` в `onClick` и класс `navItemDisabled` из `className`
+- [x] удалить ставший мёртвым `.navItemDisabled` из `BottomNav.module.css`
+- [x] заменить тест «пункт Profile остаётся задизейбленным» на тест «клик по Profile ведёт на /profile» и добавить тест подсветки активного пункта на `active='profile'`
+- [x] поправить тест «6 колонок» — убрать ассерт про `navItemDisabled`, оставить проверку количества пунктов
+- [x] добавить тест в `AppLayout.test.tsx`: на `/profile` рендерится мобильный chrome с заголовком `Profile` и активным пунктом `profile` в `BottomNav`
+- [x] прогнать `make test` и `make typecheck` — должны проходить перед Task 8
 
 ### Task 8: Компонент `ProfileAvatar` в `@features/profile`
 
@@ -544,14 +546,14 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 - Create: `src/features/profile/ui/ProfileAvatar/ProfileAvatar.test.tsx`
 - Modify: `src/features/profile/index.ts`
 
-- [ ] создать `ProfileAvatar` — `<Link to='/profile'>` с инициалами из `useProfile()` либо `<ProfileIcon />`, если имя не задано
-- [ ] задать `aria-label`: `'Your profile'` без имени и `` `Your profile: ${name}` `` с именем (см. раздел про a11y в Technical Details)
-- [ ] перенести стили кружка в `ProfileAvatar.module.css` mobile-first: база — `font-size: 10px` + `flex-shrink: 0` + `text-decoration: none` (новый элемент — `<a>`, а не `<div>`, как был старый `.avatar` — без явного сброса инициалы отрендерятся подчёркнутыми), в `@media (min-width: 720px)` — `font-size: 11px`; плюс остальные свойства старого `.avatar` без изменений — `width`/`height: 32px`, `border-radius: 999px`, `display: flex` + центрирование, `font-family: var(--font-mono)`, `color: var(--text-primary)`, `cursor: pointer`, фон `var(--avatar-gradient)`, рамка `var(--border-strong)`
-- [ ] добавить `:focus-visible` стиль (например, `outline` в `var(--accent-warm)`) — у старого `<div>` фокус-стиля не требовалось, у нового интерактивного `<a>` он нужен
-- [ ] экспортировать `ProfileAvatar` из `src/features/profile/index.ts`
-- [ ] написать тест: без имени рендерится ссылка на `/profile` с доступным именем `Your profile` и без текстовых инициалов
-- [ ] написать тест: с сохранённым именем видны инициалы и доступное имя содержит само имя
-- [ ] прогнать `make test` — должно проходить перед Task 9
+- [x] создать `ProfileAvatar` — `<Link to='/profile'>` с инициалами из `useProfile()` либо `<ProfileIcon />`, если имя не задано
+- [x] задать `aria-label`: `'Your profile'` без имени и `` `Your profile: ${name}` `` с именем (см. раздел про a11y в Technical Details)
+- [x] перенести стили кружка в `ProfileAvatar.module.css` mobile-first: база — `font-size: 10px` + `flex-shrink: 0` + `text-decoration: none` (новый элемент — `<a>`, а не `<div>`, как был старый `.avatar` — без явного сброса инициалы отрендерятся подчёркнутыми), в `@media (min-width: 720px)` — `font-size: 11px`; плюс остальные свойства старого `.avatar` без изменений — `width`/`height: 32px`, `border-radius: 999px`, `display: flex` + центрирование, `font-family: var(--font-mono)`, `color: var(--text-primary)`, `cursor: pointer`, фон `var(--avatar-gradient)`, рамка `var(--border-strong)`
+- [x] добавить `:focus-visible` стиль (например, `outline` в `var(--accent-warm)`) — у старого `<div>` фокус-стиля не требовалось, у нового интерактивного `<a>` он нужен
+- [x] экспортировать `ProfileAvatar` из `src/features/profile/index.ts`
+- [x] написать тест: без имени рендерится ссылка на `/profile` с доступным именем `Your profile` и без текстовых инициалов
+- [x] написать тест: с сохранённым именем видны инициалы и доступное имя содержит само имя
+- [x] прогнать `make test` — должно проходить перед Task 9
 
 ### Task 9: Подключить `ProfileAvatar` в `Header` и `MobileHeader`, убрать дублированный CSS
 
@@ -564,12 +566,12 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 - Modify: `src/widgets/mobile-chrome/ui/MobileHeader/MobileHeader.module.css`
 - Modify: `src/widgets/mobile-chrome/ui/MobileHeader/MobileHeader.test.tsx`
 
-- [ ] в `Header.tsx` заменить `<div className={s.avatar}>AV</div>` на `<ProfileAvatar />` из `@features/profile`
-- [ ] в `MobileHeader.tsx` заменить `rightAction ?? <div className={s.avatar}>AV</div>` на `rightAction ?? <ProfileAvatar />`
-- [ ] удалить класс `.avatar` из `Header.module.css` и из `MobileHeader.module.css` (проверить, что на него больше нет ссылок)
-- [ ] добавить тест в `Header.test.tsx`: аватар — ссылка на `/profile`, показывает инициалы сохранённого имени
-- [ ] добавить тест в `MobileHeader.test.tsx`: то же самое, плюс что переданный `rightAction` по-прежнему перекрывает аватар (регресс-гард для `/movie/:id`, где справа кнопка «поделиться»)
-- [ ] прогнать `make test` и `make typecheck` — должны проходить перед Task 10
+- [x] в `Header.tsx` заменить `<div className={s.avatar}>AV</div>` на `<ProfileAvatar />` из `@features/profile`
+- [x] в `MobileHeader.tsx` заменить `rightAction ?? <div className={s.avatar}>AV</div>` на `rightAction ?? <ProfileAvatar />`
+- [x] удалить класс `.avatar` из `Header.module.css` и из `MobileHeader.module.css` (проверить, что на него больше нет ссылок)
+- [x] добавить тест в `Header.test.tsx`: аватар — ссылка на `/profile`, показывает инициалы сохранённого имени
+- [x] добавить тест в `MobileHeader.test.tsx`: то же самое, плюс что переданный `rightAction` по-прежнему перекрывает аватар (регресс-гард для `/movie/:id`, где справа кнопка «поделиться»)
+- [x] прогнать `make test` и `make typecheck` — должны проходить перед Task 10
 
 ### Task 10: Бандл — группа чанка `page-profile` и бюджеты `size-limit`
 
@@ -578,13 +580,13 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 - Modify: `vite.config.ts`
 - Modify: `package.json`
 
-- [ ] добавить в `codeSplitting.groups` группу `{ name: 'page-profile', test: /\/pages\/profile\// }` рядом с остальными page-группами (после `shared`, не перед)
-- [ ] выполнить `make build-only` и зафиксировать реальные gzip-размеры `page-profile-*.js` и `shared-*.js`
-- [ ] добавить в `"size-limit"` запись `page-profile` с лимитом «реальный замер + 15%», как у остальных записей
-- [ ] пере-замерить и при необходимости поднять лимит `shared` (в него попадает `@features/profile`), не трогая остальные лимиты без причины
-- [ ] прогнать `make size` — все бюджеты должны проходить
-- [ ] прогнать `make knip`; если он пометит экспорты нового бареля `src/features/profile/index.ts` как неиспользуемые, добавить его в `ignore` в `knip.jsonc` с комментарием-обоснованием (тот же приём, что уже применён к барелям `catalog-filter`/`favorites`/`theme`)
-- [ ] прогнать `make lint` и `make typecheck` — должны проходить перед Task 11
+- [x] добавить в `codeSplitting.groups` группу `{ name: 'page-profile', test: /\/pages\/profile\// }` рядом с остальными page-группами (после `shared`, не перед)
+- [x] выполнить `make build-only` и зафиксировать реальные gzip-размеры `page-profile-*.js` и `shared-*.js` (замер size-limit: page-profile 2.48 kB, shared 17.18 kB)
+- [x] добавить в `"size-limit"` запись `page-profile` с лимитом «реальный замер + 15%», как у остальных записей (2.48 kB × 1.15 ≈ 2.85 KB)
+- [x] пере-замерить и при необходимости поднять лимит `shared` (в него попадает `@features/profile`), не трогая остальные лимиты без причины (пере-замер: 17.18 kB при лимите 22.6 KB — бюджет `shared` проходит, лимит не менялся)
+- [x] прогнать `make size` — все бюджеты должны проходить
+- [x] прогнать `make knip`; если он пометит экспорты нового бареля `src/features/profile/index.ts` как неиспользуемые, добавить его в `ignore` в `knip.jsonc` с комментарием-обоснованием (тот же приём, что уже применён к барелям `catalog-filter`/`favorites`/`theme`) (knip пометил `UseProfileResult` — барель был добавлен в `ignore`; по ревью реэкспорт типа убран, и запись из `ignore` тоже снята)
+- [x] прогнать `make lint` и `make typecheck` — должны проходить перед Task 11
 
 ### Task 11: E2E-спека `/profile` + проверка axe
 
@@ -592,22 +594,22 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 
 - Create: `e2e/profile.spec.ts`
 
-- [ ] написать спеку: переход на `/profile`, ввод имени, сохранение, `page.reload()` — имя сохранилось (проверка реальной персистентности в `localStorage`, а не только React-стейта)
-- [ ] проверить, что после сохранения имени аватар в шапке показывает инициалы и ведёт на `/profile`
-- [ ] проверить быстрый доступ: клик по `Favorites` (`getByRole('link', { name: 'Favorites' })` — коллизии с `NavPill` в хедере нет, тот рендерится `<button>`) уводит на `/favorites`
-- [ ] добавить `await checkA11y(page)` из `e2e/utils/a11y.ts` — ноль violations с `impact === 'critical'`
-- [ ] селекторы — только по `role`/`label`/`placeholder`/тексту, без `data-testid` (правило AGENTS.md)
-- [ ] выполнить `make build-only`, затем `pnpm exec playwright test e2e/profile.spec.ts --project=chromium` (точечно, не весь `make e2e` — см. Testing Strategy про экономию API-квоты) — спека должна проходить; зафиксировать в плане, что спека не делает ни одного запроса к API
-- [ ] мобильную спеку (`e2e/mobile/`) не добавлять — обоснование в Testing Strategy
+- [x] написать спеку: переход на `/profile`, ввод имени, сохранение, `page.reload()` — имя сохранилось (проверка реальной персистентности в `localStorage`, а не только React-стейта)
+- [x] проверить, что после сохранения имени аватар в шапке показывает инициалы и ведёт на `/profile`
+- [x] проверить быстрый доступ: клик по `Favorites` (`getByRole('link', { name: 'Favorites' })` — коллизии с `NavPill` в хедере нет, тот рендерится `<button>`) уводит на `/favorites`
+- [x] добавить `await checkA11y(page)` из `e2e/utils/a11y.ts` — ноль violations с `impact === 'critical'`
+- [x] селекторы — только по `role`/`label`/`placeholder`/тексту, без `data-testid` (правило AGENTS.md)
+- [x] выполнить `make build-only`, затем `pnpm exec playwright test e2e/profile.spec.ts --project=chromium` (точечно, не весь `make e2e` — см. Testing Strategy про экономию API-квоты) — спека должна проходить; зафиксировать в плане, что спека не делает ни одного запроса к API (выполнено: 1 passed; спека не делает ни одного запроса к API — /profile client-only, клик на /favorites при пустом избранном тоже без API)
+- [x] мобильную спеку (`e2e/mobile/`) не добавлять — обоснование в Testing Strategy (не добавлена)
 
 ### Task 12: Verify acceptance criteria
 
-- [ ] проверить, что ни одной заглушки из бэклога не осталось: `grep -rn "AV" src/widgets` не находит захардкоженного аватара, `path: null` в `BottomNav` отсутствует, `.navItemDisabled` удалён
-- [ ] проверить, что на странице нет ни одного контрола, который ничего не делает (в т.ч. не появилась disabled-кнопка входа)
-- [ ] проверить краевые случаи: очень длинное имя (обрезка по code points, не по code units), имя из эмодзи, пустое избранное, тема `system`, cross-tab-синхронизация имени между двумя вкладками
-- [ ] прогнать полный набор: `make check` (lint + build), `make test`, `make size`, `make knip`
-- [ ] прогнать `pnpm exec playwright test e2e/profile.spec.ts --project=chromium` после `make build-only` (точечно, не весь `make e2e` — см. Testing Strategy)
-- [ ] проверить обе темы (`light`/`dark`) на новой странице — ни одного хардкоженного цвета, всё через токены
+- [x] проверить, что ни одной заглушки из бэклога не осталось: `grep -rn "AV" src/widgets` не находит захардкоженного аватара, `path: null` в `BottomNav` отсутствует, `.navItemDisabled` удалён — проверено: `AV` в src/widgets, `path: null` в mobile-chrome, `navItemDisabled`, `.avatar` в widgets — ничего не найдено
+- [x] проверить, что на странице нет ни одного контрола, который ничего не делает (в т.ч. не появилась disabled-кнопка входа) — проверено: Profile.tsx — форма (Save disabled только при неизменённом черновике), 3 ссылки, radio-темы, Clear name (только при заданном имени), Sign in отсутствует (обычный текст-подпись)
+- [x] проверить краевые случаи: очень длинное имя (обрезка по code points, не по code units), имя из эмодзи, пустое избранное, тема `system`, cross-tab-синхронизация имени между двумя вкладками — покрыто существующими тестами (getInitials/profileStorage/useProfile/Profile) + добавлены два page-level теста в Profile.test.tsx: эмодзи-имя end-to-end, имя ровно на лимите (40). Замечание: `maxLength` инпута считает UTF-16 code units, поэтому эмодзи-имя через UI ограничено 20 символами — принято как консервативное, не дефект
+- [x] прогнать полный набор: `make check` (lint + build), `make test`, `make size`, `make knip` — `make test` (96 файлов, 810 тестов), `make lint`, `make build`, `make size`, `make knip` зелёные; `make check` целиком падает только на format-check из-за git-ignored локального `.claude/settings.local.json` (не часть репозитория), `oxfmt --check src e2e docs` чист
+- [x] прогнать `pnpm exec playwright test e2e/profile.spec.ts --project=chromium` после `make build-only` (точечно, не весь `make e2e` — см. Testing Strategy) — 1 spec passed; `e2e/profile.spec.ts` chromium. Сетевой лог: переход /profile → /favorites при пустом избранном делает 0 запросов к api.poiskkino.dev (всего 19 запросов, все локальные/шрифты)
+- [x] проверить обе темы (`light`/`dark`) на новой странице — ни одного хардкоженного цвета, всё через токены — CSS обоих файлов: нет hex/rgb/hsl/named-цветов; все var(--token) существуют в global.css (и в dark :root, и в light-блоке; шрифтовые токены наследуются)
 
 ### Task 13: [Final] Документация
 
@@ -619,19 +621,19 @@ Task 7, а группа чанка `page-profile` — только в Task 10, �
 - Modify: `plans/roadmap.md`
 - Move: `docs/plans/20260916-user-profile-block.md` → `docs/plans/completed/`
 
-- [ ] добавить в `AGENTS.md` раздел про `@features/profile`: client-only профиль, ключ `kinoshka:profile`, `ProfileAvatar` как третий пример «UI фичи, рендерящейся из обоих виджетов-хедеров» (после `ThemeToggle`), решение «никаких disabled-заглушек авторизации»
-- [ ] дополнить в `AGENTS.md` таблицу «Key public APIs» строкой `@features/profile`
-- [ ] отметить в `AGENTS.md`, что задизейбленных пунктов в `BottomNav` больше нет и тип `path` сужен до `string`
-- [ ] обновить в `AGENTS.md` список маршрутов в разделе Routing («`/`, `/search`, `/movie/:id`, `/favorites`, `/popular`, `/recommendations`») — добавить `/profile`
-- [ ] обновить в `AGENTS.md` формулировку «`router.tsx` uses it for all 6 routes» (раздел про `lazyNamed`) — теперь их 7
-- [ ] обновить в `AGENTS.md` перечисление `codeSplitting.groups` (раздел «Performance budgets») — добавить `page-profile` в список явных page-групп
-- [ ] обновить в `AGENTS.md` формулировку «all 6 page slices are imported through an identically-named `index.tsx` barrel» — теперь их 7
-- [ ] обновить в `AGENTS.md` раздел «`size-limit` budgets» — добавить `page-profile` в перечисление 10 записей (станет 11) и актуализировать измеренную цифру `shared` после её пере-замера в Task 10
-- [ ] обновить в `AGENTS.md` раздел про E2E — формулировку «the app has 6 routes total (`/`, `/search`, …)» и зафиксировать там же решение «`/profile` не добавляется в мобильный сьют» (см. Testing Strategy)
-- [ ] дописать в `plans/roadmap.md` (Фаза 5) заметку: client-only профиль уже существует в `main`, при появлении реальной сессии заменяется источник данных `useProfile()`, а роут/страница/навигация переиспользуются
-- [ ] создать `docs/backlog/dead-header-controls.md` с YAML-фронтматтером (`worth: later`, `added: 2026-09-16`, по образцу существующих файлов в `docs/backlog/`), зафиксировав мёртвые элементы профильного UI, найденные при работе над этим планом: `Header.tsx` — `IconButton aria-label='Notifications'` без `onClick` (плюс декоративная точка непрочитанного); `AppLayout.tsx` `MOVIE_CHROME.rightAction` — `IconButton aria-label='Share'` без обработчика; `Footer.tsx` — статические нерабочие `<li>`-ссылки колонки «Account» (`My lists`/`Watched`/`Ratings`/`Recommendations`) (см. Solution Overview, п.9)
-- [ ] удалить `docs/backlog/user-profile-block.md` — пункт закрыт (жизненный цикл бэклога: создать → сделать → удалить)
-- [ ] перенести этот план в `docs/plans/completed/`
+- [x] добавить в `AGENTS.md` раздел про `@features/profile`: client-only профиль, ключ `kinoshka:profile`, `ProfileAvatar` как второй пример «UI фичи, рендерящейся из обоих виджетов-хедеров» (после `ThemeToggle`), решение «никаких disabled-заглушек авторизации»
+- [x] дополнить в `AGENTS.md` таблицу «Key public APIs» строкой `@features/profile`
+- [x] отметить в `AGENTS.md`, что задизейбленных пунктов в `BottomNav` больше нет и тип `path` сужен до `string`
+- [x] обновить в `AGENTS.md` список маршрутов в разделе Routing («`/`, `/search`, `/movie/:id`, `/favorites`, `/popular`, `/recommendations`») — добавить `/profile`
+- [x] обновить в `AGENTS.md` формулировку «`router.tsx` uses it for all 6 routes» (раздел про `lazyNamed`) — теперь их 7
+- [x] обновить в `AGENTS.md` перечисление `codeSplitting.groups` (раздел «Performance budgets») — добавить `page-profile` в список явных page-групп
+- [x] обновить в `AGENTS.md` формулировку «all 6 page slices are imported through an identically-named `index.tsx` barrel» — теперь их 7
+- [x] обновить в `AGENTS.md` раздел «`size-limit` budgets» — добавить `page-profile` в перечисление 9 записей (станет 10) и актуализировать измеренную цифру `shared` после её пере-замера в Task 10
+- [x] обновить в `AGENTS.md` раздел про E2E — формулировку «the app has 6 routes total (`/`, `/search`, …)» и зафиксировать там же решение «`/profile` не добавляется в мобильный сьют» (см. Testing Strategy)
+- [x] дописать в `plans/roadmap.md` (Фаза 5) заметку: client-only профиль уже существует в `main`, при появлении реальной сессии заменяется источник данных `useProfile()`, а роут/страница/навигация переиспользуются
+- [x] создать `docs/backlog/dead-header-controls.md` с YAML-фронтматтером (`worth: later`, `added: 2026-09-16`, по образцу существующих файлов в `docs/backlog/`), зафиксировав мёртвые элементы профильного UI, найденные при работе над этим планом: `Header.tsx` — `IconButton aria-label='Notifications'` без `onClick` (плюс декоративная точка непрочитанного); `AppLayout.tsx` `MOVIE_CHROME.rightAction` — `IconButton aria-label='Share'` без обработчика; `Footer.tsx` — статические нерабочие `<li>`-ссылки колонки «Account» (`My lists`/`Watched`/`Ratings`/`Recommendations`) (см. Solution Overview, п.9)
+- [x] удалить `docs/backlog/user-profile-block.md` — пункт закрыт (жизненный цикл бэклога: создать → сделать → удалить)
+- [x] перенести этот план в `docs/plans/completed/` (перенос выполняет оркестратор после ревью-фаз)
 
 ## Post-Completion
 
@@ -644,8 +646,10 @@ _Пункты, требующие ручных действий или внеш�
   (не перекрывает ли она кнопку `Save`), безопасные зоны iOS.
 - проверить страницу со скринридером (VoiceOver): озвучивание группы выбора темы (`radiogroup`),
   ссылки-аватара и кнопки `Clear name`.
-- проверить приватный режим браузера, где `localStorage` может быть недоступен/сбрасываться:
-  страница должна деградировать до «имя не задано», а не падать.
+- проверить приватный режим браузера, где `localStorage` может быть недоступен/сбрасываться.
+  (Исходная формулировка плана говорила, что код не оборачивает обращения к хранилищу в
+  `try/catch`; в реализации это не так: `createStorageSlot` ловит сбои `localStorage`, `get()`
+  деградирует до fallback, `set()` возвращает `false`, а `/profile` показывает inline-ошибку.)
 
 **Что дальше (вне скоупа этого плана):**
 
