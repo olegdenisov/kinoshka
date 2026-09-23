@@ -30,8 +30,10 @@ export const useFavorites = (): UseFavoritesResult => {
       if (current.includes(id)) {
         setIds(current.filter(existingId => existingId !== id))
       } else {
-        setIds([...current, id])
-        trackEvent('favorite added')
+        // trackEvent только при успешной записи: setIds() не бросает при недоступном
+        // хранилище, а возвращает false (см. createStorageSlot.set) — иначе Plausible
+        // считал бы "favorite added" в сессиях, где избранное на самом деле не сохранилось.
+        if (setIds([...current, id])) trackEvent('favorite added')
       }
     },
     clear: () => setIds([]),
