@@ -1,4 +1,5 @@
 export * from './Icon'
+export { AvatarCircle } from './AvatarCircle'
 export { IconButton } from './IconButton'
 export { Footer } from './Footer'
 export { Spinner } from './Spinner'

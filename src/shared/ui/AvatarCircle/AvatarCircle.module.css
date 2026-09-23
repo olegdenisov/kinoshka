@@ -1,0 +1,29 @@
+.avatar {
+  border-radius: 999px;
+  background: var(--avatar-gradient);
+  border: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  color: var(--avatar-fg);
+  flex-shrink: 0;
+}
+
+.sm {
+  width: 32px;
+  height: 32px;
+  font-size: 10px;
+}
+
+@media (min-width: 720px) {
+  .sm {
+    font-size: 11px;
+  }
+}
+
+.lg {
+  width: 72px;
+  height: 72px;
+  font-size: 24px;
+}
