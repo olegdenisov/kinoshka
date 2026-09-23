@@ -63,6 +63,10 @@ const renderAt = (path: string) =>
                 element: <div>Recommendations page content</div>,
               },
               { path: '/search', element: <div>Search page content</div> },
+              {
+                path: '/profile',
+                element: <div>Profile page content</div>,
+              },
             ],
           },
         ],
@@ -149,6 +153,23 @@ describe('AppLayout — десктоп рендерит Header, не MobileHeade
     ).not.toBeInTheDocument()
   })
 
+  // /profile — ROUTE_CHROME['/profile'] не задаёт activeNav (у Header нет nav-pill профиля),
+  // поэтому ни один nav-pill не подсвечен; вместо него — аватар-ссылка на /profile.
+  it('/profile: Header рендерится без подсвеченного nav-pill (activeNav не задан)', () => {
+    renderAt('/profile')
+
+    const banner = screen.getByRole('banner')
+    expect(screen.getByText('Profile page content')).toBeInTheDocument()
+    expect(
+      within(banner)
+        .getAllByRole('button')
+        .some(btn => btn.className.match(/navPillActive/)),
+    ).toBe(false)
+    expect(
+      within(banner).getByRole('link', { name: 'Your profile' }),
+    ).toHaveAttribute('href', '/profile')
+  })
+
   // /movie/:id (Task 9) — MOVIE_CHROME не задаёт activeNav (см. докблок RouteChromeConfig в
   // AppLayout.tsx — воспроизводит поведение голого <Header /> из удалённого MovieDesktop.tsx),
   // поэтому ни один nav-pill не подсвечен.
@@ -216,6 +237,21 @@ describe('AppLayout — мобильный рендерит MobileHeader+BottomN
     const banner = screen.getByRole('banner')
     expect(within(banner).getByText('Recommended for you')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Picks/ }).className).toMatch(
+      /navItemActive/,
+    )
+  })
+
+  it('/profile: MobileHeader получает title="Profile", BottomNav — active="profile"', () => {
+    setViewportWidth(MOBILE_WIDTH)
+    renderAt('/profile')
+
+    const banner = screen.getByRole('banner')
+    expect(within(banner).getByText('Profile')).toBeInTheDocument()
+    // десктопный Header не смонтирован — его nav-pill'ов нет
+    expect(
+      within(banner).queryByRole('button', { name: 'Popular' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Profile/ }).className).toMatch(
       /navItemActive/,
     )
   })

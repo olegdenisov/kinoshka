@@ -55,11 +55,13 @@ type RouteChromeConfig = {
 /**
  * route → chrome-конфиг карта (Task 6 плана docs/plans/20260827-mobile-first-adaptive-layout.md).
  * Заполнена для маршрутов, уже подключённых под этот layout — `/favorites`, `/popular`,
- * `/recommendations` (Task 3-5), `/` (Task 8), `/movie/:id` (Task 9, см. `MOVIE_CHROME` ниже —
- * не входит в эту карту, потому что ключ здесь — точный `pathname`, а `/movie/123` не совпадёт
- * с литералом `/movie/:id`) и `/search` (Task 10, см. `SEARCH_CHROME` ниже — по той же причине,
- * что `MOVIE_CHROME`, не входит в эту карту, хоть у `/search` и нет динамического сегмента: у
- * этого роута `activeNav` вычисляется не по статической карте, а из `?type`, см. ниже).
+ * `/recommendations` (Task 3-5), `/profile` (client-only профиль, отдельный план
+ * docs/plans/completed/20260916-user-profile-block.md), `/` (Task 8), `/movie/:id` (Task 9, см.
+ * `MOVIE_CHROME` ниже — не входит в эту карту, потому что ключ здесь — точный `pathname`, а
+ * `/movie/123` не совпадёт с литералом `/movie/:id`) и `/search` (Task 10, см. `SEARCH_CHROME`
+ * ниже — по той же причине, что `MOVIE_CHROME`, не входит в эту карту, хоть у `/search` и нет
+ * динамического сегмента: у этого роута `activeNav` вычисляется не по статической карте, а из
+ * `?type`, см. ниже).
  *   - `/` (Task 8): простой случай, `activeNav: 'home'`, `active: 'home'`, `title` не задаётся
  *     (см. докблок `RouteChromeConfig.title` — воспроизводит исходное поведение `HomeMobile`).
  *   - `/movie/:id` (Task 9): НЕ простой случай — см. `MOVIE_CHROME` и докблок
@@ -99,6 +101,11 @@ const ROUTE_CHROME: Record<string, RouteChromeConfig> = {
     activeNav: 'recommendations',
     active: 'recommendations',
     title: 'Recommended for you',
+  },
+  // activeNav не задан — у Header нет nav-pill профиля (см. таблицу выше).
+  '/profile': {
+    active: 'profile',
+    title: 'Profile',
   },
 }
 
@@ -164,10 +171,11 @@ const SEARCH_CHROME: RouteChromeConfig = {
  * none` `Header` продолжил бы это делать на роутах вроде `/favorites`, где `?q` не нужен и не
  * ожидается. Явное условное (не)монтирование через `useViewport()` — тот самый точечный JS-форк,
  * зафиксированный в Task 1/Audit как оправданный (CSS `hover`/`pointer` не может выразить "не
- * монтировать вообще"). Ни один из пяти роутов, подключённых сейчас (`/`, `/favorites`,
- * `/popular`, `/recommendations`, `/movie/:id`), не использует `variant='search'` — эта ветка
+ * монтировать вообще"). На момент Task 1 ни один из пяти подключённых роутов (`/`, `/favorites`,
+ * `/popular`, `/recommendations`, `/movie/:id`) не использовал `variant='search'` — эта ветка
  * `Header` (и её ⌘K-листенер, и её `?q`-эффект в контексте реального поиска) присоединится
- * только вместе с `/search` в Task 10.
+ * только вместе с `/search` в Task 10 (актуальный список роутов под layout — в `router.tsx`;
+ * `/profile` тоже подключён и `variant='search'` не использует).
  *
  * **Task 10 (`/search`) добавила второй JS-fork поверх этого.** `/search` подключён под этот
  * layout (см. `router.tsx`) вместо инлайн-рендера chrome внутри `Search` — тот же принцип, что
