@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
 import { describe, expect, it } from 'vitest'
@@ -104,5 +105,14 @@ describe('lighthouserc.cjs', () => {
     expect(Array.isArray(assertion)).toBe(true)
     const [severity] = asCategoryAssertion(assertion)
     expect(severity).toBe('off')
+  })
+
+  // AGENTS.md (Profile → Avatar contrast) ссылается на Lighthouse как на реальное покрытие /profile
+  // для всего, кроме аватара; без утверждения ниже /profile могли бы тихо убрать из обоих списков.
+  it.each([
+    ['.github/workflows/lighthouse.yml', '/profile'],
+    ['Makefile', 'localhost:4173/profile'],
+  ])('%s аудитирует /profile', (file, needle) => {
+    expect(readFileSync(file, 'utf-8')).toContain(needle)
   })
 })

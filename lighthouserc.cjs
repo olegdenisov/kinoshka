@@ -39,8 +39,10 @@ module.exports = {
   ci: {
     collect: {
       // Квота demo-тарифа Kinopoisk API (200 запросов/сутки, разделяемых с E2E) — без
-      // медианы из нескольких прогонов, но в 3 раза меньше нагрузки на живой API за то же
-      // покрытие трёх роутов (/, /search, /movie/:id).
+      // медианы из нескольких прогонов, но в разы меньше нагрузки на живой API за то же
+      // покрытие четырёх роутов (/, /search, /movie/:id, /profile). /profile не добавляет
+      // расхода квоты вовсе: страница обращается только к localStorage-хукам
+      // (useProfile()/useFavorites()/useTheme()), без единого запроса к API.
       numberOfRuns: 1,
       settings: {
         // mobile-preset с simulated throttling — известный источник флейков на shared

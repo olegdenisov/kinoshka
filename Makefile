@@ -93,4 +93,5 @@ lighthouse: build-only
 	  --collect.startServerReadyPattern='Local:' \
 	  --collect.url=http://localhost:4173 \
 	  --collect.url=http://localhost:4173/search \
-	  --collect.url=http://localhost:4173/movie/666
+	  --collect.url=http://localhost:4173/movie/666 \
+	  --collect.url=http://localhost:4173/profile

@@ -83,6 +83,7 @@ jobs:
             ${{ steps.wait.outputs.url }}
             ${{ steps.wait.outputs.url }}/search
             ${{ steps.wait.outputs.url }}/movie/666
+            ${{ steps.wait.outputs.url }}/profile
           configPath: ./lighthouserc.cjs
           uploadArtifacts: true
           temporaryPublicStorage: true
