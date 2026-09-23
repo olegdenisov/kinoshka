@@ -18,6 +18,10 @@ beforeEach(() => {
   vi.mocked(trackEvent).mockClear()
 })
 
+// Страховка для теста со spyOn(Storage.prototype, 'setItem') ниже: если expect упадёт до
+// mockRestore(), бросающий spy иначе утёк бы в последующие тесты файла.
+afterEach(() => vi.restoreAllMocks())
+
 describe('useFavorites — успешные сценарии', () => {
   it('add добавляет id в ids и isFavorite начинает возвращать true', () => {
     const { result } = renderHook(() => useFavorites())
@@ -65,6 +69,21 @@ describe('useFavorites — успешные сценарии', () => {
 
     act(() => result.current.toggle(1))
 
+    expect(result.current.ids).toEqual([])
+    expect(trackEvent).not.toHaveBeenCalled()
+  })
+
+  it('toggle на отсутствующем id НЕ вызывает trackEvent, если запись в хранилище не удалась', () => {
+    const { result } = renderHook(() => useFavorites())
+    const spy = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new DOMException('full', 'QuotaExceededError')
+      })
+
+    act(() => result.current.toggle(1))
+
+    spy.mockRestore()
     expect(result.current.ids).toEqual([])
     expect(trackEvent).not.toHaveBeenCalled()
   })
