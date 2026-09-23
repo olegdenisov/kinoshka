@@ -102,18 +102,3 @@
   border-radius: 999px;
   background: var(--accent-warm);
 }
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  background: var(--avatar-gradient);
-  border: 1px solid var(--border-strong);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-primary);
-  cursor: pointer;
-}

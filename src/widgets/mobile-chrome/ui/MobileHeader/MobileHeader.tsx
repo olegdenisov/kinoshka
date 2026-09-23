@@ -1,3 +1,4 @@
+import { ProfileAvatar } from '@features/profile'
 import { ThemeToggle } from '@features/theme'
 import { SearchIcon, ChevronLeftIcon } from '@shared/ui'
 import { useNavigate } from 'react-router'
@@ -56,7 +57,7 @@ export const MobileHeader = ({
         )}
 
         <ThemeToggle />
-        {rightAction ?? <div className={s.avatar}>AV</div>}
+        {rightAction ?? <ProfileAvatar />}
       </div>
     </header>
   )
