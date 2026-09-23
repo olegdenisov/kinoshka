@@ -35,10 +35,6 @@
   color: var(--accent-warm);
 }
 
-.navItemDisabled {
-  cursor: default;
-}
-
 .navLabel {
   font-family: var(--font-mono);
   font-size: 9.5px;

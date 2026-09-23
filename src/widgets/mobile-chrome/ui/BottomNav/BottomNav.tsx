@@ -6,7 +6,7 @@ import {
   StarIcon,
   ProfileIcon,
 } from '@shared/ui'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 
 import s from './BottomNav.module.css'
 
@@ -24,12 +24,13 @@ type BottomNavProps = {
 
 export const BottomNav = ({ active }: BottomNavProps) => {
   const navigate = useNavigate()
+  const { pathname, search, hash } = useLocation()
 
   const items: {
     key: NavKey
     label: string
     icon: typeof HomeIcon
-    path: string | null
+    path: string
   }[] = [
     { key: 'home', label: 'Home', icon: HomeIcon, path: '/' },
     { key: 'search', label: 'Catalog', icon: SearchIcon, path: '/search' },
@@ -41,7 +42,7 @@ export const BottomNav = ({ active }: BottomNavProps) => {
       icon: StarIcon,
       path: '/recommendations',
     },
-    { key: 'profile', label: 'Profile', icon: ProfileIcon, path: null },
+    { key: 'profile', label: 'Profile', icon: ProfileIcon, path: '/profile' },
   ]
 
   return (
@@ -54,8 +55,20 @@ export const BottomNav = ({ active }: BottomNavProps) => {
             <button
               type='button'
               key={it.key}
-              onClick={() => it.path && navigate(it.path)}
-              className={`${s.navItem} ${isActive ? s.navItemActive : ''} ${!it.path ? s.navItemDisabled : ''}`}
+              // replace на уже открытой странице: иначе повторный тап по активному пункту
+              // кладёт в историю дубль, и первое «Назад» визуально ничего не делает. Сравниваем
+              // с pathname, а не с isActive: у /movie/:id активен пункт search, но это другая
+              // страница, и переход на /search должен быть обычным push. Сравниваем весь текущий
+              // URL (pathname+search+hash) с it.path, а не только pathname: все it.path — без
+              // query/hash, так что на /search?q=… (BottomNav есть в SEARCH_CHROME) повторный тап
+              // по «Catalog» иначе стёр бы отфильтрованный URL из истории через replace, хотя
+              // страница другая — просто с тем же pathname.
+              onClick={() =>
+                navigate(it.path, {
+                  replace: `${pathname}${search}${hash}` === it.path,
+                })
+              }
+              className={`${s.navItem} ${isActive ? s.navItemActive : ''}`}
             >
               <Icon size={20} filled={isActive} />
               <span

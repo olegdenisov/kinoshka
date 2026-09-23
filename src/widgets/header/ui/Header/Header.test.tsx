@@ -549,3 +549,45 @@ describe('Header — переключатель темы (ThemeToggle)', () => {
     expect(document.documentElement.dataset.theme).toBe('dark')
   })
 })
+
+describe('Header — аватар профиля (ProfileAvatar)', () => {
+  it('без имени аватар — ссылка на /profile с доступным именем "Your profile"', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Header variant='default' />
+      </MemoryRouter>,
+    )
+
+    const link = screen.getByRole('link', { name: 'Your profile' })
+    expect(link).toHaveAttribute('href', '/profile')
+  })
+
+  it('в варианте search аватар тоже ссылка на /profile', () => {
+    render(
+      <MemoryRouter initialEntries={['/search']}>
+        <Header variant='search' activeNav='search' />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('link', { name: 'Your profile' })).toHaveAttribute(
+      'href',
+      '/profile',
+    )
+  })
+
+  it('с сохранённым именем показывает инициалы', () => {
+    localStorage.setItem('kinoshka:profile', JSON.stringify('Oleg Denisov'))
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Header variant='default' />
+      </MemoryRouter>,
+    )
+
+    const link = screen.getByRole('link', {
+      name: 'Your profile: Oleg Denisov',
+    })
+    expect(link).toHaveAttribute('href', '/profile')
+    expect(link).toHaveTextContent('OD')
+  })
+})

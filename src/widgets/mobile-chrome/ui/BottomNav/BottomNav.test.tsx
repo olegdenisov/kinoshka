@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { useEffect } from 'react'
-import { MemoryRouter, useLocation } from 'react-router'
+import { MemoryRouter, useLocation, useNavigate } from 'react-router'
 
 import { BottomNav } from './BottomNav'
 
@@ -50,16 +50,23 @@ describe('BottomNav — навигация к /favorites (пункт "Lists")', 
       /navItemActive/,
     )
   })
+})
 
-  it('пункт "Profile" (path: null) остаётся задизейбленным — клик не навигирует', () => {
+describe('BottomNav — навигация к /profile (пункт "Profile")', () => {
+  it('клик по "Profile" ведёт на /profile', () => {
     const { getPathname } = renderWithProbe('home')
 
-    const profileBtn = screen.getByRole('button', { name: /Profile/ })
-    expect(profileBtn.className).toMatch(/navItemDisabled/)
+    fireEvent.click(screen.getByRole('button', { name: /Profile/ }))
 
-    fireEvent.click(profileBtn)
+    expect(getPathname()).toBe('/profile')
+  })
 
-    expect(getPathname()).toBe('/')
+  it('пункт "Profile" подсвечивается активным на /profile', () => {
+    renderWithProbe('profile')
+
+    expect(screen.getByRole('button', { name: /Profile/ }).className).toMatch(
+      /navItemActive/,
+    )
   })
 })
 
@@ -80,13 +87,10 @@ describe('BottomNav — навигация к /popular (пункт "Popular")', 
     )
   })
 
-  it('6 колонок — существующие пункты (в т.ч. задизейбленный "Profile") не задеты', () => {
+  it('6 колонок — количество пунктов не изменилось', () => {
     renderWithProbe('home')
 
     expect(screen.getAllByRole('button')).toHaveLength(6)
-    expect(screen.getByRole('button', { name: /Profile/ }).className).toMatch(
-      /navItemDisabled/,
-    )
   })
 })
 
@@ -105,5 +109,114 @@ describe('BottomNav — навигация к /recommendations (пункт "Pick
     expect(screen.getByRole('button', { name: /Picks/ }).className).toMatch(
       /navItemActive/,
     )
+  })
+})
+
+describe('BottomNav — повторный тап по пункту текущей страницы', () => {
+  const BackButton = () => {
+    const navigate = useNavigate()
+    return (
+      <button type='button' onClick={() => navigate(-1)}>
+        back
+      </button>
+    )
+  }
+
+  it('не кладёт дубль в историю: одно «Назад» уводит на предыдущую страницу', () => {
+    const PathnameOutput = () => <output>{useLocation().pathname}</output>
+    render(
+      <MemoryRouter initialEntries={['/popular', '/profile']} initialIndex={1}>
+        <BottomNav active='profile' />
+        <BackButton />
+        <PathnameOutput />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Profile/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'back' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('/popular')
+  })
+
+  it('переход на другую страницу — обычный push: «Назад» возвращает на исходную', () => {
+    const PathnameOutput = () => <output>{useLocation().pathname}</output>
+    render(
+      <MemoryRouter initialEntries={['/movie/1']}>
+        <BottomNav active='search' />
+        <BackButton />
+        <PathnameOutput />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Catalog/ }))
+    expect(screen.getByRole('status')).toHaveTextContent('/search')
+    fireEvent.click(screen.getByRole('button', { name: 'back' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('/movie/1')
+  })
+
+  it('тап по «Catalog» на /search?q=… с фильтрами в URL — push, а не replace: «Назад» восстанавливает URL с фильтрами', () => {
+    const PathnameOutput = () => {
+      const { pathname, search } = useLocation()
+      return <output>{`${pathname}${search}`}</output>
+    }
+    render(
+      <MemoryRouter initialEntries={['/search?q=matrix&genres=драма&page=3']}>
+        <BottomNav active='search' />
+        <BackButton />
+        <PathnameOutput />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '/search?q=matrix&genres=драма&page=3',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Catalog/ }))
+    expect(screen.getByRole('status')).toHaveTextContent('/search')
+
+    fireEvent.click(screen.getByRole('button', { name: 'back' }))
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '/search?q=matrix&genres=драма&page=3',
+    )
+  })
+
+  it('тап по «Catalog» на голом /search (без query) — replace: «Назад» уводит на предыдущую страницу', () => {
+    const PathnameOutput = () => <output>{useLocation().pathname}</output>
+    render(
+      <MemoryRouter initialEntries={['/popular', '/search']} initialIndex={1}>
+        <BottomNav active='search' />
+        <BackButton />
+        <PathnameOutput />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Catalog/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'back' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('/popular')
+  })
+
+  it('тап по пункту страницы, открытой с #hash, — push, а не replace: «Назад» возвращает на URL с hash', () => {
+    const LocationOutput = () => {
+      const { pathname, hash } = useLocation()
+      return <output>{`${pathname}${hash}`}</output>
+    }
+    render(
+      <MemoryRouter
+        initialEntries={['/popular', '/profile#top']}
+        initialIndex={1}
+      >
+        <BottomNav active='profile' />
+        <BackButton />
+        <LocationOutput />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Profile/ }))
+    expect(screen.getByRole('status')).toHaveTextContent(/^\/profile$/)
+    fireEvent.click(screen.getByRole('button', { name: 'back' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('/profile#top')
   })
 })

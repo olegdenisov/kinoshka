@@ -58,4 +58,33 @@ describe('MobileHeader', () => {
     // (localStorage empty) resolves to 'light' on mount, so one click flips it to 'dark'.
     expect(document.documentElement.dataset.theme).toBe('dark')
   })
+
+  it('аватар — ссылка на /profile с инициалами сохранённого имени', () => {
+    localStorage.setItem('kinoshka:profile', JSON.stringify('Oleg Denisov'))
+
+    render(
+      <MemoryRouter>
+        <MobileHeader />
+      </MemoryRouter>,
+    )
+
+    const link = screen.getByRole('link', {
+      name: 'Your profile: Oleg Denisov',
+    })
+    expect(link).toHaveAttribute('href', '/profile')
+    expect(link).toHaveTextContent('OD')
+  })
+
+  it('переданный rightAction перекрывает аватар (регресс-гард для /movie/:id)', () => {
+    render(
+      <MemoryRouter>
+        <MobileHeader rightAction={<button type='button'>Share</button>} />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: /your profile/i }),
+    ).not.toBeInTheDocument()
+  })
 })

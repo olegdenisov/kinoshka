@@ -1,5 +1,6 @@
 import { EMPTY_FILTERS, filtersToSearchParams } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
+import { ProfileAvatar } from '@features/profile'
 import { ThemeToggle } from '@features/theme'
 import { useDebouncedValue } from '@shared/lib'
 import { SearchIcon, BellIcon, CloseIcon, IconButton } from '@shared/ui'
@@ -213,7 +214,7 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
             <span className={s.notificationDot} />
           </IconButton>
           <ThemeToggle />
-          <div className={s.avatar}>AV</div>
+          <ProfileAvatar />
         </div>
       </div>
     </header>
