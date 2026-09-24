@@ -22,8 +22,180 @@
     "no-explicit-any": "error",
     "consistent-type-imports": "error",
     "button-has-type": "error",
-    "import/no-cycle": "error"
+    "import/no-cycle": "error",
+    // Проектное правило «type, не interface» (AGENTS.md → Architecture). Единственное
+    // исключение — interface Window в src/vite-env.d.ts, помечено disable-комментарием.
+    "typescript/consistent-type-definitions": ["error", "type"],
+    // FSD public API: срезы импортируются только через свой index.ts. Паттерны ниже
+    // повторяются в каждом override: override заменяет опции правила целиком, а не мержит их.
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": [
+              "@pages/*/**",
+              "@widgets/*/**",
+              "@features/*/**",
+              "@entities/*/**",
+              "@shared/*/**"
+            ],
+            "message": "FSD: import the slice through its public index.ts, not its internals."
+          }
+        ]
+      }
+    ]
   },
+  // FSD-направление импортов: pages → widgets → features → entities → shared.
+  "overrides": [
+    {
+      "files": ["src/pages/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@pages/*/**",
+                  "@widgets/*/**",
+                  "@features/*/**",
+                  "@entities/*/**",
+                  "@shared/*/**"
+                ],
+                "message": "FSD: import the slice through its public index.ts, not its internals."
+              },
+              {
+                "group": ["@app", "@app/**"],
+                "message": "FSD: pages can't import from app."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/widgets/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@pages/*/**",
+                  "@widgets/*/**",
+                  "@features/*/**",
+                  "@entities/*/**",
+                  "@shared/*/**"
+                ],
+                "message": "FSD: import the slice through its public index.ts, not its internals."
+              },
+              {
+                "group": ["@app", "@app/**", "@pages", "@pages/**"],
+                "message": "FSD: widgets can only import features, entities, shared."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/features/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@pages/*/**",
+                  "@widgets/*/**",
+                  "@features/*/**",
+                  "@entities/*/**",
+                  "@shared/*/**"
+                ],
+                "message": "FSD: import the slice through its public index.ts, not its internals."
+              },
+              {
+                "group": [
+                  "@app",
+                  "@app/**",
+                  "@pages",
+                  "@pages/**",
+                  "@widgets",
+                  "@widgets/**"
+                ],
+                "message": "FSD: features can only import entities, shared."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/entities/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@pages/*/**",
+                  "@widgets/*/**",
+                  "@features/*/**",
+                  "@entities/*/**",
+                  "@shared/*/**"
+                ],
+                "message": "FSD: import the slice through its public index.ts, not its internals."
+              },
+              {
+                "group": [
+                  "@app",
+                  "@app/**",
+                  "@pages",
+                  "@pages/**",
+                  "@widgets",
+                  "@widgets/**",
+                  "@features",
+                  "@features/**"
+                ],
+                "message": "FSD: entities can only import shared."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/shared/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@app",
+                  "@app/**",
+                  "@pages",
+                  "@pages/**",
+                  "@widgets",
+                  "@widgets/**",
+                  "@features",
+                  "@features/**",
+                  "@entities",
+                  "@entities/**"
+                ],
+                "message": "FSD: shared can't import from upper layers."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
   "env": {
     "builtin": true,
     "browser": true,
