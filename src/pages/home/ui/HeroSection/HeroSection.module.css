@@ -19,6 +19,7 @@
 }
 
 .backgroundGradient {
+  /* stylelint-disable function-disallowed-list -- декоративный glow пока не тонируется темой, см. docs/backlog/hero-gradient-light-theme.md */
   position: absolute;
   inset: 0;
   background:
@@ -37,6 +38,7 @@
       oklch(0.12 0.02 20),
       transparent 80%
     );
+  /* stylelint-enable function-disallowed-list */
 }
 
 .backgroundGrid {
@@ -47,6 +49,7 @@
     linear-gradient(to right, var(--border-heavy) 1px, transparent 1px),
     linear-gradient(to bottom, var(--border-heavy) 1px, transparent 1px);
   background-size: 80px 80px;
+  /* stylelint-disable-next-line color-named -- в mask-image цвет задаёт только альфу маски, от темы не зависит */
   mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black, transparent);
 }
 

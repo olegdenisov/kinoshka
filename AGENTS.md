@@ -35,7 +35,7 @@ make dev          # start dev server with HMR
 make build        # type-check (tsc -b) then Vite production build
 make typecheck    # type-check only (tsc -b — without -b the solution-style tsconfig checks 0 files)
 make build-only   # Vite production build, no type-check
-make lint         # oxlint over all TS/TSX files
+make lint         # oxlint (TS/TSX) + stylelint (src/**/*.module.css)
 make format       # oxfmt write
 make format-check # oxfmt --check
 make preview      # serve the production build locally
@@ -57,7 +57,7 @@ make lighthouse   # local Lighthouse smoke against vite preview — not the CI g
 make sentry-telemetry # provision Sentry alerts + dashboard via sentry CLI (see sentry.md)
 ```
 
-**Commit hooks:** husky + lint-staged run `oxlint --fix --deny-warnings` on staged `*.{ts,tsx}` files pre-commit. Commit messages are enforced by commitlint (`@commitlint/config-conventional`); use `pnpm commit` (commitizen) for a guided conventional-commit prompt. The lint-staged glob doesn't cover `.cjs`/`.js` (`lighthouserc.cjs`, `public/font-swap.js`) — those are only checked by repo-wide `make lint`/`make format-check`.
+**Commit hooks:** husky + lint-staged run `oxfmt` + `oxlint --fix --deny-warnings` on staged `*.{ts,tsx}` and `stylelint` on staged `*.module.css`. Commit messages are enforced by commitlint (`@commitlint/config-conventional`); use `pnpm commit` (commitizen) for a guided conventional-commit prompt. The lint-staged glob doesn't cover `.cjs`/`.js` (`lighthouserc.cjs`, `public/font-swap.js`) — those are only checked by repo-wide `make lint`/`make format-check`.
 
 ## Architecture
 
@@ -65,7 +65,7 @@ React 19 + TypeScript 7 + Vite 8 (Rolldown) single-page app.
 
 - **React Compiler is enabled** (`babel-plugin-react-compiler` via `@rolldown/plugin-babel`). Don't write manual `useMemo` / `useCallback` / `memo`.
 - **TypeScript strictness:** `noUnusedLocals`, `noUnusedParameters`, `erasableSyntaxOnly` (no `enum`, `namespace`, parameter properties).
-- **TypeScript style:** `type`, not `interface`. Single exception: `interface Window` in `src/vite-env.d.ts` (global declaration merging only works through `interface`).
+- **TypeScript style:** `type`, not `interface` — enforced by oxlint `typescript/consistent-type-definitions`. Single exception: `interface Window` in `src/vite-env.d.ts` (global declaration merging only works through `interface`), marked with `oxlint-disable-next-line`.
 - **Fonts:** Instrument Serif (`--font-serif`), Instrument Sans (`--font-display`/`--font-body`), JetBrains Mono (`--font-mono`), loaded in `index.html` (async-load details → `csp.md`). Don't add new font imports.
 - **Path aliases** map to FSD layers (`vite.config.ts` + `tsconfig.app.json`): `@app`, `@pages`, `@widgets`, `@features`, `@entities`, `@shared`. Use them for all cross-layer imports.
 
@@ -83,9 +83,9 @@ src/
 └── shared/       # cross-cutting utilities and primitives (api/, lib/, ui/, config/)
 ```
 
-Import direction: `pages → widgets → features → entities → shared`. Never import upward. A generic component needed by both a widget and a feature goes to `@shared/ui` (that's why `IconButton`/`AvatarCircle` live there).
+Import direction: `pages → widgets → features → entities → shared`. Never import upward. Enforced for `@`-alias imports by `no-restricted-imports` overrides in `.oxlintrc.json` (relative `../` imports across layers aren't caught — don't write them). A generic component needed by both a widget and a feature goes to `@shared/ui` (that's why `IconButton`/`AvatarCircle` live there).
 
-**Public API:** every slice in `widgets/` and `features/` (and `entities/movie`) exposes an `index.ts`. Import only through it — `import { Header } from '@widgets/header'`, never `@widgets/header/ui/Header`. The barrel `index.ts` is the source of truth for what a slice exports — read it before adding a new hook; an equivalent may already exist.
+**Public API:** every slice in `widgets/` and `features/` (and `entities/movie`) exposes an `index.ts`. Import only through it — `import { Header } from '@widgets/header'`, never `@widgets/header/ui/Header` (lint error). Same for `@shared/{ui,lib,api,config}`. The barrel `index.ts` is the source of truth for what a slice exports — read it before adding a new hook; an equivalent may already exist.
 
 **Page-slice `model/` facade.** When a page needs to combine more than one downward slice (e.g. `@features/*` + `@entities/*`), put the composing hook in `src/pages/<page>/model/` — a lower slice can't import a higher one. Page-internal, not exported. Examples: `useMovieCatalog`, `useRecommendedMovies`, `useSearchAnalytics`.
 
@@ -144,7 +144,7 @@ CSS Modules: `import s from './ComponentName.module.css'`, `className={s.x}`.
 - Hover → `:hover`, not `useState` + inline style.
 - Conditional classes → `` `${s.btn} ${active ? s.active : ''}` ``.
 - Inline `style` only for truly dynamic values.
-- **Colors only via `var(--token)`, never a hardcoded hex/rgba** — the light theme overrides tokens under `:root[data-theme='light']`; a hardcoded color silently stays wrong there.
+- **Colors only via `var(--token)`, never a literal color** — the light theme overrides tokens under `:root[data-theme='light']`; a hardcoded color silently stays wrong there. Enforced by stylelint (`stylelint.config.mjs`: `color-no-hex`, `color-named`, `rgb()`/`oklch()`/… disallowed) on `*.module.css`; `global.css` is exempt because it defines the tokens. A genuinely theme-independent color (scrim over a photo, mask alpha) gets a `stylelint-disable` comment with the reason.
 - Tokens live in `src/app/styles/global.css` (backgrounds `--bg-*`, text `--text-*`, accents `--accent-warm*`/`--accent-cool`/`--accent-rating`, borders `--border-*`, `--overlay-backdrop`, `--danger`, `--avatar-fg`, fonts `--font-*`). Read that file for the full list; a new color token goes into **both** theme blocks.
 - Global utilities: `.fade-up`, `.hide-scrollbar`; keyframes `shimmer`, `pulse`, `fadeUp`.
 
