@@ -3,6 +3,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react'
 type Props = {
   children: ReactNode
   fallback: (params: { error: Error | null; reset: () => void }) => ReactNode
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
 }
 
 type State = {
@@ -25,6 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error(error, errorInfo)
+    this.props.onError?.(error, errorInfo)
   }
 
   reset = () => {
