@@ -1,7 +1,7 @@
 import { apiClient, ApiError } from '@shared/api'
+import { createCachedFetcher } from '@shared/lib'
 
 import type { MovieDetail } from '../model/types'
-import { createCachedFetcher } from './createCachedFetcher'
 import { mapDtoToMovieDetail } from './mapDtoToMovieDetail'
 
 const fetchMovieDetail = async (id: number): Promise<MovieDetail> => {

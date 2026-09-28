@@ -1,6 +1,4 @@
-import { createSessionCache } from '@shared/lib'
-
-import type { Movie } from '../model/types'
+import { createSessionCache } from '../sessionCache'
 
 type CacheEntry<R> = {
   promise: Promise<R>
@@ -105,9 +103,15 @@ export type CachedFetcher<P, R> = ((params: P) => Promise<R>) & {
   clear: () => void
 }
 
-// R по умолчанию — Movie[] (совместимость getMovies/getSearchMovies без правок сигнатур);
-// произвольный R (напр. {movies, totalPages}) — для search/cursor-фетчеров.
-export const createCachedFetcher = <P, R = Movie[]>(
+// Файл переехал из `@entities/movie` в `@shared/lib` (Задача 2 плана person-detail-page):
+// это первый случай, когда двум entity-слайсам одного уровня (`@entities/movie` и новому
+// `@entities/person`) нужна одна и та же инфраструктурная утилита — `@entities/person` не
+// может законно импортировать `@entities/movie` (FSD запрещает горизонтальные импорты между
+// слайсами одного уровня), поэтому утилита без доменной логики уезжает в `shared`.
+// Дефолт дженерика `R = Movie[]` убран: `@shared/lib` не может знать о типе `Movie` из
+// `@entities/movie` (это был бы обратный кросс-импорт `shared → entities`). TypeScript и так
+// выводит `R` из аргумента `fetcher` на каждом текущем вызове.
+export const createCachedFetcher = <P, R>(
   namespace: string,
   fetcher: (params: P) => Promise<R>,
   options?: { ttlMs?: number },

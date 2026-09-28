@@ -1,21 +1,20 @@
-import type { Movie } from '../model/types'
 import { createCachedFetcher } from './createCachedFetcher'
 
 // Мирроят TTL-константы из createCachedFetcher.ts — при их изменении там нужно поправить и здесь.
 const CACHE_TTL_MS = 5 * 60 * 1000
 const ERROR_CACHE_TTL_MS = 20 * 1000
 
-const movie = (id = 1): Movie => ({
-  id,
-  title: 'M',
-  rating: 1,
-  type: 'movie',
-  genre: [],
-  runtime: '0',
-  hue: 0,
-})
+// Локальный тестовый тип вместо `Movie` (`@entities/movie`) — после переноса в `@shared/lib`
+// файл не может импортировать сущность из entity-слайса (shared → entities запрещено FSD),
+// а сама утилита теперь дженерик без дефолта, так что для тестов годится любой тип.
+type TestItem = {
+  id: number
+  title: string
+}
 
-const okFetcher = (result: Movie[] = [movie()]) => {
+const item = (id = 1): TestItem => ({ id, title: 'M' })
+
+const okFetcher = (result: TestItem[] = [item()]) => {
   const calls = { count: 0 }
   const fetcher = async () => {
     calls.count += 1
@@ -59,7 +58,7 @@ describe('createCachedFetcher — in-memory кэш', () => {
   })
 
   it('Резолвится значением, которое вернул fetcher', async () => {
-    const data = [movie(7)]
+    const data = [item(7)]
     const { fetcher } = okFetcher(data)
     const get = createCachedFetcher('ns', fetcher)
 
@@ -239,11 +238,11 @@ describe('createCachedFetcher — dev-кэш в sessionStorage пережива�
   })
 })
 
-type SearchResult = { movies: Movie[]; totalPages: number }
+type SearchResult = { items: TestItem[]; totalPages: number }
 
-describe('createCachedFetcher — generic R (не Movie[])', () => {
-  it('дефолт R=Movie[] — вызов без явного type-параметра работает как раньше', async () => {
-    const data = [movie(9)]
+describe('createCachedFetcher — generic R', () => {
+  it('инференс R из fetcher — вызов без явного type-параметра работает (дефолт дженерика убран в Задаче 2)', async () => {
+    const data = [item(9)]
     const { fetcher, calls } = okFetcher(data)
     const get = createCachedFetcher('ns', fetcher)
 
@@ -254,7 +253,7 @@ describe('createCachedFetcher — generic R (не Movie[])', () => {
   })
 
   it('произвольный R — кеширует и отдаёт тот же промис на повторный вызов (дедупликация)', async () => {
-    const result: SearchResult = { movies: [movie(1)], totalPages: 3 }
+    const result: SearchResult = { items: [item(1)], totalPages: 3 }
     const calls = { count: 0 }
     const fetcher = async (): Promise<SearchResult> => {
       calls.count += 1
@@ -273,7 +272,7 @@ describe('createCachedFetcher — generic R (не Movie[])', () => {
   })
 
   it('произвольный R — в пределах TTL повторный вызов после resolve не дёргает fetcher', async () => {
-    const result: SearchResult = { movies: [], totalPages: 0 }
+    const result: SearchResult = { items: [], totalPages: 0 }
     const calls = { count: 0 }
     const fetcher = async (): Promise<SearchResult> => {
       calls.count += 1
@@ -291,7 +290,7 @@ describe('createCachedFetcher — generic R (не Movie[])', () => {
   })
 
   it('произвольный R — переживает reload через sessionStorage', async () => {
-    const result: SearchResult = { movies: [movie(2)], totalPages: 1 }
+    const result: SearchResult = { items: [item(2)], totalPages: 1 }
     const calls = { count: 0 }
     const fetcher = async (): Promise<SearchResult> => {
       calls.count += 1

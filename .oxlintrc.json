@@ -159,7 +159,9 @@
                   "@widgets",
                   "@widgets/**",
                   "@features",
-                  "@features/**"
+                  "@features/**",
+                  "@entities",
+                  "@entities/**"
                 ],
                 "message": "FSD: entities can only import shared."
               }
