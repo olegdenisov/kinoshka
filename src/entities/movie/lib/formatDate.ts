@@ -6,5 +6,12 @@ export const formatDate = (
 
   if (Number.isNaN(date.getTime())) return isoDate
 
-  return new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(date)
+  // Kinopoisk отдаёт календарные даты (день рождения/смерти, премьера) как
+  // UTC-полночь ("1964-09-02T00:00:00.000Z"), а не момент времени. Без
+  // timeZone: 'UTC' Intl форматирует их в локальной зоне зрителя, и к западу
+  // от UTC дата сдвигается на день назад.
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: 'long',
+    timeZone: 'UTC',
+  }).format(date)
 }
