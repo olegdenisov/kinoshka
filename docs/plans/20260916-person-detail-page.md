@@ -362,17 +362,17 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - Create: `src/pages/person/ui/PersonHero/PersonHero.module.css`
 - Create: `src/pages/person/ui/PersonHero/PersonHero.test.tsx`
 
-- [ ] отрендерить фото: `<img src={person.photo} alt={person.name} />`; при отсутствии `photo` — градиентная заглушка через локальную константу `FALLBACK_HUE = 220` (тот же приём и то же значение, что в `CastTab.tsx`; добавить WHY-комментарий, что дублирование константы предпочтено вынесению в shared)
-- [ ] отрендерить `<h1>` с `person.name` и, если есть и отличается, `person.enName` подзаголовком
-- [ ] отрендерить профессии как ряд пиллов (по образцу `TagPill` в `MovieHero.tsx`, но локально в этом модуле — общий компонент не заводить)
-- [ ] отрендерить мета-строки, каждую только при наличии данных: `Born` (`formatDate(person.birthday)` из `@entities/movie`), `Died` (`formatDate(person.death)`), `Age` (`person.age`), `Height` (`${growth} cm`), `Born in` (`birthPlace.join(', ')`), `Died in` (`deathPlace.join(', ')`, только если есть `death`), `Awards` (`countAwards`)
-- [ ] **не** передавать `locale` в `formatDate` явно из компонента — дефолт `navigator.language` (как во всех остальных вызовах в репозитории)
-- [ ] написать CSS mobile-first: на мобильном фото сверху и информация под ним, на десктопе (`@media (min-width: 720px)`) — две колонки; только `var(--token)`, ни одного хардкоженного цвета
-- [ ] написать тест: полная персона → видны имя (роль `heading`, уровень 1), `enName`, все профессии, все мета-строки, включая `Died in`
-- [ ] написать тест: персона без `photo` → рендерится заглушка, а не `<img>` с пустым `src`
-- [ ] написать тест: персона без `death`/`growth`/`countAwards`/`birthPlace` → соответствующие строки отсутствуют (не «—» и не пустые лейблы)
-- [ ] написать тест: дата рождения рендерится в формате дефолтной локали jsdom (`en-US`) — сравнить с конкретной ожидаемой строкой, по образцу `src/entities/movie/lib/formatDate.test.ts` (`formatDate('2024-03-14')` → `'March 14, 2024'`), не добавляя компоненту проп `locale`
-- [ ] запустить `make test` — должны пройти до перехода к задаче 7
+- [x] отрендерить фото: `<img src={person.photo} alt={person.name} />`; при отсутствии `photo` — градиентная заглушка через локальную константу `FALLBACK_HUE = 220` (тот же приём и то же значение, что в `CastTab.tsx`; добавить WHY-комментарий, что дублирование константы предпочтено вынесению в shared)
+- [x] отрендерить `<h1>` с `person.name` и, если есть и отличается, `person.enName` подзаголовком
+- [x] отрендерить профессии как ряд пиллов (по образцу `TagPill` в `MovieHero.tsx`, но локально в этом модуле — общий компонент не заводить)
+- [x] отрендерить мета-строки, каждую только при наличии данных: `Born` (`formatDate(person.birthday)` из `@entities/movie`), `Died` (`formatDate(person.death)`), `Age` (`person.age`), `Height` (`${growth} cm`), `Born in` (`birthPlace.join(', ')`), `Died in` (`deathPlace.join(', ')`, только если есть `death`), `Awards` (`countAwards`)
+- [x] **не** передавать `locale` в `formatDate` явно из компонента — дефолт `navigator.language` (как во всех остальных вызовах в репозитории)
+- [x] написать CSS mobile-first: на мобильном фото сверху и информация под ним, на десктопе (`@media (min-width: 720px)`) — две колонки; только `var(--token)`, ни одного хардкоженного цвета
+- [x] написать тест: полная персона → видны имя (роль `heading`, уровень 1), `enName`, все профессии, все мета-строки, включая `Died in`
+- [x] написать тест: персона без `photo` → рендерится заглушка, а не `<img>` с пустым `src`
+- [x] написать тест: персона без `death`/`growth`/`countAwards`/`birthPlace` → соответствующие строки отсутствуют (не «—» и не пустые лейблы)
+- [x] написать тест: дата рождения рендерится в формате дефолтной локали jsdom (`en-US`) — сравнить с конкретной ожидаемой строкой, по образцу `src/entities/movie/lib/formatDate.test.ts` (`formatDate('2024-03-14')` → `'March 14, 2024'`), не добавляя компоненту проп `locale`
+- [x] запустить `make test` — должны пройти до перехода к задаче 7
 
 ### Задача 7: Фильмография — группировка и список кредитов со ссылками
 
