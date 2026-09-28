@@ -271,11 +271,11 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 - Modify: `src/app/sentry.ts`
 - Modify: `src/app/sentry.test.ts`
 
-- [ ] добавить экспорт `captureRouteError(error: Error, errorInfo: ErrorInfo): void`, вызывающий `Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } }, mechanism: { handled: true } })`
-- [ ] короткий WHY-комментарий: перехватывается раньше `GlobalErrorBoundary`, поэтому репортинг явный; `errorInfo`/`componentStack` — чтобы не потерять то, что раньше давал `Sentry.ErrorBoundary`/`captureReactException`
-- [ ] в `sentry.test.ts` переиспользовать существующий мок `@sentry/react` (`captureException: vi.fn()` там уже есть — используется тестом репортера localStorage); сбрасывать мок перед новым тестом (`vi.mocked(Sentry.captureException).mockClear()`), чтобы счётчик вызовов не пересекался с тестом репортера
-- [ ] написать тест: `captureRouteError(error, errorInfo)` вызывает `Sentry.captureException` ровно один раз с этим `error` и с `contexts.react.componentStack === errorInfo.componentStack`
-- [ ] прогнать тесты — должны проходить перед Task 3
+- [x] добавить экспорт `captureRouteError(error: Error, errorInfo: ErrorInfo): void`, вызывающий `Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } }, mechanism: { handled: true } })`
+- [x] короткий WHY-комментарий: перехватывается раньше `GlobalErrorBoundary`, поэтому репортинг явный; `errorInfo`/`componentStack` — чтобы не потерять то, что раньше давал `Sentry.ErrorBoundary`/`captureReactException`
+- [x] в `sentry.test.ts` переиспользовать существующий мок `@sentry/react` (`captureException: vi.fn()` там уже есть — используется тестом репортера localStorage); сбрасывать мок перед новым тестом (`vi.mocked(Sentry.captureException).mockClear()`), чтобы счётчик вызовов не пересекался с тестом репортера
+- [x] написать тест: `captureRouteError(error, errorInfo)` вызывает `Sentry.captureException` ровно один раз с этим `error` и с `contexts.react.componentStack === errorInfo.componentStack`
+- [x] прогнать тесты — должны проходить перед Task 3
 
 ### Task 3: `secondaryAction`-слот в `shared/ui/ErrorState`
 
