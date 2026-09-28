@@ -293,13 +293,13 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - Create: `src/entities/person/api/getPersonDetail.ts`
 - Create: `src/entities/person/api/getPersonDetail.test.ts`
 
-- [ ] создать `getPersonDetail` через `createCachedFetcher<number, PersonDetail>('person-detail', fetchPersonDetail)`, импортируя `createCachedFetcher` из `@shared/lib` (см. Задачу 2) — **не** из `@entities/movie`
-- [ ] внутри `fetchPersonDetail` вызвать `apiClient.getV15PersonById({ path: { id } })` и сузить тип через `if ('statusCode' in response.data)` → `throw new ApiError(response.data.message, response.data.statusCode)` (тот же комментарий «нужно чтобы сузить тип», что в `getMovieDetail.ts`)
-- [ ] написать тест успешного пути: MSW мокает `*/v1.5/person/:id` валидным `Person` → возвращается замапленный `PersonDetail`
-- [ ] написать тест кеширования: два последовательных вызова `getPersonDetail(id)` возвращают одну и ту же ссылку на промис и делают ровно один сетевой запрос
-- [ ] написать тесты ошибок: MSW отдаёт `{ statusCode: 404, message: ... }` → отклонение с `ApiError`, у которого `status === 404`; то же для 403 — **каждый сценарий использует свой уникальный `id`** (по образцу `getMovieDetail.test.ts`: 101/102/666/555), чтобы error-снапшот с cooldown в `sessionStorage` от одного теста не утёк в соседний
-- [ ] написать тест `getPersonDetail.invalidate(id)` — после инвалидации следующий вызов снова ходит в сеть
-- [ ] запустить `make test` — должны пройти до перехода к задаче 4
+- [x] создать `getPersonDetail` через `createCachedFetcher<number, PersonDetail>('person-detail', fetchPersonDetail)`, импортируя `createCachedFetcher` из `@shared/lib` (см. Задачу 2) — **не** из `@entities/movie`
+- [x] внутри `fetchPersonDetail` вызвать `apiClient.getV15PersonById({ path: { id } })` и сузить тип через `if ('statusCode' in response.data)` → `throw new ApiError(response.data.message, response.data.statusCode)` (тот же комментарий «нужно чтобы сузить тип», что в `getMovieDetail.ts`)
+- [x] написать тест успешного пути: MSW мокает `*/v1.5/person/:id` валидным `Person` → возвращается замапленный `PersonDetail`
+- [x] написать тест кеширования: два последовательных вызова `getPersonDetail(id)` возвращают одну и ту же ссылку на промис и делают ровно один сетевой запрос
+- [x] написать тесты ошибок: MSW отдаёт `{ statusCode: 404, message: ... }` → отклонение с `ApiError`, у которого `status === 404`; то же для 403 — **каждый сценарий использует свой уникальный `id`** (по образцу `getMovieDetail.test.ts`: 101/102/666/555), чтобы error-снапшот с cooldown в `sessionStorage` от одного теста не утёк в соседний
+- [x] написать тест `getPersonDetail.invalidate(id)` — после инвалидации следующий вызов снова ходит в сеть
+- [x] запустить `make test` — должны пройти до перехода к задаче 4
 
 ### Задача 4: Suspense-хук `usePersonDetail` + `invalidatePersonDetail` + публичный барель слайса
 
