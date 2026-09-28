@@ -253,14 +253,14 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 - Modify: `src/shared/ui/ErrorBoundary/ErrorBoundary.tsx`
 - Create: `src/shared/ui/ErrorBoundary/ErrorBoundary.test.tsx`
 
-- [ ] добавить в `Props` необязательный `onError?: (error: Error, errorInfo: ErrorInfo) => void`
-- [ ] вызвать `this.props.onError?.(error, errorInfo)` в `componentDidCatch`, после существующего `console.error`
-- [ ] написать тест: без ошибки в детях — рендерит `children`, `onError` не вызван
-- [ ] написать тест: ошибка в детях, `onError` передан — вызывается один раз с `(error, errorInfo)`, рендерится `fallback`
-- [ ] написать тест: ошибка в детях, `onError` НЕ передан — не падает (проп опционален), `fallback` всё равно рендерится
-- [ ] написать тест: `reset()` из `fallback`-параметров возвращает к рендеру `children` после того, как причина ошибки устранена
-- [ ] в компоненте-бомбе использовать module-level флаг (не self-flipping внутри рендера) — React синхронно повторяет попытку рендера ещё раз до того, как решит считать её настоящей ошибкой; тот же паттерн уже задокументирован в `AsyncBoundary.test.tsx`/`GlobalErrorBoundary.test.tsx`
-- [ ] прогнать тесты — должны проходить перед Task 2
+- [x] добавить в `Props` необязательный `onError?: (error: Error, errorInfo: ErrorInfo) => void`
+- [x] вызвать `this.props.onError?.(error, errorInfo)` в `componentDidCatch`, после существующего `console.error`
+- [x] написать тест: без ошибки в детях — рендерит `children`, `onError` не вызван
+- [x] написать тест: ошибка в детях, `onError` передан — вызывается один раз с `(error, errorInfo)`, рендерится `fallback`
+- [x] написать тест: ошибка в детях, `onError` НЕ передан — не падает (проп опционален), `fallback` всё равно рендерится
+- [x] написать тест: `reset()` из `fallback`-параметров возвращает к рендеру `children` после того, как причина ошибки устранена
+- [x] в компоненте-бомбе использовать module-level флаг (не self-flipping внутри рендера) — React синхронно повторяет попытку рендера ещё раз до того, как решит считать её настоящей ошибкой; тот же паттерн уже задокументирован в `AsyncBoundary.test.tsx`/`GlobalErrorBoundary.test.tsx`
+- [x] прогнать тесты — должны проходить перед Task 2
 
 ### Task 2: `captureRouteError` в `src/app/sentry.ts`
 
