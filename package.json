@@ -135,6 +135,12 @@
       "path": "dist/assets/page-profile-*.js",
       "gzip": true,
       "limit": "3.1 KB"
+    },
+    {
+      "name": "page-person",
+      "path": "dist/assets/page-person-*.js",
+      "gzip": true,
+      "limit": "4.4 KB"
     }
   ]
 }
