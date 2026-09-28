@@ -6,6 +6,7 @@ paths:
   - 'knip.jsonc'
   - 'src/app/router.tsx'
   - 'src/app/layouts/AppLayout.tsx'
+  - 'src/app/chunkPreloadRecovery.ts'
   - 'src/shared/lib/lazyNamed/**'
 ---
 
@@ -16,7 +17,8 @@ History and measurements: `docs/plans/completed/20260912-performance-budgets-bun
 ## Code splitting
 
 - Every route is `lazyNamed(() => import('../pages/x'), 'XPage')` (`@shared/lib`) — `React.lazy` needs a default export, pages export by name.
-- `<Suspense fallback={<Spinner/>}>` around `<Outlet/>` in `AppLayout` is for **code** loading; pages keep their own `AsyncBoundary` for data. Accepted: navigations run in `startTransition`, so on page-to-page nav the old page (and nav highlight, pageview) stays until the chunk loads.
+- `<Suspense fallback={<Spinner/>}>` around `<Outlet/>` in `AppLayout` is for **code** loading; pages keep their own `AsyncBoundary` for data. Accepted: navigations run in `startTransition`, so on page-to-page nav the old page (and nav highlight, pageview) stays until the chunk loads — **except** across a dynamic segment on the same route (`/movie/1 → /movie/2`, `/person/1 → /person/2`): the per-route `ErrorBoundary` in `AppLayout` (`docs/plans/completed/20260916-per-route-error-boundaries.md`) carries `key={pathname}`, which remounts `<Suspense><Outlet/></Suspense>` on every `pathname` change, so the old page unmounts immediately instead of staying visible during the chunk/data load. `/search` is unaffected — only its query params change, `pathname` stays stable.
+- `registerChunkPreloadRecovery()` (`src/app/chunkPreloadRecovery.ts`, called once from `providers.tsx`) listens for `vite:preloadError` on `window` and does `window.location.reload()` — `React.lazy` caches a rejected import promise per module, so neither a per-route `ErrorBoundary` retry nor navigating to another route reliably recovers from a stale/404'd chunk; a full reload is the only guaranteed fix.
 - `build.rolldownOptions.output.codeSplitting.groups` (not deprecated `advancedChunks`, no global `chunkFileNames`): `vendor` (`/node_modules/`), `shared` (`/(widgets|features|entities|shared)\//`), then one `page-<name>` group per page. **`shared` must precede the page groups** — without it Rolldown dumps cross-page code into the first page chunk and every route eagerly loads it. Verify after changes: entry and page chunks import only `rolldown-runtime`/`vendor`/`shared`, never another `page-*`.
 - New route → add a `page-<name>` group and a `size-limit` entry.
 - `@entities/person` deliberately lands in the `shared` group (not a `page-person`-only chunk) — same as every other `entities/*`/`features/*`/`widgets/*` slice, since `shared`'s `test` regex catches that whole layer before the page groups run.

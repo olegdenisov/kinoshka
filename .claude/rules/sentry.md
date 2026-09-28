@@ -5,6 +5,7 @@ paths:
   - 'src/app/router.tsx'
   - 'src/app/providers.tsx'
   - 'src/app/GlobalErrorBoundary.tsx'
+  - 'src/app/layouts/AppLayout.tsx'
   - 'sentry.config.ts'
   - 'sentry-telemetry.config.ts'
   - 'provision-sentry-telemetry.ts'
@@ -16,7 +17,7 @@ paths:
 
 # Sentry: errors, tracing, telemetry-as-code
 
-History: `docs/plans/completed/20260905-sentry-error-tracking.md`, `…/20260915-telemetry-dashboard-sentry-alerts.md`. Operational steps: `docs/telemetry-runbook.md`.
+History: `docs/plans/completed/20260905-sentry-error-tracking.md`, `…/20260915-telemetry-dashboard-sentry-alerts.md`, `…/20260916-per-route-error-boundaries.md`. Operational steps: `docs/telemetry-runbook.md`.
 
 ## Init
 
@@ -24,7 +25,8 @@ History: `docs/plans/completed/20260905-sentry-error-tracking.md`, `…/20260915
 - It's called from `src/app/sentry-bootstrap.ts`, imported as the **first line of `src/main.tsx`**. Don't reorder: `Sentry.wrapCreateBrowserRouter` silently returns the router unwrapped if `createBrowserRouter` runs before `Sentry.init()` (warning is `DEBUG_BUILD`-only). `oxfmt` doesn't reorder the side-effect import.
 - Tracing: `reactRouterBrowserTracingIntegration({ useEffect, useLocation, useNavigationType, createRoutesFromChildren, matchRoutes })` (not the deprecated V7 variant) + `wrapCreateBrowserRouter` → `/movie/:id` is one transaction name. `tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE` (0.2, `sentry.config.ts`). Web Vitals (LCP/INP/CLS) come from here — not Plausible.
 - `tracePropagationTargets` deliberately left at the default: the API is cross-origin and must first allow `sentry-trace`/`baggage` in CORS (runbook §4).
-- `GlobalErrorBoundary` wraps `<RouterProvider>` with `Sentry.ErrorBoundary` + `ErrorState`; `shared/ui/ErrorBoundary` (behind every `AsyncBoundary`) is intentionally untouched.
+- `GlobalErrorBoundary` wraps `<RouterProvider>` with `Sentry.ErrorBoundary` + `ErrorState` — last line of defense for errors outside `<Outlet/>` (e.g. `AppLayout` itself).
+- Per-route `ErrorBoundary` (`shared/ui/ErrorBoundary`, `key={pathname}`) around `<Suspense><Outlet/></Suspense>` in `AppLayout.tsx` catches a failing page before it reaches `GlobalErrorBoundary`, so it reports explicitly via `onError={captureRouteError}` (`src/app/sentry.ts`) — `Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } })`, no `mechanism: { handled: true }` (the SDK's types reject it alongside `contexts`). `componentStack` comes from `errorInfo`, to not lose what `Sentry.ErrorBoundary` used to attach. Errors caught by a page's own `AsyncBoundary` still don't reach Sentry — that boundary doesn't pass `onError` (accepted gap, see `data-layer.md`).
 
 ## Build-time
 
