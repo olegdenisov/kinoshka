@@ -132,6 +132,36 @@ describe('mapDtoToPersonDetail — profession[] дедупликация', () =>
       ).professions,
     ).toEqual(['actor', 'producer'])
   })
+
+  it('пустые value отфильтровываются до дедупликации', () => {
+    expect(
+      mapDtoToPersonDetail(
+        doc({
+          profession: [{ value: undefined }, {}, { value: 'actor' }],
+        }),
+      ).professions,
+    ).toEqual(['actor'])
+  })
+})
+
+describe('mapDtoToPersonDetail — birthPlace/deathPlace фильтрация пустых значений', () => {
+  it('записи без value отбрасываются из birthPlace', () => {
+    expect(
+      mapDtoToPersonDetail(
+        doc({ birthPlace: [{}, { value: 'Helsinki' }, { value: undefined }] }),
+      ).birthPlace,
+    ).toEqual(['Helsinki'])
+  })
+
+  it('записи без value отбрасываются из deathPlace', () => {
+    expect(
+      mapDtoToPersonDetail(
+        doc({
+          deathPlace: [{ value: undefined }, { value: 'Los Angeles' }, {}],
+        }),
+      ).deathPlace,
+    ).toEqual(['Los Angeles'])
+  })
 })
 
 describe('mapDtoToPersonDetail — movies[] fallback названия и фильтрация', () => {
@@ -171,5 +201,13 @@ describe('mapDtoToPersonDetail — facts[] очистка от HTML-тегов',
         doc({ facts: [{ value: '<span class="x"></span>' }] }),
       ).facts,
     ).toEqual([])
+  })
+
+  it('записи без value отфильтровываются до очистки тегов', () => {
+    expect(
+      mapDtoToPersonDetail(
+        doc({ facts: [{ value: undefined }, {}, { value: 'факт' }] }),
+      ).facts,
+    ).toEqual(['факт'])
   })
 })

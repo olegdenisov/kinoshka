@@ -8,17 +8,17 @@ Kinoshka — movie catalog SPA with a home feed, search, filters, and detail pag
 
 This file holds only repo-wide conventions. Area-specific decisions and gotchas live in `.claude/rules/*.md`. Claude Code loads them automatically via their `paths:` frontmatter; **other agents (Codex, etc.) must open the matching file by hand before editing files in that area.** Full history/rationale for each area is in the linked `docs/plans/completed/*.md`.
 
-| Doc                              | Read when touching                                                                                                                                                      |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.claude/rules/data-layer.md`    | `src/entities/movie/**`, `src/shared/api/**`, `src/pages/{search,movie,popular,recommendations}/**`, favorites/catalog-filter/recommendations features, `AsyncBoundary` |
-| `.claude/rules/ui-patterns.md`   | `Card`, `YearRangeSlider`, `@features/theme`, `src/app/styles/**`                                                                                                       |
-| `.claude/rules/profile.md`       | `@features/profile`, `/profile`, `src/shared/lib/storage/**`, `AvatarCircle`, `BottomNav`                                                                               |
-| `.claude/rules/sentry.md`        | `src/app/sentry*`, `src/main.tsx`, `src/app/router.tsx`, `sentry*.config.ts`, `provision-sentry-telemetry.ts`, `.mcp.json`                                              |
-| `.claude/rules/analytics.md`     | `src/shared/lib/analytics/**` and the four `trackEvent`/`trackPageview` call sites                                                                                      |
-| `.claude/rules/build-budgets.md` | `vite.config.ts`, `bundle.config.ts`, `package.json` (`size-limit`), `knip.jsonc`, `lazyNamed`                                                                          |
-| `.claude/rules/csp.md`           | `vercel.json`, `index.html`, `public/font-swap.js`                                                                                                                      |
-| `.claude/rules/e2e.md`           | `e2e/**`, `playwright.config.ts`, `.github/workflows/e2e.yml`                                                                                                           |
-| `.claude/rules/lighthouse.md`    | `lighthouserc.cjs`, `.github/workflows/lighthouse.yml`, `.github/scripts/**`                                                                                            |
+| Doc                              | Read when touching                                                                                                                                                                                       |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.claude/rules/data-layer.md`    | `src/entities/movie/**`, `src/entities/person/**`, `src/shared/api/**`, `src/pages/{search,movie,popular,recommendations,person}/**`, favorites/catalog-filter/recommendations features, `AsyncBoundary` |
+| `.claude/rules/ui-patterns.md`   | `Card`, `YearRangeSlider`, `@features/theme`, `src/app/styles/**`                                                                                                                                        |
+| `.claude/rules/profile.md`       | `@features/profile`, `/profile`, `src/shared/lib/storage/**`, `AvatarCircle`, `BottomNav`                                                                                                                |
+| `.claude/rules/sentry.md`        | `src/app/sentry*`, `src/main.tsx`, `src/app/router.tsx`, `sentry*.config.ts`, `provision-sentry-telemetry.ts`, `.mcp.json`                                                                               |
+| `.claude/rules/analytics.md`     | `src/shared/lib/analytics/**` and the four `trackEvent`/`trackPageview` call sites                                                                                                                       |
+| `.claude/rules/build-budgets.md` | `vite.config.ts`, `bundle.config.ts`, `package.json` (`size-limit`), `knip.jsonc`, `lazyNamed`                                                                                                           |
+| `.claude/rules/csp.md`           | `vercel.json`, `index.html`, `public/font-swap.js`                                                                                                                                                       |
+| `.claude/rules/e2e.md`           | `e2e/**`, `playwright.config.ts`, `.github/workflows/e2e.yml`                                                                                                                                            |
+| `.claude/rules/lighthouse.md`    | `lighthouserc.cjs`, `.github/workflows/lighthouse.yml`, `.github/scripts/**`                                                                                                                             |
 
 When a new area-specific decision is worth recording, add it to the matching rule file (or create one with a `paths:` frontmatter and a row in this table) — not here. Record the rule and the one-line reason; the story of how it was found belongs in the plan.
 
@@ -79,13 +79,13 @@ src/
 ├── pages/        # route-level components
 ├── widgets/      # large reusable UI sections (header, mobile-chrome, movie-rail, search-sidebar)
 ├── features/     # user-facing interactive features (catalog-filter, favorites, theme, profile, recommendations)
-├── entities/     # business-domain objects (movie — types, api, hooks, UI)
+├── entities/     # business-domain objects (movie, person — types, api, hooks, UI)
 └── shared/       # cross-cutting utilities and primitives (api/, lib/, ui/, config/)
 ```
 
 Import direction: `pages → widgets → features → entities → shared`. Never import upward. Enforced for `@`-alias imports by `no-restricted-imports` overrides in `.oxlintrc.json` (relative `../` imports across layers aren't caught — don't write them). A generic component needed by both a widget and a feature goes to `@shared/ui` (that's why `IconButton`/`AvatarCircle` live there).
 
-**Public API:** every slice in `widgets/` and `features/` (and `entities/movie`) exposes an `index.ts`. Import only through it — `import { Header } from '@widgets/header'`, never `@widgets/header/ui/Header` (lint error). Same for `@shared/{ui,lib,api,config}`. The barrel `index.ts` is the source of truth for what a slice exports — read it before adding a new hook; an equivalent may already exist.
+**Public API:** every slice in `widgets/` and `features/` (and every `entities/*` slice) exposes an `index.ts`. Import only through it — `import { Header } from '@widgets/header'`, never `@widgets/header/ui/Header` (lint error). Same for `@shared/{ui,lib,api,config}`. The barrel `index.ts` is the source of truth for what a slice exports — read it before adding a new hook; an equivalent may already exist.
 
 **Page-slice `model/` facade.** When a page needs to combine more than one downward slice (e.g. `@features/*` + `@entities/*`), put the composing hook in `src/pages/<page>/model/` — a lower slice can't import a higher one. Page-internal, not exported. Examples: `useMovieCatalog`, `useRecommendedMovies`, `useSearchAnalytics`.
 
@@ -162,7 +162,7 @@ Formatters over API numbers/dates (`formatCurrency()`/`formatDate()`, `@entities
 
 ## Data (summary)
 
-Live data comes from `@entities/movie` hooks over `apiClient`; favorites/theme/profile/genre cache are `localStorage` via `createStorageSlot` (`@shared/lib`). Async data is read with Suspense `use()` inside `AsyncBoundary`; Retry wires `onRetry` to an `invalidate*` companion export. Details, caching and endpoint quirks → `.claude/rules/data-layer.md`. Check for an existing live-data hook before reaching for mock data.
+Live data comes from `@entities/movie`/`@entities/person` hooks over `apiClient`; favorites/theme/profile/genre cache are `localStorage` via `createStorageSlot` (`@shared/lib`). Async data is read with Suspense `use()` inside `AsyncBoundary`; Retry wires `onRetry` to an `invalidate*` companion export. Details, caching and endpoint quirks → `.claude/rules/data-layer.md`. Check for an existing live-data hook before reaching for mock data.
 
 Repo-wide gotchas worth knowing everywhere:
 
