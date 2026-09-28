@@ -37,8 +37,10 @@ export const CreditGroup = ({ group }: CreditGroupProps) => {
       </h3>
       <ul id={listId} className={s.list}>
         {visible.map(credit => (
-          // Составной ключ: один фильм может повторяться в movies[] с разными
-          // enProfession (по прецеденту `${c.id}-${c.role}` в CastTab.tsx).
+          // Составной ключ по прецеденту `${c.id}-${c.role}` в CastTab.tsx:
+          // внутри одного бакета groupCreditsByProfession профессия уже
+          // постоянна и id сам по себе уникален, суффикс — задел на случай,
+          // если список когда-нибудь станет рендериться без группировки.
           <li
             key={`${credit.id}-${credit.profession ?? ''}`}
             className={s.item}
