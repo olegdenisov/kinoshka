@@ -125,6 +125,9 @@ plan-review-агента):**
 - **Тестирование**: Regular (код → тесты, в рамках той же задачи).
 - Каждая задача — маленькая, самодостаточная, тесты пишутся сразу после кода в той же задаче.
 - Все тесты проходят перед переходом к следующей задаче.
+- При запуске через `/planning:exec` брать модель и effort сабагента из строки `**Модель:**` под
+  заголовком задачи (`haiku` — простые механические правки, `sonnet` — типовая реализация, `opus` —
+  насыщенная логика и финальная приёмка).
 
 ## Testing Strategy
 
@@ -243,6 +246,8 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 
 ### Task 1: `onError`-проп в `shared/ui/ErrorBoundary`
 
+**Модель:** `haiku` · effort `medium` — один опциональный проп и четыре теста по готовому паттерну бомбы
+
 **Files:**
 
 - Modify: `src/shared/ui/ErrorBoundary/ErrorBoundary.tsx`
@@ -259,6 +264,8 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 
 ### Task 2: `captureRouteError` в `src/app/sentry.ts`
 
+**Модель:** `haiku` · effort `medium` — тонкая обёртка над `captureException`, мок уже есть
+
 **Files:**
 
 - Modify: `src/app/sentry.ts`
@@ -271,6 +278,8 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 - [ ] прогнать тесты — должны проходить перед Task 3
 
 ### Task 3: `secondaryAction`-слот в `shared/ui/ErrorState`
+
+**Модель:** `haiku` · effort `medium` — слот + перенос `margin-top` на контейнер, простые тесты
 
 **Files:**
 
@@ -287,6 +296,8 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 - [ ] прогнать тесты — должны проходить перед Task 4
 
 ### Task 4: Per-route `ErrorBoundary` в `AppLayout`
+
+**Модель:** `opus` · effort `high` — самая насыщенная задача: `key={pathname}`-ремаунт, взаимодействие с `Suspense`/`AsyncBoundary`, навигационные тесты на data router
 
 **Files:**
 
@@ -309,6 +320,8 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 
 ### Task 5: `registerChunkPreloadRecovery` — авто-перезагрузка при сбое загрузки чанка
 
+**Модель:** `sonnet` · effort `medium` — маленький модуль, но тонкости с моком `window.location.reload` и изоляцией слушателя в jsdom
+
 **Files:**
 
 - Create: `src/app/chunkPreloadRecovery.ts`
@@ -327,6 +340,8 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 
 ### Task 6: Verify acceptance criteria
 
+**Модель:** `opus` · effort `high` — финальная проверка приёмки, высокая цена пропущенной регрессии
+
 - [ ] проверить все три пункта роадмапа 2.6: global boundary в `app/` (уже было, `GlobalErrorBoundary`), per-route boundary через `pages/*`-контент (реализовано на уровне `AppLayout`, не дублируя код по 8 страницам — согласованное отклонение от буквальной формулировки), fallback с retry + ссылкой на главную
 - [ ] вручную (`make dev`) проверить: временно бросить ошибку в одной из страниц, убедиться что Header/BottomNav не пропадают, retry и ссылка «На главную» работают
 - [ ] прогнать полный набор тестов: `make test`
@@ -336,6 +351,8 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 - [ ] `make coverage` — убедиться, что новые ветки (`onError`, `secondaryAction`, `key={pathname}`-сброс, `captureRouteError`, `registerChunkPreloadRecovery`) покрыты (в проекте нет глобального порога coverage — проверка вручную по отчёту, не автоматический gate)
 
 ### Task 7: Обновить документацию и роадмап
+
+**Модель:** `sonnet` · effort `medium` — правки документации по чёткому списку
 
 Area-специфичные решения теперь живут в `.claude/rules/*.md`, а не в `AGENTS.md` (там только
 общие для репо конвенции и таблица topic-доков). Каждое правило — одна строка + причина; история —
