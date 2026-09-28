@@ -93,7 +93,7 @@ Import direction: `pages → widgets → features → entities → shared`. Neve
 
 React Router 7. Route config: `src/app/router.tsx` (every route lazy via `lazyNamed`, router wrapped with `Sentry.wrapCreateBrowserRouter`); providers: `src/app/providers.tsx`; chrome/layout: `src/app/layouts/AppLayout.tsx`.
 
-Routes: `/` (home feed), `/search` (search + filters), `/movie/:id` (overview, cast, media tabs), `/favorites`, `/popular` (weekly popular with rank badges), `/recommendations` (rule-based from favorites), `/profile` (client-only profile).
+Routes: `/` (home feed), `/search` (search + filters), `/movie/:id` (overview, cast, media tabs), `/favorites`, `/popular` (weekly popular with rank badges), `/recommendations` (rule-based from favorites), `/profile` (client-only profile), `/person/:id` (photo, bio meta, filmography, facts).
 
 Adding a route touches: `router.tsx`, `AppLayout`'s `ROUTE_CHROME`, a `codeSplitting` group + `size-limit` entry (see `build-budgets.md`), and possibly the Lighthouse URL list and an e2e spec.
 
