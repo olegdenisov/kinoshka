@@ -203,6 +203,17 @@ describe('mapDtoToPersonDetail — facts[] очистка от HTML-тегов',
     ).toEqual([])
   })
 
+  it('вложенные/разорванные теги не оставляют разметки после очистки', () => {
+    const [fact] = mapDtoToPersonDetail(
+      doc({
+        facts: [{ value: '<scr<script>ipt>alert(1)</script><<b>i>факт</i>' }],
+      }),
+    ).facts
+
+    expect(fact).not.toMatch(/<[a-z/]/i)
+    expect(fact).toContain('факт')
+  })
+
   it('записи без value отфильтровываются до очистки тегов', () => {
     expect(
       mapDtoToPersonDetail(
