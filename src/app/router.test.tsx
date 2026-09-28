@@ -80,10 +80,10 @@ describe('router — реальный createBrowserRouter резолвит lazy+
   })
 })
 
-// [review phase 1] Покрытие остальных 6 lazyNamed()-вызовов через настоящий router (не только
+// [review phase 1] Покрытие остальных 7 lazyNamed()-вызовов через настоящий router (не только
 // HomePage). Найдено ревью: exportName — голый string (см. lazyNamed.ts докблок про принятый
 // гэп), а тест на реальный router был только для '/'. Опечатка/переименование в любом из
-// остальных 6 lazyNamed()-вызовов (router.tsx) не ловится ни `tsc`, ни существующим тестом —
+// остальных 7 lazyNamed()-вызовов (router.tsx) не ловится ни `tsc`, ни существующим тестом —
 // только рантайм-ошибкой "Element type is invalid" у реального пользователя. Ниже — по одному
 // смоук-тесту на каждый оставшийся роут, доказывающему, что exportName реально резолвится через
 // настоящий `router`, а не через изолированный мок (тот же принцип, что и '/'-тест выше).
@@ -91,7 +91,7 @@ describe('router — реальный createBrowserRouter резолвит lazy+
 // Навигация — через `router.navigate(path)` (программный API реального data-роутера), а не
 // через remount с новым initialEntries (MemoryRouter) — этот файл специально тестирует именно
 // `router.tsx`'s экземпляр, не его копию.
-describe('router — оставшиеся 6 роутов резолвят свой lazyNamed()-экспорт', () => {
+describe('router — оставшиеся 7 роутов резолвят свой lazyNamed()-экспорт', () => {
   it('/movie/:id → MoviePage', async () => {
     server.use(
       http.get('*/v1.5/movie/1', () =>
@@ -205,5 +205,27 @@ describe('router — оставшиеся 6 роутов резолвят сво
     render(<RouterProvider router={router} />)
 
     expect(await screen.findByText(/Local profile\./)).toBeInTheDocument()
+  })
+
+  it('/person/:id → PersonPage', async () => {
+    server.use(
+      http.get('*/v1.5/person/1', () =>
+        HttpResponse.json({
+          id: 1,
+          name: 'Router Smoke Person',
+          updatedAt: '2024-01-01T00:00:00.000Z',
+          createdAt: '2024-01-01T00:00:00.000Z',
+        }),
+      ),
+    )
+
+    await act(async () => {
+      await router.navigate('/person/1')
+    })
+    render(<RouterProvider router={router} />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Router Smoke Person' }),
+    ).toBeInTheDocument()
   })
 })

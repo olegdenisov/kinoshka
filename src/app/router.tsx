@@ -12,7 +12,7 @@ import { AppLayout } from './layouts/AppLayout'
 const wrappedCreateBrowserRouter =
   Sentry.wrapCreateBrowserRouter(createBrowserRouter)
 
-// Все семь роутов теперь под `AppLayout` (Task 10 плана
+// Все восемь роутов теперь под `AppLayout` (Task 10 плана
 // docs/plans/20260827-mobile-first-adaptive-layout.md завершила перенос `/search` — последнего
 // оставшегося top-level роута). `Search` больше не рендерит Header/MobileHeader+BottomNav сама
 // — chrome для `/search` (включая activeNav из `?type` и Header's variant='search') реализован
@@ -34,6 +34,7 @@ const RecommendationsPage = lazyNamed(
 )
 const SearchPage = lazyNamed(() => import('../pages/search'), 'SearchPage')
 const ProfilePage = lazyNamed(() => import('../pages/profile'), 'ProfilePage')
+const PersonPage = lazyNamed(() => import('../pages/person'), 'PersonPage')
 
 export const router = wrappedCreateBrowserRouter([
   {
@@ -46,6 +47,7 @@ export const router = wrappedCreateBrowserRouter([
       { path: '/recommendations', element: <RecommendationsPage /> },
       { path: '/search', element: <SearchPage /> },
       { path: '/profile', element: <ProfilePage /> },
+      { path: '/person/:id', element: <PersonPage /> },
     ],
   },
 ])
