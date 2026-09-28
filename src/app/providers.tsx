@@ -1,6 +1,7 @@
 import { initAnalytics } from '@shared/lib'
 import { RouterProvider } from 'react-router/dom'
 
+import { registerChunkPreloadRecovery } from './chunkPreloadRecovery'
 import { GlobalErrorBoundary } from './GlobalErrorBoundary'
 import { router } from './router'
 
@@ -11,8 +12,12 @@ import { router } from './router'
 // собирает Sentry Performance (tracesSampleRate в src/app/sentry.ts), отдельный вызов не нужен.
 // Один раз на верхнем уровне модуля, до определения Providers — initAnalytics() рано выходит,
 // если !PROD || !VITE_PLAUSIBLE_DOMAIN (см. src/shared/lib/analytics/analytics.ts) — no-op в
-// dev/test-окружениях.
+// dev/test-окружениях. registerChunkPreloadRecovery() — тоже один раз на верхнем уровне, но
+// безусловно (не гейтится PROD): слушает window's vite:preloadError и перезагружает страницу при
+// сбое загрузки чанка (см. WHY в chunkPreloadRecovery.ts) — в dev-режиме Vite это событие не
+// диспатчит настоящих сбоев (нет билд-чанков), так что регистрация там безвредна.
 initAnalytics()
+registerChunkPreloadRecovery()
 
 export const Providers = () => {
   return (
