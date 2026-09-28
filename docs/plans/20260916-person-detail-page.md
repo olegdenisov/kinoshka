@@ -312,15 +312,15 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - Create: `src/entities/person/hooks/usePersonDetail.test.tsx`
 - Create: `src/entities/person/index.ts`
 
-- [ ] создать `usePersonDetail(id): PersonDetail` как `use(getPersonDetail(id))`
-- [ ] добавить WHY-комментарий на русском: почему здесь **не нужен** `bundleCache` как в `useMovieDetail` (там комбинировались два промиса через `Promise.allSettled`, что порождало новую ссылку на каждый рендер; тут промис один и стабилен по построению `createCachedFetcher`)
-- [ ] добавить companion-инвалидатор `invalidatePersonDetail(id)`
-- [ ] создать `src/entities/person/index.ts` — публичный барель: `PersonDetail`, `PersonMovieCredit`, `usePersonDetail`, `invalidatePersonDetail`
-- [ ] правок `vite.config.ts`/`tsconfig.app.json` не требуется — алиас `@entities` директорный (`path.resolve(__dirname, 'src/entities')` / `"./src/entities/*"`), новый слайс `@entities/person` подхватывается автоматически
-- [ ] написать тест хука: рендер внутри `<Suspense>`, MSW отдаёт персону → после резолва в DOM видно имя
-- [ ] написать тест ошибочного пути: MSW отдаёт 404 → ошибка пробрасывается в `ErrorBoundary`, а не глотается
-- [ ] написать тест стабильности: два рендера подряд не вызывают повторный сетевой запрос (защита от бесконечного ре-саспенса)
-- [ ] запустить `make test` — должны пройти до перехода к задаче 5
+- [x] создать `usePersonDetail(id): PersonDetail` как `use(getPersonDetail(id))`
+- [x] добавить WHY-комментарий на русском: почему здесь **не нужен** `bundleCache` как в `useMovieDetail` (там комбинировались два промиса через `Promise.allSettled`, что порождало новую ссылку на каждый рендер; тут промис один и стабилен по построению `createCachedFetcher`)
+- [x] добавить companion-инвалидатор `invalidatePersonDetail(id)`
+- [x] создать `src/entities/person/index.ts` — публичный барель: `PersonDetail`, `PersonMovieCredit`, `usePersonDetail`, `invalidatePersonDetail`
+- [x] правок `vite.config.ts`/`tsconfig.app.json` не требуется — алиас `@entities` директорный (`path.resolve(__dirname, 'src/entities')` / `"./src/entities/*"`), новый слайс `@entities/person` подхватывается автоматически
+- [x] написать тест хука: рендер внутри `<Suspense>`, MSW отдаёт персону → после резолва в DOM видно имя
+- [x] написать тест ошибочного пути: MSW отдаёт 404 → ошибка пробрасывается в `ErrorBoundary`, а не глотается
+- [x] написать тест стабильности: два рендера подряд не вызывают повторный сетевой запрос (защита от бесконечного ре-саспенса)
+- [x] запустить `make test` — должны пройти до перехода к задаче 5
 
 ### Задача 5: Скелет страницы `PersonPage` + `PersonDetailSkeleton`
 
