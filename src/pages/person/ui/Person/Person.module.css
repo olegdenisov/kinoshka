@@ -2,10 +2,14 @@
   background: var(--bg-primary);
   min-height: 100vh;
   padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
 }
 
 @media (min-width: 720px) {
   .root {
     padding: 40px;
+    gap: 60px;
   }
 }
