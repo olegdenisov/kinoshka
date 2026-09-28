@@ -516,16 +516,16 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - Modify: `vite.config.ts`
 - Modify: `package.json`
 
-- [ ] добавить в `build.rolldownOptions.output.codeSplitting.groups` запись `{ name: 'page-person', test: /\/pages\/person\// }` — **после** группы `shared` и рядом с остальными page-группами (порядок важен: `shared` должен ловить `@entities`/`@widgets` раньше page-групп); последней сейчас идёт `page-profile`
-- [ ] обновить комментарий над `codeSplitting` в `vite.config.ts` («все 7 page-слайсов» → 8)
-- [ ] выполнить `make build-only` и убедиться, что в `dist/assets/` появился отдельный `page-person-*.js`, а не «растворился» в `page-movie`/`shared`
-- [ ] проверить, что `dist/assets/page-person-*.js` не импортируется статически из других page-чанков (грепом по `import{...}from"./page-person`) — то есть изоляция роутов не нарушена
-- [ ] **измерить** реальный gzip-размер `page-person-*.js` после сборки (`make size` покажет размеры имеющихся записей; для новой можно посмотреть вывод сборки) — **не гадать число заранее**
-- [ ] добавить в секцию `"size-limit"` в `package.json` запись `{ "name": "page-person", "path": "dist/assets/page-person-*.js", "gzip": true, "limit": "<измеренный размер + 15%>" }` (15% — тот же буфер, что у всех существующих записей)
-- [ ] **перепроверить остальные бюджеты**: `shared` вырастет за счёт `@entities/person` и переехавшего `createCachedFetcher`, `page-movie` может измениться из-за правок `CastTab`/`OverviewTab` — если `make size` красный, пересчитать затронутые лимиты по фактическим замерам и зафиксировать это в плане с префиксом ➕
-- [ ] запустить `make size` — должен быть зелёным до перехода к задаче 14
-- [ ] запустить `make knip` — убедиться, что новые экспорты `@entities/person` и перенесённого `createCachedFetcher` не помечены как unused (у всех есть реальный потребитель; если помечены — исправлять источником, а не записью в `ignore`)
-- [ ] запустить `make test` и `make lint` — должны пройти до перехода к задаче 14
+- [x] добавить в `build.rolldownOptions.output.codeSplitting.groups` запись `{ name: 'page-person', test: /\/pages\/person\// }` — **после** группы `shared` и рядом с остальными page-группами (порядок важен: `shared` должен ловить `@entities`/`@widgets` раньше page-групп); последней сейчас идёт `page-profile`
+- [x] обновить комментарий над `codeSplitting` в `vite.config.ts` («все 7 page-слайсов» → 8)
+- [x] выполнить `make build-only` и убедиться, что в `dist/assets/` появился отдельный `page-person-*.js`, а не «растворился» в `page-movie`/`shared` — `dist/assets/page-person-CsfHDubE.js` (9.99 kB, gzip 3.82 kB) появился отдельным чанком
+- [x] проверить, что `dist/assets/page-person-*.js` не импортируется статически из других page-чанков (грепом по `import{...}from"./page-person`) — то есть изоляция роутов не нарушена; проверено грепом по всем `dist/assets/page-*.js`: каждый page-чанк (включая `page-person`) импортирует только `rolldown-runtime`/`vendor`/`shared`, ни один — другой `page-*` (единственная ссылка на `page-person` — из `index-*.js`, это ожидаемый динамический `import()` роутера)
+- [x] **измерить** реальный gzip-размер `page-person-*.js` после сборки — `make size` (с `VITE_SENTRY_DSN`, он уже задан в `.env.local`): **3.82 kB gzipped**
+- [x] добавить в секцию `"size-limit"` в `package.json` запись `{ "name": "page-person", "path": "dist/assets/page-person-*.js", "gzip": true, "limit": "4.4 KB" }` (3.82 kB + 15% ≈ 4.39 kB, округлено вверх до 4.4 KB — тот же буфер, что у всех существующих записей)
+- [x] **перепроверить остальные бюджеты**: `shared` вырос за счёт `@entities/person` и переехавшего `createCachedFetcher`, `page-movie` изменился из-за правок `CastTab`/`OverviewTab` — оба остались **зелёными** без изменения лимитов: `shared` 17.98 kB / лимит 22.6 kB, `page-movie` 7.68 kB / лимит 8.75 kB (замерено тем же `make build-only && make size`, `VITE_SENTRY_DSN` уже в `.env.local` — пересчёт `entry` не потребовался, `entry` тоже остался в бюджете: 3.01 kB / лимит 3.4 kB). `➕` изменений лимитов, кроме новой записи `page-person`, не потребовалось — все существующие бюджеты прошли по факту замера
+- [x] запустить `make size` — зелёный (`entry` 3.01/3.4 kB, `vendor` 169.13/184.7 kB, `shared` 17.98/22.6 kB, `page-home` 2.59/3 kB, `page-movie` 7.68/8.75 kB, `page-favorites` 1.09/1.3 kB, `page-popular` 1.07/1.25 kB, `page-recommendations` 1.15/1.35 kB, `page-search` 6.03/7 kB, `page-profile` 2.67/3.1 kB, `page-person` 3.82/4.4 kB)
+- [x] запустить `make knip` — новые экспорты `@entities/person` и перенесённого `createCachedFetcher` не помечены как unused (только 3 несвязанных config hints про `knip.jsonc` entry-паттерны, не про эту задачу)
+- [x] запустить `make test` и `make lint` — оба зелёные (1007 тестов, `oxlint` + `stylelint` без замечаний); `make typecheck` тоже зелёный
 
 ### Задача 14: E2E-спек `person-detail.spec.ts` с a11y-проверкой
 
