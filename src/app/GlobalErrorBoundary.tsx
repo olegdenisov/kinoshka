@@ -2,11 +2,13 @@ import * as Sentry from '@sentry/react'
 import { ErrorState } from '@shared/ui'
 import type { PropsWithChildren } from 'react'
 
-// Глобальный boundary поверх всего дерева (см. providers.tsx) — отдельный компонент, а не правка
-// shared/ui/ErrorBoundary: тот примитив уже держит на себе все точечные AsyncBoundary-секции
-// (rails, /search, /movie/:id), трогать его ради Sentry — лишний blast radius (см. план
-// docs/plans/20260905-sentry-error-tracking.md, Solution Overview). ErrorState — тот же UI
-// фолбэк, что и у AsyncBoundary, для визуальной консистентности.
+// Глобальный boundary поверх всего дерева (см. providers.tsx) — отдельный компонент на
+// Sentry.ErrorBoundary, а не переиспользование shared/ui/ErrorBoundary: примитив с план
+// 20260916-per-route-error-boundaries.md получил опциональный onError и используется per-route
+// границей в AppLayout, но сюда, снаружи <RouterProvider>, тот механизм не подключить — здесь
+// нет собственного роутинга/pathname для key-сброса, а Sentry.ErrorBoundary сам репортит
+// пойманные ошибки. ErrorState — тот же UI фолбэк, что и у AsyncBoundary/per-route границы, для
+// визуальной консистентности.
 export const GlobalErrorBoundary = ({ children }: PropsWithChildren) => (
   <Sentry.ErrorBoundary
     fallback={({ resetError }) => (
