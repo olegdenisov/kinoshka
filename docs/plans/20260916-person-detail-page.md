@@ -244,15 +244,15 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - Create: `src/entities/person/api/mapDtoToPersonDetail.ts`
 - Create: `src/entities/person/api/mapDtoToPersonDetail.test.ts`
 
-- [ ] создать `src/entities/person/model/types.ts` с `PersonMovieCredit` и `PersonDetail` по форме из «Технических деталей» (только `type`, не `interface`, без поля `sex`)
-- [ ] добавить WHY-комментарий на русском, почему `PersonMovieCredit` — не `Movie` (в `MovieInPerson` нет `poster`/`type`/`genre`/`year`)
-- [ ] создать `mapDtoToPersonDetail(dto: Person): PersonDetail` — нормализация `null → undefined`, фолбэк `name ?? enName ?? ''`, дедупликация `professions` через `Set`, фильтрация пустых `birthPlace`/`deathPlace`
-- [ ] реализовать очистку `facts[]` от HTML-тегов (`replace(/<[^>]*>/g, '').trim()`) с отбрасыванием строк, ставших пустыми после очистки — добавить WHY-комментарий на русском со ссылкой на то, что Kinopoisk иногда кладёт разметку в `facts[].value`
-- [ ] в маппинге `movies[]`: `title: m.name ?? m.alternativeName ?? ''`, отбрасывать записи с пустым `title`
-- [ ] написать тесты маппера на успешный случай (полный DTO со всеми полями → ожидаемый `PersonDetail`)
-- [ ] написать тесты маппера на краевые случаи: пустой DTO (только `id`/`updatedAt`/`createdAt`), `name: null` с заполненным `enName`, `enName === name` (не дублируется), дубли в `profession[]`, `movies[]` без `name` но с `alternativeName`, `movies[]` с пустым и `name`, и `alternativeName` (запись отбрасывается)
-- [ ] написать тест маппера: `facts[].value` с HTML-тегами (`'<span class="x">факт</span>'`) → тег вырезан, остаётся только текст; факт, состоящий только из тегов, отбрасывается целиком
-- [ ] запустить `make test` — должны пройти до перехода к задаче 2
+- [x] создать `src/entities/person/model/types.ts` с `PersonMovieCredit` и `PersonDetail` по форме из «Технических деталей» (только `type`, не `interface`, без поля `sex`)
+- [x] добавить WHY-комментарий на русском, почему `PersonMovieCredit` — не `Movie` (в `MovieInPerson` нет `poster`/`type`/`genre`/`year`)
+- [x] создать `mapDtoToPersonDetail(dto: Person): PersonDetail` — нормализация `null → undefined`, фолбэк `name ?? enName ?? ''`, дедупликация `professions` через `Set`, фильтрация пустых `birthPlace`/`deathPlace`
+- [x] реализовать очистку `facts[]` от HTML-тегов (`replace(/<[^>]*>/g, '').trim()`) с отбрасыванием строк, ставших пустыми после очистки — добавить WHY-комментарий на русском со ссылкой на то, что Kinopoisk иногда кладёт разметку в `facts[].value`
+- [x] в маппинге `movies[]`: `title: m.name ?? m.alternativeName ?? ''`, отбрасывать записи с пустым `title`
+- [x] написать тесты маппера на успешный случай (полный DTO со всеми полями → ожидаемый `PersonDetail`)
+- [x] написать тесты маппера на краевые случаи: пустой DTO (только `id`/`updatedAt`/`createdAt`), `name: null` с заполненным `enName`, `enName === name` (не дублируется), дубли в `profession[]`, `movies[]` без `name` но с `alternativeName`, `movies[]` с пустым и `name`, и `alternativeName` (запись отбрасывается)
+- [x] написать тест маппера: `facts[].value` с HTML-тегами (`'<span class="x">факт</span>'`) → тег вырезан, остаётся только текст; факт, состоящий только из тегов, отбрасывается целиком
+- [x] запустить `make test` — должны пройти до перехода к задаче 2
 
 ### Задача 2: Перенести `createCachedFetcher` в `@shared/lib` (устранить кросс-импорт entity↔entity)
 
