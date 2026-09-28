@@ -36,13 +36,15 @@ export const CreditGroup = ({ group }: CreditGroupProps) => {
         {label} <span className={s.count}>{credits.length}</span>
       </h3>
       <ul id={listId} className={s.list}>
-        {visible.map(credit => (
-          // Составной ключ по прецеденту `${c.id}-${c.role}` в CastTab.tsx:
-          // внутри одного бакета groupCreditsByProfession профессия уже
-          // постоянна и id сам по себе уникален, суффикс — задел на случай,
-          // если список когда-нибудь станет рендериться без группировки.
+        {visible.map((credit, index) => (
+          // Kinopoisk может отдать один и тот же фильм дважды в одном бакете
+          // groupCreditsByProfession (несколько ролей у одного enProfession,
+          // например разные персонажи или producer + executive producer под
+          // одной меткой) — тогда (id, profession) не уникальна сама по себе.
+          // Индекс внутри видимого среза — надёжный тай-брейк; profession
+          // остаётся для параллели с составным ключом в CastTab.tsx.
           <li
-            key={`${credit.id}-${credit.profession ?? ''}`}
+            key={`${credit.id}-${credit.profession ?? ''}-${index}`}
             className={s.item}
           >
             <Link to={`/movie/${credit.id}`} className={s.link}>

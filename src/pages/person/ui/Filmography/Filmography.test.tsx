@@ -74,6 +74,27 @@ describe('Filmography — строки кредитов', () => {
     expect(item).toHaveTextContent(/^No rating$/)
   })
 
+  it('один и тот же id+profession дважды в одной группе (разные роли) — обе строки рендерятся без React duplicate-key warning', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    renderFilmography([
+      { id: 42, title: 'Ensemble Movie', role: 'Alice', profession: 'actor' },
+      { id: 42, title: 'Ensemble Movie', role: 'Bob', profession: 'actor' },
+    ])
+
+    expect(
+      screen.getAllByRole('link', { name: 'Ensemble Movie' }),
+    ).toHaveLength(2)
+    expect(screen.getByText('Alice')).toBeInTheDocument()
+    expect(screen.getByText('Bob')).toBeInTheDocument()
+    expect(errorSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('same key'),
+      expect.anything(),
+    )
+
+    errorSpy.mockRestore()
+  })
+
   it('один фильм в двух профессиях — две строки в разных группах без конфликта ключей', () => {
     renderFilmography([
       { id: 7, title: 'Same Movie', profession: 'actor' },

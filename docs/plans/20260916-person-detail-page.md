@@ -434,12 +434,12 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - Modify: `src/pages/person/ui/Person/Person.module.css`
 - Create: `src/pages/person/ui/Person/Person.test.tsx`
 
-- [ ] собрать `Person.tsx` из `PersonHero` + `Filmography` + `PersonFacts` (в этом порядке)
-- [ ] добавить WHY-комментарий на русском: почему выбраны секции, а не `MovieTabsNav`-подобные табы (три содержательных блока, ремаунт по `key` не нужен, копировать табы ради симметрии с `/movie/:id` — карго-культ)
-- [ ] дописать `Person.module.css`: mobile-first отступы между секциями, десктопные оверрайды в `@media (min-width: 720px)`; проверить, что компонент один и парных `*Desktop`/`*Mobile` файлов не заведено
-- [ ] написать тест: полная персона → присутствуют имя, секция `Filmography` и секция `Facts`
-- [ ] написать тест: персона без фактов и без фильмографии → имя есть, `Facts` нет, `Filmography` показывает `EmptyState`
-- [ ] запустить `make test` — должны пройти до перехода к задаче 10
+- [x] собрать `Person.tsx` из `PersonHero` + `Filmography` + `PersonFacts` (в этом порядке)
+- [x] добавить WHY-комментарий на русском: почему выбраны секции, а не `MovieTabsNav`-подобные табы (три содержательных блока, ремаунт по `key` не нужен, копировать табы ради симметрии с `/movie/:id` — карго-культ)
+- [x] дописать `Person.module.css`: mobile-first отступы между секциями, десктопные оверрайды в `@media (min-width: 720px)`; проверить, что компонент один и парных `*Desktop`/`*Mobile` файлов не заведено
+- [x] написать тест: полная персона → присутствуют имя, секция `Filmography` и секция `Facts`
+- [x] написать тест: персона без фактов и без фильмографии → имя есть, `Facts` нет, `Filmography` показывает `EmptyState`
+- [x] запустить `make test` — должны пройти до перехода к задаче 10
 
 ### Задача 10: Роут `/person/:id` и chrome-конфиг в `AppLayout`
 

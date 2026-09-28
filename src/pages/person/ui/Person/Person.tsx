@@ -1,17 +1,26 @@
 import type { PersonDetail } from '@entities/person'
 
+import { Filmography } from '../Filmography'
+import { PersonFacts } from '../PersonFacts'
+import { PersonHero } from '../PersonHero'
+
 import s from './Person.module.css'
 
 type PersonProps = {
   person: PersonDetail
 }
 
-// Заглушка на Задачу 5: наполнение (PersonHero/Filmography/PersonFacts) —
-// задачи 6-9 плана docs/plans/20260916-person-detail-page.md.
+// Три содержательных блока (герой, фильмография, факты) достаточно компактны,
+// чтобы вмещаться в один скролл без табов. В отличие от /movie/:id, где табы
+// нужны для четырёх больших панелей, здесь ремаунт по key={id} не требуется —
+// просто скроллируемая страница с секциями. Копировать MovieTabsNav ради
+// симметрии было бы карго-культом.
 export const Person = ({ person }: PersonProps) => {
   return (
     <div className={s.root}>
-      <h1>{person.name}</h1>
+      <PersonHero person={person} />
+      <Filmography credits={person.movies} />
+      <PersonFacts facts={person.facts} />
     </div>
   )
 }
