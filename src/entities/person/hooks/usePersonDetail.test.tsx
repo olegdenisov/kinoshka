@@ -1,4 +1,5 @@
 import { AsyncBoundary } from '@shared/ui'
+import type { RenderResult } from '@testing-library/react'
 import { act, cleanup, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
@@ -79,11 +80,14 @@ describe('usePersonDetail — стабильность промиса', () => {
       }),
     )
 
-    const { rerender } = render(
-      <AsyncBoundary>
-        <Probe id={803} />
-      </AsyncBoundary>,
-    )
+    let rerender: RenderResult['rerender'] = () => {}
+    await act(async () => {
+      ;({ rerender } = render(
+        <AsyncBoundary>
+          <Probe id={803} />
+        </AsyncBoundary>,
+      ))
+    })
     await act(async () => {
       rerender(
         <AsyncBoundary>

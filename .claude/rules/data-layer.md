@@ -1,9 +1,12 @@
 ---
 paths:
   - 'src/entities/movie/**'
+  - 'src/entities/person/**'
+  - 'src/pages/person/**'
   - 'src/shared/api/**'
   - 'src/shared/lib/storage/**'
   - 'src/shared/lib/sessionCache/**'
+  - 'src/shared/lib/cachedFetcher/**'
   - 'src/shared/ui/AsyncBoundary/**'
   - 'src/pages/search/**'
   - 'src/pages/movie/**'
@@ -23,9 +26,9 @@ History: `docs/plans/completed/20260805-search-filters-url-sync.md`, `…-movie-
 
 ## Shared building blocks
 
-- **`createCachedFetcher<P, R = Movie[]>(fn, options?)`** (`@entities/movie/api/createCachedFetcher.ts`) — TTL cache (default 5 min, `options.ttlMs` to override), session-persist, 403 cooldown, error cache (`ERROR_CACHE_TTL_MS` = 20s). Returns a fetcher with `invalidate(params)`/`clear()`. Use it for every new fetcher.
+- **`createCachedFetcher<P, R>(fn, options?)`** (`@shared/lib`) — TTL cache (default 5 min, `options.ttlMs` to override), session-persist, 403 cooldown, error cache (`ERROR_CACHE_TTL_MS` = 20s). Returns a fetcher with `invalidate(params)`/`clear()`. Moved out of `@entities/movie` because `@entities/person` needed it too and entity slices can't import each other. Use it for every new fetcher.
 - `createSessionCache` persists to `sessionStorage` **only in `import.meta.env.DEV`**; in prod the cache is in-memory for the SPA session (lost on reload).
-- **`AsyncBoundary`** (`@shared/ui`): Suspense + error boundary. Optional `errorFallback({ error, reset })` and `onRetry()` (runs before `reset()`). Every retry-capable boundary wires `onRetry` to an `invalidate*` export next to its hook (`invalidateTopRatedMovies`, `invalidateNewMovies`, `invalidateMovieCatalog`, `invalidateMovieDetail`, `invalidateRecommendations`) — otherwise Retry replays the cached rejection for 20s. Double-click protection is the synchronous `isRetryingRef`, reset on every `errorFallback` render — **not** an error-reference comparison (fetchers replay the same `Error` object).
+- **`AsyncBoundary`** (`@shared/ui`): Suspense + error boundary. Optional `errorFallback({ error, reset })` and `onRetry()` (runs before `reset()`). Every retry-capable boundary wires `onRetry` to an `invalidate*` export next to its hook (`invalidateTopRatedMovies`, `invalidateNewMovies`, `invalidateMovieCatalog`, `invalidateMovieDetail`, `invalidateRecommendations`, `invalidatePersonDetail`) — otherwise Retry replays the cached rejection for 20s. Double-click protection is the synchronous `isRetryingRef`, reset on every `errorFallback` render — **not** an error-reference comparison (fetchers replay the same `Error` object).
 - **404 pattern:** `error instanceof ApiError && error.status === 404` inside `errorFallback` (see `MoviePage.tsx`). Endpoints whose error DTO has `statusCode`/`message` instead of data must check `'statusCode' in response.data` and throw `ApiError` before reading fields (`getMovieDetail`, `getPopularMovies`).
 - **`createStorageSlot`** (`@shared/lib`) — `localStorage` slot with zod-validated reads, cross-tab sync, `try/catch` around every access. `get()` memoizes the parsed value against the raw string (required: `useStorageSlot` feeds it to `useSyncExternalStore` as `getSnapshot`, which needs a stable reference). `set()` returns `boolean`. Failures go to the module-level `setStorageErrorReporter()` (details in `profile.md`). Keys: `kinoshka:favorites`, `kinoshka:theme`, `kinoshka:genres`, `kinoshka:profile`.
 
