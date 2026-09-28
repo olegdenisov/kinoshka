@@ -58,10 +58,11 @@ type RouteChromeConfig = {
  * `/recommendations` (Task 3-5), `/profile` (client-only профиль, отдельный план
  * docs/plans/completed/20260916-user-profile-block.md), `/` (Task 8), `/movie/:id` (Task 9, см.
  * `MOVIE_CHROME` ниже — не входит в эту карту, потому что ключ здесь — точный `pathname`, а
- * `/movie/123` не совпадёт с литералом `/movie/:id`) и `/search` (Task 10, см. `SEARCH_CHROME`
+ * `/movie/123` не совпадёт с литералом `/movie/:id`), `/search` (Task 10, см. `SEARCH_CHROME`
  * ниже — по той же причине, что `MOVIE_CHROME`, не входит в эту карту, хоть у `/search` и нет
  * динамического сегмента: у этого роута `activeNav` вычисляется не по статической карте, а из
- * `?type`, см. ниже).
+ * `?type`, см. ниже) и `/person/:id` (Task 10, см. `PERSON_CHROME` ниже — не входит в эту карту
+ * по той же причине, что `MOVIE_CHROME`: `/person/123` не совпадёт с литералом `/person/:id`).
  *   - `/` (Task 8): простой случай, `activeNav: 'home'`, `active: 'home'`, `title` не задаётся
  *     (см. докблок `RouteChromeConfig.title` — воспроизводит исходное поведение `HomeMobile`).
  *   - `/movie/:id` (Task 9): НЕ простой случай — см. `MOVIE_CHROME` и докблок
@@ -70,6 +71,8 @@ type RouteChromeConfig = {
  *     а из `?type` в URL (`useFilterState()`/`getFilterFromSearchParams`) — реализовано в
  *     `AppLayout` ниже через `useSearchParams()` + `isSearchRoute`, см. `SEARCH_CHROME` и
  *     докблок `AppLayout`.
+ *   - `/person/:id` (Task 10): НЕ простой случай, аналогично `/movie/:id` — см. `PERSON_CHROME`
+ *     ниже.
  *
  * Полная таблица соответствия `Header.activeNav` ↔ `BottomNav.active` (множества пересекаются
  * только частично, см. чек-бокс Task 6):
@@ -79,6 +82,7 @@ type RouteChromeConfig = {
  *   popular         → activeNav='popular',         active='popular'
  *   recommendations → activeNav='recommendations', active='recommendations'
  *   movie detail    → activeNav=не задан (нет своего пункта), active='search' (см. MOVIE_CHROME)
+ *   person detail   → activeNav=не задан (нет своего пункта), active='search' (см. PERSON_CHROME)
  *   search          → activeNav=нет соответствия (Header не умеет), active='search'
  *   profile         → activeNav=нет соответствия,  active='profile'
  */
@@ -129,6 +133,30 @@ const MOVIE_CHROME: RouteChromeConfig = {
       <ShareIcon />
     </IconButton>
   ),
+}
+
+/**
+ * Chrome-конфиг для `/person/:id` (Task 10) — отдельная константа, а не запись в `ROUTE_CHROME`
+ * и не переиспользование `MOVIE_CHROME`, по трём отдельным причинам:
+ *   1. Ключи `ROUTE_CHROME` сравниваются с `useLocation().pathname` напрямую — `/person/123` не
+ *      совпадёт с литералом `/person/:id`, так же как `/movie/:id` не совпадает с `MOVIE_CHROME`
+ *      (см. докблок `ROUTE_CHROME` выше). Матчится через `useMatch('/person/:id')` в `AppLayout`
+ *      ниже.
+ *   2. `active: 'search'` — у detail-страницы персоны нет своего пункта в `BottomNav`, ближайший
+ *      по смыслу раздел — каталог/поиск, то же значение, что и у `MOVIE_CHROME` (см. докблок
+ *      `MOVIE_CHROME` выше).
+ *   3. Здесь **нет** `rightAction` — в отличие от `MOVIE_CHROME`. Кнопка "поделиться" у
+ *      `MOVIE_CHROME` воспроизводила поведение удалённого `MovieMobile.tsx`; для `/person/:id`
+ *      такой исходной страницы не было, добавлять эту кнопку заново не за чем (подтверждено
+ *      пользователем при планировании — см. «Ключевые решения» плана
+ *      docs/plans/20260916-person-detail-page.md). Кнопка Share на `/movie/:id` вдобавок признана
+ *      мёртвым контролом (`docs/backlog/dead-header-controls.md`) — лишний повод не копировать её
+ *      сюда.
+ */
+const PERSON_CHROME: RouteChromeConfig = {
+  active: 'search',
+  onBack: true,
+  showSearch: false,
 }
 
 /**
@@ -192,12 +220,15 @@ export const AppLayout = () => {
   const { isMobile } = useViewport()
   const navigate = useNavigate()
   const isMovieRoute = useMatch('/movie/:id') != null
+  const isPersonRoute = useMatch('/person/:id') != null
   const isSearchRoute = pathname === '/search'
   const config = isMovieRoute
     ? MOVIE_CHROME
-    : isSearchRoute
-      ? SEARCH_CHROME
-      : ROUTE_CHROME[pathname]
+    : isPersonRoute
+      ? PERSON_CHROME
+      : isSearchRoute
+        ? SEARCH_CHROME
+        : ROUTE_CHROME[pathname]
   const headerVariant = isSearchRoute ? 'search' : 'default'
   // `|| 'search'` (не `??`), чтобы точно повторить прежнюю семантику `filters.type ?? 'search'`
   // из удалённого `SearchDesktop.tsx` — `filters.type` там уже само по себе

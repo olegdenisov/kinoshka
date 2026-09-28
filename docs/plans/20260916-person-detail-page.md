@@ -452,17 +452,17 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - Modify: `src/app/layouts/AppLayout.test.tsx`
 - Modify: `src/app/router.test.tsx`
 
-- [ ] в `router.tsx` добавить `const PersonPage = lazyNamed(() => import('../pages/person'), 'PersonPage')` и маршрут `{ path: '/person/:id', element: <PersonPage /> }` в `children` у `AppLayout`
-- [ ] обновить комментарий в шапке `router.tsx` (там сказано «Все семь роутов» — станет восемь)
-- [ ] добавить в `router.test.tsx` кейс `/person/:id → PersonPage` в блок «оставшиеся N роутов резолвят свой lazyNamed()-экспорт» (MSW мокает `*/v1.5/person/1`, после `router.navigate('/person/1')` виден `heading` с именем) и обновить счётчик в названии `describe` и в комментарии над ним (6 → 7)
-- [ ] в `AppLayout.tsx` добавить константу `PERSON_CHROME: RouteChromeConfig = { active: 'search', onBack: true, showSearch: false }` рядом с `MOVIE_CHROME`
-- [ ] добавить WHY-докблок на русском: почему отдельная константа, а не запись в `ROUTE_CHROME` (ключи карты сравниваются с `pathname` напрямую, `/person/123` не совпадёт с литералом `/person/:id`); почему `active: 'search'` (у detail-страницы персоны нет своего пункта `BottomNav`, ближайший по смыслу — каталог/поиск, так же как у `/movie/:id`); почему **нет** `rightAction` (кнопка Share у `MOVIE_CHROME` воспроизводила поведение удалённого `MovieMobile.tsx`, у персоны такой истории нет — решение подтверждено пользователем при планировании)
-- [ ] добавить `const isPersonRoute = useMatch('/person/:id') != null` и включить его в цепочку выбора `config` (порядок: movie → person → search → `ROUTE_CHROME[pathname]`)
-- [ ] обновить таблицу соответствия `Header.activeNav` ↔ `BottomNav.active` в докблоке `ROUTE_CHROME` строкой `person detail` (после строки `movie detail`, до `search`/`profile`) и перечень подключённых роутов в том же докблоке
-- [ ] написать тест в `AppLayout.test.tsx`: на `/person/123` в мобильном вьюпорте рендерится `MobileHeader` с кнопкой «назад» и `BottomNav` с активным пунктом `search`
-- [ ] написать тест в `AppLayout.test.tsx`: на `/person/123` в десктопном вьюпорте рендерится `Header` без подсвеченного nav-pill (`activeNav` не задан) и `variant='default'`
-- [ ] написать тест: `trackPageview()` вызывается при переходе на `/person/:id`
-- [ ] запустить `make test` — должны пройти до перехода к задаче 11
+- [x] в `router.tsx` добавить `const PersonPage = lazyNamed(() => import('../pages/person'), 'PersonPage')` и маршрут `{ path: '/person/:id', element: <PersonPage /> }` в `children` у `AppLayout`
+- [x] обновить комментарий в шапке `router.tsx` (там сказано «Все семь роутов» — станет восемь)
+- [x] добавить в `router.test.tsx` кейс `/person/:id → PersonPage` в блок «оставшиеся N роутов резолвят свой lazyNamed()-экспорт» (MSW мокает `*/v1.5/person/1`, после `router.navigate('/person/1')` виден `heading` с именем) и обновить счётчик в названии `describe` и в комментарии над ним (6 → 7)
+- [x] в `AppLayout.tsx` добавить константу `PERSON_CHROME: RouteChromeConfig = { active: 'search', onBack: true, showSearch: false }` рядом с `MOVIE_CHROME`
+- [x] добавить WHY-докблок на русском: почему отдельная константа, а не запись в `ROUTE_CHROME` (ключи карты сравниваются с `pathname` напрямую, `/person/123` не совпадёт с литералом `/person/:id`); почему `active: 'search'` (у detail-страницы персоны нет своего пункта `BottomNav`, ближайший по смыслу — каталог/поиск, так же как у `/movie/:id`); почему **нет** `rightAction` (кнопка Share у `MOVIE_CHROME` воспроизводила поведение удалённого `MovieMobile.tsx`, у персоны такой истории нет — решение подтверждено пользователем при планировании)
+- [x] добавить `const isPersonRoute = useMatch('/person/:id') != null` и включить его в цепочку выбора `config` (порядок: movie → person → search → `ROUTE_CHROME[pathname]`)
+- [x] обновить таблицу соответствия `Header.activeNav` ↔ `BottomNav.active` в докблоке `ROUTE_CHROME` строкой `person detail` (после строки `movie detail`, до `search`/`profile`) и перечень подключённых роутов в том же докблоке
+- [x] написать тест в `AppLayout.test.tsx`: на `/person/123` в мобильном вьюпорте рендерится `MobileHeader` с кнопкой «назад» и `BottomNav` с активным пунктом `search`
+- [x] написать тест в `AppLayout.test.tsx`: на `/person/123` в десктопном вьюпорте рендерится `Header` без подсвеченного nav-pill (`activeNav` не задан) и `variant='default'`
+- [x] написать тест: `trackPageview()` вызывается при переходе на `/person/:id`
+- [x] запустить `make test` — должны пройти до перехода к задаче 11
 
 ### Задача 11: Карточки актёров в `CastTab` становятся ссылками на `/person/:id`
 

@@ -29,14 +29,15 @@ const setViewportWidth = (width: number) => {
 
 // Повторяет структуру src/app/router.tsx: AppLayout — layout-route с <Outlet/>, дочерние роуты —
 // уже слитые страницы (Task 3-5 Favorites/Popular/Recommendations, Task 8 Home, Task 9 Movie,
-// Task 10 Search; здесь — плейсхолдеры вместо реальных компонентов, проверяем именно композицию
-// chrome + Outlet, а не их бизнес-логику, которая уже покрыта Home.test.tsx/Favorites.test.tsx/
-// Popular.test.tsx/Recommendations.test.tsx/Movie.test.tsx/Search.test.tsx). `/search` — тоже
-// плейсхолдер `<div>`, не реальный `Search`: `path` может включать query (`/search?type=series`),
-// createMemoryRouter матчит по pathname, query долетает до `AppLayout`'s `useSearchParams()` как
-// есть. Data router (createMemoryRouter + RouterProvider), не декларативный <MemoryRouter>, —
-// AppLayout рендерит <ScrollRestoration/>, которая внутри вызывает useMatches() и требует data
-// router, иначе падает с "useMatches must be used within a data router".
+// Task 10 Search и Person; здесь — плейсхолдеры вместо реальных компонентов, проверяем именно
+// композицию chrome + Outlet, а не их бизнес-логику, которая уже покрыта Home.test.tsx/
+// Favorites.test.tsx/Popular.test.tsx/Recommendations.test.tsx/Movie.test.tsx/Search.test.tsx/
+// PersonPage.test.tsx). `/search` — тоже плейсхолдер `<div>`, не реальный `Search`: `path` может
+// включать query (`/search?type=series`), createMemoryRouter матчит по pathname, query долетает
+// до `AppLayout`'s `useSearchParams()` как есть. Data router (createMemoryRouter + RouterProvider),
+// не декларативный <MemoryRouter>, — AppLayout рендерит <ScrollRestoration/>, которая внутри
+// вызывает useMatches() и требует data router, иначе падает с "useMatches must be used within a
+// data router".
 const renderAt = (path: string) =>
   render(
     <RouterProvider
@@ -66,6 +67,10 @@ const renderAt = (path: string) =>
               {
                 path: '/profile',
                 element: <div>Profile page content</div>,
+              },
+              {
+                path: '/person/:id',
+                element: <div>Person page content</div>,
               },
             ],
           },
@@ -184,6 +189,25 @@ describe('AppLayout — десктоп рендерит Header, не MobileHeade
         .some(btn => btn.className.match(/navPillActive/)),
     ).toBe(false)
   })
+
+  // /person/:id (Task 10) — PERSON_CHROME не задаёт activeNav (та же логика, что MOVIE_CHROME),
+  // поэтому ни один nav-pill не подсвечен. `variant='default'` (не 'search') доказывается тем же
+  // маркером, что и в isSearchRoute-тестах ниже: инлайн-поиск (плейсхолдер "Search movies, series,
+  // anime…") не рендерится — обычный `<Header/>` с логотипом и nav-pill'ами.
+  it('/person/1: Header рендерится без подсвеченного nav-pill, variant="default" (не "search")', () => {
+    renderAt('/person/1')
+
+    const banner = screen.getByRole('banner')
+    expect(screen.getByText('Person page content')).toBeInTheDocument()
+    expect(
+      within(banner)
+        .getAllByRole('button')
+        .some(btn => btn.className.match(/navPillActive/)),
+    ).toBe(false)
+    expect(
+      within(banner).queryByPlaceholderText('Search movies, series, anime…'),
+    ).not.toBeInTheDocument()
+  })
 })
 
 describe('AppLayout — мобильный рендерит MobileHeader+BottomNav, не Header', () => {
@@ -275,6 +299,26 @@ describe('AppLayout — мобильный рендерит MobileHeader+BottomN
       /navItemActive/,
     )
   })
+
+  // /person/:id (Task 10) — PERSON_CHROME: onBack вместо логотипа, showSearch=false (нет
+  // search-триггера), без rightAction (в отличие от MOVIE_CHROME — см. докблок PERSON_CHROME в
+  // AppLayout.tsx), BottomNav — active='search' (у detail-страницы персоны нет своего пункта).
+  it('/person/1: MobileHeader получает onBack/showSearch=false, без rightAction, BottomNav — active="search"', () => {
+    setViewportWidth(MOBILE_WIDTH)
+    renderAt('/person/1')
+
+    const banner = screen.getByRole('banner')
+    expect(within(banner).queryByText('Search…')).not.toBeInTheDocument()
+    // onBack рендерит кнопку "назад" вместо логотипа — логотип не в дереве.
+    expect(within(banner).queryByText('kino')).not.toBeInTheDocument()
+    // Нет rightAction — в отличие от /movie/:id, здесь нет кнопки "Share".
+    expect(
+      within(banner).queryByRole('button', { name: 'Share' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Catalog/ }).className).toMatch(
+      /navItemActive/,
+    )
+  })
 })
 
 // /search (Task 10) — единственный роут, где Header's activeNav не выводится из pathname (один
@@ -341,6 +385,10 @@ describe('AppLayout — page view tracking: смена pathname трекаетс
               path: '/favorites',
               element: <div>Favorites page content</div>,
             },
+            {
+              path: '/person/:id',
+              element: <div>Person page content</div>,
+            },
           ],
         },
       ],
@@ -365,5 +413,13 @@ describe('AppLayout — page view tracking: смена pathname трекаетс
     // прохождения теста, если navigate ещё не долетел до commit к моменту проверки.
     await waitFor(() => expect(router.state.location.search).toBe('?x=1'))
     expect(trackPageview).toHaveBeenCalledTimes(2)
+
+    // /person/:id (Task 10) — динамический сегмент тоже меняет pathname, trackPageview должен
+    // вызваться ещё раз.
+    await act(async () => {
+      await router.navigate('/person/1')
+    })
+    await waitFor(() => expect(trackPageview).toHaveBeenCalledTimes(3))
+    expect(screen.getByText('Person page content')).toBeInTheDocument()
   })
 })
