@@ -1,10 +1,18 @@
 import { trackPageview, useViewport } from '@shared/lib'
-import { IconButton, ShareIcon, Spinner } from '@shared/ui'
+import {
+  ErrorBoundary,
+  ErrorState,
+  IconButton,
+  ShareIcon,
+  Spinner,
+} from '@shared/ui'
+import type { ErrorFallbackParams } from '@shared/ui'
 import { Header } from '@widgets/header'
 import { BottomNav, MobileHeader } from '@widgets/mobile-chrome'
 import type { ReactNode } from 'react'
 import { Suspense, useEffect } from 'react'
 import {
+  Link,
   Outlet,
   ScrollRestoration,
   useLocation,
@@ -12,6 +20,10 @@ import {
   useNavigate,
   useSearchParams,
 } from 'react-router'
+
+import { captureRouteError } from '../sentry'
+
+import s from './AppLayout.module.css'
 
 type BottomNavKey =
   | 'home'
@@ -183,6 +195,25 @@ const SEARCH_CHROME: RouteChromeConfig = {
 }
 
 /**
+ * Фолбэк per-route `ErrorBoundary` (роадмап 2.6, docs/plans/20260916-per-route-error-boundaries.md)
+ * — тот же `ErrorState`, что у `AsyncBoundary`'s дефолтного фолбэка, плюс ссылка на главную через
+ * `secondaryAction`-слот. `Link` передаётся снаружи, а не живёт внутри `ErrorState`: тот
+ * рендерится и вне `<RouterProvider>` (`GlobalErrorBoundary`), где `Link` упал бы.
+ */
+const routeErrorFallback = ({ error, reset }: ErrorFallbackParams) => (
+  <ErrorState
+    title='Something went wrong'
+    description={error?.message || 'Please try again later'}
+    onRetry={reset}
+    secondaryAction={
+      <Link className={s.homeLink} to='/'>
+        На главную
+      </Link>
+    }
+  />
+)
+
+/**
  * Единая точка выбора навигационного chrome (`Header` vs `MobileHeader`+`BottomNav`) — заменяет
  * временное `useViewport`-ветвление, повторявшееся в каждой из `Favorites`/`Popular`/
  * `Recommendations` (Task 3-5 плана). Выбран вариант A (layout-route с `<Outlet/>`), а не
@@ -262,10 +293,22 @@ export const AppLayout = () => {
       {/* Suspense-боундари здесь — про загрузку JS-чанка страницы (route-based code
       splitting, роадмап 2.5.3), не про данные: каждая страница уже оборачивает свою
       async-секцию в собственный `<AsyncBoundary>` (см. AGENTS.md, "Loading / Empty / Error
-      везде"). Единая точка на всё дерево роутов — как и сам `<Outlet/>`. */}
-      <Suspense fallback={<Spinner />}>
-        <Outlet />
-      </Suspense>
+      везде"). Единая точка на всё дерево роутов — как и сам `<Outlet/>`.
+      Per-route ErrorBoundary (роадмап 2.6) — снаружи Suspense (тот же порядок, что в
+      AsyncBoundary), чтобы ловить и сбой загрузки чанка, и runtime-ошибку страницы, не теряя
+      chrome вокруг. Перехватывает раньше GlobalErrorBoundary — поэтому сам репортит в Sentry
+      через onError. `key={pathname}` сбрасывает границу при переходе на другой роут; принятое
+      следствие — ремаунт Suspense+страницы и на смене параметра (`/movie/1 → /movie/2`), без
+      удержания старого контента во время загрузки нового. */}
+      <ErrorBoundary
+        key={pathname}
+        fallback={routeErrorFallback}
+        onError={captureRouteError}
+      >
+        <Suspense fallback={<Spinner />}>
+          <Outlet />
+        </Suspense>
+      </ErrorBoundary>
 
       {isMobile && config && <BottomNav active={config.active} />}
 

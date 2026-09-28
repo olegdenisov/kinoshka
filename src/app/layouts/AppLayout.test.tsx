@@ -1,5 +1,14 @@
 import type * as SharedLib from '@shared/lib'
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { AsyncBoundary } from '@shared/ui'
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
+import { useEffect } from 'react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 
 import { AppLayout } from './AppLayout'
@@ -16,6 +25,12 @@ vi.mock('@shared/lib', async importOriginal => {
 })
 
 const { trackPageview } = await import('@shared/lib')
+
+// Per-route ErrorBoundary (роадмап 2.6) репортит через captureRouteError — мокаем целиком, чтобы
+// не тянуть реальный @sentry/react и проверять сам факт вызова (тот же приём, что с trackPageview).
+vi.mock('../sentry', () => ({ captureRouteError: vi.fn() }))
+
+const { captureRouteError } = await import('../sentry')
 
 // useViewport() читает window.innerWidth только один раз при монтировании (см.
 // src/shared/lib/viewport/useViewport.ts) — задаём ширину до рендера, resize-событие
@@ -82,6 +97,7 @@ const renderAt = (path: string) =>
 
 beforeEach(() => {
   vi.mocked(trackPageview).mockClear()
+  vi.mocked(captureRouteError).mockClear()
   setViewportWidth(DESKTOP_WIDTH)
 })
 
@@ -420,6 +436,157 @@ describe('AppLayout — page view tracking: смена pathname трекаетс
       await router.navigate('/person/1')
     })
     await waitFor(() => expect(trackPageview).toHaveBeenCalledTimes(3))
+    expect(screen.getByText('Person page content')).toBeInTheDocument()
+  })
+})
+
+// Per-route ErrorBoundary (роадмап 2.6, docs/plans/20260916-per-route-error-boundaries.md).
+// module-level флаг (не self-flipping внутри рендера) — React после ошибки в рендере синхронно
+// повторяет рендер ещё раз ДО того, как считать её настоящей ошибкой (см. ErrorBoundary.test.tsx).
+let shouldThrow = true
+const Bomb = () => {
+  if (shouldThrow) throw new Error('boom')
+  return <div>Recovered page content</div>
+}
+
+// Счётчик маунтов для проверки ремаунта на key={pathname} внутри одного динамического роута.
+let personMounts = 0
+const PersonPlaceholder = () => {
+  useEffect(() => {
+    personMounts += 1
+  }, [])
+  return <div>Person page content</div>
+}
+
+// Роутер монтируется один раз — навигация через router.navigate (как в tracking-describe выше).
+// Бомба стоит на /popular (а не на отдельном /broken), чтобы у роута был ROUTE_CHROME-конфиг и на
+// мобильном рендерился BottomNav — иначе проверка «chrome цел» на мобильном была бы пустой.
+const createErrorRouter = (initialPath: string) =>
+  createMemoryRouter(
+    [
+      {
+        element: <AppLayout />,
+        children: [
+          { path: '/', element: <div>Home page content</div> },
+          { path: '/popular', element: <Bomb /> },
+          {
+            path: '/favorites',
+            element: (
+              <div>
+                <div>Favorites page shell</div>
+                <AsyncBoundary>
+                  <Bomb />
+                </AsyncBoundary>
+              </div>
+            ),
+          },
+          { path: '/person/:id', element: <PersonPlaceholder /> },
+        ],
+      },
+    ],
+    { initialEntries: [initialPath] },
+  )
+
+describe('AppLayout — per-route ErrorBoundary', () => {
+  afterEach(() => {
+    shouldThrow = true
+    personMounts = 0
+  })
+
+  it('десктоп: падение страницы — Header остаётся, вместо контента ErrorState с текстом ошибки и ссылкой на главную', () => {
+    render(<RouterProvider router={createErrorRouter('/popular')} />)
+
+    expect(screen.getByRole('banner')).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('banner')).getByRole('button', {
+        name: 'Popular',
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+    expect(screen.getByText('boom')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'На главную' })).toHaveAttribute(
+      'href',
+      '/',
+    )
+  })
+
+  it('мобильный: падение страницы — MobileHeader и BottomNav остаются в дереве', () => {
+    setViewportWidth(MOBILE_WIDTH)
+    render(<RouterProvider router={createErrorRouter('/popular')} />)
+
+    expect(
+      within(screen.getByRole('banner')).getByText('Popular'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Lists/ })).toBeInTheDocument()
+    expect(screen.getByText('boom')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'На главную' })).toBeInTheDocument()
+  })
+
+  it('«Попробовать снова» восстанавливает страницу, если причина устранена — chrome вокруг сохраняется', () => {
+    render(<RouterProvider router={createErrorRouter('/popular')} />)
+
+    expect(screen.getByText('boom')).toBeInTheDocument()
+
+    shouldThrow = false
+    fireEvent.click(screen.getByText('Попробовать снова'))
+
+    expect(screen.getByText('Recovered page content')).toBeInTheDocument()
+    expect(screen.queryByText('boom')).not.toBeInTheDocument()
+    expect(screen.getByRole('banner')).toBeInTheDocument()
+  })
+
+  it('падение страницы репортится через captureRouteError(error, errorInfo)', () => {
+    render(<RouterProvider router={createErrorRouter('/popular')} />)
+
+    expect(captureRouteError).toHaveBeenCalledTimes(1)
+    const [error, errorInfo] = vi.mocked(captureRouteError).mock.calls[0]
+    expect(error.message).toBe('boom')
+    expect(errorInfo).toHaveProperty('componentStack')
+  })
+
+  // Страничный AsyncBoundary ближе к ошибке — перехватывает её сам; per-route граница не
+  // срабатывает, и в Sentry такая ошибка не уходит (принятый gap: AsyncBoundary не прокидывает
+  // onError).
+  it('ошибку внутри страничного AsyncBoundary ловит он, а не per-route граница — captureRouteError не вызван', () => {
+    render(<RouterProvider router={createErrorRouter('/favorites')} />)
+
+    expect(screen.getByText('Favorites page shell')).toBeInTheDocument()
+    expect(screen.getByText('boom')).toBeInTheDocument()
+    // Фолбэк AsyncBoundary — без secondaryAction, ссылки на главную нет.
+    expect(
+      screen.queryByRole('link', { name: 'На главную' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('banner')).toBeInTheDocument()
+    expect(captureRouteError).not.toHaveBeenCalled()
+  })
+
+  it('навигация с упавшего роута на другой сбрасывает границу сама (key={pathname}), без retry', async () => {
+    const router = createErrorRouter('/popular')
+    render(<RouterProvider router={router} />)
+
+    expect(screen.getByText('boom')).toBeInTheDocument()
+
+    await act(async () => {
+      await router.navigate('/')
+    })
+
+    expect(await screen.findByText('Home page content')).toBeInTheDocument()
+    expect(screen.queryByText('boom')).not.toBeInTheDocument()
+  })
+
+  // Принятое следствие key={pathname} (см. Overview плана): смена параметра динамического роута
+  // меняет pathname — граница и страница под ней ремаунтятся, а не переиспользуются.
+  it('/person/1 → /person/2: страница ремаунтится (зафиксированное следствие key={pathname})', async () => {
+    const router = createErrorRouter('/person/1')
+    render(<RouterProvider router={router} />)
+
+    await waitFor(() => expect(personMounts).toBe(1))
+
+    await act(async () => {
+      await router.navigate('/person/2')
+    })
+
+    await waitFor(() => expect(personMounts).toBe(2))
     expect(screen.getByText('Person page content')).toBeInTheDocument()
   })
 })
