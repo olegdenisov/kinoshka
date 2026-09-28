@@ -1,0 +1,14 @@
+/* Вторичное действие в фолбэке per-route ErrorBoundary — нейтральные токены (как у
+.retryButton в ErrorState.module.css, но без акцентного фона): главное действие там — retry. */
+.homeLink {
+  padding: 8px 20px;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+}
+
+.homeLink:hover {
+  background: var(--bg-hover);
+}
