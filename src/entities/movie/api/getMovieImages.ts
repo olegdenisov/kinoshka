@@ -1,6 +1,5 @@
 import { apiClient } from '@shared/api'
-
-import { createCachedFetcher } from './createCachedFetcher'
+import { createCachedFetcher } from '@shared/lib'
 
 export type MovieImage = {
   url: string

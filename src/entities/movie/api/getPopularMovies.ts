@@ -1,7 +1,7 @@
 import { apiClient, ApiError } from '@shared/api'
+import { createCachedFetcher } from '@shared/lib'
 
 import type { PopularMovie } from '../model/types'
-import { createCachedFetcher } from './createCachedFetcher'
 import { mapDocToMovie } from './mapDocToMovie'
 
 type RequestParams = {

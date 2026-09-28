@@ -1,7 +1,7 @@
 import { ApiError } from '@shared/api'
+import { createCachedFetcher } from '@shared/lib'
 
 import type { Movie } from '../model/types'
-import { createCachedFetcher } from './createCachedFetcher'
 import { getMovieDetail } from './getMovieDetail'
 
 const isNotFound = (reason: unknown) =>

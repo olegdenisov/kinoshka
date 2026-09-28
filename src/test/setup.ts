@@ -1,8 +1,6 @@
 import '@testing-library/jest-dom/vitest'
-import {
-  resetAllCachedFetchers,
-  resetGenreDictionaryState,
-} from '@entities/movie'
+import { resetGenreDictionaryState } from '@entities/movie'
+import { resetAllCachedFetchers } from '@shared/lib'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'

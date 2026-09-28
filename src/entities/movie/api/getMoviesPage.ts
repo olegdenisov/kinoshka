@@ -2,9 +2,9 @@ import {
   apiClient,
   type MovieControllerFindManyByQueryV15Data,
 } from '@shared/api'
+import { createCachedFetcher } from '@shared/lib'
 
 import type { Movie } from '../model/types'
-import { createCachedFetcher } from './createCachedFetcher'
 import { mapDocToMovie } from './mapDocToMovie'
 import { PER_PAGE, MAX_PAGES } from './paginationConfig'
 
