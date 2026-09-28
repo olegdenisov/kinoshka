@@ -9,25 +9,29 @@ Discovery (см. ниже) показал, что буквальная реал�
 **Что входит в план:**
 
 1. `content-visibility: auto` на секциях rails главной страницы — совпадает по духу с «виртуализацией» (браузер пропускает layout/paint для offscreen-контента), не требует сторонней библиотеки и не конфликтует с существующим hover-arrow `scrollBy`.
-2. `loading="lazy"`/`decoding="async"` на всех оставшихся `<img>` без этих атрибутов (аватары каста, скриншоты в Media-табе; постеры уже частично готовы).
+2. `loading="lazy"`/`decoding="async"` на `<img>` ниже первого экрана без этих атрибутов (аватары каста, скриншоты в Media-табе; постеры уже частично готовы).
 3. `useInView()` — общий хук на `IntersectionObserver` (`@shared/lib`) + lazy-mount `RelatedMovies` (всегда смонтированная секция «Similar titles» под табами `/movie/:id`).
-4. Замер Lighthouse Performance (`/` и `/movie/:id`) до и после — baseline в первой задаче, повторный замер в задаче верификации.
+4. Замер Lighthouse Performance (`/` и `/movie/666`) до и после — baseline в первой задаче, повторный замер в задаче верификации.
 
 **Что осознанно не входит** (и почему — см. Technical Details):
 
 - `@tanstack/react-virtual`/`react-window` для rails главной — demo-тариф API (`limit ≤ 10`, см. AGENTS.md/roadmap 1.1) ограничивает каждый rail максимум 10 карточками; виртуализация списка из ≤10 элементов не даёт измеримого выигрыша и конфликтует по сложности с текущим hover-arrow `scrollBy(480px)`. Пользователь подтвердил это решение при планировании.
 - Виртуализация грида `/search` — сам roadmap обуславливает её переходом на infinite scroll; `/search` остаётся на нумерованной пагинации (`MAX_PAGE = 10`, `src/pages/search/model/usePageSync.ts`), условие не выполняется.
+- Фото персоны в `PersonHero` (`src/pages/person/ui/PersonHero/PersonHero.tsx`, появился после составления исходной версии плана) — это above-the-fold hero-изображение, вероятный LCP-элемент `/person/:id`; `loading='lazy'` на нём отложил бы загрузку LCP-картинки и ухудшил бы метрику. Не трогаем.
 
 ## Context (from discovery)
 
-- **Rails главной** (`src/widgets/movie-rail/ui/MovieRail/MovieRail.tsx` + `.module.css`) — горизонтальный scroll-контейнер, `ArrowBtn` скроллит на фиксированные 480px. `Home.tsx` монтирует 4 rails (`PopularMoviesRail`, `TrandingSeriesRail`, `TopAnimeRails`, `PersonalRails`). Только `usePopularMovies.ts` передаёт `limit: 10` явно (`POPULAR_PARAMS`); `useNewMovies.ts`/`useTopRatedMovies.ts` (3 из 4 rails, через общий `getMovies.ts`) **не передают `limit` вообще** — `getMovies.ts` не задаёт его по умолчанию. Потолок в ≤10 карточек на этих трёх rails — не параметр запроса, а внешний факт demo-тарифа API (roadmap 1.1: «limit ≤ 10»), а не гарантия, читаемая из кода. Если тариф сменится или в `getMovies.ts` добавят явный `limit`, это обоснование виртуализации устареет молча — см. заметку про внешний факт в Task 5.
-- **`Poster.tsx`** (`src/entities/movie/ui/Poster/`) уже рендерит `<img loading='lazy' ... />`, но без `decoding='async'`. Тест `Poster.test.tsx` проверяет только `loading=lazy`.
-- **`CastTab.tsx`** (`src/pages/movie/ui/tabs/CastTab/`) рендерит `<img className={s.avatar} src={c.photo} ...>` без `loading`/`decoding` вообще, без теста (`CastTab.test.tsx` не существует).
-- **`MediaTab.tsx`** (`src/pages/movie/ui/tabs/MediaTab/`) рендерит грид скриншотов `<img src={image.previewUrl ?? image.url} ...>` без `loading`/`decoding`, без теста.
-- **`Movie.tsx`** (`src/pages/movie/ui/Movie/`) рендерит табы условно (`{tab === 'X' && <XTab/>}` — уже не в DOM, пока не выбраны), но `<RelatedMovies movies={related} movieTitle={movie.title} />` смонтирован **безусловно**, ниже табов. `movie.similarMovies` (до 6 штук) уже доступен синхронно из данных детальной страницы — отдельного запроса на "похожие" нет.
-- **`@shared/lib`** (`src/shared/lib/index.ts`) — баррель с `useViewport`, `createStorageSlot`/`useStorageSlot`, `createSessionCache`, `useDebouncedValue`, `lazyNamed`, analytics-хелперы. Паттерн для нового хука: своя поддиректория (`viewport/`, `debounce/`) + реэкспорт из барреля.
-- **`src/test/setup.ts`** — глобальные стабы для jsdom (`window.matchMedia`, MSW-хендлер для genre dictionary). `IntersectionObserver` **не застаблен нигде** — jsdom его не реализует, а `RelatedMovies` после этой задачи станет первым потребителем.
-- **`plans/roadmap.md`** уже документирует похожие «буквальная формулировка vs факт» отклонения прямо в тексте пункта (см. 1.1, 1.4, 2.3) — этот план продолжает тот же стиль.
+- **Rails главной** (`src/widgets/movie-rail/ui/MovieRail/MovieRail.tsx` + `.module.css`) — горизонтальный scroll-контейнер, `ArrowBtn` скроллит на фиксированные 480px. `Home.tsx` монтирует 4 rails (`PopularMoviesRail`, `TrandingSeriesRail`, `TopAnimeRails`, `PersonalRails`), каждый в своём `AsyncBoundary` с `fallback={<MovieRailSkeleton />}`, под ними — `Footer`. Только `usePopularMovies.ts` передаёт `limit: 10` явно (`POPULAR_PARAMS`); `useNewMovies.ts`/`useTopRatedMovies.ts` (3 из 4 rails, через общий `getMovies.ts`, теперь обёрнутый в `createCachedFetcher`) **не передают `limit` вообще** — `getMovies.ts` не задаёт его по умолчанию. Потолок в ≤10 карточек на этих трёх rails — не параметр запроса, а внешний факт demo-тарифа API (roadmap 1.1: «limit ≤ 10»), а не гарантия, читаемая из кода. Если тариф сменится или в `getMovies.ts` добавят явный `limit`, это обоснование виртуализации устареет молча — см. заметку про внешний факт в Task 5.
+- **`MovieRail.module.css`** — mobile-first: база `.section { margin-bottom: 40px }`, `.scroll { grid-auto-columns: 140px }`; оверрайд `@media (min-width: 720px)` — `margin-bottom: 64px`, `grid-auto-columns: 200px`. **`MovieRailSkeleton.module.css`** — без брейкпоинтов: `.section { margin-bottom: 64px }`, `.scroll { height: 300px; overflow: hidden }`, `.poster { 200×300 }`.
+- **`Poster.tsx`** (`src/entities/movie/ui/Poster/`) уже рендерит `<img src={movie.poster} alt='' loading='lazy' className={s.img} />`, но без `decoding='async'`. Тест `Poster.test.tsx` проверяет только `loading=lazy`.
+- **`CastTab.tsx`** (`src/pages/movie/ui/tabs/CastTab/`) рендерит `<img className={s.avatar} src={c.photo} alt='' />` (декоративное фото: доступное имя уже у ссылки на `/person/:id` через `.actorName`) без `loading`/`decoding`. **`CastTab.test.tsx` уже существует** (4 кейса про ссылки на персону, fallback-градиент без `photo`, пустое имя, дубли персоны) — его расширяем, а не создаём.
+- **`MediaTab.tsx`** (`src/pages/movie/ui/tabs/MediaTab/`) рендерит грид скриншотов `<img key={image.url} className={s.screenshot} src={image.previewUrl ?? image.url} alt='' />` без `loading`/`decoding`, теста нет.
+- **`Movie.tsx`** (`src/pages/movie/ui/Movie/`) рендерит табы условно (`{tab === 'X' && <XTab/>}` — уже не в DOM, пока не выбраны), но `<RelatedMovies movies={related} movieTitle={movie.title} />` смонтирован **безусловно**, ниже табов, и это последний элемент страницы (`AppLayout` рендерит `<Outlet/>` без `Footer`; `Footer` рендерит только `Home`). `movie.similarMovies` (до 6 штук) уже доступен синхронно из данных детальной страницы — отдельного запроса на "похожие" нет.
+- **`@shared/lib`** (`src/shared/lib/index.ts`) — баррель с `useViewport`, `createStorageSlot`/`useStorageSlot`, `createSessionCache`, `createCachedFetcher`, `useDebouncedValue`, `lazyNamed`, analytics-хелперы, `PROFILE_ARIA_LABEL_PREFIX`. Паттерн для нового хука: своя поддиректория (`viewport/`, `debounce/`) + реэкспорт из барреля.
+- **`src/test/setup.ts`** — глобальные стабы для jsdom (`window.matchMedia`, MSW-хендлер для genre dictionary). `IntersectionObserver` **не застаблен нигде** (`grep -rn IntersectionObserver src` — пусто) — jsdom его не реализует, а `RelatedMovies` после этой задачи станет первым потребителем.
+- **Lighthouse CI уже реализован** (roadmap 2.5.6, `.claude/rules/lighthouse.md`): `lighthouserc.cjs` (`preset: 'desktop'`, `numberOfRuns: 1`), `make lighthouse` запускает `pnpm dlx @lhci/cli@0.15.1` против `vite preview --port 4173 --strictPort` по URL `/`, `/search`, `/movie/666`, `/profile`; `/movie/666` — уже live-проверенный id; `.lighthouseci/` в `.gitignore`. Требует **системный Chrome** (`chrome-launcher`, иначе `NO_USABLE_CHROME`). Замер этого плана переиспользует тот же пиненный `@lhci/cli` и тот же конфиг, но с 3 прогонами и только двумя URL (см. Progress Tracking) — не `make lighthouse` как есть (1 прогон, 4 URL).
+- **Документация по областям** теперь живёт в `.claude/rules/*.md` (таблица в `AGENTS.md`), а не в самом `AGENTS.md` — таблицы «Key public APIs» больше нет. Правила для нового хука/CSS-решения идут в rule-файл (Task 5).
+- **`plans/roadmap.md`** уже документирует похожие «буквальная формулировка vs факт» отклонения прямо в тексте пункта (см. 1.1, 1.4, 2.5.6) — этот план продолжает тот же стиль.
 
 ## Development Approach
 
@@ -35,13 +39,14 @@ Discovery (см. ниже) показал, что буквальная реал�
 - Каждая задача — атомарная, со своим `Files:`-блоком и тестами, тесты должны проходить до перехода к следующей задаче.
 - React Compiler уже мемоизирует — `useMemo`/`useCallback` не добавлять (AGENTS.md).
 - CSS-only правки (Task 1) не требуют нового юнит-теста — jsdom не считает layout/`content-visibility`; регрессия проверяется прогоном существующего `MovieRail.test.tsx`.
+- При запуске через `/planning:exec` брать модель и effort сабагента из строки `**Модель:**` под заголовком задачи (`haiku` — простые механические правки, `sonnet` — типовая реализация и замеры по готовой методологии, `opus` — насыщенная логика и финальная приёмка).
 
 ## Testing Strategy
 
 - **Unit-тесты:** обязательны для `useInView` (новый хук) и для всех изменённых компонентов с проверяемым поведением (`Poster`, `CastTab`, `MediaTab`, `RelatedMovies`).
 - **CSS-only изменения** (Task 1): без нового теста, но с явной проверкой, что существующий тест не сломался.
-- **E2E:** проект имеет Playwright (`e2e/`), но эта задача не меняет пользовательские сценарии (только атрибуты изображений и момент маунта одной секции) — новый E2E-сценарий не нужен; в задаче верификации — прогнать существующий `e2e/movie*.spec.ts`/smoke, если локально настроен `VITE_API_KEY` (не блокирующе, см. Post-Completion).
-- **Lighthouse:** ручной, локальный замер через `npx lighthouse` против прод-сборки, поднятой на фиксированном порту (`vite preview --port 4173 --strictPort`, тот же паттерн, что у `playwright.config.ts`) — методология (3 прогона на страницу/фазу, медиана, 5%-порог по score, «5% И абсолютный шумовой порог» по LCP/CLS/TBT, пин версии CLI) зафиксирована в Progress Tracking; не CI-интеграция (это отдельный roadmap-пункт 2.5.6, `@lhci/cli`, ещё не реализован); никакой новый devDependency не добавляется. **Квота:** ~36 API-запросов (24 на `/`, 12 на `/movie/:id`; см. точный расчёт в Progress Tracking) — около 18% суточного лимита 200 запросов, не совмещать с `make e2e` (~40-50 запросов) в один день без проверки остатка квоты.
+- **E2E:** Playwright (`e2e/`, правила — `.claude/rules/e2e.md`); эта задача не меняет пользовательские сценарии (только атрибуты изображений и момент маунта одной секции) — новый E2E-сценарий не нужен; в задаче верификации — прогнать существующие `e2e/home.spec.ts`/`e2e/movie-detail.spec.ts`, если локально настроен `VITE_API_KEY` (не блокирующе, см. Post-Completion).
+- **Lighthouse:** ручной локальный замер тем же пиненным `@lhci/cli@0.15.1` и `lighthouserc.cjs`, что у `make lighthouse`, но с `--collect.numberOfRuns=3` и двумя URL — методология (медиана из 3, 5%-порог по score, «5% И абсолютный шумовой порог» по LCP/CLS/TBT) зафиксирована в Progress Tracking. Никакой новый devDependency и никаких правок `lighthouserc.cjs`/`Makefile`. **Квота:** ~36 API-запросов (24 на `/`, 12 на `/movie/666`; расчёт в Progress Tracking) — около 18% суточного лимита 200 запросов, не совмещать с `make e2e` (~40-50 запросов) в один день без проверки остатка квоты.
 
 ## Progress Tracking
 
@@ -49,33 +54,44 @@ Discovery (см. ниже) показал, что буквальная реал�
 
 **Методология замера (одна и та же в Task 1 и Task 4, чтобы числа были сравнимы):**
 
-- Собрать прод-бандл и поднять preview **в фоне, на фиксированном порту** — тот же паттерн, что уже использует `playwright.config.ts`: `make build-only && pnpm exec vite preview --port 4173 --strictPort &` (отдельный терминал/background job), дождаться готовности сервера, только потом запускать Lighthouse; после серии прогонов — остановить preview-процесс явно.
-- Зафиксировать версию CLI один раз перед baseline: `npx lighthouse --version`, записать строку версии в Progress Tracking; в фазе "после" (Task 4) вызывать `npx lighthouse@<та же версия>` — иначе baseline и after могут быть посчитаны разными релизами Lighthouse (`npx lighthouse` без пина резолвит `latest` на момент вызова).
-- Для `/movie/:id` — выбрать один конкретный, заранее проверенный валидный id (`GET`-запросом убедиться, что фильм существует и не 404-ит) и использовать этот же id в baseline и after — не полагаться на «любой id».
-- `npx lighthouse@<pinned> http://localhost:4173/<path> --preset=desktop --only-categories=performance --output=json --output-path=<scratchpad>/lh-<page>-<before|after>-<n>.json` — **3 прогона подряд** на каждую страницу/фазу (не 5 — см. пересчёт квоты ниже), `--preset=desktop` фиксирует throttling явно.
-- Из 3 JSON-отчётов брать **медиану** Performance-score и отдельно медианы LCP/CLS/TBT, а также **min/max по каждой метрике** (разброс внутри одной серии нужен для интерпретации критерия ниже — если сам baseline "гуляет" в пределах 5%, порог неприменим).
-- Отчёты (`.json`) хранить в scratchpad-директории сессии, не коммитить в репозиторий; в PR/этот файл идут только итоговые числа.
-- **Критерий приёмки:** после (Task 4) — регрессия по метрике засчитывается, только если она одновременно (а) превышает 5% от baseline-медианы **и** (б) превышает абсолютный шумовой порог: CLS > 0.01, TBT > 20ms, LCP > 50ms (у этого SPA на `--preset=desktop` CLS/TBT обычно близки к нулю — чисто относительный 5%-порог на почти нулевых числах либо всегда «проваливается» от шума, либо всегда проходит от округления; для Performance-score, целочисленного 0-100, отдельный абсолютный порог не нужен, оставить только 5%). При регрессии, удовлетворяющей обоим условиям — определить, какой из трёх шагов (Task 1/2/3) виноват, и либо исправить, либо откатить именно его, не весь план. **Отсутствие изменений — ожидаемый и приемлемый исход**, не провал: изменения точечные (4 rail-секции + skeleton ≤10 карточек, 6 карточек `RelatedMovies` уже с `loading='lazy'`), а живой demo-API вносит собственную дисперсию TTFB, которую 3 прогона гасят не полностью; roadmap-чекбокс «Lighthouse измерен до/после» закрывается фактом измерения, а не обязательным ростом числа.
-- **Пересчёт нагрузки на API (без кэша — каждый Lighthouse-прогон это свежий Chrome и полная загрузка страницы; `createSessionCache` персистится в `sessionStorage` только под `import.meta.env.DEV`, в прод-preview не помогает):** `/` делает 4 API-вызова за загрузку (по одному на rail) → 3 прогона × 4 вызова × 2 фазы (baseline/after) = **24 вызова**; `/movie/:id` делает 2 параллельных вызова (`getMovieDetail`+`getMovieImages`) → 3 × 2 × 2 = **12 вызовов**. Итого **~36 запросов** к demo-API только на Lighthouse — около 18% суточной квоты в 200 запросов. Не запускать в тот же день, что и `make e2e` (~40-50 запросов) без явного расчёта оставшейся квоты. Если API ответит 403 (лимит исчерпан) посреди серии — остановиться, зафиксировать сколько прогонов реально собрано, не дожидаться полных 3, и явно пометить это в Progress Tracking, а не подставлять частичные данные как финальную медиану.
+- Предусловие: системный Chrome установлен (иначе `NO_USABLE_CHROME`, см. `.claude/rules/lighthouse.md`).
+- Команда (сервер поднимается и гасится самим `lhci`, версия CLI запинена так же, как в `Makefile`):
 
-**Lighthouse Performance (`/`, `--preset=desktop`, медиана из 3 прогонов):**
+  ```bash
+  make build-only
+  rm -rf .lighthouseci
+  pnpm dlx @lhci/cli@0.15.1 collect --config=./lighthouserc.cjs \
+    --numberOfRuns=3 \
+    --startServerCommand='pnpm exec vite preview --port 4173 --strictPort' \
+    --startServerReadyPattern='Local:' \
+    --url=http://localhost:4173 \
+    --url=http://localhost:4173/movie/666
+  ```
 
-- Lighthouse CLI версия (зафиксирована в Task 1, переиспользуется в Task 4): _TBD_
-- Baseline (до, Task 1): _TBD_ (score / LCP / CLS / TBT)
-- После (Task 4): _TBD_ (score / LCP / CLS / TBT)
+  `collect`, а не `autorun` — ассерты `lighthouserc.cjs` тут не нужны, нужны только сырые отчёты. `preset: 'desktop'` приходит из конфига. Если флаги без префикса `--collect.` не подхватятся этой версией CLI — использовать `--collect.numberOfRuns=3`/`--collect.url=…`, как в `Makefile`.
 
-**Lighthouse Performance (`/movie/:id`, `--preset=desktop`, медиана из 3 прогонов):**
+- Сырые отчёты (`.lighthouseci/lhr-*.json`) скопировать в scratchpad-директорию сессии с пометкой фазы (`before`/`after`) сразу после серии — следующий `rm -rf .lighthouseci` их сотрёт; в репозиторий не коммитить (`.lighthouseci/` в `.gitignore`), в PR/этот файл идут только итоговые числа.
+- `/movie/666` — тот же id, что в `lighthouserc`-URL-списке, живость уже проверена при внедрении Lighthouse CI; перед baseline один раз убедиться, что страница не отдаёт ErrorState (иначе Lighthouse молча аудирует страницу ошибки) — достаточно глянуть скриншот/`finalDisplayedUrl` + LCP-элемент в первом отчёте, отдельный `curl` не нужен.
+- Из 3 отчётов на страницу брать **медиану** Performance-score и отдельно медианы LCP/CLS/TBT, а также **min/max по каждой метрике** (разброс внутри одной серии нужен для интерпретации критерия ниже — если сам baseline "гуляет" в пределах 5%, порог неприменим).
+- **Критерий приёмки:** после (Task 4) — регрессия по метрике засчитывается, только если она одновременно (а) превышает 5% от baseline-медианы **и** (б) превышает абсолютный шумовой порог: CLS > 0.01, TBT > 20ms, LCP > 50ms (у этого SPA на `desktop`-пресете CLS/TBT обычно близки к нулю — чисто относительный 5%-порог на почти нулевых числах либо всегда «проваливается» от шума, либо всегда проходит от округления; для Performance-score, целочисленного 0-100, отдельный абсолютный порог не нужен, оставить только 5%). При регрессии, удовлетворяющей обоим условиям — определить, какой из трёх шагов (Task 1/2/3) виноват, и либо исправить, либо откатить именно его, не весь план. **Отсутствие изменений — ожидаемый и приемлемый исход**, не провал: изменения точечные (4 rail-секции + skeleton ≤10 карточек, 6 карточек `RelatedMovies` уже с `loading='lazy'`), а живой demo-API вносит собственную дисперсию TTFB, которую 3 прогона гасят не полностью; roadmap-чекбокс «Lighthouse измерен до/после» закрывается фактом измерения, а не обязательным ростом числа.
+- **Нагрузка на API (без кэша — каждый прогон это свежий Chrome и полная загрузка страницы; `createCachedFetcher`/`createSessionCache` живут в памяти вкладки, а `sessionStorage`-персист — только под `import.meta.env.DEV`, в прод-preview не помогает):** `/` делает 4 API-вызова за загрузку (по одному на rail; genre dictionary грузит только `GenreSelector` на `/search`) → 3 прогона × 4 вызова × 2 фазы = **24 вызова**; `/movie/666` делает 2 параллельных вызова (`getMovieDetail`+`getMovieImages`) → 3 × 2 × 2 = **12 вызовов**. Итого **~36 запросов** — около 18% суточной квоты. Не запускать в тот же день, что и `make e2e` (~40-50 запросов) или `make lighthouse`, без явного расчёта оставшейся квоты. Если API ответит 403 (лимит исчерпан) посреди серии — остановиться, зафиксировать сколько прогонов реально собрано и явно пометить это в Progress Tracking, а не подставлять частичные данные как финальную медиану.
 
-- Использованный movie id: _TBD_
-- Baseline (до, Task 1): _TBD_ (score / LCP / CLS / TBT)
-- После (Task 4): _TBD_ (score / LCP / CLS / TBT)
+**Lighthouse Performance (`/`, `desktop`, медиана из 3 прогонов):**
+
+- Baseline (до, Task 1): _TBD_ (score / LCP / CLS / TBT, min–max)
+- После (Task 4): _TBD_ (score / LCP / CLS / TBT, min–max)
+
+**Lighthouse Performance (`/movie/666`, `desktop`, медиана из 3 прогонов):**
+
+- Baseline (до, Task 1): _TBD_ (score / LCP / CLS / TBT, min–max)
+- После (Task 4): _TBD_ (score / LCP / CLS / TBT, min–max)
 
 ## Solution Overview
 
 - **Rails главной:** `content-visibility: auto` + `contain-intrinsic-size` на `.section` — в `MovieRail.module.css` (загруженное состояние) **и** в `MovieRailSkeleton.module.css` (состояние загрузки, которое реально присутствует в измеряемом Lighthouse-окне) — браузер пропускает рендер-работу для rails ниже первого экрана до скролла, без стороннего JS/библиотеки.
-- **Изображения:** дополнить недостающие `loading='lazy' decoding='async'` там, где их ещё нет (`CastTab`, `MediaTab`), и добавить `decoding='async'` туда, где уже есть `loading='lazy'` (`Poster`).
+- **Изображения:** дополнить недостающие `loading='lazy' decoding='async'` там, где их ещё нет (`CastTab`, `MediaTab`), и добавить `decoding='async'` туда, где уже есть `loading='lazy'` (`Poster`). `PersonHero` — вне скоупа (LCP-кандидат, см. Overview).
 - **`RelatedMovies`:** новый общий хук `useInView()` на `IntersectionObserver` оборачивает контейнер — секция не рендерит `Card`-сетку, пока не попадёт во viewport хотя бы частично; после первого попадания — остаётся смонтированной (once-триггер, без повторных unmount/remount на скролле туда-обратно). Выигрыш здесь — только React-рендер и размер DOM (6 `Card`-узлов + 6 подписок `useFavorites`), **не сетевая загрузка изображений**: постеры внутри `Card`→`Poster` уже рендерятся с `loading='lazy'` независимо от этой задачи, так что offscreen-постеры браузер и без lazy-mount не качает. Делается по прямому указанию roadmap 2.7 («IntersectionObserver для lazy-mount тяжёлых секций») и решению пользователя при планировании — не ради заметного изменения Lighthouse-цифр.
-- **Lighthouse:** ручной baseline/after замер, зафиксированный в этом файле и в PR — не автоматизация.
+- **Lighthouse:** ручной baseline/after замер, зафиксированный в этом файле и в PR — не автоматизация и не правка CI-конфига.
 
 ## Technical Details
 
@@ -88,11 +104,12 @@ Discovery (см. ниже) показал, что буквальная реал�
       demo-тариф API ограничивает rails ≤10 карточками (limit: 10), виртуализация списка
       такого размера не даёт измеримого выигрыша и конфликтует по сложности с hover-arrow
       `scrollBy`. Вместо этого — `content-visibility: auto` на rail-секциях. См.
-      docs/plans/20260916-performance-virtualization-lazy-loading.md.
+      docs/plans/completed/20260916-performance-virtualization-lazy-loading.md.
 - [ ] Виртуализация грида `/search` при infinite scroll — не применимо: `/search` остаётся
       на нумерованной пагинации (1.4, MAX_PAGE=10), infinite scroll не внедрялся.
 - [x] `<img loading="lazy" decoding="async" />` на постерах — постеры (`Poster.tsx`),
-      аватары каста (`CastTab.tsx`), скриншоты (`MediaTab.tsx`).
+      аватары каста (`CastTab.tsx`), скриншоты (`MediaTab.tsx`); hero-фото персоны
+      (`PersonHero.tsx`) осознанно без lazy — LCP-кандидат.
 - [x] Lighthouse Performance измерен до/после — см. Progress Tracking в плане.
 ```
 
@@ -121,48 +138,56 @@ Once-триггер: после первого `entry.isIntersecting === true` �
 
 ## What Goes Where
 
-- **Implementation Steps** — CSS-правка rails, атрибуты `<img>`, хук `useInView` + интеграция в `RelatedMovies`, тесты, обновление `AGENTS.md`/`roadmap.md`.
-- **Post-Completion** — ручной прогон Lighthouse (браузер/CLI), ручной прогон E2E-сьюта (требует `VITE_API_KEY` и живой квоты API).
+- **Implementation Steps** — CSS-правка rails, атрибуты `<img>`, хук `useInView` + интеграция в `RelatedMovies`, тесты, новый rule-файл `.claude/rules/performance.md` + строка в таблице `AGENTS.md`, обновление `roadmap.md`.
+- **Post-Completion** — ручной прогон E2E-сьюта (требует `VITE_API_KEY` и живой квоты API), если не уложился в квоту в Task 4.
 
 ## Implementation Steps
 
 ### Task 1: Baseline Lighthouse + `content-visibility: auto` для rails главной
+
+**Модель:** `sonnet` · effort `medium` — замер по готовой методологии + две CSS-правки, но с ручными DevTools-измерениями высот и визуальной проверкой через браузер (chrome-devtools MCP)
 
 **Files:**
 
 - Modify: `src/widgets/movie-rail/ui/MovieRail/MovieRail.module.css`
 - Modify: `src/widgets/movie-rail/ui/MovieRail/MovieRailSkeleton.module.css`
 
-- [ ] на текущем `main` (до изменений): `make build-only`, затем поднять preview в фоне на фиксированном порту (`pnpm exec vite preview --port 4173 --strictPort &`), проверить валидный movie id (`GET`-запросом), зафиксировать версию `npx lighthouse --version` — записать id и версию в Progress Tracking
-- [ ] прогнать Lighthouse 3 раза для `/` и 3 раза для `/movie/<зафиксированный id>` по методологии из Progress Tracking (`--preset=desktop`, пиненная версия CLI), записать медианы **и min/max-разброс** (score/LCP/CLS/TBT) в секцию Progress Tracking этого файла (baseline); остановить preview-процесс после замера
-- [ ] измерить в DevTools реальную высоту `.section` в `MovieRail.module.css` отдельно на мобильной раскладке (base) и на `@media (min-width: 720px)` — раскладки отличаются (типографика/отступы, см. комментарий в файле про mobile-first базу)
-- [ ] добавить `content-visibility: auto;` и `contain-intrinsic-size: auto <base-height>px;` в базовый `.section`, и переопределить `contain-intrinsic-size: auto <desktop-height>px;` внутри существующего `@media (min-width: 720px)` блока — двумя разными числами, не одним на оба брейкпоинта; WHY-комментарий: однозначное `<length>` в `contain-intrinsic-size: auto <length>` применяется к обеим осям (ширина и высота), но для блочного `<section>` ширина всё равно берётся из layout контейнера, а не из intrinsic-size, так что практического эффекта на ширину нет
-- [ ] **важно, отдельно от rails:** на холодной загрузке `/` все 4 rails на старте рендерят не `MovieRail`, а `MovieRailSkeleton` (`<AsyncBoundary fallback={<MovieRailSkeleton />}>`, свой CSS-модуль `MovieRailSkeleton.module.css`, `.section { margin-bottom: 64px }`, без `content-visibility`) — именно скелетоны занимают критический отрезок, который замеряет Lighthouse (LCP/TBT считаются до/около момента прихода данных), так что оптимизация `MovieRail.module.css` без изменений в `MovieRailSkeleton.module.css` не подействует в измеряемом окне. Измерить в DevTools реальную высоту `.section` в `MovieRailSkeleton.module.css` (она фиксирована — скелетон использует хардкод-пиксельные размеры `.scroll { height: 300px }`/`.poster { width: 200px; height: 300px }`, а не брейкпоинт-зависимую типографику, так что одного числа достаточно, брейкпоинт-развилки в этом модуле нет) и добавить туда `content-visibility: auto; contain-intrinsic-size: auto <measured-height>px;` тем же способом
-- [ ] визуально проверить (`make dev`, DevTools → Rendering → "Layout Shift Regions" или Performance-панель) на обоих брейкпоинтах — при скролле вниз по `/` нет заметного CLS/дёрганья на появлении rails 2–4 (ни в состоянии skeleton, ни после загрузки данных)
+- [ ] на текущем `main` (до изменений): проверить наличие системного Chrome, прогнать серию по методологии из Progress Tracking (`make build-only` + `pnpm dlx @lhci/cli@0.15.1 collect … --numberOfRuns=3`, URL `/` и `/movie/666`), убедиться по первому отчёту, что `/movie/666` не отрисовал ErrorState; скопировать отчёты в scratchpad как `before`
+- [ ] записать медианы **и min/max-разброс** (score/LCP/CLS/TBT) по обеим страницам в секцию Progress Tracking этого файла (baseline)
+- [ ] измерить в DevTools реальную высоту `.section` в `MovieRail.module.css` отдельно на мобильной раскладке (base) и на `@media (min-width: 720px)` — раскладки отличаются (`grid-auto-columns` 140px vs 200px → разная высота постеров, плюс типографика/отступы, см. комментарий в файле про mobile-first базу)
+- [ ] добавить `content-visibility: auto;` и `contain-intrinsic-size: auto <base-height>px;` в базовый `.section`, и переопределить `contain-intrinsic-size: auto <desktop-height>px;` внутри существующего `@media (min-width: 720px)` блока — двумя разными числами, не одним на оба брейкпоинта; WHY-комментарий (на русском): однозначное `<length>` в `contain-intrinsic-size: auto <length>` применяется к обеим осям (ширина и высота), но для блочного `<section>` ширина всё равно берётся из layout контейнера, а не из intrinsic-size, так что практического эффекта на ширину нет
+- [ ] **важно, отдельно от rails:** на холодной загрузке `/` все 4 rails на старте рендерят не `MovieRail`, а `MovieRailSkeleton` (`<AsyncBoundary fallback={<MovieRailSkeleton />}>` в `Home.tsx`, свой CSS-модуль `MovieRailSkeleton.module.css`, `.section { margin-bottom: 64px }`, без `content-visibility`) — именно скелетоны занимают критический отрезок, который замеряет Lighthouse (LCP/TBT считаются до/около момента прихода данных), так что оптимизация `MovieRail.module.css` без изменений в `MovieRailSkeleton.module.css` не подействует в измеряемом окне. Измерить в DevTools реальную высоту `.section` в `MovieRailSkeleton.module.css` (она фиксирована — скелетон использует хардкод-пиксельные размеры `.scroll { height: 300px }`/`.poster { width: 200px; height: 300px }` без брейкпоинтов, так что одного числа достаточно) и добавить туда `content-visibility: auto; contain-intrinsic-size: auto <measured-height>px;` тем же способом
+- [ ] визуально проверить (`make dev`, DevTools → Rendering → "Layout Shift Regions" или Performance-панель) на обоих брейкпоинтах — при скролле вниз по `/` нет заметного CLS/дёрганья на появлении rails 2–4 (ни в состоянии skeleton, ни после загрузки данных) и `Footer` под rails не прыгает
 - [ ] визуально проверить сохранение горизонтальной прокрутки: проскроллить любой rail стрелкой вправо (`ArrowBtn`), увести страницу вниз за пределы вьюпорта и вернуться — позиция `scrollLeft` внутри `.scroll`-контейнера сохранилась (`content-visibility: auto` пропускает рендер поддерева, это исторически проблемное место для вложенных скролл-контейнеров)
+- [ ] `make lint` — stylelint по изменённым `*.module.css` чистый
 - [ ] убедиться, что `MovieRail.test.tsx` проходит без изменений (CSS-only правка не меняет поведение/DOM-структуру, новый юнит-тест не нужен — jsdom не считает `content-visibility`/layout)
 - [ ] run tests — должны пройти (`make test`)
 
 ### Task 2: `loading='lazy' decoding='async'` на постерах, аватарах каста и скриншотах
+
+**Модель:** `haiku` · effort `medium` — механическое добавление атрибутов в три `<img>` и тесты по готовым образцам (`Poster.test.tsx`, существующий `CastTab.test.tsx`)
 
 **Files:**
 
 - Modify: `src/entities/movie/ui/Poster/Poster.tsx`
 - Modify: `src/entities/movie/ui/Poster/Poster.test.tsx`
 - Modify: `src/pages/movie/ui/tabs/CastTab/CastTab.tsx`
-- Create: `src/pages/movie/ui/tabs/CastTab/CastTab.test.tsx`
+- Modify: `src/pages/movie/ui/tabs/CastTab/CastTab.test.tsx`
 - Modify: `src/pages/movie/ui/tabs/MediaTab/MediaTab.tsx`
 - Create: `src/pages/movie/ui/tabs/MediaTab/MediaTab.test.tsx`
 
-- [ ] `Poster.tsx`: добавить `decoding='async'` к существующему `<img loading='lazy' .../>`
-- [ ] `CastTab.tsx`: добавить `loading='lazy' decoding='async'` к `<img className={s.avatar} src={c.photo} alt={c.name} />` (fallback-градиент без `photo` не трогать — там нет `<img>`)
+- [ ] `Poster.tsx`: добавить `decoding='async'` к существующему `<img ... loading='lazy' .../>`
+- [ ] `CastTab.tsx`: добавить `loading='lazy' decoding='async'` к `<img className={s.avatar} src={c.photo} alt='' />` (`alt=''` и WHY-комментарий над ним не трогать; fallback-градиент без `photo` не трогать — там нет `<img>`)
 - [ ] `MediaTab.tsx`: добавить `loading='lazy' decoding='async'` к `<img>` в `.screenshotsGrid`
-- [ ] обновить `Poster.test.tsx`: расширить существующий тест на `loading=lazy` проверкой `decoding=async` на том же элементе
-- [ ] написать `CastTab.test.tsx`: рендер с `photo` → `img` с `loading=lazy`/`decoding=async` и корректным `alt`; рендер без `photo` → `img` отсутствует, рендерится fallback-градиент (`div` с `style.background`)
-- [ ] написать `MediaTab.test.tsx`: непустые `images` → screenshot-`img`-элементы с `loading=lazy`/`decoding=async`; пустой `images` → секция "Screenshots" не рендерится; `trailerUrl` есть/нет → блок "Trailer" рендерится/не рендерится
+- [ ] `PersonHero.tsx` **не трогать** (LCP-кандидат, см. Overview)
+- [ ] обновить `Poster.test.tsx`: расширить существующий тест на `loading=lazy` проверкой `decoding=async` на том же элементе (обновить и название кейса)
+- [ ] дополнить существующий `CastTab.test.tsx` одним кейсом: персона с `photo` → `img` с `loading=lazy`/`decoding=async` (через `container.querySelector('img')` — `alt=''` делает картинку presentational, `getByRole('img')` её не найдёт); кейс без `photo` уже покрыт — не дублировать
+- [ ] написать `MediaTab.test.tsx`: непустые `images` → screenshot-`img`-элементы с `loading=lazy`/`decoding=async` (тоже через `querySelectorAll('img')`, `alt=''`); `previewUrl` есть → `src` берётся из него, нет → из `url`; пустой `images` → секция "Screenshots" не рендерится; `trailerUrl` есть/нет → блок "Trailer" рендерится/не рендерится
 - [ ] run tests — должны пройти (`make test`)
 
 ### Task 3: `useInView()` (`@shared/lib`) + lazy-mount `RelatedMovies`
+
+**Модель:** `opus` · effort `high` — самая насыщенная задача: once-триггер с exhaustive-deps-совместимыми зависимостями, инвариантность `RefObject<T>`, глобальный стаб в `setup.ts`, который не должен сломать существующие тесты `/movie/:id`, резервирование места без CLS
 
 **Files:**
 
@@ -178,41 +203,54 @@ Once-триггер: после первого `entry.isIntersecting === true` �
 - [ ] `src/test/setup.ts`: добавить глобальный стаб `window.IntersectionObserver` (дефолт: `observe()` синхронно вызывает колбэк с `[{ isIntersecting: true, target }]`), по аналогии с существующим `window.matchMedia`-стабом — комментарий объясняет, зачем (jsdom не реализует API, `RelatedMovies` — первый потребитель)
 - [ ] `useInView.ts`: реализовать хук в стиле `export const useInView = <T extends Element = HTMLElement>(options?: IntersectionObserverInit): { ref: RefObject<T | null>; inView: boolean } => ...` (arrow-const, как `useDebouncedValue`/`lazyNamed` — не `export function`, как устаревший `useViewport`; дефолт `= HTMLElement` у generic-параметра — см. Technical Details) — деструктурировать `options` на примитивы (`root`, `rootMargin = '200px'`, `threshold`) для exhaustive-deps-совместимого массива зависимостей эффекта (`.oxlintrc.json` требует `"exhaustive-deps": "error"` — объект `options` целиком в deps нельзя, пересоздаст observer на каждый рендер); в эффекте — ранний `if (inView) return`, иначе `observe(ref.current)`, при первом `isIntersecting: true` — `setInView(true)` + `observer.disconnect()`; cleanup — `disconnect()` при unmount, если ещё не сработал. Полное обоснование — в Technical Details.
 - [ ] `src/shared/lib/inView/index.ts`: `export { useInView } from './useInView'` (по образцу `viewport/`, `debounce/`, `lazyNamed/` — barrel-файл на директорию, не прямой импорт файла)
-- [ ] экспортировать `useInView` из `src/shared/lib/index.ts` (`export { useInView } from './inView'`) и добавить строку в таблицу «Key public APIs» в `AGENTS.md` (Task 5)
-- [ ] `RelatedMovies.tsx`: вызвать `useInView<HTMLDivElement>()` (явный параметр типа — дефолт `HTMLElement` не совместим с `ref` на `<div>`, см. Technical Details) рядом с существующим `useFavorites()`, **до** раннего `return null` на `movies.length === 0` (Rules of Hooks — как уже вызывается `useFavorites()`); повесить `ref` на уже существующий `<div className={s.section}>`; `header` (`.eyebrow`+`.heading`, чисто текстовый, дешёвый) рендерить всегда, без задержки; пока `!inView` — вместо реального `.grid` с `Card`-карточками рендерить **тот же контейнер `className={s.grid}`**, но заполненный `movies.length` (не хардкод — ровно столько, сколько реальных карточек будет) плейсхолдер-`div`ами (`s.placeholderCard`, `aria-hidden`) вместо `Card`
-- [ ] `RelatedMovies.module.css`: добавить `.placeholderCard { aspect-ratio: 2/3; border-radius: <как у постера/карточки>; background: var(--bg-elevated); }` — **не** задавать фиксированный `min-height` на `.section` или на плейсхолдер: десктопная раскладка (`grid-template-columns: repeat(6, 1fr)` внутри `.section { max-width: 1440px; padding: 24px 40px 80px }`) флюидная — высота карточки (`Poster` с `aspect-ratio: 2/3`) масштабируется с шириной колонки, которая на десктопе варьируется от ~103px (vw=800) до ~210px (vw≥1440), то есть единое хардкод-число `min-height` было бы верным только на той ширине, на которой измерили, и создавало бы ровно тот layout shift, который призвано устранить, на любой другой. Используя тот же `.grid` (`grid-auto-flow: column`/`grid-template-columns: repeat(6, 1fr)` — те же классы, что и у реального контента) с `aspect-ratio: 2/3` на плейсхолдер-ячейках вместо хардкод-высоты, резервирование остаётся корректным на любой ширине без раздельных чисел на брейкпоинт — мобильная раскладка (`grid-auto-columns: 140px`, фиксированная ширина колонки) при этом тоже покрывается автоматически, без развилки. Плейсхолдер под текстовый блок `.info` (заголовок+год у `Card`, ≈43px при однострочном заголовке и ≈61px при двухстрочном — `gap: 10px` у `.card` + `.title`/`.meta` из `Card.module.css`) не резервируется отдельно, но это осознанно безвредно именно в этой позиции: `RelatedMovies` — последний элемент дерева `/movie/:id` (`Movie.tsx`; `AppLayout` рендерит `<Outlet/>` без `Footer` под контентом страницы), поэтому грид растёт вниз и **ни один элемент под ним не смещается** — вклад в CLS нулевой, меняется только высота страницы; плюс `rootMargin: '200px'` (Technical Details) монтирует карточки ещё до входа секции во viewport. Пересмотреть это допущение, если под `RelatedMovies` когда-нибудь появится новый контент (например, `Footer` начнёт рендериться и на `/movie/:id`)
+- [ ] экспортировать `useInView` из `src/shared/lib/index.ts` (`export { useInView } from './inView'`)
+- [ ] `RelatedMovies.tsx`: вызвать `useInView<HTMLDivElement>()` (явный параметр типа — дефолт `HTMLElement` не совместим с `ref` на `<div>`, см. Technical Details) рядом с существующим `useFavorites()`, **до** раннего `return null` на `movies.length === 0` (Rules of Hooks — как уже вызывается `useFavorites()`); повесить `ref` на уже существующий `<div className={s.section}>`; `header` (`.eyebrow`+`.heading`, чисто текстовый, дешёвый) рендерить всегда, без задержки; пока `!inView` — вместо реального грида с `Card`-карточками рендерить **тот же контейнер ``className={`${s.grid} hide-scrollbar`}``**, но заполненный `movies.length` (не хардкод — ровно столько, сколько реальных карточек будет) плейсхолдер-`div`ами (`s.placeholderCard`, `aria-hidden`) вместо `Card`
+- [ ] `RelatedMovies.module.css`: добавить `.placeholderCard { aspect-ratio: 2/3; border-radius: <как у постера/карточки>; background: var(--bg-elevated); }` (цвет только через токен — stylelint) — **не** задавать фиксированный `min-height` на `.section` или на плейсхолдер: десктопная раскладка (`grid-template-columns: repeat(6, 1fr)` внутри `.section { max-width: 1440px; padding: 24px 40px 80px }`) флюидная — высота карточки (`Poster` с `aspect-ratio: 2/3`) масштабируется с шириной колонки, которая на десктопе варьируется от ~103px (vw=800) до ~210px (vw≥1440), то есть единое хардкод-число `min-height` было бы верным только на той ширине, на которой измерили, и создавало бы ровно тот layout shift, который призвано устранить, на любой другой. Используя тот же `.grid` (`grid-auto-flow: column; grid-auto-columns: 140px` на мобильном / `grid-template-columns: repeat(6, 1fr)` на десктопе — те же классы, что и у реального контента) с `aspect-ratio: 2/3` на плейсхолдер-ячейках вместо хардкод-высоты, резервирование остаётся корректным на любой ширине без раздельных чисел на брейкпоинт. Плейсхолдер под текстовый блок `.info` (заголовок+год у `Card`, ≈43px при однострочном заголовке и ≈61px при двухстрочном — `gap: 10px` у `.card` + `.title`/`.meta` из `Card.module.css`) не резервируется отдельно, но это осознанно безвредно именно в этой позиции: `RelatedMovies` — последний элемент дерева `/movie/:id` (`Movie.tsx`; `AppLayout` рендерит `<Outlet/>` без `Footer`, `Footer` есть только у `Home`), поэтому грид растёт вниз и **ни один элемент под ним не смещается** — вклад в CLS нулевой, меняется только высота страницы; плюс `rootMargin: '200px'` (Technical Details) монтирует карточки ещё до входа секции во viewport. Пересмотреть это допущение, если под `RelatedMovies` когда-нибудь появится новый контент (например, `Footer` начнёт рендериться и на `/movie/:id`)
 - [ ] написать `useInView.test.ts`: локально переопределить `window.IntersectionObserver` мок-классом, который сохраняет переданный колбэк и не вызывает его сразу — проверить (а) `inView` изначально `false`, становится `true` после ручного вызова сохранённого колбэка с `isIntersecting: true`, `disconnect` вызван один раз после этого; (б) unmount **до** срабатывания колбэка тоже вызывает `disconnect` (cleanup-кейс); сохранить `window.IntersectionObserver` в module-scope переменную до переопределения и восстановить в `afterEach` (механизм — см. Technical Details)
 - [ ] обновить `RelatedMovies.test.tsx`: добавить кейс с локальным override `IntersectionObserver` (колбэк не вызывается) — `Card`-сетка отсутствует (проверить через `queryAllByRole('button', { name: /favorites/ })` — пусто, как и в существующих тестах этого файла), заголовок секции виден (`getByText('More like ...')`, header рендерится всегда) — селекторы по role/text, не по CSS-module-классу (в духе остальных тестов проекта); восстановить `window.IntersectionObserver` в `afterEach` этого кейса; существующие тесты (клик по сердечку) продолжают работать на дефолтном стабе из `setup.ts` (контент виден сразу)
-- [ ] run tests — должны пройти (`make test`)
+- [ ] run tests — должны пройти (`make test`), включая `Movie`/`MoviePage`-тесты на дефолтном стабе
 
 ### Task 4: Verify acceptance criteria
 
+**Модель:** `opus` · effort `high` — финальная приёмка: повторный замер, сравнение по двухусловному критерию, поиск виновной задачи при регрессии, бюджеты и квота
+
 - [ ] verify all requirements from Overview are implemented
-- [ ] `make build-only`, снова поднять preview в фоне на том же порту 4173, повторно прогнать Lighthouse 3 раза для `/` и 3 раза для того же movie id — та же зафиксированная версия CLI и методология, что в Task 1 — записать в Progress Tracking ("После"); остановить preview-процесс после замера
+- [ ] повторно прогнать серию Lighthouse по той же методологии из Progress Tracking (тот же `@lhci/cli@0.15.1`, те же `/` и `/movie/666`, `--numberOfRuns=3`) — скопировать отчёты в scratchpad как `after`, записать медианы и min/max в Progress Tracking ("После")
 - [ ] сравнить baseline/after медианы по критерию приёмки из Progress Tracking (**дословно, не по памяти**: для LCP/CLS/TBT регрессия засчитывается, только если одновременно >5% от baseline-медианы **и** выше абсолютного шумового порога — CLS>0.01, TBT>20ms, LCP>50ms; для score — только 5%, без абсолютного порога); при регрессии, удовлетворяющей обоим условиям — определить, какая задача (1/2/3) виновата, исправить или откатить именно её; зафиксировать итоговую дельту в описании PR
 - [ ] `make test` — полный набор проходит
 - [ ] `make check` (`format-check` + `lint` + `build`, т.е. `typecheck` через `build`) — чисто
-- [ ] `make knip` — новые файлы `src/shared/lib/inView/*` и новые тестовые файлы не всплывают как unused (barrel-экспорт `useInView` из `@shared/lib` должен быть виден knip'у через публичное API, без добавления в `ignore`)
-- [ ] `make size` — бюджет `shared` (лимит 22.6 KB gzip) не превышен новым экспортом `useInView` в `shared-*.js`
-- [ ] проверить остаток суточной квоты demo-API перед `make e2e`: Task 1 (baseline) + этот шаг Task 4 (after) вместе уже потратили ~36 запросов на Lighthouse; если обе Lighthouse-фазы выполнялись в один день с этим шагом — либо убедиться, что оставшейся квоты хватает на `make e2e` (~40-50 запросов), либо перенести `make e2e` на следующий день (не блокирует завершение плана, см. Post-Completion)
-- [ ] `make e2e` (если локально настроен `VITE_API_KEY` с доступной квотой) — существующие смоки по `/` и `/movie/:id` не сломаны (селекторы по role/label, не зависят от `content-visibility`/момента маунта `RelatedMovies`)
-- [ ] визуально проверить `/movie/:id` в браузере — заголовок "More like ..." виден сразу, карточки в сетке подгружаются при скролле без заметного скачка layout, на обоих брейкпоинтах (мобильном и `≥720px`)
+- [ ] `make knip` — новые файлы `src/shared/lib/inView/*` и новые тестовые файлы не всплывают как unused (barrel-экспорт `useInView` из `@shared/lib` используется `RelatedMovies` — без добавления в `ignore`, см. `.claude/rules/build-budgets.md`)
+- [ ] `make size` — бюджеты `shared` (22.6 KB gzip, `useInView` попадёт в `shared`-чанк через группу `/(widgets|features|entities|shared)\//`) и `page-movie` (8.75 KB) не превышены; актуальные лимиты — в `package.json`
+- [ ] проверить остаток суточной квоты demo-API перед `make e2e`: Task 1 (baseline) + этот шаг (after) вместе уже потратили ~36 запросов; если обе фазы выполнялись в один день с этим шагом — либо убедиться, что оставшейся квоты хватает на `make e2e` (~40-50 запросов), либо перенести `make e2e` на следующий день (не блокирует завершение плана, см. Post-Completion)
+- [ ] `make e2e` (если локально настроен `VITE_API_KEY` с доступной квотой; предварительно `make build-only`) — существующие `e2e/home.spec.ts`/`e2e/movie-detail.spec.ts` не сломаны (селекторы по role/label, не зависят от `content-visibility`/момента маунта `RelatedMovies`)
+- [ ] визуально проверить `/movie/666` в браузере — заголовок "More like ..." виден сразу, карточки в сетке подгружаются при скролле без заметного скачка layout, на обоих брейкпоинтах (мобильном и `≥720px`)
 
 ### Task 5: [Final] Update documentation
 
-- [ ] обновить `AGENTS.md`: добавить заметку в раздел performance/roadmap о решении не виртуализировать rails главной (demo-лимит ≤10 карточек — **внешний факт, не читаемый из кода** для 3 из 4 rails, см. Context; конфликт с hover-arrow `scrollBy`) — по образцу существующих заметок «буквальная формулировка vs факт»; явно указать: пересмотреть при смене API-тарифа или добавлении явного `limit` в `getMovies.ts`
-- [ ] в той же заметке — указать, что `content-visibility` (Task 1) поддерживается Safari только с версии 18: на более старых WebKit-браузерах эффект отсутствует (деградирует к обычному рендерингу, не ломается), это accepted limitation, не баг
-- [ ] обновить `AGENTS.md`: задокументировать `useInView()` (`@shared/lib`) как reusable-паттерн для lazy-mount тяжёлых always-mounted секций, с уточнением про default-стаб в `src/test/setup.ts`; отдельно объяснить критерий выбора между этим хуком и CSS-`content-visibility` (Task 1) для будущих разработчиков — `content-visibility` для чисто визуального offscreen-контента (rails, где не нужен явный JS-сигнал), `useInView` там, где нужен собственно факт «замонтировано/не замонтировано» в React-дереве (здесь — по прямому указанию roadmap 2.7 и решению пользователя при планировании)
-- [ ] обновить `@shared/lib` строку в таблице «Key public APIs» (`AGENTS.md`) — добавить `useInView()`
-- [ ] обновить `plans/roadmap.md` 2.7 — проставить чекбоксы согласно маппингу из Technical Details, добавить ссылку на этот план
+**Модель:** `sonnet` · effort `medium` — документация по чёткому списку: новый rule-файл, строка в таблице `AGENTS.md`, roadmap, перенос плана
+
+**Files:**
+
+- Create: `.claude/rules/performance.md`
+- Modify: `AGENTS.md`
+- Modify: `plans/roadmap.md`
+- Move: `docs/plans/20260916-performance-virtualization-lazy-loading.md` → `docs/plans/completed/`
+
+- [ ] создать `.claude/rules/performance.md` с `paths:`-frontmatter (`src/widgets/movie-rail/**`, `src/pages/movie/ui/RelatedMovies/**`, `src/shared/lib/inView/**`, `src/test/setup.ts`) — в формате остальных rule-файлов (английский, коротко: правило + одна строка причины, история — ссылкой на план в `docs/plans/completed/`)
+- [ ] в `performance.md` — решение не виртуализировать rails главной: demo-лимит ≤10 карточек — **внешний факт, не читаемый из кода** для 3 из 4 rails (см. Context), конфликт с hover-arrow `scrollBy`; явно указать: пересмотреть при смене API-тарифа или добавлении явного `limit` в `getMovies.ts`
+- [ ] в `performance.md` — `content-visibility: auto` на `MovieRail` **и** `MovieRailSkeleton` (скелетон — это то, что видит Lighthouse), `contain-intrinsic-size` — измеренные высоты, разные по брейкпоинтам у `MovieRail`; при изменении раскладки rail — перемерить. Safari поддерживает `content-visibility` только с 18: на старых WebKit эффект отсутствует (деградация к обычному рендерингу), accepted limitation
+- [ ] в `performance.md` — `useInView()` (`@shared/lib`) как reusable-паттерн для lazy-mount тяжёлых always-mounted секций: явный параметр типа на DOM-call-site, once-триггер, default-стаб в `src/test/setup.ts` (`isIntersecting: true` сразу) и локальный override + restore в тестах «вне вьюпорта»; критерий выбора — `content-visibility` для чисто визуального offscreen-контента, `useInView` там, где нужен факт «замонтировано/не замонтировано» в React-дереве
+- [ ] в `performance.md` — `loading='lazy'` не ставить на above-the-fold/LCP-изображения (`PersonHero`)
+- [ ] добавить строку `.claude/rules/performance.md` в таблицу «Topic docs» в `AGENTS.md` (с теми же путями, что во frontmatter) — сам `AGENTS.md` больше ничем не дополнять
+- [ ] обновить `plans/roadmap.md` 2.7 — проставить чекбоксы согласно маппингу из Technical Details, добавить ссылку на этот план (путь в `docs/plans/completed/`)
 - [ ] переместить этот файл в `docs/plans/completed/`
 
 ## Post-Completion
 
 **Manual verification:**
 
-- Ручной прогон Lighthouse (CLI/DevTools) против `make preview`-сборки — до (Task 1) и после (Task 4) всех изменений; числа фиксируются прямо в этом плане и в PR, не в CI.
-- Визуальная проверка отсутствия layout shift на `/` (rails) и `/movie/:id` (`RelatedMovies`) при скролле — через Chrome DevTools Performance/Rendering панели.
-- `make e2e` — требует валидный `VITE_API_KEY` и доступную суточную квоту demo-тарифа (200 запросов/сутки, см. AGENTS.md "E2E тесты") — не блокирует завершение плана, если квота исчерпана в моменте.
+- Визуальная проверка отсутствия layout shift на `/` (rails) и `/movie/:id` (`RelatedMovies`) при скролле — через Chrome DevTools Performance/Rendering панели, если в Task 1/4 не удалось проверить через chrome-devtools MCP.
+- `make e2e` — требует валидный `VITE_API_KEY` и доступную суточную квоту demo-тарифа (200 запросов/сутки) — не блокирует завершение плана, если квота исчерпана в моменте.
+- По желанию — повесить на PR лейбл `run-lighthouse`: CI-прогон (`numberOfRuns: 1`, 4 URL) против Vercel preview даст независимую точку сравнения, но тратит ещё квоту и не заменяет медианный замер из Progress Tracking.
 
-**External system updates:** нет (пункт не затрагивает CI/деплой-конфиги — Lighthouse CI остаётся отдельным roadmap-пунктом 2.5.6).
+**External system updates:** нет — `lighthouserc.cjs`, `Makefile`, `.github/workflows/lighthouse.yml` не меняются.
