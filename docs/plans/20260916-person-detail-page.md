@@ -5,14 +5,29 @@
 - Добавить отдельную страницу персоны (актёра / члена съёмочной группы) по адресу `/person/:id`, построенную по тому же паттерну, что уже работающая `/movie/:id`.
 - Решаемая проблема: клик по актёру в `CastTab` и по имени члена съёмочной группы в `OverviewTab` сейчас никуда не ведёт — карточки персон на `/movie/:id` статичны, тупик в навигации. Пользователь не может перейти от фильма к актёру и от актёра обратно к другим его фильмам.
 - Что даёт: базовая информация о персоне (фото, имя/оригинальное имя, дата рождения и возраст, дата смерти и место, место рождения, рост, профессии, число наград), фильмография со ссылками на `/movie/:id`, интересные факты. Плюс закольцованная навигация «фильм → персона → фильм».
-- Интеграция с системой: новый entity-слайс `@entities/person` (типы, фетчер, маппер, Suspense-хук) + новый page-слайс `src/pages/person/`; новый роут под тем же `AppLayout`, что и остальные шесть; новый chrome-конфиг `PERSON_CHROME`; новая группа код-сплиттинга `page-person` и бюджет `size-limit`. `createCachedFetcher` (сейчас живёт в `@entities/movie`) переезжает в `@shared/lib` — без этого `@entities/person` пришлось бы импортировать инфраструктуру из соседнего entity-слайса, что запрещено направлением FSD (`pages → widgets → features → entities → shared`, без горизонтальных импортов между entity-слайсами).
+- Интеграция с системой: новый entity-слайс `@entities/person` (типы, фетчер, маппер, Suspense-хук) + новый page-слайс `src/pages/person/`; новый роут под тем же `AppLayout`, что и остальные семь (включая добавленный после написания плана `/profile`); новый chrome-конфиг `PERSON_CHROME`; новая группа код-сплиттинга `page-person` и бюджет `size-limit`. `createCachedFetcher` (сейчас живёт в `@entities/movie`) переезжает в `@shared/lib` — без этого `@entities/person` пришлось бы импортировать инфраструктуру из соседнего entity-слайса, что запрещено направлением FSD (`pages → widgets → features → entities → shared`, без горизонтальных импортов между entity-слайсами).
 - API уже сгенерирован, регенерировать ничего не нужно: `apiClient.getV15PersonById({ path: { id } })` (`PersonControllerFindOneV15` в `instance.gen.ts`) возвращает `Person`.
+
+## Актуализация 2026-09-28
+
+План написан 2026-09-16; с тех пор в `main` влились блок профиля и реорганизация документации. Что поменялось в плане:
+
+- **Роутов теперь семь** (`/profile` добавлен в `router.tsx`, `ROUTE_CHROME`, `codeSplitting`, `size-limit`, Lighthouse, e2e). `/person/:id` станет восьмым — поправлены счётчики и комментарии, которые это упоминают (`router.tsx`, `vite.config.ts`, `e2e.md`).
+- **`AGENTS.md` разбит на ядро + `.claude/rules/*.md`.** Секций «Key public APIs», «Data state», «Performance budgets», «CSP headers», на которые ссылалась Задача 16, в `AGENTS.md` больше нет — их содержимое живёт в `data-layer.md`, `build-budgets.md`, `csp.md`, `e2e.md`. Задача 16 переписана под новую структуру, включая `paths:`-frontmatter `data-layer.md` (иначе правила не подгрузятся при работе с `@entities/person`).
+- **FSD-направление теперь проверяет oxlint** (`no-restricted-imports` overrides в `.oxlintrc.json`), но override для `src/entities/**` **не** запрещает импорт `@entities/*` — горизонтальный импорт `@entities/person → @entities/movie` линтер сейчас пропустит. В Задачу 2 добавлен шаг: закрыть эту дыру в конфиге, раз именно этот план впервые заводит второй entity-слайс.
+- **Цвета проверяет stylelint** (`color-no-hex` и т.п. на `*.module.css`), `import/no-cycle` ловит самоссылку барреля — пункты про хардкод цветов и цикл `@shared/lib` теперь страхуются линтером, но остаются в плане как требования.
+- **`router.test.tsx`** покрывает каждый `lazyNamed()`-вызов реальным роутером — в Задачу 10 добавлен кейс `/person/:id → PersonPage`.
+- **Кнопка Share в `MOVIE_CHROME` признана мёртвым контролом** (`docs/backlog/dead-header-controls.md`) — дополнительный аргумент не копировать `rightAction` в `PERSON_CHROME`.
+- **`csp.md`** документирует `st.kp.yandex.net` как хост фото персон, а живой запрос этого плана показал `avatars.mds.yandex.net` — оба хоста уже в `img-src`, правки `vercel.json` по-прежнему не нужны; в Задаче 16 уточняется формулировка `csp.md`.
+- **Lighthouse**: `/person/:id` в список URL не добавляется (см. «Ключевые решения»).
 
 ## Контекст (из исследования)
 
 - **Файлы/компоненты, затрагиваемые задачей:**
-  - `src/app/router.tsx` — 6 роутов через `lazyNamed` под одним `AppLayout`; сюда добавляется седьмой.
-  - `src/app/layouts/AppLayout.tsx` — `ROUTE_CHROME` (карта по точному `pathname`) + отдельные `MOVIE_CHROME`/`SEARCH_CHROME`, матчащиеся через `useMatch`/`isSearchRoute`. Требует `PERSON_CHROME`.
+  - `src/app/router.tsx` — 7 роутов через `lazyNamed` под одним `AppLayout` (последний добавленный — `/profile`); сюда добавляется восьмой. `src/app/router.test.tsx` прогоняет каждый `lazyNamed()`-вызов через настоящий роутер — нужен кейс для персоны.
+  - `src/app/layouts/AppLayout.tsx` — `ROUTE_CHROME` (карта по точному `pathname`, включая `/profile`) + отдельные `MOVIE_CHROME`/`SEARCH_CHROME`, матчащиеся через `useMatch`/`isSearchRoute`. Требует `PERSON_CHROME`.
+  - `.oxlintrc.json` — `no-restricted-imports` overrides по слоям FSD; override `src/entities/**` пока не запрещает `@entities/*`.
+  - `.claude/rules/data-layer.md`, `build-budgets.md`, `e2e.md`, `csp.md` — документация областей, которую затрагивает задача (обновляется в Задаче 16).
   - `src/pages/movie/MoviePage.tsx` — эталон тонкой страницы-обёртки.
   - `src/entities/movie/api/createCachedFetcher.ts` — переезжает в `src/shared/lib/cachedFetcher/`, т.к. становится общей инфраструктурой для `@entities/movie` и `@entities/person`.
   - `src/entities/movie/api/getMovieDetail.ts`, `mapDtoToMovieDetail.ts` — эталон слоя данных.
@@ -44,6 +59,7 @@
 
 - **Подход к тестированию: Regular** (сначала код, затем тесты в рамках той же задачи) — так написаны все существующие планы и тесты в репозитории.
 - [ ] выполнять каждую задачу полностью, прежде чем переходить к следующей
+- [ ] при запуске через `/planning:exec` брать модель и effort сабагента из строки `**Модель:**` под заголовком задачи (выбраны по сложности: `haiku` — простые компоненты, `sonnet` — типовая реализация, `opus` — насыщенная логика/a11y и финальная приёмка)
 - [ ] делать маленькие сфокусированные изменения
 - [ ] **КРИТИЧНО: каждая задача ОБЯЗАНА содержать новые/обновлённые тесты** на код, меняющийся в этой задаче
   - [ ] писать юнит-тесты на новые функции/компоненты
@@ -88,7 +104,7 @@
 
 Рассмотренные альтернативы:
 
-- **Вариант 1 (выбран): новый entity-слайс `@entities/person`.** Данные персоны — самостоятельный домен: свой DTO, свой эндпоинт, свой маппер, свой Suspense-хук. Полностью повторяет уже работающую схему `@entities/movie` (`getMovieDetail` тоже используется ровно одной страницей — это не аргумент против entity-слоя, а действующий прецедент репозитория). Плюсы: соответствует конвенции FSD и существующему коду; фетчер сразу получает TTL/cooldown/инвалидацию через `createCachedFetcher`; будущий `/person/search` или карусель «другие работы» подключится без переездов. Минус: `@entities/person` попадёт в чанк `shared` (группа `{ name: 'shared', test: /\/(widgets|features|entities|shared)\// }` стоит раньше page-групп), то есть ~1 kB маппера/фетчера будет грузиться на всех роутах, включая те, где персон нет. Принято как компромисс — переупорядочивать группы ради одного слайса нельзя, это сломает всю схему `shared` (см. AGENTS.md, «Performance budgets»).
+- **Вариант 1 (выбран): новый entity-слайс `@entities/person`.** Данные персоны — самостоятельный домен: свой DTO, свой эндпоинт, свой маппер, свой Suspense-хук. Полностью повторяет уже работающую схему `@entities/movie` (`getMovieDetail` тоже используется ровно одной страницей — это не аргумент против entity-слоя, а действующий прецедент репозитория). Плюсы: соответствует конвенции FSD и существующему коду; фетчер сразу получает TTL/cooldown/инвалидацию через `createCachedFetcher`; будущий `/person/search` или карусель «другие работы» подключится без переездов. Минус: `@entities/person` попадёт в чанк `shared` (группа `{ name: 'shared', test: /\/(widgets|features|entities|shared)\// }` стоит раньше page-групп), то есть ~1 kB маппера/фетчера будет грузиться на всех роутах, включая те, где персон нет. Принято как компромисс — переупорядочивать группы ради одного слайса нельзя, это сломает всю схему `shared` (см. `.claude/rules/build-budgets.md`, «Code splitting»).
 - **Вариант 2 (отклонён): держать данные персоны внутри `@entities/movie`.** Формально «работает» (там уже лежат `CastMember`/`CrewMember`), но смешивает два домена в одном слайсе и делает барель `@entities/movie` свалкой. Отклонён.
 - **Вариант 3 (отклонён): всё в page-слайсе `src/pages/person/` (api + model прямо там, без entity).** Единственный реальный плюс — весь код персоны попал бы в ленивый чанк `page-person`, а не в `shared`. Минусы перевешивают: нарушает конвенцию «данные домена живут в `entities`», запрещает переиспользование из любого другого слайса, и `model/`-фасад в page-слайсе конвенцией предназначен для _композиции нескольких нижних слайсов_ (как `useMovieCatalog`), а не для единственного доменного фетча. Отклонён.
 
@@ -106,7 +122,9 @@
 - **Фолбэк-градиент вместо `hashHue`.** `hashHue` не экспортируется из бареля `@entities/movie` (он внутренний), а расширять публичный API ради одного градиента не нужно. Берём фиксированный `FALLBACK_HUE = 220` — ровно тот же приём, что уже применён в `CastTab.tsx` для персон без фото. Дублирование константы между двумя page-компонентами сознательно предпочтено преждевременной абстракции.
 - **Факты очищаются от HTML-тегов в маппере, рендерятся как обычный текст.** `dangerouslySetInnerHTML` не используется нигде в `src/` (проверено при внедрении CSP), а политика содержит `require-trusted-types-for 'script'` — заводить его ради `facts[]` не стоит. Но Kinopoisk иногда кладёт в `facts[].value` HTML-разметку (`<span class="...">`), и если просто рендерить это текстом, пользователь увидит сырые теги. Решение: `mapDtoToPersonDetail` вырезает теги простым `replace(/<[^>]*>/g, '')` перед тем, как положить строку в `PersonDetail.facts` — не ослабляет CSP/Trusted Types (это не выполнение разметки, а её отбрасывание) и закрывается одной строкой кода плюс одним тестом. **Принятое ограничение:** HTML-сущности (`&laquo;`, `&nbsp;` и т.п.) при этом не декодируются и могут отрендериться как есть — это не полная санитизация текста, декодирование сущностей осталось за рамками этой задачи.
 - **`sex` не входит в `PersonDetail`, `deathPlace` — входит и рендерится.** Ни одно поле не должно попадать в тип/маппер без реального потребителя (YAGNI). `sex` не показывается нигде в UI по этой задаче — не мапим его вовсе. `deathPlace`, наоборот, получает собственную строку «Died in» в `PersonHero` (см. Задачу 6) — иначе это было бы точно такое же неиспользуемое поле.
-- **`PERSON_CHROME` обязателен.** В `AppLayout` `config` резолвится как `ROUTE_CHROME[pathname]` с точечными исключениями через `useMatch`. Без явного конфига для `/person/:id` `config` будет `undefined`, из-за чего на мобильном не отрендерится `BottomNav` (`{isMobile && config && <BottomNav .../>}`) и не будет кнопки «назад». Берём форму `MOVIE_CHROME` (`active: 'search'`, `onBack: true`, `showSearch: false`), но **без** `rightAction` — кнопка «поделиться» там появилась как повторение поведения удалённого `MovieMobile.tsx`, у персоны такого исторического поведения нет, и заводить её «для симметрии» не нужно (подтверждено при планировании).
+- **`PERSON_CHROME` обязателен.** В `AppLayout` `config` резолвится как `ROUTE_CHROME[pathname]` с точечными исключениями через `useMatch`. Без явного конфига для `/person/:id` `config` будет `undefined`, из-за чего на мобильном не отрендерится `BottomNav` (`{isMobile && config && <BottomNav .../>}`) и не будет кнопки «назад». Берём форму `MOVIE_CHROME` (`active: 'search'`, `onBack: true`, `showSearch: false`), но **без** `rightAction` — кнопка «поделиться» там появилась как повторение поведения удалённого `MovieMobile.tsx`, у персоны такого исторического поведения нет, и заводить её «для симметрии» не нужно (подтверждено при планировании). К тому же у неё нет обработчика — она уже заведена в бэклог как мёртвый контрол (`docs/backlog/dead-header-controls.md`), копировать её значило бы размножить известный дефект.
+- **`/person/:id` не добавляется в Lighthouse.** Список URL (`/`, `/search`, `/movie/666`, `/profile`) покрывает общий chrome и тяжёлую detail-страницу; страница персоны структурно проще `/movie/:id` и тратила бы квоту API на каждый прогон. `AGENTS.md` («Routing») формулирует Lighthouse как «possibly» — осознанно пропускаем, при появлении перф-регрессий на персоне вернуться к вопросу.
+- **Имена персон в `alt`/тексте ссылок допустимы.** Правило `AGENTS.md` («Accessibility baseline», `sentry.md`) запрещает класть в `aria-label`/`alt` **пользовательский ввод**; имя персоны приходит из API, это публичные данные, скраб не нужен.
 
 ## Технические детали
 
@@ -218,6 +236,8 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 
 ### Задача 1: Типы `PersonDetail`/`PersonMovieCredit` и маппер DTO → `PersonDetail`
 
+**Модель:** `sonnet` · effort `medium` — чистый маппер + типы, много краевых кейсов в тестах, но без архитектурных развилок
+
 **Файлы:**
 
 - Create: `src/entities/person/model/types.ts`
@@ -236,6 +256,8 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 
 ### Задача 2: Перенести `createCachedFetcher` в `@shared/lib` (устранить кросс-импорт entity↔entity)
 
+**Модель:** `sonnet` · effort `low` — механический перенос файла и путей импорта плюс точечная правка `.oxlintrc.json`; логика не меняется
+
 **Файлы:**
 
 - Create: `src/shared/lib/cachedFetcher/createCachedFetcher.ts`
@@ -247,6 +269,7 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - Modify: `src/shared/lib/index.ts`
 - Modify: `src/entities/movie/api/getMovies.ts`, `getSearchMovies.ts`, `getMoviesPage.ts`, `getMovieDetail.ts`, `getMovieImages.ts`, `getMoviesByIds.ts`, `getPopularMovies.ts`
 - Modify: `src/test/setup.ts`
+- Modify: `.oxlintrc.json`
 
 - [ ] перенести код `createCachedFetcher.ts` (включая тип `CachedFetcher` и функцию `resetAllCachedFetchers`) в `src/shared/lib/cachedFetcher/createCachedFetcher.ts` без изменения логики (TTL, `sessionStorage`-persist в DEV, 403-cooldown, `.invalidate()`/`.clear()`); создать `src/shared/lib/cachedFetcher/index.ts` с реэкспортом — по образцу остальных поддиректорий `src/shared/lib/*` (`viewport`, `storage`, `sessionCache`, `debounce`, `lazyNamed`, `analytics`), каждая из которых отдаёт свой `index.ts`, а `src/shared/lib/index.ts` реэкспортирует из директории, а не из файла напрямую
 - [ ] заменить внутри перенесённого файла `import { createSessionCache } from '@shared/lib'` на относительный `import { createSessionCache } from '../sessionCache'` — внутри `src/shared/lib/**` алиас `@shared/lib` на собственный барель нигде не используется (только относительные импорты), а после переноса `@shared/lib` стал бы ссылаться сам на себя (`index.ts → cachedFetcher → index.ts`) — паразитный цикл в самом широко импортируемом барреле приложения
@@ -256,10 +279,14 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - [ ] обновить импорты `createCachedFetcher` на `@shared/lib` в семи реальных потребителях: `getMovies.ts`, `getSearchMovies.ts`, `getMoviesPage.ts`, `getMovieDetail.ts`, `getMovieImages.ts`, `getMoviesByIds.ts`, `getPopularMovies.ts` — **`getGenreDictionary.ts` сюда не входит**, он кеширует через отдельный `genreDictionaryCache.ts`/`createStorageSlot` и `createCachedFetcher` не импортирует
 - [ ] обновить `src/test/setup.ts`: `resetAllCachedFetchers` импортируется из `@shared/lib`
 - [ ] удалить из публичного барреля `@entities/movie` (`src/entities/movie/index.ts`) строку `export { resetAllCachedFetchers } from './api/createCachedFetcher'` — файл-источник удалён этой же задачей, реэкспорт становится безусловно недействителен, а не «условно, если был опубликован ради переиспользования»
+- [ ] закрыть дыру в `.oxlintrc.json`: в override `src/entities/**` добавить во второй паттерн группу `"@entities"`, `"@entities/**"` (сообщение — «FSD: entities can only import shared.» остаётся верным) — сейчас горизонтальный импорт `@entities/person → @entities/movie` линтер пропустит; внутри `src/entities/movie/**` алиас `@entities/*` не используется (проверено грепом — только комментарий в `genre.ts`), так что правка ничего не ломает
+- [ ] убедиться, что `make lint` зелёный, и вручную проверить, что правило срабатывает: временный `import type { Movie } from '@entities/movie'` в файле под `src/entities/` даёт ошибку (после проверки удалить)
 - [ ] перенести `createCachedFetcher.test.ts` вместе с кодом; тесты по существу не переписывать (bare-вызовы `createCachedFetcher('ns', fetcher)` в тестах тоже продолжат работать без явного `R` — см. предыдущий чекбокс про вывод типов)
 - [ ] запустить `make test` — весь существующий набор тестов `@entities/movie` должен остаться зелёным после переноса — обязательное условие перед задачей 3
 
 ### Задача 3: Фетчер `getPersonDetail` с кешем и `ApiError`
+
+**Модель:** `sonnet` · effort `medium` — фетчер по образцу `getMovieDetail`, основная тонкость — изоляция error-кеша в тестах
 
 **Файлы:**
 
@@ -275,6 +302,8 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - [ ] запустить `make test` — должны пройти до перехода к задаче 4
 
 ### Задача 4: Suspense-хук `usePersonDetail` + `invalidatePersonDetail` + публичный барель слайса
+
+**Модель:** `sonnet` · effort `medium` — хук на `use()` по образцу, тесты Suspense/ErrorBoundary
 
 **Файлы:**
 
@@ -294,6 +323,8 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - [ ] запустить `make test` — должны пройти до перехода к задаче 5
 
 ### Задача 5: Скелет страницы `PersonPage` + `PersonDetailSkeleton`
+
+**Модель:** `sonnet` · effort `medium` — страница по образцу `MoviePage`, пять сценариев тестов с MSW
 
 **Файлы:**
 
@@ -322,6 +353,8 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 
 ### Задача 6: Компонент `PersonHero` — фото, имя, профессии, биометрия
 
+**Модель:** `sonnet` · effort `medium` — презентационный компонент + mobile-first CSS
+
 **Файлы:**
 
 - Create: `src/pages/person/ui/PersonHero/index.tsx`
@@ -342,6 +375,8 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - [ ] запустить `make test` — должны пройти до перехода к задаче 7
 
 ### Задача 7: Фильмография — группировка и список кредитов со ссылками
+
+**Модель:** `opus` · effort `high` — самая насыщенная UI-задача: группировка, per-группа сворачивание, a11y-имена кнопок, составные ключи
 
 **Файлы:**
 
@@ -372,6 +407,8 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 
 ### Задача 8: Секция фактов `PersonFacts`
 
+**Модель:** `haiku` · effort `medium` — маленькая секция-список с двумя тестами
+
 **Файлы:**
 
 - Create: `src/pages/person/ui/PersonFacts/index.tsx`
@@ -389,6 +426,8 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 
 ### Задача 9: Композиция `Person` и раскладка страницы
 
+**Модель:** `haiku` · effort `medium` — композиция трёх готовых компонентов и отступы
+
 **Файлы:**
 
 - Modify: `src/pages/person/ui/Person/Person.tsx`
@@ -404,24 +443,30 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 
 ### Задача 10: Роут `/person/:id` и chrome-конфиг в `AppLayout`
 
+**Модель:** `sonnet` · effort `medium` — роут + chrome-конфиг по готовому прецеденту `MOVIE_CHROME`, правки докблоков и тестов
+
 **Файлы:**
 
 - Modify: `src/app/router.tsx`
 - Modify: `src/app/layouts/AppLayout.tsx`
 - Modify: `src/app/layouts/AppLayout.test.tsx`
+- Modify: `src/app/router.test.tsx`
 
 - [ ] в `router.tsx` добавить `const PersonPage = lazyNamed(() => import('../pages/person'), 'PersonPage')` и маршрут `{ path: '/person/:id', element: <PersonPage /> }` в `children` у `AppLayout`
-- [ ] обновить комментарий в шапке `router.tsx` (там сказано «Все шесть роутов» — станет семь)
+- [ ] обновить комментарий в шапке `router.tsx` (там сказано «Все семь роутов» — станет восемь)
+- [ ] добавить в `router.test.tsx` кейс `/person/:id → PersonPage` в блок «оставшиеся N роутов резолвят свой lazyNamed()-экспорт» (MSW мокает `*/v1.5/person/1`, после `router.navigate('/person/1')` виден `heading` с именем) и обновить счётчик в названии `describe` и в комментарии над ним (6 → 7)
 - [ ] в `AppLayout.tsx` добавить константу `PERSON_CHROME: RouteChromeConfig = { active: 'search', onBack: true, showSearch: false }` рядом с `MOVIE_CHROME`
 - [ ] добавить WHY-докблок на русском: почему отдельная константа, а не запись в `ROUTE_CHROME` (ключи карты сравниваются с `pathname` напрямую, `/person/123` не совпадёт с литералом `/person/:id`); почему `active: 'search'` (у detail-страницы персоны нет своего пункта `BottomNav`, ближайший по смыслу — каталог/поиск, так же как у `/movie/:id`); почему **нет** `rightAction` (кнопка Share у `MOVIE_CHROME` воспроизводила поведение удалённого `MovieMobile.tsx`, у персоны такой истории нет — решение подтверждено пользователем при планировании)
 - [ ] добавить `const isPersonRoute = useMatch('/person/:id') != null` и включить его в цепочку выбора `config` (порядок: movie → person → search → `ROUTE_CHROME[pathname]`)
-- [ ] обновить таблицу соответствия `Header.activeNav` ↔ `BottomNav.active` в докблоке `ROUTE_CHROME` строкой `person detail`
+- [ ] обновить таблицу соответствия `Header.activeNav` ↔ `BottomNav.active` в докблоке `ROUTE_CHROME` строкой `person detail` (после строки `movie detail`, до `search`/`profile`) и перечень подключённых роутов в том же докблоке
 - [ ] написать тест в `AppLayout.test.tsx`: на `/person/123` в мобильном вьюпорте рендерится `MobileHeader` с кнопкой «назад» и `BottomNav` с активным пунктом `search`
 - [ ] написать тест в `AppLayout.test.tsx`: на `/person/123` в десктопном вьюпорте рендерится `Header` без подсвеченного nav-pill (`activeNav` не задан) и `variant='default'`
 - [ ] написать тест: `trackPageview()` вызывается при переходе на `/person/:id`
 - [ ] запустить `make test` — должны пройти до перехода к задаче 11
 
 ### Задача 11: Карточки актёров в `CastTab` становятся ссылками на `/person/:id`
+
+**Модель:** `sonnet` · effort `medium` — точечная правка `CastTab` с a11y-нюансами (пустое имя, задвоение доступного имени)
 
 **Файлы:**
 
@@ -443,6 +488,8 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 
 ### Задача 12: Имена съёмочной группы в `OverviewTab` становятся ссылками
 
+**Модель:** `sonnet` · effort `high` — меняется форма возврата общей функции и тип пропа `MetaRow`, легко сломать соседние тесты
+
 **Файлы:**
 
 - Modify: `src/pages/movie/lib/groupCrewByProfession.ts`
@@ -462,12 +509,15 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 
 ### Задача 13: Группа код-сплиттинга `page-person` и бюджет `size-limit`
 
+**Модель:** `sonnet` · effort `medium` — конфиг сборки + реальные замеры, требует внимательной проверки изоляции чанков
+
 **Файлы:**
 
 - Modify: `vite.config.ts`
 - Modify: `package.json`
 
-- [ ] добавить в `build.rolldownOptions.output.codeSplitting.groups` запись `{ name: 'page-person', test: /\/pages\/person\// }` — **после** группы `shared` и рядом с остальными page-группами (порядок важен: `shared` должен ловить `@entities`/`@widgets` раньше page-групп)
+- [ ] добавить в `build.rolldownOptions.output.codeSplitting.groups` запись `{ name: 'page-person', test: /\/pages\/person\// }` — **после** группы `shared` и рядом с остальными page-группами (порядок важен: `shared` должен ловить `@entities`/`@widgets` раньше page-групп); последней сейчас идёт `page-profile`
+- [ ] обновить комментарий над `codeSplitting` в `vite.config.ts` («все 7 page-слайсов» → 8)
 - [ ] выполнить `make build-only` и убедиться, что в `dist/assets/` появился отдельный `page-person-*.js`, а не «растворился» в `page-movie`/`shared`
 - [ ] проверить, что `dist/assets/page-person-*.js` не импортируется статически из других page-чанков (грепом по `import{...}from"./page-person`) — то есть изоляция роутов не нарушена
 - [ ] **измерить** реальный gzip-размер `page-person-*.js` после сборки (`make size` покажет размеры имеющихся записей; для новой можно посмотреть вывод сборки) — **не гадать число заранее**
@@ -479,10 +529,13 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 
 ### Задача 14: E2E-спек `person-detail.spec.ts` с a11y-проверкой
 
+**Модель:** `sonnet` · effort `high` — живой API с квотой 200/день, подбор стабильных id `curl`-ом, флейк-риски
+
 **Файлы:**
 
 - Create: `e2e/person-detail.spec.ts`
 
+- [ ] спек desktop-only (проект `chromium`, файл в корне `e2e/`, не в `e2e/mobile/`) — `e2e.md` прямо запрещает расширять мобильный проект за пределы `/`, `/search`, `/movie/:id`
 - [ ] написать сценарий навигации: `page.goto('/movie/<стабильный id>')` → клик по табу `Cast` → клик по первой карточке актёра → URL совпадает с `/\/person\/.+/`, виден `heading` уровня 1
 - [ ] использовать **фиксированный** id фильма с гарантированно непустым кастом (подобрать живым запросом заранее и зафиксировать в комментарии `[decision]`, по образцу `9999999` в `movie-detail.spec.ts`), а не «первую карточку с главной» — живые данные главной не гарантируют наличие каста, это реальный источник флейка
 - [ ] добавить мягкие (не блокирующие) проверки наличия секций `Filmography`/`Facts` через `count() > 0`, по образцу проверок `Trailer`/`Screenshots` в `movie-detail.spec.ts` — у произвольной персоны фактов может не быть
@@ -493,6 +546,8 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - [ ] запустить `make test` — юнит-тесты должны оставаться зелёными
 
 ### Задача 15: Проверка критериев приёмки
+
+**Модель:** `opus` · effort `high` — финальная проверка приёмки, высокая цена пропущенной регрессии
 
 - [ ] проверить, что все требования из «Обзора» реализованы: страница `/person/:id` с фото, именем, датой рождения/возрастом, профессиями, фильмографией со ссылками и фактами
 - [ ] проверить, что клик по актёру в `CastTab` ведёт на страницу персоны
@@ -509,11 +564,19 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 
 ### Задача 16: [Финальная] Обновление документации
 
-- [ ] обновить `AGENTS.md`, секция «Routing»: добавить `/person/:id` в перечисление маршрутов
-- [ ] обновить `AGENTS.md`, секция «Key public APIs»: добавить строку `@entities/person` с `PersonDetail`, `PersonMovieCredit`, `usePersonDetail()`, `invalidatePersonDetail()`; переместить `createCachedFetcher`/`resetAllCachedFetchers` из строки `@entities/movie` (если она там документирована) в строку `@shared/lib`
-- [ ] обновить `AGENTS.md`, секция «Data state»: добавить пункт про шестую live-data интеграцию — `/person/:id`, включая решение по фильмографии (почему список, а не `Card`-сетка, и почему не догружаем постеры через `getMoviesByIds`), и упомянуть перенос `createCachedFetcher` в `@shared/lib` в описании, где сейчас фиксируется его история обобщения (`createCachedFetcher<P, R = Movie[]>`)
-- [ ] обновить `AGENTS.md`, секция «Performance budgets»: упомянуть группу `page-person` и то, что `@entities/person` осознанно попадает в чанк `shared`
-- [ ] обновить `AGENTS.md`, секция «CSP headers»: зафиксировать, что фото персоны проверено живым запросом и отдаётся с уже разрешённого `avatars.mds.yandex.net` — правки `vercel.json` не потребовались
+**Модель:** `sonnet` · effort `medium` — правки документации по чёткому списку
+
+`AGENTS.md` держит только общие для репозитория конвенции, детали по областям — в `.claude/rules/*.md` (см. таблицу «Topic docs»). Правило: одна строка — правило + причина, история — в этом плане.
+
+- [ ] `AGENTS.md`, «Routing»: добавить `/person/:id` в перечисление маршрутов (с кратким описанием: фото, мета, фильмография, факты)
+- [ ] `AGENTS.md`, «Project structure»: в комментарии к `entities/` добавить `person`; в абзаце «Public API» заменить «(and `entities/movie`)» на «(and every `entities/*` slice)»
+- [ ] `AGENTS.md`, таблица «Topic docs»: в строке `data-layer.md` добавить `src/entities/person/**` и `src/pages/person/**`
+- [ ] `.claude/rules/data-layer.md`, frontmatter `paths:`: добавить `src/entities/person/**`, `src/pages/person/**`, `src/shared/lib/cachedFetcher/**` — иначе Claude Code не подгрузит правила слоя данных при работе с персоной
+- [ ] `.claude/rules/data-layer.md`, «Shared building blocks»: строку `createCachedFetcher<P, R = Movie[]>` (`@entities/movie/api/createCachedFetcher.ts`) заменить на `createCachedFetcher<P, R>` (`@shared/lib`) с одной фразой-причиной переезда (общая инфраструктура двух entity-слайсов); добавить `invalidatePersonDetail` в перечень `invalidate*`-экспортов
+- [ ] `.claude/rules/data-layer.md`: новая секция `## /person/:id` — `usePersonDetail(id)` = `use(getPersonDetail(id))` без `bundleCache`; фильмография — текстовый список из `MovieInPerson` (нет постеров/годов/жанров → не `Card`, постеры через `getMoviesByIds` не догружаются из-за квоты); теги в `facts[]` вырезает маппер, HTML-сущности не декодируются (принятое ограничение); `formatDate` вызывается в page-слое, т.к. entity-слайсы не импортируют друг друга
+- [ ] `.claude/rules/build-budgets.md`: упомянуть, что `@entities/person` осознанно попадает в чанк `shared` (group-порядок не трогаем ради одного слайса); сами лимиты не дублировать — источник правды `package.json`
+- [ ] `.claude/rules/e2e.md`: «Specs cover all 7 routes» → 8, упомянуть `person-detail.spec.ts` (desktop-only)
+- [ ] `.claude/rules/csp.md`, `img-src`: уточнить, что фото персон по живому запросу (`/v1.5/person/6317`) приходят с `avatars.mds.yandex.net`, `st.kp.yandex.net` — второй возможный хост; оба уже разрешены
 - [ ] удалить `docs/backlog/actor-detail-page.md` — пункт бэклога закрыт (жизненный цикл «создать → удалить»)
 - [ ] проверить, нужно ли обновлять `README.md` (если там перечислены маршруты)
 - [ ] перенести этот план в `docs/plans/completed/`
@@ -544,4 +607,4 @@ _Пункты, требующие ручного вмешательства ил
 **Внешние системы:**
 
 - Изменений в `vercel.json` (CSP/заголовки безопасности) **не требуется** — подтверждено живым запросом: `photo` приходит с `https://avatars.mds.yandex.net`, хост уже в `img-src`; `st.kp.yandex.net` (второй возможный домен фото персон) там тоже уже есть. Если в будущем фото начнут отдаваться с третьего домена, `img-src` придётся обновить вручную — это внешний факт, который никакой тест не поймает.
-- После деплоя проверить в Sentry, что на `/person/:id` не посыпались новые ошибки, и в Plausible — что pageview для нового маршрута регистрируется (`AppLayout` вызывает `trackPageview()` по смене `pathname`, отдельной проводки не нужно).
+- После деплоя проверить в Sentry, что на `/person/:id` не посыпались новые ошибки и что транзакции группируются под параметризованным именем `/person/:id`, а не по одной на персону (обеспечивает `Sentry.wrapCreateBrowserRouter` в `router.tsx`, отдельной проводки не нужно), и в Plausible — что pageview для нового маршрута регистрируется (`AppLayout` вызывает `trackPageview()` по смене `pathname`, отдельной проводки не нужно).
