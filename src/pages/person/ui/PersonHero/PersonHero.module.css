@@ -1,0 +1,152 @@
+.hero {
+  padding: 24px 16px 32px;
+  background: var(--bg-primary);
+}
+
+/* Мобильная база — одна колонка (фото сверху, инфо под ним); десктопная
+   раскладка (грид 240px+1fr, текст слева) — оверрайд ниже, по образцу
+   MovieHero.module.css и уже смонтированного PersonDetailSkeleton. */
+.layout {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.photo {
+  width: 160px;
+  align-self: center;
+}
+
+.photoImage {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  object-fit: cover;
+}
+
+.photoFallback {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+
+.tags {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.tagPill {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border: 1px solid var(--border-soft);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.enName {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-faint);
+}
+
+.metaRow {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13.5px;
+}
+
+.metaLabel {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  align-self: center;
+}
+
+.metaValue {
+  color: var(--text-secondary);
+}
+
+@media (min-width: 720px) {
+  .hero {
+    padding: 40px 40px 48px;
+  }
+
+  .layout {
+    flex-direction: row;
+    gap: 48px;
+    align-items: flex-start;
+  }
+
+  .photo {
+    width: 240px;
+    align-self: auto;
+  }
+
+  .info {
+    padding-top: 4px;
+    text-align: left;
+    gap: 20px;
+  }
+
+  .tags {
+    justify-content: flex-start;
+  }
+
+  .heading {
+    font-size: 56px;
+  }
+
+  .meta {
+    align-items: flex-start;
+  }
+
+  .metaRow {
+    justify-content: flex-start;
+  }
+}
