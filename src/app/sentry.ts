@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react'
 import { PROFILE_ARIA_LABEL_PREFIX, setStorageErrorReporter } from '@shared/lib'
 import type { StorageErrorReporter } from '@shared/lib'
+import type { ErrorInfo } from 'react'
 import { useEffect } from 'react'
 import {
   createRoutesFromChildren,
@@ -162,6 +163,19 @@ const reportStorageErrorToSentry: StorageErrorReporter = ({
       tags: { storageKey: key, storageOperation: operation },
     },
   )
+}
+
+// Перехватывается раньше GlobalErrorBoundary — требует явного репортинга. errorInfo/componentStack
+// содержит информацию, которую раньше давал Sentry.ErrorBoundary/captureReactException; не потеряем
+// это вызвав только captureException(error) без контекста.
+export const captureRouteError = (error: Error, errorInfo: ErrorInfo): void => {
+  Sentry.captureException(error, {
+    contexts: {
+      react: {
+        componentStack: errorInfo.componentStack,
+      },
+    },
+  })
 }
 
 // Явная функция, а не side-effect при импорте — тестируема с разными import.meta.env.PROD /

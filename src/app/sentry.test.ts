@@ -4,6 +4,7 @@ import { setStorageErrorReporter } from '@shared/lib'
 
 import { SENTRY_TRACES_SAMPLE_RATE } from '../../sentry.config'
 import {
+  captureRouteError,
   initSentry,
   scrubApiKeyHeader,
   scrubProfileNameBreadcrumb,
@@ -341,5 +342,26 @@ describe('initSentry', () => {
     const callArgs = vi.mocked(Sentry.init).mock.calls[0]?.[0]
     expect(callArgs).toBeDefined()
     expect(Object.keys(callArgs ?? {})).not.toContain('tracePropagationTargets')
+  })
+})
+
+describe('captureRouteError', () => {
+  it('вызывает Sentry.captureException с ошибкой и componentStack из errorInfo', () => {
+    const error = new Error('Route render failed')
+    const errorInfo = {
+      componentStack: 'ComponentA > ComponentB > ComponentC',
+    }
+
+    vi.mocked(Sentry.captureException).mockClear()
+    captureRouteError(error, errorInfo)
+
+    expect(Sentry.captureException).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(Sentry.captureException)).toHaveBeenCalledWith(error, {
+      contexts: {
+        react: {
+          componentStack: 'ComponentA > ComponentB > ComponentC',
+        },
+      },
+    })
   })
 })
