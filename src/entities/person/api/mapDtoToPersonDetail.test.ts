@@ -214,6 +214,12 @@ describe('mapDtoToPersonDetail — facts[] очистка от HTML-тегов',
     expect(fact).toContain('факт')
   })
 
+  it('незакрытая `<` не съедает остаток строки', () => {
+    expect(
+      mapDtoToPersonDetail(doc({ facts: [{ value: 'стаж <5 лет' }] })).facts,
+    ).toEqual(['стаж 5 лет'])
+  })
+
   it('записи без value отфильтровываются до очистки тегов', () => {
     expect(
       mapDtoToPersonDetail(
