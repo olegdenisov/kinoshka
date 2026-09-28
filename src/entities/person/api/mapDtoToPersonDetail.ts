@@ -5,8 +5,21 @@ import type { PersonDetail, PersonMovieCredit } from '../model/types'
 // Kinopoisk иногда кладёт в facts[].value HTML-разметку (`<span class="...">`),
 // хотя в проверенной выборке это был простой текст — вырезаем теги, чтобы не
 // рендерить их пользователю сырыми (dangerouslySetInnerHTML в проекте не используется).
-const stripHtmlTags = (value: string): string =>
-  value.replace(/<[^>]*>/g, '').trim()
+// Повторяем до стабилизации: один проход по `<scr<b>ipt>` оставил бы новый тег
+// (CodeQL js/incomplete-multi-character-sanitization).
+const HTML_TAG = /<[^>]*>/g
+
+const stripHtmlTags = (value: string): string => {
+  let prev = value
+  let next = value.replace(HTML_TAG, '')
+
+  while (next !== prev) {
+    prev = next
+    next = next.replace(HTML_TAG, '')
+  }
+
+  return next.trim()
+}
 
 const mapMovieCredit = (
   movie: NonNullable<Person['movies']>[number],
