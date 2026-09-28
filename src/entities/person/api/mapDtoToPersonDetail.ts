@@ -5,14 +5,32 @@ import type { PersonDetail, PersonMovieCredit } from '../model/types'
 // Kinopoisk иногда кладёт в facts[].value HTML-разметку (`<span class="...">`),
 // хотя в проверенной выборке это был простой текст — вырезаем теги, чтобы не
 // рендерить их пользователю сырыми (dangerouslySetInnerHTML в проекте не используется).
-// После вырезания тегов добиваем одиночные `<`/`>`: иначе остатки вложенных или
-// разорванных тегов (`<scr<b>ipt>`) могли бы сложиться в разметку — так CodeQL
-// (js/incomplete-multi-character-sanitization) видит, что `<` в результате не остаётся.
-const stripHtmlTags = (value: string): string =>
-  value
-    .replace(/<[^>]*>/g, '')
-    .replace(/[<>]/g, '')
-    .trim()
+// Посимвольный проход вместо regex-replace: CodeQL (js/incomplete-multi-character-
+// sanitization) считает однопроходную замену `<[^>]*>` неполной очисткой, а DOMParser
+// нельзя — это sink Trusted Types (`require-trusted-types-for 'script'` в CSP).
+// Всё между `<` и `>` отбрасывается; `<`/`>` в результат не попадают никогда; у
+// незакрытого `<` («<5 лет») теряется только сама скобка, а не хвост строки.
+const stripHtmlTags = (value: string): string => {
+  let text = ''
+  let tag: string | null = null
+
+  for (const char of value) {
+    if (char === '<') {
+      if (tag !== null) text += tag
+      tag = ''
+    } else if (char === '>') {
+      tag = null
+    } else if (tag !== null) {
+      tag += char
+    } else {
+      text += char
+    }
+  }
+
+  if (tag !== null) text += tag
+
+  return text.trim()
+}
 
 const mapMovieCredit = (
   movie: NonNullable<Person['movies']>[number],
