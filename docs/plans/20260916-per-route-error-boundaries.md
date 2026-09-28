@@ -329,14 +329,14 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 - Modify: `src/app/providers.tsx`
 - Modify: `src/app/providers.test.tsx`
 
-- [ ] реализовать `registerChunkPreloadRecovery(): void` — `window.addEventListener('vite:preloadError', event => { event.preventDefault(); window.location.reload() })`
-- [ ] WHY-комментарий: Vite диспатчит это событие при сбое динамического `import()` чанка (устаревший деплой/chunk 404/сетевая ошибка) ДО того, как та же ошибка дойдёт до `Suspense`/`ErrorBoundary`; `React.lazy` кэширует rejected-промис на модуль — ни retry, ни навигация на другой роут не гарантируют восстановление (см. Overview, решение №2), полная перезагрузка — единственный надёжный путь; ссылка на `vite.dev/guide/build.html#load-error-handling`
-- [ ] вызвать `registerChunkPreloadRecovery()` один раз на верхнем уровне модуля в `src/app/providers.tsx`, рядом с `initAnalytics()` (единственный оставшийся там side-effect-вызов — `initSentry()` живёт в `sentry-bootstrap.ts`, `reportWebVitals()` удалён); дополнить существующий комментарий над `initAnalytics()`
-- [ ] в `providers.test.tsx` добавить `vi.mock('./chunkPreloadRecovery', () => ({ registerChunkPreloadRecovery: vi.fn() }))` и тест «вызывает `registerChunkPreloadRecovery` один раз при импорте модуля» по образцу теста на `initAnalytics`; обновить шапочный комментарий файла
-- [ ] написать тест: диспатч `CustomEvent('vite:preloadError', { cancelable: true })` на `window` после вызова `registerChunkPreloadRecovery()` — `event.preventDefault` вызван, `window.location.reload` (замоканный через `vi.stubGlobal`/`vi.spyOn`) вызван ровно один раз
-- [ ] написать тест: без диспатча события — `window.location.reload` не вызывается (компонент/модуль сам по себе не триггерит побочный эффект)
-- [ ] следить, чтобы слушатель регистрировался в файле один раз (иначе повторная регистрация в jsdom-`window` даст несколько вызовов `reload` на один диспатч); функцию отписки в API не добавлять ради тестов
-- [ ] прогнать тесты — должны проходить перед Task 6
+- [x] реализовать `registerChunkPreloadRecovery(): void` — `window.addEventListener('vite:preloadError', event => { event.preventDefault(); window.location.reload() })`
+- [x] WHY-комментарий: Vite диспатчит это событие при сбое динамического `import()` чанка (устаревший деплой/chunk 404/сетевая ошибка) ДО того, как та же ошибка дойдёт до `Suspense`/`ErrorBoundary`; `React.lazy` кэширует rejected-промис на модуль — ни retry, ни навигация на другой роут не гарантируют восстановление (см. Overview, решение №2), полная перезагрузка — единственный надёжный путь; ссылка на `vite.dev/guide/build.html#load-error-handling`
+- [x] вызвать `registerChunkPreloadRecovery()` один раз на верхнем уровне модуля в `src/app/providers.tsx`, рядом с `initAnalytics()` (единственный оставшийся там side-effect-вызов — `initSentry()` живёт в `sentry-bootstrap.ts`, `reportWebVitals()` удалён); дополнить существующий комментарий над `initAnalytics()`
+- [x] в `providers.test.tsx` добавить `vi.mock('./chunkPreloadRecovery', () => ({ registerChunkPreloadRecovery: vi.fn() }))` и тест «вызывает `registerChunkPreloadRecovery` один раз при импорте модуля» по образцу теста на `initAnalytics`; обновить шапочный комментарий файла
+- [x] написать тест: диспатч `CustomEvent('vite:preloadError', { cancelable: true })` на `window` после вызова `registerChunkPreloadRecovery()` — `event.preventDefault` вызван, `window.location.reload` (замоканный через `vi.stubGlobal`/`vi.spyOn`) вызван ровно один раз
+- [x] написать тест: без диспатча события — `window.location.reload` не вызывается (компонент/модуль сам по себе не триггерит побочный эффект)
+- [x] следить, чтобы слушатель регистрировался в файле один раз (иначе повторная регистрация в jsdom-`window` даст несколько вызовов `reload` на один диспатч); функцию отписки в API не добавлять ради тестов
+- [x] прогнать тесты — должны проходить перед Task 6
 
 ### Task 6: Verify acceptance criteria
 
