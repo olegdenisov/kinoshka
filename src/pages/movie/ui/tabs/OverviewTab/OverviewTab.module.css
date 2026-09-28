@@ -72,6 +72,25 @@
   color: var(--text-primary);
 }
 
+.crewLink {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 2px;
+  border-radius: 2px;
+}
+
+.crewLink:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .crewLink:hover {
+    color: var(--accent-warm);
+  }
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;

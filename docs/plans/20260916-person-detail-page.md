@@ -498,14 +498,14 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - Modify: `src/pages/movie/ui/tabs/OverviewTab/OverviewTab.module.css`
 - Create: `src/pages/movie/ui/tabs/OverviewTab/OverviewTab.test.tsx`
 
-- [ ] изменить `groupCrewByProfession` так, чтобы он возвращал `Array<{ profession: string; members: CrewMember[] }>` вместо склеенной строки `names` — из строки ссылки не построить
-- [ ] обновить `MetaRow` в `OverviewTab.tsx`: принимать `ReactNode` вместо `string` в `value` и рендерить `members` как `<Link to={`/person/${m.id}`}>` через разделитель `, `; для записи с пустым `m.name` рендерить обычный текстовый узел без `<Link>` (та же причина, что в Задаче 11 — `<Link>` без доступного имени критично для axe `link-name` и упадёт в `checkA11y` из Задачи 14)
-- [ ] добавить WHY-комментарий на русском, почему `names: string` пришлось развернуть в `members: CrewMember[]`, и отдельно — почему запись с пустым `name` не оборачивается в ссылку
-- [ ] дописать стили ссылок crew в `OverviewTab.module.css` (цвет `var(--accent-warm)` при hover, `:focus-visible`), не ломая существующую вёрстку мета-строк
-- [ ] обновить существующие тесты `groupCrewByProfession.test.ts` под новую форму возврата (порядок профессий, порядок членов внутри профессии, дубли)
-- [ ] написать тест `groupCrewByProfession.test.ts` на пустой вход → пустой массив
-- [ ] создать `OverviewTab.test.tsx` (сейчас у компонента нет отдельного тест-файла): проверить, что имена crew отрендерены как ссылки с `href="/person/:id"`, разделитель между несколькими именами присутствует, а остальной контент вкладки (synopsis, мета-строки) не сломан переходом `value: string → ReactNode`; отдельным кейсом — член съёмочной группы с пустым `name` рендерится текстом без `<Link>`
-- [ ] запустить `make test` — должны пройти до перехода к задаче 13
+- [x] изменить `groupCrewByProfession` так, чтобы он возвращал `Array<{ profession: string; members: CrewMember[] }>` вместо склеенной строки `names` — из строки ссылки не построить
+- [x] обновить `MetaRow` в `OverviewTab.tsx`: принимать `ReactNode` вместо `string` в `value` и рендерить `members` как `<Link to={`/person/${m.id}`}>` через разделитель `, `; для записи с пустым `m.name` рендерить обычный текстовый узел без `<Link>` (та же причина, что в Задаче 11 — `<Link>` без доступного имени критично для axe `link-name` и упадёт в `checkA11y` из Задачи 14)
+- [x] добавить WHY-комментарий на русском, почему `names: string` пришлось развернуть в `members: CrewMember[]`, и отдельно — почему запись с пустым `name` не оборачивается в ссылку
+- [x] дописать стили ссылок crew в `OverviewTab.module.css` (цвет `var(--accent-warm)` при hover, `:focus-visible`), не ломая существующую вёрстку мета-строк
+- [x] обновить существующие тесты `groupCrewByProfession.test.ts` под новую форму возврата (порядок профессий, порядок членов внутри профессии, дубли)
+- [x] написать тест `groupCrewByProfession.test.ts` на пустой вход → пустой массив
+- [x] создать `OverviewTab.test.tsx` (сейчас у компонента нет отдельного тест-файла): проверить, что имена crew отрендерены как ссылки с `href="/person/:id"`, разделитель между несколькими именами присутствует, а остальной контент вкладки (synopsis, мета-строки) не сломан переходом `value: string → ReactNode`; отдельным кейсом — член съёмочной группы с пустым `name` рендерится текстом без `<Link>`
+- [x] запустить `make test` — должны пройти до перехода к задаче 13
 
 ### Задача 13: Группа код-сплиттинга `page-person` и бюджет `size-limit`
 

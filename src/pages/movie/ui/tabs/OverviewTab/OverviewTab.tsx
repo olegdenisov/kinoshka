@@ -1,4 +1,6 @@
-import type { MovieDetail } from '@entities/movie'
+import type { CrewMember, MovieDetail } from '@entities/movie'
+import type { ReactNode } from 'react'
+import { Link } from 'react-router'
 
 import { groupCrewByProfession } from '../../../lib/groupCrewByProfession'
 
@@ -12,7 +14,7 @@ const SectionHead = ({ children }: SectionHeadProps) => (
 
 type MetaRowProps = {
   label: string
-  value: string
+  value: ReactNode
 }
 
 const MetaRow = ({ label, value }: MetaRowProps) => (
@@ -21,6 +23,35 @@ const MetaRow = ({ label, value }: MetaRowProps) => (
     <div className={s.metaValue}>{value}</div>
   </div>
 )
+
+type CrewMemberListProps = {
+  members: CrewMember[]
+}
+
+const CrewMemberList = ({ members }: CrewMemberListProps) => {
+  // DTO не гарантирует имя члена съёмочной группы (mapDtoToMovieDetail может отдать
+  // name: ''). У пустого имени нет ни текста, ни ссылки — нечего показывать, поэтому
+  // такие записи отбрасываем ещё до расстановки разделителей ", ": иначе запись без
+  // имени, оказавшись не первой в группе, оставляла бы висячий разделитель без пары
+  // (', ' и дальше пусто). axe-правило link-name критично и уронило бы checkA11y на
+  // живых данных (Задача 14), а имя без ссылки не имеет смысла отдельно от этого.
+  const named = members.filter(m => m.name)
+
+  return (
+    <>
+      {named.map((m, i) => (
+        // Ключ включает индекс: один и тот же id персоны может встретиться дважды в одной
+        // профессии (дубли персон в API) — одного id как ключа недостаточно.
+        <span key={`${m.id}-${i}`}>
+          {i > 0 && ', '}
+          <Link to={`/person/${m.id}`} className={s.crewLink}>
+            {m.name}
+          </Link>
+        </span>
+      ))}
+    </>
+  )
+}
 
 type SignalRowProps = {
   label: string
@@ -55,9 +86,18 @@ export const OverviewTab = ({ m }: OverviewTabProps) => {
         </div>
 
         <div className={s.crew}>
-          {groupCrewByProfession(m.crew).map(({ profession, names }) => (
-            <MetaRow key={profession} label={profession} value={names} />
-          ))}
+          {groupCrewByProfession(m.crew)
+            // Профессия, где у всех членов пустое имя, не даёт ни текста, ни ссылки —
+            // строка вида "Продюсер: " без значения выглядела бы как баг, поэтому такую
+            // группу целиком не рендерим.
+            .filter(({ members }) => members.some(mm => mm.name))
+            .map(({ profession, members }) => (
+              <MetaRow
+                key={profession}
+                label={profession}
+                value={<CrewMemberList members={members} />}
+              />
+            ))}
         </div>
       </div>
 
