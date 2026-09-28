@@ -342,13 +342,13 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 
 **Модель:** `opus` · effort `high` — финальная проверка приёмки, высокая цена пропущенной регрессии
 
-- [ ] проверить все три пункта роадмапа 2.6: global boundary в `app/` (уже было, `GlobalErrorBoundary`), per-route boundary через `pages/*`-контент (реализовано на уровне `AppLayout`, не дублируя код по 8 страницам — согласованное отклонение от буквальной формулировки), fallback с retry + ссылкой на главную
-- [ ] вручную (`make dev`) проверить: временно бросить ошибку в одной из страниц, убедиться что Header/BottomNav не пропадают, retry и ссылка «На главную» работают
-- [ ] прогнать полный набор тестов: `make test`
-- [ ] прогнать `make typecheck`, `make lint`, `make format-check`
-- [ ] `make knip` — новый экспорт `captureRouteError`/`registerChunkPreloadRecovery` используется, лишних экспортов нет
-- [ ] `make build-only && make size` — новый `AppLayout.module.css` и `Link` в entry-чанке не выбивают бюджеты `size-limit`
-- [ ] `make coverage` — убедиться, что новые ветки (`onError`, `secondaryAction`, `key={pathname}`-сброс, `captureRouteError`, `registerChunkPreloadRecovery`) покрыты (в проекте нет глобального порога coverage — проверка вручную по отчёту, не автоматический gate)
+- [x] проверить все три пункта роадмапа 2.6: global boundary в `app/` (уже было, `GlobalErrorBoundary`), per-route boundary через `pages/*`-контент (реализовано на уровне `AppLayout`, не дублируя код по 8 страницам — согласованное отклонение от буквальной формулировки), fallback с retry + ссылкой на главную
+- [x] вручную (`make dev`) проверить: временно бросить ошибку в одной из страниц, убедиться что Header/BottomNav не пропадают, retry и ссылка «На главную» работают (проверено через chrome-devtools на `/profile` с временным throw, откачен: Header на месте, retry восстанавливает страницу, переход на `/favorites` сбрасывает границу; «На главную» — проверен только `href="/"`, клик не делался, чтобы не тратить лимит API на `/`)
+- [x] прогнать полный набор тестов: `make test`
+- [x] прогнать `make typecheck`, `make lint`, `make format-check`
+- [x] `make knip` — новый экспорт `captureRouteError`/`registerChunkPreloadRecovery` используется, лишних экспортов нет
+- [x] `make build-only && make size` — новый `AppLayout.module.css` и `Link` в entry-чанке не выбивают бюджеты `size-limit`
+- [x] `make coverage` — убедиться, что новые ветки (`onError`, `secondaryAction`, `key={pathname}`-сброс, `captureRouteError`, `registerChunkPreloadRecovery`) покрыты (в проекте нет глобального порога coverage — проверка вручную по отчёту, не автоматический gate)
 
 ### Task 7: Обновить документацию и роадмап
 
