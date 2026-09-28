@@ -22,7 +22,7 @@ paths:
 
 # Data layer
 
-History: `docs/plans/completed/20260805-search-filters-url-sync.md`, `…-movie-detail-page-api.md`, `…-async-boundary-retry-and-empty-states.md`, `…-dynamic-genre-dictionary.md`, `…-favorites-feature.md`, `…-popular-this-week-rail.md`, `…-recommendations-rule-based.md`.
+History: `docs/plans/completed/20260805-search-filters-url-sync.md`, `…-movie-detail-page-api.md`, `…-async-boundary-retry-and-empty-states.md`, `…-dynamic-genre-dictionary.md`, `…-favorites-feature.md`, `…-popular-this-week-rail.md`, `…-recommendations-rule-based.md`, `…-person-detail-page.md`.
 
 ## Shared building blocks
 
@@ -50,6 +50,16 @@ History: `docs/plans/completed/20260805-search-filters-url-sync.md`, `…-movie-
 ## `/movie/:id`
 
 `useMovieDetail(id)` = `Promise.allSettled([getMovieDetail(), getMovieImages()])`. Cast/crew/similar come from the same `MovieDtoV14`. Images rejecting → `images: []`, page still renders; detail rejecting (incl. 404) → `AsyncBoundary`.
+
+## `/person/:id`
+
+- `usePersonDetail(id)` = `use(getPersonDetail(id))` — no `bundleCache` needed (unlike `useMovieDetail`): a single stable promise straight from `createCachedFetcher`, not a `Promise.allSettled` combining two.
+- Filmography is a compact text list built from `MovieInPerson` (no `poster`/`year`/`genre` in the DTO), not `Card` — and no `getMoviesByIds` fan-out to fetch real cards, to stay within the demo API's 200 req/day quota.
+- Credits are grouped client-side by `enProfession` (`groupCreditsByProfession`, `src/pages/person/lib/`): a preferred order (`actor`, `director`, `writer`, `producer`, `composer`, `operator`) then the rest by first appearance, with an `Other` bucket for a missing `enProfession` and a raw-label fallback for one outside `PROFESSION_LABELS`.
+- `facts[]` HTML tags are stripped in `mapDtoToPersonDetail`; HTML entities (`&laquo;`, `&nbsp;`, …) are **not** decoded — accepted limitation.
+- `formatDate` (`@entities/movie/lib`) is called from the page layer, not the mapper — entity slices can't import each other. It formats in UTC (calendar dates from the API are UTC midnight, not a timezone-aware instant).
+- 404 via `ApiError` (`error.status === 404`), same pattern as `/movie/:id`; `invalidatePersonDetail(id)` wired to `AsyncBoundary`'s `onRetry`.
+- **DEV-only caveat:** an error snapshot replayed from `sessionStorage` within the 20s cooldown loses `ApiError`'s `status` (`createCachedFetcher` re-wraps it as a plain `Error`) — the 404 view falls back to the generic error for that replay. Same behavior on `/movie/:id`; prod is unaffected (session-persist is DEV-only).
 
 ## `/popular`
 

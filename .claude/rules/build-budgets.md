@@ -19,6 +19,7 @@ History and measurements: `docs/plans/completed/20260912-performance-budgets-bun
 - `<Suspense fallback={<Spinner/>}>` around `<Outlet/>` in `AppLayout` is for **code** loading; pages keep their own `AsyncBoundary` for data. Accepted: navigations run in `startTransition`, so on page-to-page nav the old page (and nav highlight, pageview) stays until the chunk loads.
 - `build.rolldownOptions.output.codeSplitting.groups` (not deprecated `advancedChunks`, no global `chunkFileNames`): `vendor` (`/node_modules/`), `shared` (`/(widgets|features|entities|shared)\//`), then one `page-<name>` group per page. **`shared` must precede the page groups** — without it Rolldown dumps cross-page code into the first page chunk and every route eagerly loads it. Verify after changes: entry and page chunks import only `rolldown-runtime`/`vendor`/`shared`, never another `page-*`.
 - New route → add a `page-<name>` group and a `size-limit` entry.
+- `@entities/person` deliberately lands in the `shared` group (not a `page-person`-only chunk) — same as every other `entities/*`/`features/*`/`widgets/*` slice, since `shared`'s `test` regex catches that whole layer before the page groups run.
 
 ## `size-limit` (`package.json`, `@size-limit/file`, `gzip: true`, `path` globs)
 

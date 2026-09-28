@@ -88,8 +88,9 @@ const allCaches: Map<string, CacheEntry<unknown>>[] = []
  * (или разные `it` в одном файле), обращающиеся к одному и тому же namespace с одинаковыми
  * параметрами запроса, получали бы кэш-хит с промисом/данными из более раннего теста —
  * до этой правки конвенция избегания коллизий держалась только на том, что каждый тест
- * вручную придумывает уникальный query/набор фильтров (см. комментарии в SearchDesktop.test.tsx
- * / SearchMobile.test.tsx). sessionStorage-персист (см. `createSessionCache`) здесь не трогаем —
+ * вручную придумывает уникальный query/набор фильтров (см. комментарии в тестах,
+ * использующих `getMovieDetail`/`getPersonDetail`, например `getMovieDetail.test.ts`).
+ * sessionStorage-персист (см. `createSessionCache`) здесь не трогаем —
  * `beforeEach(() => sessionStorage.clear())` в тестовых файлах уже делает эту часть.
  */
 export const resetAllCachedFetchers = (): void => {

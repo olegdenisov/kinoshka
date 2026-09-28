@@ -568,18 +568,18 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 
 `AGENTS.md` держит только общие для репозитория конвенции, детали по областям — в `.claude/rules/*.md` (см. таблицу «Topic docs»). Правило: одна строка — правило + причина, история — в этом плане.
 
-- [ ] `AGENTS.md`, «Routing»: добавить `/person/:id` в перечисление маршрутов (с кратким описанием: фото, мета, фильмография, факты)
+- [x] `AGENTS.md`, «Routing»: добавить `/person/:id` в перечисление маршрутов (с кратким описанием: фото, мета, фильмография, факты)
 - [x] `AGENTS.md`, «Project structure»: в комментарии к `entities/` добавить `person`; в абзаце «Public API» заменить «(and `entities/movie`)» на «(and every `entities/*` slice)» (сделано в review phase 1)
 - [x] `AGENTS.md`, таблица «Topic docs»: в строке `data-layer.md` добавить `src/entities/person/**` и `src/pages/person/**` (сделано в review phase 1)
 - [x] `.claude/rules/data-layer.md`, frontmatter `paths:`: добавить `src/entities/person/**`, `src/pages/person/**`, `src/shared/lib/cachedFetcher/**` — иначе Claude Code не подгрузит правила слоя данных при работе с персоной (сделано в review phase 1)
 - [x] `.claude/rules/data-layer.md`, «Shared building blocks»: строку `createCachedFetcher<P, R = Movie[]>` (`@entities/movie/api/createCachedFetcher.ts`) заменить на `createCachedFetcher<P, R>` (`@shared/lib`) с одной фразой-причиной переезда (общая инфраструктура двух entity-слайсов); добавить `invalidatePersonDetail` в перечень `invalidate*`-экспортов (сделано в review phase 1)
-- [ ] `.claude/rules/data-layer.md`: новая секция `## /person/:id` — `usePersonDetail(id)` = `use(getPersonDetail(id))` без `bundleCache`; фильмография — текстовый список из `MovieInPerson` (нет постеров/годов/жанров → не `Card`, постеры через `getMoviesByIds` не догружаются из-за квоты); теги в `facts[]` вырезает маппер, HTML-сущности не декодируются (принятое ограничение); `formatDate` вызывается в page-слое, т.к. entity-слайсы не импортируют друг друга
-- [ ] `.claude/rules/build-budgets.md`: упомянуть, что `@entities/person` осознанно попадает в чанк `shared` (group-порядок не трогаем ради одного слайса); сами лимиты не дублировать — источник правды `package.json`
-- [ ] `.claude/rules/e2e.md`: «Specs cover all 7 routes» → 8, упомянуть `person-detail.spec.ts` (desktop-only)
-- [ ] `.claude/rules/csp.md`, `img-src`: уточнить, что фото персон по живому запросу (`/v1.5/person/6317`) приходят с `avatars.mds.yandex.net`, `st.kp.yandex.net` — второй возможный хост; оба уже разрешены
-- [ ] удалить `docs/backlog/actor-detail-page.md` — пункт бэклога закрыт (жизненный цикл «создать → удалить»)
-- [ ] проверить, нужно ли обновлять `README.md` (если там перечислены маршруты)
-- [ ] перенести этот план в `docs/plans/completed/`
+- [x] `.claude/rules/data-layer.md`: новая секция `## /person/:id` — `usePersonDetail(id)` = `use(getPersonDetail(id))` без `bundleCache`; фильмография — текстовый список из `MovieInPerson` (нет постеров/годов/жанров → не `Card`, постеры через `getMoviesByIds` не догружаются из-за квоты); теги в `facts[]` вырезает маппер, HTML-сущности не декодируются (принятое ограничение); `formatDate` вызывается в page-слое, т.к. entity-слайсы не импортируют друг друга
+- [x] `.claude/rules/build-budgets.md`: упомянуть, что `@entities/person` осознанно попадает в чанк `shared` (group-порядок не трогаем ради одного слайса); сами лимиты не дублировать — источник правды `package.json`
+- [x] `.claude/rules/e2e.md`: «Specs cover all 7 routes» → 8, упомянуть `person-detail.spec.ts` (desktop-only)
+- [x] `.claude/rules/csp.md`, `img-src`: уточнить, что фото персон по живому запросу (`/v1.5/person/6317`) приходят с `avatars.mds.yandex.net`, `st.kp.yandex.net` — второй возможный хост; оба уже разрешены
+- [x] удалить `docs/backlog/actor-detail-page.md` — пункт бэклога закрыт (жизненный цикл «создать → удалить»)
+- [x] проверить, нужно ли обновлять `README.md` (если там перечислены маршруты) — да, дописана страница персоны в перечисление разделов и `entities/` в архитектуре
+- [x] перенести этот план в `docs/plans/completed/` (переносит оркестратор после финальных фаз)
 
 ## После завершения
 

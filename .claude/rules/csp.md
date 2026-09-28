@@ -22,7 +22,7 @@ History (incl. how hosts were verified): `docs/plans/completed/20260912-csp-secu
 
 - `script-src`: a `'sha256-…'` of the anti-FOUC inline script in `index.html` + `'unsafe-inline'` (ignored by CSP2+ browsers when a hash is present; legacy fallback) + `https://plausible.io`. **Editing the inline script changes the hash** — `vercel-headers.test.ts` recomputes it from `index.html` and fails if `vercel.json` is stale. Vite doesn't transform that tag; an HTML minifier would break the invariant.
 - `style-src 'unsafe-inline'` — runtime inline `style` attributes can't be hashed; accepted (CSS injection only).
-- `img-src`: `https://avatars.mds.yandex.net` (posters/backdrops/images) and `https://st.kp.yandex.net` (person photos). `image.tmdb.org` deliberately absent (`logo` isn't rendered). No `data:` — no asset currently crosses `assetsInlineLimit`; revisit if one does.
+- `img-src`: `https://avatars.mds.yandex.net` (posters/backdrops/images; a live `/v1.5/person/6317` request confirmed person photos also come from this host) and `https://st.kp.yandex.net` (the other host Kinopoisk may serve person photos from — not observed live, kept allowed defensively). `image.tmdb.org` deliberately absent (`logo` isn't rendered). No `data:` — no asset currently crosses `assetsInlineLimit`; revisit if one does.
 - `connect-src` includes `fonts.googleapis.com`/`fonts.gstatic.com` because Chromium checks `preconnect` hints against `connect-src`.
 - `require-trusted-types-for 'script'` (no `dangerouslySetInnerHTML` in `src/`).
 - `'strict-dynamic'` not adopted — needs per-request nonces, impossible with static `vercel.json` (revisit with Edge Middleware/SSR).
