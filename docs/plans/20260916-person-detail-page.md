@@ -338,18 +338,18 @@ export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
 - Create: `src/pages/person/ui/Person/Person.module.css`
 - Create: `src/pages/person/PersonPage.test.tsx`
 
-- [ ] создать `PersonPage.tsx` по образцу `MoviePage.tsx`: валидация `id` из `useParams` (`Number.isInteger(numericId) && numericId > 0`), иначе `ErrorState` «Person not found» / «This person doesn't exist or was removed.» без сетевого запроса
-- [ ] обернуть контент в `AsyncBoundary` с `fallback={<PersonDetailSkeleton />}`, `errorFallback` (различает `error instanceof ApiError && error.status === 404`) и `onRetry={() => invalidatePersonDetail(numericId)}`
-- [ ] вынести внутренний `PersonDetailContent` (вызывает `usePersonDetail(id)`), рендерить `<Person key={id} person={detail} />` с WHY-комментарием про сброс локального состояния при переходе между персонами
-- [ ] создать `src/pages/person/index.tsx` с именованным реэкспортом `export { PersonPage } from './PersonPage'` (важно для `lazyNamed`)
-- [ ] создать `PersonDetailSkeleton` по образцу `MovieDetailSkeleton` — блок фото + строки имени/меты + строки фильмографии, через `Skeleton` из `@shared/ui`, CSS mobile-first с `@media (min-width: 720px)`
-- [ ] создать заглушку `Person.tsx`, рендерящую пока только `<h1>{person.name}</h1>` (наполнение — задачи 6-9), и `Person.module.css`
-- [ ] написать тест `PersonPage.test.tsx`: невалидный `id` (`/person/abc`, `/person/0`, `/person/-1`) → `ErrorState` «Person not found», запроса в сеть нет
-- [ ] написать тест `PersonPage.test.tsx`: MSW 404 → `ErrorState` «Person not found» с кнопкой Retry
-- [ ] написать тест `PersonPage.test.tsx`: MSW 500 / другая ошибка → generic `ErrorState`, а не «Person not found»
-- [ ] написать тест `PersonPage.test.tsx`: успешная загрузка → отображается имя персоны
-- [ ] написать тест `PersonPage.test.tsx`: клик по Retry после ошибки реально повторяет запрос (проверить счётчиком MSW-хендлера)
-- [ ] запустить `make test` — должны пройти до перехода к задаче 6
+- [x] создать `PersonPage.tsx` по образцу `MoviePage.tsx`: валидация `id` из `useParams` (`Number.isInteger(numericId) && numericId > 0`), иначе `ErrorState` «Person not found» / «This person doesn't exist or was removed.» без сетевого запроса
+- [x] обернуть контент в `AsyncBoundary` с `fallback={<PersonDetailSkeleton />}`, `errorFallback` (различает `error instanceof ApiError && error.status === 404`) и `onRetry={() => invalidatePersonDetail(numericId)}`
+- [x] вынести внутренний `PersonDetailContent` (вызывает `usePersonDetail(id)`), рендерить `<Person key={id} person={detail} />` с WHY-комментарием про сброс локального состояния при переходе между персонами
+- [x] создать `src/pages/person/index.tsx` с именованным реэкспортом `export { PersonPage } from './PersonPage'` (важно для `lazyNamed`)
+- [x] создать `PersonDetailSkeleton` по образцу `MovieDetailSkeleton` — блок фото + строки имени/меты + строки фильмографии, через `Skeleton` из `@shared/ui`, CSS mobile-first с `@media (min-width: 720px)`
+- [x] создать заглушку `Person.tsx`, рендерящую пока только `<h1>{person.name}</h1>` (наполнение — задачи 6-9), и `Person.module.css`
+- [x] написать тест `PersonPage.test.tsx`: невалидный `id` (`/person/abc`, `/person/0`, `/person/-1`) → `ErrorState` «Person not found», запроса в сеть нет
+- [x] написать тест `PersonPage.test.tsx`: MSW 404 → `ErrorState` «Person not found» с кнопкой Retry
+- [x] написать тест `PersonPage.test.tsx`: MSW 500 / другая ошибка → generic `ErrorState`, а не «Person not found»
+- [x] написать тест `PersonPage.test.tsx`: успешная загрузка → отображается имя персоны
+- [x] написать тест `PersonPage.test.tsx`: клик по Retry после ошибки реально повторяет запрос (проверить счётчиком MSW-хендлера)
+- [x] запустить `make test` — должны пройти до перехода к задаче 6
 
 ### Задача 6: Компонент `PersonHero` — фото, имя, профессии, биометрия
 
