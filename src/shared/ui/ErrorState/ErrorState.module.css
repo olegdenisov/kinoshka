@@ -18,8 +18,13 @@
   color: var(--text-secondary);
 }
 
-.retryButton {
+.actions {
   margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.retryButton {
   padding: 8px 20px;
   font-size: 0.9375rem;
   color: var(--accent-warm);

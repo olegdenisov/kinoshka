@@ -287,13 +287,13 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 - Modify: `src/shared/ui/ErrorState/ErrorState.module.css`
 - Create: `src/shared/ui/ErrorState/ErrorState.test.tsx`
 
-- [ ] добавить `secondaryAction?: ReactNode` в `Props` (НЕ булев `homeLink` — компонент не должен знать про `react-router`/навигацию, только про то, что рядом с retry может стоять произвольный доп. узел)
-- [ ] обернуть кнопку retry и `secondaryAction` в новый `.actions`-контейнер (flex, `gap: 8px`), перенести `margin-top` с `.retryButton` на `.actions`; условие рендера контейнера — `onRetry || secondaryAction`
-- [ ] написать тест: без `onRetry`/`secondaryAction` — ни кнопки, ни доп. узла нет
-- [ ] написать тест: `secondaryAction={<span>custom</span>}` без `onRetry` — рендерится только переданный узел
-- [ ] написать тест: `onRetry` + `secondaryAction` одновременно — оба присутствуют, кнопка retry по-прежнему кликабельна и вызывает `onRetry`
-- [ ] написать тест: существующее поведение (`onRetry` без `secondaryAction`) не регрессировало — только кнопка retry
-- [ ] прогнать тесты — должны проходить перед Task 4
+- [x] добавить `secondaryAction?: ReactNode` в `Props` (НЕ булев `homeLink` — компонент не должен знать про `react-router`/навигацию, только про то, что рядом с retry может стоять произвольный доп. узел)
+- [x] обернуть кнопку retry и `secondaryAction` в новый `.actions`-контейнер (flex, `gap: 8px`), перенести `margin-top` с `.retryButton` на `.actions`; условие рендера контейнера — `onRetry || secondaryAction`
+- [x] написать тест: без `onRetry`/`secondaryAction` — ни кнопки, ни доп. узла нет
+- [x] написать тест: `secondaryAction={<span>custom</span>}` без `onRetry` — рендерится только переданный узел
+- [x] написать тест: `onRetry` + `secondaryAction` одновременно — оба присутствуют, кнопка retry по-прежнему кликабельна и вызывает `onRetry`
+- [x] написать тест: существующее поведение (`onRetry` без `secondaryAction`) не регрессировало — только кнопка retry
+- [x] прогнать тесты — должны проходить перед Task 4
 
 ### Task 4: Per-route `ErrorBoundary` в `AppLayout`
 
