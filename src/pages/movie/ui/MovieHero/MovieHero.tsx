@@ -45,6 +45,8 @@ type MovieHeroProps = {
   onLikedChange: (l: LikedState) => void
   watched: boolean
   onWatchedToggle: () => void
+  inWatchlist: boolean
+  onWatchlistToggle: () => void
 }
 
 export const MovieHero = ({
@@ -53,6 +55,8 @@ export const MovieHero = ({
   onLikedChange,
   watched,
   onWatchedToggle,
+  inWatchlist,
+  onWatchlistToggle,
 }: MovieHeroProps) => {
   return (
     <section className={s.hero}>
@@ -145,6 +149,8 @@ export const MovieHero = ({
               onChange={onLikedChange}
               watched={watched}
               onWatchedToggle={onWatchedToggle}
+              inWatchlist={inWatchlist}
+              onWatchlistToggle={onWatchlistToggle}
             />
 
             <p className={s.synopsis}>

@@ -1,5 +1,6 @@
 import type { MovieDetail, MovieImage } from '@entities/movie'
 import { useWatched } from '@features/watched'
+import { useWatchlist } from '@features/watchlist'
 import { useState } from 'react'
 
 import { MovieHero } from '../MovieHero'
@@ -30,10 +31,10 @@ export const Movie = ({ movie, images }: MovieProps) => {
   const [tab, setTab] = useState('Overview')
   const [liked, setLiked] = useState<LikedState>({
     rate: false,
-    list: false,
     fav: false,
   })
   const { isWatched, toggle } = useWatched()
+  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
   const related = movie.similarMovies.slice(0, 6)
 
   return (
@@ -44,6 +45,8 @@ export const Movie = ({ movie, images }: MovieProps) => {
         onLikedChange={setLiked}
         watched={isWatched(movie.id)}
         onWatchedToggle={() => toggle(movie.id)}
+        inWatchlist={isInWatchlist(movie.id)}
+        onWatchlistToggle={() => toggleWatchlist(movie.id)}
       />
       <MovieTabsNav tabs={TABS} activeTab={tab} onTabChange={setTab} />
       <div className={s.tabContent}>

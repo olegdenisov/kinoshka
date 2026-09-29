@@ -101,13 +101,13 @@
 - Modify: `src/pages/movie/ui/types.ts`
 - Modify: `src/pages/movie/ui/Movie/Movie.test.tsx` (`MovieActions.test.tsx` не существует)
 
-- [ ] `types.ts`: убрать `list` из `LikedState`
-- [ ] `MovieActions`: новые пропсы `inWatchlist`/`onWatchlistToggle`, подпись `Watchlist`, `active={inWatchlist}`
-- [ ] `MovieHero.tsx`: пробросить `inWatchlist`/`onWatchlistToggle` в `MovieActions` (рядом с `watched`/`onWatchedToggle`)
-- [ ] `Movie.tsx`: подключить `useWatchlist()` рядом с `useWatched()` вместо `liked.list`
-- [ ] `Movie.test.tsx`: новый `describe('Movie — Watchlist')` по образцу `describe('Movie — Watched')`: независимость (Watched не меняет watchlist и наоборот), просмотренный тайтл можно добавить в watchlist, состояние переживает перемонтирование, `aria-pressed`
-- [ ] `Movie.test.tsx`: заменить `Add to list` на `Watchlist` в тесте «остальные кнопки работают независимо от Watched» (в `e2e/` этого текста нет)
-- [ ] запустить `make test` и `make typecheck` — должно пройти до задачи 3
+- [x] `types.ts`: убрать `list` из `LikedState`
+- [x] `MovieActions`: новые пропсы `inWatchlist`/`onWatchlistToggle`, подпись `Watchlist`, `active={inWatchlist}`
+- [x] `MovieHero.tsx`: пробросить `inWatchlist`/`onWatchlistToggle` в `MovieActions` (рядом с `watched`/`onWatchedToggle`)
+- [x] `Movie.tsx`: подключить `useWatchlist()` рядом с `useWatched()` вместо `liked.list`
+- [x] `Movie.test.tsx`: новый `describe('Movie — Watchlist')` по образцу `describe('Movie — Watched')`: независимость (Watched не меняет watchlist и наоборот), просмотренный тайтл можно добавить в watchlist, состояние переживает перемонтирование, `aria-pressed`
+- [x] `Movie.test.tsx`: заменить `Add to list` на `Watchlist` в тесте «остальные кнопки работают независимо от Watched» (в `e2e/` этого текста нет)
+- [x] запустить `make test` и `make typecheck` — должно пройти до задачи 3
 
 ### Task 3: Страница `/watchlist`
 
