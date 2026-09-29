@@ -54,3 +54,30 @@ describe('RelatedMovies — избранное', () => {
     ).toBeInTheDocument()
   })
 })
+
+describe('RelatedMovies — lazy-mount', () => {
+  const original = window.IntersectionObserver
+
+  afterEach(() => {
+    window.IntersectionObserver = original
+  })
+
+  it('вне вьюпорта: заголовок виден, Card-сетка не смонтирована', () => {
+    // Observer, который никогда не сообщает о пересечении — секция «вне вьюпорта».
+    window.IntersectionObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+      takeRecords() {
+        return []
+      }
+    } as unknown as typeof IntersectionObserver
+
+    renderRelated([makeMovie(1), makeMovie(2)])
+
+    expect(screen.getByText('More like Some Movie')).toBeInTheDocument()
+    expect(screen.queryAllByRole('button', { name: /favorites/ })).toHaveLength(
+      0,
+    )
+  })
+})
