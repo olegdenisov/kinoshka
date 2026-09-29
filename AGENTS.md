@@ -6,24 +6,30 @@ Kinoshka — movie catalog SPA with a home feed, search, filters, and detail pag
 
 ## Topic docs — read before touching these areas
 
-This file holds only repo-wide conventions. Area-specific decisions and gotchas live in `.claude/rules/*.md`. Claude Code loads them automatically via their `paths:` frontmatter; **other agents (Codex, etc.) must open the matching file by hand before editing files in that area.** Full history/rationale for each area is in the linked `docs/plans/completed/*.md`.
+This file holds only repo-wide conventions. Area-specific decisions and gotchas live in `.claude/rules/*.md`. Claude Code loads them automatically via their `paths:` frontmatter (the source of truth for which files a rule covers); **other agents (Codex, etc.) must check that frontmatter (`head -15 .claude/rules/*.md`) and open the matching file by hand before editing files in that area.** Background and history live in `docs/plans/completed/*.md`.
 
-| Doc                              | Read when touching                                                                                                                                                                                                                      |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.claude/rules/data-layer.md`    | `src/entities/movie/**`, `src/entities/person/**`, `src/shared/api/**`, `src/pages/{search,movie,popular,recommendations,person}/**`, favorites/catalog-filter/recommendations features, `AsyncBoundary`, `ErrorBoundary`, `ErrorState` |
-| `.claude/rules/watched.md`       | `src/features/watched/**`, `src/pages/watched/**`, `src/pages/movie/ui/MovieActions/**`, `e2e/watched.spec.ts`                                                                                                                          |
-| `.claude/rules/watchlist.md`     | `src/features/watchlist/**`, `src/pages/watchlist/**`, `src/pages/movie/ui/{Movie,MovieActions,MovieHero}/**`, `e2e/watchlist.spec.ts`                                                                                                  |
-| `.claude/rules/ui-patterns.md`   | `Card`, `YearRangeSlider`, `@features/theme`, `src/app/styles/**`                                                                                                                                                                       |
-| `.claude/rules/profile.md`       | `@features/profile`, `/profile`, `src/shared/lib/storage/**`, `AvatarCircle`, `BottomNav`                                                                                                                                               |
-| `.claude/rules/sentry.md`        | `src/app/sentry*`, `src/main.tsx`, `src/app/router.tsx`, `src/app/layouts/AppLayout.tsx`, `sentry*.config.ts`, `provision-sentry-telemetry.ts`, `.mcp.json`                                                                             |
-| `.claude/rules/analytics.md`     | `src/shared/lib/analytics/**` and the four `trackEvent`/`trackPageview` call sites                                                                                                                                                      |
-| `.claude/rules/build-budgets.md` | `vite.config.ts`, `bundle.config.ts`, `package.json` (`size-limit`), `knip.jsonc`, `lazyNamed`, `src/app/chunkPreloadRecovery.ts`                                                                                                       |
-| `.claude/rules/csp.md`           | `vercel.json`, `index.html`, `public/font-swap.js`                                                                                                                                                                                      |
-| `.claude/rules/e2e.md`           | `e2e/**`, `playwright.config.ts`, `.github/workflows/e2e.yml`                                                                                                                                                                           |
-| `.claude/rules/lighthouse.md`    | `lighthouserc.cjs`, `.github/workflows/lighthouse.yml`, `.github/scripts/**`                                                                                                                                                            |
-| `.claude/rules/performance.md`   | `src/widgets/movie-rail/**`, `src/pages/movie/ui/RelatedMovies/**`, `src/shared/lib/inView/**`, `src/test/setup.ts`, `Poster`, `MovieHero`                                                                                              |
+| Doc                 | Topic                                                                     |
+| ------------------- | ------------------------------------------------------------------------- |
+| `data-layer.md`     | fetch caching, `AsyncBoundary`/Retry, endpoint quirks, id-list fetching   |
+| `search-catalog.md` | `/search` URL state, text-vs-filter modes, genres                         |
+| `storage.md`        | `createStorageSlot` semantics and failure handling                        |
+| `user-lists.md`     | Watched/Watchlist: independence, relation to Favorites                    |
+| `profile.md`        | `/profile`, avatar contrast, `BottomNav`                                  |
+| `ui-patterns.md`    | `Card` stacking/stretched link, `YearRangeSlider`, theming, contrast test |
+| `performance.md`    | rails, `content-visibility`, lazy-mount, image loading                    |
+| `sentry.md`         | init order, tracing, PII scrubbing, telemetry-as-code                     |
+| `analytics.md`      | Plausible init and event rules                                            |
+| `build-budgets.md`  | code splitting, chunk-error recovery, `size-limit`, knip                  |
+| `csp.md`            | security headers, CSP hash invariant, font loading                        |
+| `e2e.md`            | Playwright against the live API, quota, selectors                         |
+| `lighthouse.md`     | Lighthouse CI config, SEO asserts, Vercel bypass                          |
 
-When a new area-specific decision is worth recording, add it to the matching rule file (or create one with a `paths:` frontmatter and a row in this table) — not here. Record the rule and the one-line reason; the story of how it was found belongs in the plan.
+When a new area-specific decision is worth recording, add it to the matching rule file — not here. Record the rule and the one-line reason; the story of how it was found belongs in the plan.
+
+- **Only what the code can't tell you:** a decision and its reason, a non-obvious constraint, a trap. Never retell the code — hook signatures, file lists, route chrome, "page X is a copy of page Y", exact numbers, e2e step lists, what a test checks. They go stale and duplicate what reading the code already gives. A WHY-comment at the single place the rule applies counts as code — prefer it over a rule entry.
+- **One invariant, one place.** If two rule files would say the same thing, pick one and let the other point to it.
+- **Put it where it will load:** pick the file whose `paths:` matches the code an agent will be editing when the rule matters, not the file of the feature that motivated it (a `Card` caveat goes to `ui-patterns.md` even if found while building watchlist).
+- **A new rule file is the exception, not a default step of a feature plan.** Create one (with `paths:` frontmatter and a row in this table) only when the decisions don't fit any existing file; a new page or feature by itself is not a reason. A feature that adds nothing non-obvious gets no rule-doc update at all.
 
 ## Git workflow
 
@@ -34,31 +40,17 @@ When a new area-specific decision is worth recording, add it to the matching rul
 A `Makefile` at the project root wraps all pnpm scripts. Prefer `make` over direct `pnpm` calls.
 
 ```bash
-make dev          # start dev server with HMR
-make build        # type-check (tsc -b) then Vite production build
-make typecheck    # type-check only (tsc -b — without -b the solution-style tsconfig checks 0 files)
-make build-only   # Vite production build, no type-check
-make lint         # oxlint (TS/TSX) + stylelint (src/**/*.module.css)
-make format       # oxfmt write
-make format-check # oxfmt --check
-make preview      # serve the production build locally
-make install      # install dependencies
-make hooks        # install husky git hooks (pnpm exec husky)
-make clean        # remove dist and node_modules
 make check        # format-check lint build (full validation)
-make generate-api # regenerate API client from OpenAPI spec (re-run after spec changes)
-make test         # run Vitest once
-make test-watch   # run Vitest in watch mode
-make coverage     # run Vitest with coverage report
-make audit        # pnpm audit (prod deps, high severity)
-make analyze      # ANALYZE=true production build → dist/stats.html (bundle treemap)
-make size         # size-limit — per-chunk size budgets against dist/
-make knip         # unused exports/deps/files detector
+make typecheck    # tsc -b — without -b the solution-style tsconfig checks 0 files
+make test         # Vitest once
+make build-only   # Vite production build, no type-check
 make e2e          # Playwright E2E (requires make build-only first)
-make e2e-install  # playwright install --with-deps chromium webkit
-make lighthouse   # local Lighthouse smoke against vite preview — not the CI gate
-make sentry-telemetry # provision Sentry alerts + dashboard via sentry CLI (see sentry.md)
+make size         # size-limit budgets against dist/
+make knip         # unused exports/deps/files
+make generate-api # regenerate API client (re-run after spec changes)
 ```
+
+The rest (`dev`, `format`, `coverage`, `analyze`, `lighthouse`, `sentry-telemetry`, …) is in the `Makefile`.
 
 **Commit hooks:** husky + lint-staged run `oxfmt` + `oxlint --fix --deny-warnings` on staged `*.{ts,tsx}` and `stylelint` on staged `*.module.css`. Commit messages are enforced by commitlint (`@commitlint/config-conventional`); use `pnpm commit` (commitizen) for a guided conventional-commit prompt. The lint-staged glob doesn't cover `.cjs`/`.js` (`lighthouserc.cjs`, `public/font-swap.js`) — those are only checked by repo-wide `make lint`/`make format-check`.
 
@@ -95,8 +87,6 @@ Import direction: `pages → widgets → features → entities → shared`. Neve
 ## Routing
 
 React Router 7. Route config: `src/app/router.tsx` (every route lazy via `lazyNamed`, router wrapped with `Sentry.wrapCreateBrowserRouter`); providers: `src/app/providers.tsx`; chrome/layout: `src/app/layouts/AppLayout.tsx`.
-
-Routes: `/` (home feed), `/search` (search + filters), `/movie/:id` (overview, cast, media tabs), `/favorites`, `/watched` (watched movies and series, marked on the detail page), `/watchlist` (saved to watch later, added on the detail page), `/popular` (weekly popular with rank badges), `/recommendations` (rule-based from favorites), `/profile` (client-only profile), `/person/:id` (photo, bio meta, filmography, facts).
 
 Adding a route touches: `router.tsx`, `AppLayout`'s `ROUTE_CHROME`, a `codeSplitting` group + `size-limit` entry (see `build-budgets.md`), and possibly the Lighthouse URL list and an e2e spec.
 
@@ -165,7 +155,7 @@ Formatters over API numbers/dates (`formatCurrency()`/`formatDate()`, `@entities
 
 ## Data (summary)
 
-Live data comes from `@entities/movie`/`@entities/person` hooks over `apiClient`; favorites/theme/profile/genre cache are `localStorage` via `createStorageSlot` (`@shared/lib`). Async data is read with Suspense `use()` inside `AsyncBoundary`; Retry wires `onRetry` to an `invalidate*` companion export. Details, caching and endpoint quirks → `.claude/rules/data-layer.md`. Check for an existing live-data hook before reaching for mock data.
+Async data is read with Suspense `use()` inside `AsyncBoundary`; client state lives in `localStorage` via `createStorageSlot`. Details → `data-layer.md`, `storage.md`. Check for an existing live-data hook before reaching for mock data.
 
 Repo-wide gotchas worth knowing everywhere:
 

@@ -5,43 +5,26 @@ paths:
   - 'package.json'
   - 'knip.jsonc'
   - 'src/app/router.tsx'
-  - 'src/app/layouts/AppLayout.tsx'
   - 'src/app/chunkPreloadRecovery.ts'
   - 'src/shared/lib/lazyNamed/**'
 ---
 
 # Code splitting, size budgets, knip
 
-History and measurements: `docs/plans/completed/20260912-performance-budgets-bundle-visualization.md`.
-
 ## Code splitting
 
-- Every route is `lazyNamed(() => import('../pages/x'), 'XPage')` (`@shared/lib`) — `React.lazy` needs a default export, pages export by name.
-- `<Suspense fallback={<Spinner/>}>` around `<Outlet/>` in `AppLayout` is for **code** loading; pages keep their own `AsyncBoundary` for data. Accepted: navigations run in `startTransition`, so on page-to-page nav the old page (and nav highlight, pageview) stays until the chunk loads — **except** across a dynamic segment on the same route (`/movie/1 → /movie/2`, `/person/1 → /person/2`): the per-route `ErrorBoundary` in `AppLayout` (`docs/plans/completed/20260916-per-route-error-boundaries.md`) carries `key={pathname}`, which remounts `<Suspense><Outlet/></Suspense>` on every `pathname` change, so the old page unmounts immediately instead of staying visible during the chunk/data load. `/search` is unaffected — only its query params change, `pathname` stays stable.
-- `registerChunkPreloadRecovery()` (`src/app/chunkPreloadRecovery.ts`, called once from `providers.tsx`) listens for `vite:preloadError` on `window` and does `window.location.reload()` — `React.lazy` caches a rejected import promise per module, so neither a per-route `ErrorBoundary` retry nor navigating to another route reliably recovers from a stale/404'd chunk; a full reload is the only guaranteed fix.
-  - No reload if the current document started (`performance.timeOrigin`) <10s after the `sessionStorage` stamp written before the last recovery reload AND is still <120s old (`performance.now()`); no stamp written → no reload; PROD only; registration idempotent; one reload per failure burst (`isReloading`). Compare against document start, not failure time — a slow chunk can fail >10s after the reload; bound it within the document — otherwise a long-lived tab started by a recovery reload never auto-recovers on the next deploy. Inside the window the error goes (not prevented) to the per-route `ErrorBoundary`. The 9-row scenario matrix is in the file's WHY-comment, one test per row.
-  - `preventDefault()` makes Vite resolve the `import()` to `undefined`; `lazyNamed` turns that into a never-settling promise (spinner until reload) instead of a misleading `TypeError`. Keep that branch.
-- `build.rolldownOptions.output.codeSplitting.groups` (not deprecated `advancedChunks`, no global `chunkFileNames`): `vendor` (`/node_modules/`), `shared` (`/(widgets|features|entities|shared)\//`), then one `page-<name>` group per page. **`shared` must precede the page groups** — without it Rolldown dumps cross-page code into the first page chunk and every route eagerly loads it. Verify after changes: entry and page chunks import only `rolldown-runtime`/`vendor`/`shared`, never another `page-*`.
-- New route → add a `page-<name>` group and a `size-limit` entry.
-- `@entities/person` deliberately lands in the `shared` group (not a `page-person`-only chunk) — same as every other `entities/*`/`features/*`/`widgets/*` slice, since `shared`'s `test` regex catches that whole layer before the page groups run.
+- The route-level `<Suspense>` in `AppLayout` is for **code** loading; pages keep their own `AsyncBoundary` for data.
+- `chunkPreloadRecovery` reloads the page on `vite:preloadError`: `React.lazy` caches a rejected import, so neither a boundary retry nor navigation recovers — a full reload is the only guaranteed fix. The anti-loop window logic and its scenario matrix are in the file.
+- `lazyNamed` turns the `undefined` that `preventDefault()` makes Vite resolve into a never-settling promise (spinner until reload) instead of a misleading `TypeError` — keep that branch.
+- **`shared` must precede the page groups in `codeSplitting.groups`** — otherwise Rolldown dumps cross-page code into the first page chunk. Verify after changes: entry and page chunks import only `rolldown-runtime`/`vendor`/`shared`, never another `page-*`.
 
-## `size-limit` (`package.json`, `@size-limit/file`, `gzip: true`, `path` globs)
+## `size-limit`
 
-- Entries: `entry`, `vendor`, `shared`, one per `page-*`. Limit = **measured gzip size + 15%**, derived from a real build, not guessed. Current numbers are in `package.json` — that's the source of truth.
-- `@size-limit/file`, not `preset-app` (which pulls headless Chrome for timing).
-- `entry` measured without `VITE_SENTRY_DSN` is smaller (Sentry setup is dead-code-eliminated). Re-derive its limit with a DSN set: `VITE_SENTRY_DSN=https://k@o1.ingest.sentry.io/1 make build-only && make size`.
-- Not budgeted on purpose: `rolldown-runtime-*.js`, all CSS chunks.
+- Limit = **measured gzip + 15%** from a real build, never guessed.
+- Measure `entry` **with** `VITE_SENTRY_DSN` set (`VITE_SENTRY_DSN=https://k@o1.ingest.sentry.io/1 make build-only && make size`) — without it Sentry setup is eliminated and the number is too small. `entry` has little headroom: a feature that adds a storage slot or hook there needs the limit re-derived.
+- `@size-limit/file`, not `preset-app` (pulls headless Chrome).
+- Not budgeted on purpose: `rolldown-runtime-*.js`, CSS chunks.
 
-## `make analyze`
+## knip
 
-`isAnalyzeEnabled({ command, env })` (`bundle.config.ts`, tested) gates `rollup-plugin-visualizer` → `dist/stats.html` (treemap, gzip + brotli). Off in normal builds.
-
-## knip (`knip.jsonc` — `.jsonc` so ignores can carry comments)
-
-- `entry`: `src/main.tsx`, `**/*.test.{ts,tsx}`, root configs, `playwright.config.ts`, `e2e/**/*.spec.ts`; `e2e/**/*.ts` in `project`.
-- `ignore` only intentional keepers: `src/shared/api/*.gen.ts`, `@shared/config` (unused feature flags), public barrels of `catalog-filter`/`favorites`/`theme`/`shared/ui`.
-- Anything else knip flags → fix at the source (delete file / drop `export`), don't add an ignore.
-
-## Vitest
-
-`test.exclude: [...configDefaults.exclude, 'e2e/**']` — otherwise Vitest picks up Playwright specs.
+- `ignore` only for intentional keepers (reasons are in `knip.jsonc`). Anything else knip flags → fix at the source, don't add an ignore.
