@@ -66,14 +66,14 @@
 - Create: `src/features/watched/model/useWatched.test.ts`
 - Create: `src/features/watched/model/useWatchedMovies.test.tsx`
 
-- [ ] создать `watchedSlot` (`kinoshka:watched`, zod `z.array(z.number())`, default `[]`)
-- [ ] реализовать `useWatched` (`ids`, `isWatched`, `toggle`) на `useStorageSlot`
-- [ ] реализовать `useWatchedMovies` через `use(getMoviesByIds(ids))`
-- [ ] экспортировать публичный API в `index.ts`
-- [ ] тесты `useWatched`: toggle туда-обратно, `isWatched`, невалидное значение в storage → `[]`
-- [ ] тесты `useWatched`: недоступное хранилище (`set()` → `false`) не меняет состояние
-- [ ] тесты `useWatchedMovies` (MSW, по образцу `useFavoriteMovies.test.tsx`)
-- [ ] запустить тесты — должны пройти до задачи 2
+- [x] создать `watchedSlot` (`kinoshka:watched`, zod `z.array(z.number())`, default `[]`)
+- [x] реализовать `useWatched` (`ids`, `isWatched`, `toggle`) на `useStorageSlot`
+- [x] реализовать `useWatchedMovies` через `use(getMoviesByIds(ids))`
+- [x] экспортировать публичный API в `index.ts`
+- [x] тесты `useWatched`: toggle туда-обратно, `isWatched`, невалидное значение в storage → `[]`
+- [x] тесты `useWatched`: недоступное хранилище (`set()` → `false`) не меняет состояние
+- [x] тесты `useWatchedMovies` (MSW, по образцу `useFavoriteMovies.test.tsx`)
+- [x] запустить тесты — должны пройти до задачи 2
 
 ### Task 2: Переключатель Watched на странице деталей
 **Model:** sonnet — точечная правка существующего UI, тесты покрывают
