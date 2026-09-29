@@ -8,8 +8,7 @@
   // добавлен по той же причине (введён в Task 4 этого плана, после того как этот
   // раздел плана был написан). playwright.config.ts + e2e/**/*.spec.ts — иначе
   // @playwright/test/@axe-core/playwright считаются unused devDependencies (knip
-  // умеет автоопределять Playwright по playwright.config.ts, но явная запись — в
-  // духе уже принятого в проекте стиля "explicit decision", см. AGENTS.md 2.5.3).
+  // умеет автоопределять Playwright по playwright.config.ts, но явная запись нагляднее).
   "entry": [
     "src/main.tsx",
     "**/*.test.{ts,tsx}",
@@ -31,14 +30,13 @@
   // unused, даже когда a11y.ts его реально импортирует.
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts"],
   "ignore": [
-    // Сгенерированные файлы — AGENTS.md прямо запрещает их редактировать
-    // ("Generated files — never edit manually, regenerate instead").
+    // Сгенерированные файлы — AGENTS.md («API layer») запрещает их редактировать,
+    // только перегенерировать через make generate-api.
     "src/shared/api/*.gen.ts",
-    // AGENTS.md, "Feature flag not wired": весь модуль useFeatureFlag()/FeatureGate/
-    // FeatureName документирован как намеренно без текущего потребителя — тот же
-    // прецедент, что popularThisWeek/toggleTheme, оставленные false без подключения.
+    // Модуль useFeatureFlag()/FeatureGate/FeatureName намеренно без текущего потребителя —
+    // флаги (popularThisWeek, toggleTheme, …) оставлены false без подключения.
     "src/shared/config/**",
-    // Публичные барели слайсов (AGENTS.md, "Key public APIs") — реэкспортируют
+    // Публичные барели слайсов (AGENTS.md, «Public API») — реэкспортируют
     // getFilterFromSearchParams/CatalogQueryParams, UseFavoritesResult, useTheme/
     // UseThemeResult/Theme, ErrorBoundary как часть намеренного публичного API,
     // даже если у конкретного экспорта пока нет внешнего потребителя за пределами
