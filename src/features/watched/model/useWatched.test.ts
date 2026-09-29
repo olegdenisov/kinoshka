@@ -38,6 +38,17 @@ describe('useWatched', () => {
     expect(result.current.ids).toEqual([1, 2])
   })
 
+  it('toggle убирает один id из середины, порядок добавления сохраняется', () => {
+    watchedSlot.set([1, 2, 3])
+    const { result } = renderHook(() => useWatched())
+
+    act(() => result.current.toggle(2))
+    expect(result.current.ids).toEqual([1, 3])
+
+    act(() => result.current.toggle(2))
+    expect(result.current.ids).toEqual([1, 3, 2])
+  })
+
   it('сохраняет в localStorage под ключом kinoshka:watched', () => {
     const { result } = renderHook(() => useWatched())
 

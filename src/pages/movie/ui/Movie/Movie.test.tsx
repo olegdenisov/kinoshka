@@ -124,6 +124,13 @@ describe('Movie — Watched', () => {
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'false')
   })
 
+  it('предустановленный id в storage → нажата с первого рендера', () => {
+    localStorage.setItem('kinoshka:watched', JSON.stringify([MOVIE.id]))
+    renderMovie()
+
+    expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('клик добавляет id в kinoshka:watched, повторный клик убирает', async () => {
     const user = userEvent.setup()
     renderMovie()

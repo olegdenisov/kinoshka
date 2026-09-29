@@ -70,7 +70,7 @@ History: `docs/plans/completed/20260805-search-filters-url-sync.md`, `…-movie-
 
 ## Favorites (client-only)
 
-`useFavorites()` stores `number[]` in `kinoshka:favorites`. `useFavoriteMovies()` = Suspense `use()` over `getMoviesByIds(ids)` (per-id `getMovieDetail` via `Promise.allSettled`; a 404'd id drops out; cache key = the id array). `Card` takes `isFavorite`/`onToggleFavorite` props instead of importing `@features/favorites` (entities can't import features) — callers in widgets/pages pass them down.
+`useFavorites()` stores `number[]` in `kinoshka:favorites`. `useFavoriteMovies()` = Suspense `use()` over `getMoviesByIds(ids)` (per-id `getMovieDetail` via `Promise.allSettled`; a 404'd id drops out; cache key = the id array). `Card` takes `isFavorite`/`onToggleFavorite` props instead of importing `@features/favorites` (entities can't import features) — callers in widgets/pages pass them down. `/watched` mirrors this (same `getMoviesByIds`, cache namespace `movies-by-ids`) — see `watched.md`.
 
 ## `/recommendations`
 

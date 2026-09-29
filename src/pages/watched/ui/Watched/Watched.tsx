@@ -16,6 +16,8 @@ const WatchedSkeletonGrid = () => (
 )
 
 const WatchedGrid = () => {
+  // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои
+  // бросает getMoviesByIds и ловит AsyncBoundary, поэтому текст — не про ошибку загрузки.
   const movies = useWatchedMovies()
   const { isFavorite, toggle } = useFavorites()
 
@@ -23,8 +25,8 @@ const WatchedGrid = () => {
     return (
       <div className={s.stateWrap}>
         <EmptyState
-          title="Couldn't load your watched titles"
-          description='Something went wrong loading your watched movies and series. Try again later.'
+          title='Watched titles unavailable'
+          description='These titles are no longer available in the catalog.'
         />
       </div>
     )
