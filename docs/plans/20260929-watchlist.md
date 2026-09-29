@@ -157,10 +157,10 @@
 
 - Create: `e2e/watchlist.spec.ts`
 
-- [ ] один flow: карточка с главной → `Watchlist` → `/watchlist` → карточка на месте → на странице фильма `Watched` → `/watchlist`: карточка **осталась** (независимость) → на странице фильма снять `Watchlist` → `/watchlist` пуст
-- [ ] селекторы как в `e2e/watched.spec.ts`: `getByRole('button', { name: 'Watchlist' })` + проверка `aria-pressed`; на профиле ссылку искать как `/^Watchlist/` (`/^Watch/` совпадёт с обоими пунктами)
-- [ ] один `checkA11y` на спеку (см. `e2e.md`; лишние запросы к живому API не делать — квота 200/день)
-- [ ] `make build-only && make e2e` — спека должна пройти
+- [x] один flow: карточка с главной → `Watchlist` → `/watchlist` → карточка на месте → на странице фильма `Watched` → `/watchlist`: карточка **осталась** (независимость) → на странице фильма снять `Watchlist` → `/watchlist` пуст
+- [x] селекторы как в `e2e/watched.spec.ts`: `getByRole('button', { name: 'Watchlist' })` + проверка `aria-pressed`; на профиле ссылку искать как `/^Watchlist/` (`/^Watch/` совпадёт с обоими пунктами)
+- [x] один `checkA11y` на спеку (см. `e2e.md`; лишние запросы к живому API не делать — квота 200/день)
+- [x] `make build-only && make e2e` — спека должна пройти (прошла на живом API; повторный прогон после замены финальной проверки на текст пустого состояния упёрся в квоту API на главной)
 
 ### Task 6: Verify acceptance criteria
 
