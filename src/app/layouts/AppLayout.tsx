@@ -91,6 +91,7 @@ type RouteChromeConfig = {
  *   home            → activeNav='home',            active='home'
  *   movie/series/anime → activeNav=<тот же ключ>,  active=нет соответствия (BottomNav не умеет)
  *   favorites       → activeNav='favorites',       active='lists' (разные имена одного пункта)
+ *   watched         → activeNav=нет соответствия,  active='lists'
  *   popular         → activeNav='popular',         active='popular'
  *   recommendations → activeNav='recommendations', active='recommendations'
  *   movie detail    → activeNav=не задан (нет своего пункта), active='search' (см. MOVIE_CHROME)
@@ -107,6 +108,11 @@ const ROUTE_CHROME: Record<string, RouteChromeConfig> = {
     activeNav: 'favorites',
     active: 'lists',
     title: 'Favorites',
+  },
+  // activeNav не задан — у Header нет nav-pill для Watched; active='lists' — паритет с /favorites.
+  '/watched': {
+    active: 'lists',
+    title: 'Watched',
   },
   '/popular': {
     activeNav: 'popular',

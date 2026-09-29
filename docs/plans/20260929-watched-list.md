@@ -124,14 +124,15 @@
 - Modify: `package.json`
 - Modify: `src/app/layouts/AppLayout.test.tsx`, `src/app/router.test.tsx`, `src/pages/profile/ui/Profile/Profile.test.tsx`
 
-- [ ] добавить lazy-маршрут `/watched` через `lazyNamed` в `router.tsx`
-- [ ] добавить `ROUTE_CHROME['/watched'] = { active: 'lists', title: 'Watched' }` (без `activeNav`; `'lists'` — паритет с `/favorites`, тип `BottomNavKey` его допускает)
-- [ ] добавить quick link «Watched» (со счётчиком) на `/profile`
-- [ ] добавить в `vite.config.ts` группу `{ name: 'page-watched', test: /\/pages\/watched\// }` после группы `shared`; поправить комментарий «все 8 page-слайсов»
-- [ ] `make build-only`, замерить `page-watched`; запись `size-limit` = замер + 15% (не угадывать); перепроверить бюджет `shared` (в него попадёт `@features/watched`); убедиться, что `page-watched` импортирует только runtime/vendor/shared
-- [ ] тесты: `AppLayout.test.tsx` (заголовок и подсветка для `/watched`), `router.test.tsx` (навигация на `/watched`), `Profile.test.tsx` (ссылка и счётчик)
-- [ ] `make size` — бюджеты проходят
-- [ ] запустить тесты — должны пройти до задачи 5
+- [x] добавить lazy-маршрут `/watched` через `lazyNamed` в `router.tsx`
+- [x] добавить `ROUTE_CHROME['/watched'] = { active: 'lists', title: 'Watched' }` (без `activeNav`; `'lists'` — паритет с `/favorites`, тип `BottomNavKey` его допускает)
+- [x] добавить quick link «Watched» (со счётчиком) на `/profile`
+- [x] добавить в `vite.config.ts` группу `{ name: 'page-watched', test: /\/pages\/watched\// }` после группы `shared`; поправить комментарий «все 8 page-слайсов»
+- [x] ➕ лимит `entry` поднят с 3.5 до 3.6 KB: на `main` он уже 3502 B (нулевой запас), новый маршрут добавил ~30 B
+- [x] `make build-only`, замерить `page-watched`; запись `size-limit` = замер + 15% (не угадывать); перепроверить бюджет `shared` (в него попадёт `@features/watched`); убедиться, что `page-watched` импортирует только runtime/vendor/shared
+- [x] тесты: `AppLayout.test.tsx` (заголовок и подсветка для `/watched`), `router.test.tsx` (навигация на `/watched`), `Profile.test.tsx` (ссылка и счётчик)
+- [x] `make size` — бюджеты проходят
+- [x] запустить тесты — должны пройти до задачи 5
 
 ### Task 5: E2E
 **Model:** sonnet — по образцу `favorites.spec.ts`

@@ -71,7 +71,7 @@ describe('Profile', () => {
     renderProfile()
 
     const region = screen.getByRole('region', { name: 'Quick access' })
-    expect(within(region).getAllByRole('link')).toHaveLength(3)
+    expect(within(region).getAllByRole('link')).toHaveLength(4)
   })
 
   it('"Appearance" — заголовок h2 в outline и одновременно имя группы radio', () => {
@@ -382,6 +382,17 @@ describe('Profile', () => {
 
     expect(screen.getByRole('link', { name: /Favorites/ })).toHaveTextContent(
       '0',
+    )
+  })
+
+  it('счётчик просмотренного отражает содержимое localStorage', () => {
+    localStorage.setItem('kinoshka:watched', JSON.stringify([1, 2]))
+    renderProfile()
+
+    expect(screen.getByRole('link', { name: /Watched/ })).toHaveTextContent('2')
+    expect(screen.getByRole('link', { name: /Watched/ })).toHaveAttribute(
+      'href',
+      '/watched',
     )
   })
 

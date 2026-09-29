@@ -141,6 +141,15 @@ describe('router — оставшиеся 7 роутов резолвят сво
     expect(await screen.findByText('No favorites yet')).toBeInTheDocument()
   })
 
+  it('/watched → WatchedPage', async () => {
+    await act(async () => {
+      await router.navigate('/watched')
+    })
+    render(<RouterProvider router={router} />)
+
+    expect(await screen.findByText('No watched titles yet')).toBeInTheDocument()
+  })
+
   it('/popular → PopularPage', async () => {
     server.use(
       http.get(LIST_ENDPOINT, () =>
