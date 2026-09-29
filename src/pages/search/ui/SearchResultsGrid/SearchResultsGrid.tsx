@@ -1,6 +1,7 @@
 import { Card } from '@entities/movie'
 import type { Movie } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
+import { useWatchlist } from '@features/watchlist'
 
 import s from './SearchResultsGrid.module.css'
 
@@ -17,6 +18,7 @@ type SearchResultsGridProps = {
  */
 export const SearchResultsGrid = ({ movies }: SearchResultsGridProps) => {
   const { isFavorite, toggle } = useFavorites()
+  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   return (
     <div className={s.grid}>
@@ -27,6 +29,8 @@ export const SearchResultsGrid = ({ movies }: SearchResultsGridProps) => {
           variant='grid'
           isFavorite={isFavorite(m.id)}
           onToggleFavorite={toggle}
+          inWatchlist={isInWatchlist(m.id)}
+          onToggleWatchlist={toggleWatchlist}
         />
       ))}
     </div>

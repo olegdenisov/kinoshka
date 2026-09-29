@@ -5,6 +5,7 @@ import {
   usePopularMovies,
 } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
+import { useWatchlist } from '@features/watchlist'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Popular.module.css'
@@ -24,6 +25,7 @@ const PopularSkeletonGrid = () => (
 const PopularGrid = () => {
   const movies = usePopularMovies()
   const { isFavorite, toggle } = useFavorites()
+  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   if (movies.length === 0) {
     return (
@@ -45,6 +47,8 @@ const PopularGrid = () => {
           variant='grid'
           isFavorite={isFavorite(movie.id)}
           onToggleFavorite={toggle}
+          inWatchlist={isInWatchlist(movie.id)}
+          onToggleWatchlist={toggleWatchlist}
           rankBadge={
             <PopularBadge
               position={movie.position}

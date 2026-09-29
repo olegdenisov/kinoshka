@@ -168,6 +168,25 @@ describe('Recommendations — непустое избранное, успешн�
     ).not.toBeInTheDocument()
   })
 
+  it('клик по кнопке Add пишет id в watchlist, не меняя подборку и не дёргая сеть заново', async () => {
+    setFavorites([601, 602])
+    mockFavorite(601, { genres: [{ name: 'триллер' }], rating: { kp: 8.0 } })
+    mockFavorite(602, { genres: [{ name: 'драма' }], rating: { kp: 6.0 } })
+    mockCatalog([catalogDoc(701, 'Recommended Movie')])
+
+    await renderPage()
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Add to watchlist' }),
+    )
+
+    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[701]')
+    expect(localStorage.getItem(FAVORITES_KEY)).toBe('[601,602]')
+    expect(screen.getByText('Recommended Movie')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Remove from watchlist' }),
+    ).toBeInTheDocument()
+  })
+
   it('на мобильной ширине карточки рекомендаций тоже рендерятся', async () => {
     setViewportWidth(MOBILE_WIDTH)
     setFavorites([601, 602])

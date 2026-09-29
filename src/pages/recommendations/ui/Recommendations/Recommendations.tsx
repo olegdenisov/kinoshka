@@ -1,5 +1,6 @@
 import { Card } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
+import { useWatchlist } from '@features/watchlist'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 
 import {
@@ -24,8 +25,10 @@ const RecommendationsSkeletonGrid = () => (
 // `ids` в useFavorites() при каждом клике по сердечку → новый кэш-ключ getMoviesByIds(ids)
 // → весь грид уходит в Suspense заново → новый computeRecommendationQuery → новый запрос
 // getMoviesPage — полный skeleton-flash и пересчёт подборки на каждый клик.
+// Watchlist сюда подключён спокойно: подборка от него не зависит, кэш-ключ не меняется.
 const RecommendationsGrid = () => {
   const movies = useRecommendedMovies()
+  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   if (movies === null) {
     return (
@@ -52,7 +55,13 @@ const RecommendationsGrid = () => {
   return (
     <div className={s.grid}>
       {movies.map(movie => (
-        <Card key={movie.id} movie={movie} variant='grid' />
+        <Card
+          key={movie.id}
+          movie={movie}
+          variant='grid'
+          inWatchlist={isInWatchlist(movie.id)}
+          onToggleWatchlist={toggleWatchlist}
+        />
       ))}
     </div>
   )

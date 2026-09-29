@@ -55,6 +55,33 @@ describe('RelatedMovies — избранное', () => {
   })
 })
 
+describe('RelatedMovies — Watchlist', () => {
+  it('клик по кнопке Add карточки пишет id в watchlist и не трогает избранное', async () => {
+    const user = userEvent.setup()
+    renderRelated([makeMovie(1)])
+
+    await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
+
+    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
+    expect(localStorage.getItem('kinoshka:favorites')).toBeNull()
+    expect(
+      screen.getByRole('button', { name: 'Remove from watchlist' }),
+    ).toBeInTheDocument()
+  })
+
+  it('повторный клик снимает фильм из watchlist', async () => {
+    const user = userEvent.setup()
+    renderRelated([makeMovie(1)])
+
+    await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Remove from watchlist' }),
+    )
+
+    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[]')
+  })
+})
+
 describe('RelatedMovies — lazy-mount', () => {
   const original = window.IntersectionObserver
   let fireIntersect: (() => void) | null = null

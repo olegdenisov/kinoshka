@@ -13,6 +13,8 @@ type CardProps = {
   variant?: 'grid' | 'compact'
   isFavorite?: boolean
   onToggleFavorite?: (id: number) => void
+  inWatchlist?: boolean
+  onToggleWatchlist?: (id: number) => void
   rankBadge?: ReactNode
 }
 
@@ -21,6 +23,8 @@ export const Card = ({
   variant = 'grid',
   isFavorite,
   onToggleFavorite,
+  inWatchlist,
+  onToggleWatchlist,
   rankBadge,
 }: CardProps) => {
   return (
@@ -62,7 +66,26 @@ export const Card = ({
         */}
         <div className={s.actions}>
           <CardBtn icon={<StarIcon size={10} />} label='Rate' />
-          <CardBtn icon={<PlusIcon />} label='Add' />
+          {/*
+            «Add» = Watchlist. Состояние приходит пропсами (entities не могут
+            импортировать @features/watchlist), как у сердечка избранного.
+            Без onToggleWatchlist кнопка остаётся декоративной, как раньше.
+          */}
+          <CardBtn
+            icon={<PlusIcon />}
+            label={inWatchlist ? 'Added' : 'Add'}
+            active={inWatchlist}
+            ariaLabel={
+              onToggleWatchlist
+                ? inWatchlist
+                  ? 'Remove from watchlist'
+                  : 'Add to watchlist'
+                : undefined
+            }
+            onClick={
+              onToggleWatchlist ? () => onToggleWatchlist(movie.id) : undefined
+            }
+          />
           {variant === 'grid' && (
             <CardBtn icon={<EyeIcon />} square ariaLabel='Preview' />
           )}

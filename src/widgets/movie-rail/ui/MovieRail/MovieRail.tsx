@@ -1,6 +1,7 @@
 import type { Movie, PopularMovie } from '@entities/movie'
 import { Card, PopularBadge } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
+import { useWatchlist } from '@features/watchlist'
 import { EmptyState } from '@shared/ui'
 import { useRef } from 'react'
 import { Link } from 'react-router'
@@ -24,6 +25,7 @@ export const MovieRail = ({
 }: MovieRailProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const { isFavorite, toggle } = useFavorites()
+  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   const scroll = (dir: number) => {
     scrollRef.current?.scrollBy({ left: dir * 480, behavior: 'smooth' })
@@ -64,6 +66,8 @@ export const MovieRail = ({
                 variant='compact'
                 isFavorite={isFavorite(m.id)}
                 onToggleFavorite={toggle}
+                inWatchlist={isInWatchlist(m.id)}
+                onToggleWatchlist={toggleWatchlist}
                 rankBadge={
                   'position' in m ? (
                     <PopularBadge
