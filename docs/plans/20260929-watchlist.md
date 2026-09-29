@@ -176,13 +176,13 @@
 
 **Model:** sonnet — документация описывает построенное поведение
 
-- [ ] создать `.claude/rules/watchlist.md` (`paths:` — `src/features/watchlist/**`, `src/pages/watchlist/**`, `src/pages/movie/ui/{Movie,MovieActions,MovieHero}/**`, `e2e/watchlist.spec.ts`) — ключ хранилища, независимость от Watched (нет фасада и автоудаления), отсутствие даты/аналитики, квота API, chrome, бюджеты, e2e; только правила и одна строка «почему»
-- [ ] `AGENTS.md`: строка в таблице topic-docs, `/watchlist` в списке роутов, `watchlist` в списке features
-- [ ] `.claude/rules/watched.md`: обновить пункт «Единственный писатель» (флаги `LikedState` — теперь только `rate`, `fav`; watchlist независим от watched)
-- [ ] `.claude/rules/profile.md`: добавить `/watchlist` в список quick links на `/profile`
-- [ ] `.claude/rules/e2e.md`: «Specs cover all 9 routes» → 10
-- [ ] `knip.jsonc`: убедиться, что ignore не нужен (оба хука используются)
-- [ ] перенести этот план в `docs/plans/completed/`
+- [x] создать `.claude/rules/watchlist.md` (`paths:` — `src/features/watchlist/**`, `src/pages/watchlist/**`, `src/pages/movie/ui/{Movie,MovieActions,MovieHero}/**`, `e2e/watchlist.spec.ts`) — ключ хранилища, независимость от Watched (нет фасада и автоудаления), отсутствие даты/аналитики, квота API, chrome, бюджеты, e2e; только правила и одна строка «почему»
+- [x] `AGENTS.md`: строка в таблице topic-docs, `/watchlist` в списке роутов, `watchlist` в списке features
+- [x] `.claude/rules/watched.md`: обновить пункт «Единственный писатель» (флаги `LikedState` — теперь только `rate`, `fav`; watchlist независим от watched)
+- [x] `.claude/rules/profile.md`: добавить `/watchlist` в список quick links на `/profile`
+- [x] `.claude/rules/e2e.md`: «Specs cover all 9 routes» → 10
+- [x] `knip.jsonc`: убедиться, что ignore не нужен (оба хука используются) (ignore не нужен: knip чист)
+- [x] перенести этот план в `docs/plans/completed/` (перенос выполнит оркестратор после всех фаз)
 
 ## Post-Completion
 

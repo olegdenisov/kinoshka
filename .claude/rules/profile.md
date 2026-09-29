@@ -31,7 +31,7 @@ Client-only profile ahead of real auth (Phase 5). History: `docs/plans/completed
 
 ## `/profile` page (`Profile.tsx`)
 
-- Every control does something real: name form, quick links (`/favorites` and `/watched` with counts, `/popular`, `/recommendations`), Light/Dark/System radio group (`<fieldset>` + `<legend><h2>`), `Clear name` (only when a name is set). **No disabled auth stubs** — "sign-in will arrive with the backend" is plain text.
+- Every control does something real: name form, quick links (`/favorites`, `/watched` and `/watchlist` with counts, `/popular`, `/recommendations`), Light/Dark/System radio group (`<fieldset>` + `<legend><h2>`), `Clear name` (only when a name is set). **No disabled auth stubs** — "sign-in will arrive with the backend" is plain text.
 - `isDirty` compares the **normalized** draft with the stored name; after a successful save the draft resets to the normalized value.
 - Draft resync is adjust-state-during-render (`if (name !== prevName) { setPrevName(name); setDraft(name); setFailure(null) }`), not `key={name}` (remount loses focus after submit).
 - Error alert: single `failure: { action: 'save' | 'clear'; count }` state; the `role='alert'` `<p>` is keyed on `count` so repeat failures re-announce.
