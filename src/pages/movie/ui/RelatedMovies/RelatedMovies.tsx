@@ -12,8 +12,7 @@ type RelatedMoviesProps = {
 
 export const RelatedMovies = ({ movies, movieTitle }: RelatedMoviesProps) => {
   const { isFavorite, toggle } = useFavorites()
-  // Явный параметр типа: RefObject<HTMLElement> не присваивается ref'у <div> (инвариантность).
-  const { ref, inView } = useInView<HTMLDivElement>()
+  const { ref, inView } = useInView()
 
   if (movies.length === 0) {
     return null

@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-import type { RefObject } from 'react'
+import { useEffect, useState } from 'react'
+
+type UseInViewOptions = {
+  rootMargin?: string
+}
 
 /**
  * Once-триггер на `IntersectionObserver`: `inView` становится `true` при первом попадании
@@ -10,47 +13,34 @@ import type { RefObject } from 'react'
  * `rootMargin` по умолчанию `'200px'` — упреждающий маунт до фактического входа во viewport,
  * чтобы не было заметного pop-in.
  *
- * На DOM-call-site параметр типа передавать явно (`useInView<HTMLDivElement>()`):
- * `RefObject<T>` инвариантен по `T`, и `RefObject<HTMLElement | null>` не присваивается
- * `Ref<HTMLDivElement>`.
- *
- * Известная граница: `threshold`-массив попадает в deps эффекта по ссылке — немемоизированный
- * внешний массив пересоздавал бы observer на каждом рендере (инлайн-литерал на месте вызова
- * мемоизирует React Compiler). Сериализация в стабильный ключ осознанно не делается.
+ * `ref` — callback-ref: узел хранится в state и входит в deps эффекта, поэтому observer
+ * создаётся и тогда, когда элемент появляется не на первом коммите (условный рендер).
  */
-export const useInView = <T extends Element = HTMLElement>(
-  options?: IntersectionObserverInit,
-): { ref: RefObject<T | null>; inView: boolean } => {
-  // Деструктурируем в примитивы: объект options целиком в deps пересоздавал бы observer
-  // на каждом рендере (инлайн-литерал — новая ссылка).
-  const { root = null, rootMargin = '200px', threshold } = options ?? {}
-  const ref = useRef<T | null>(null)
+export const useInView = <T extends Element = HTMLElement>({
+  rootMargin = '200px',
+}: UseInViewOptions = {}): {
+  ref: (node: T | null) => void
+  inView: boolean
+} => {
+  const [node, setNode] = useState<T | null>(null)
   const [inView, setInView] = useState(false)
 
   useEffect(() => {
-    // Уже сработал — observer больше не нужен (иначе смена inView в deps пересоздала бы его).
-    if (inView) return
-    const element = ref.current
-    if (!element) return
+    if (inView || !node) return
 
-    let triggered = false
     const observer = new IntersectionObserver(
       entries => {
         if (entries.some(entry => entry.isIntersecting)) {
-          triggered = true
           observer.disconnect()
           setInView(true)
         }
       },
-      { root, rootMargin, threshold },
+      { rootMargin },
     )
-    observer.observe(element)
+    observer.observe(node)
 
-    // Cleanup нужен только если observer ещё не отключился сам по срабатыванию.
-    return () => {
-      if (!triggered) observer.disconnect()
-    }
-  }, [inView, root, rootMargin, threshold])
+    return () => observer.disconnect()
+  }, [inView, node, rootMargin])
 
-  return { ref, inView }
+  return { ref: setNode, inView }
 }

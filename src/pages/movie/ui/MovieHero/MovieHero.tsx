@@ -81,7 +81,7 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
 
         <div className={s.layout}>
           <div className={s.poster}>
-            <Poster movie={movie} showLabel={false} />
+            <Poster movie={movie} showLabel={false} eager />
             {movie.trailerUrl && (
               <a
                 className={s.trailerBtn}

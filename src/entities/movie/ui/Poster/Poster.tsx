@@ -6,12 +6,15 @@ type PosterProps = {
   movie: Movie
   ratio?: string
   showLabel?: boolean
+  /** Above-the-fold-постер (hero `/movie/:id`): без lazy/async-декодирования — не откладывать LCP-кандидата. */
+  eager?: boolean
 }
 
 export const Poster = ({
   movie,
   ratio = '2/3',
   showLabel = true,
+  eager = false,
 }: PosterProps) => {
   const hue = movie.hue ?? 20
 
@@ -28,8 +31,8 @@ export const Poster = ({
         <img
           src={movie.poster}
           alt=''
-          loading='lazy'
-          decoding='async'
+          loading={eager ? 'eager' : 'lazy'}
+          decoding={eager ? undefined : 'async'}
           className={s.img}
         />
       )}

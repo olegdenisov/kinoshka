@@ -1,5 +1,5 @@
 import type { MovieDetail, MovieImage } from '@entities/movie'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 
 import { MOVIE } from '../../../testFixtures'
 import { MediaTab } from './MediaTab'
@@ -15,21 +15,28 @@ const makeImage = (overrides: Partial<MovieImage> = {}): MovieImage => ({
 
 describe('MediaTab', () => {
   it('рендерит блок Trailer, когда есть trailerUrl', () => {
-    const { container } = render(<MediaTab m={MOVIE_DETAIL} images={[]} />)
+    render(<MediaTab m={MOVIE_DETAIL} images={[]} />)
 
-    const sectionHead = container.querySelector('.screenshotsGrid')
-    expect(sectionHead).not.toBeInTheDocument()
+    expect(screen.getByText('Trailer')).toBeInTheDocument()
+    expect(screen.getByRole('link')).toHaveAttribute(
+      'href',
+      MOVIE_DETAIL.trailerUrl,
+    )
   })
 
   it('не рендерит блок Trailer, когда нет trailerUrl', () => {
     const { container } = render(
-      <MediaTab m={{ ...MOVIE_DETAIL, trailerUrl: undefined }} images={[]} />,
+      <MediaTab
+        m={{ ...MOVIE_DETAIL, trailerUrl: undefined }}
+        images={[makeImage()]}
+      />,
     )
 
-    const trailers = Array.from(container.querySelectorAll('div')).filter(div =>
-      div.textContent.includes('Trailer'),
-    )
-    expect(trailers).toHaveLength(0)
+    expect(screen.queryByText('Trailer')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    // Остальной контент при этом рендерится — тест не проходит на пустом компоненте.
+    expect(screen.getByText('Screenshots')).toBeInTheDocument()
+    expect(container.querySelectorAll('img')).toHaveLength(1)
   })
 
   it('рендерит скриншоты с loading=lazy и decoding=async, когда images не пусто', () => {
@@ -39,9 +46,7 @@ describe('MediaTab', () => {
     ]
     const { container } = render(<MediaTab m={MOVIE_DETAIL} images={images} />)
 
-    const screenshotImgs = container.querySelectorAll(
-      'img[class*="screenshot"]',
-    )
+    const screenshotImgs = container.querySelectorAll('img')
     expect(screenshotImgs).toHaveLength(2)
 
     screenshotImgs.forEach(img => {
@@ -57,9 +62,7 @@ describe('MediaTab', () => {
     ]
     const { container } = render(<MediaTab m={MOVIE_DETAIL} images={images} />)
 
-    const screenshotImgs = container.querySelectorAll(
-      'img[class*="screenshot"]',
-    )
+    const screenshotImgs = container.querySelectorAll('img')
     expect(screenshotImgs[0]).toHaveAttribute('src', 'preview.jpg')
     expect(screenshotImgs[1]).toHaveAttribute('src', 'only-full.jpg')
   })
@@ -67,9 +70,7 @@ describe('MediaTab', () => {
   it('не рендерит блок Screenshots, когда images пусто', () => {
     const { container } = render(<MediaTab m={MOVIE_DETAIL} images={[]} />)
 
-    const screenshotImgs = container.querySelectorAll(
-      'img[class*="screenshot"]',
-    )
-    expect(screenshotImgs).toHaveLength(0)
+    expect(screen.queryByText('Screenshots')).not.toBeInTheDocument()
+    expect(container.querySelectorAll('img')).toHaveLength(0)
   })
 })

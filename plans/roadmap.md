@@ -360,12 +360,12 @@
 
 ### 2.7 Performance — virtualization
 
-- [ ] `@tanstack/react-virtual` (либо `react-window`) для rails на главной — не реализовано: demo-тариф API ограничивает rails ≤10 карточками (limit: 10), виртуализация списка такого размера не даёт измеримого выигрыша и конфликтует по сложности с hover-arrow `scrollBy`. Вместо этого — `content-visibility: auto` на rail-секциях. См. `docs/plans/completed/20260916-performance-virtualization-lazy-loading.md`.
-- [ ] Виртуализация грида `/search` при infinite scroll — не применимо: `/search` остаётся на нумерованной пагинации (1.4, MAX_PAGE=10), infinite scroll не внедрялся.
-- [x] `<img loading="lazy" decoding="async" />` на постерах — постеры (`Poster.tsx`), аватары каста (`CastTab.tsx`), скриншоты (`MediaTab.tsx`); hero-фото персоны (`PersonHero.tsx`) осознанно без lazy — LCP-кандидат.
+- [x] `@tanstack/react-virtual` (либо `react-window`) для rails на главной — закрыто как не применимо, не реализовано: demo-тариф API отдаёт ≤10 карточек на rail (внешний факт; явный `limit: 10` задан только в `usePopularMovies`), виртуализация списка такого размера не даёт измеримого выигрыша и конфликтует по сложности с hover-arrow `scrollBy`. Вместо этого — `content-visibility: auto` на rail-секциях. См. `docs/plans/completed/20260916-performance-virtualization-lazy-loading.md`.
+- [x] Виртуализация грида `/search` при infinite scroll — закрыто как не применимо: `/search` остаётся на нумерованной пагинации (1.4, MAX_PAGE=10), infinite scroll не внедрялся.
+- [x] `<img loading="lazy" decoding="async" />` на постерах — постеры (`Poster.tsx`, по умолчанию), аватары каста (`CastTab.tsx`), скриншоты (`MediaTab.tsx`); hero-фото персоны (`PersonHero.tsx`) и hero-постер фильма (`MovieHero.tsx`, `<Poster eager />`) осознанно без lazy — above-the-fold/LCP-кандидаты.
 - [x] Lighthouse Performance измерен до/после — см. Progress Tracking в `docs/plans/completed/20260916-performance-virtualization-lazy-loading.md`.
 
-**Как лучше:** React Compiler уже мемоизирует — `useMemo`/`useCallback` НЕ добавляй (см. AGENTS.md). `IntersectionObserver` для lazy-mount тяжёлых секций (related movies, cast tab). `content-visibility: auto` в CSS для off-screen rails — браузер сам пропускает рендер невидимого.
+**Как лучше:** React Compiler уже мемоизирует — `useMemo`/`useCallback` НЕ добавляй (см. AGENTS.md). `IntersectionObserver` для lazy-mount тяжёлых секций (related movies, cast tab) — сделано для `RelatedMovies`; cast tab — только lazy-изображения. `content-visibility: auto` в CSS для off-screen rails — браузер сам пропускает рендер невидимого.
 
 **📚 Refs:**
 

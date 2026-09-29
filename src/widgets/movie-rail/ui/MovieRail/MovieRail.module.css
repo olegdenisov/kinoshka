@@ -95,6 +95,14 @@
 
     /* Измерено на 1280px: 441–477px в зависимости от строк заголовка. */
     contain-intrinsic-size: auto 445px;
+
+    /* content-visibility включает paint containment — всё, что выходит за padding-box
+       секции, обрезается. На десктопе .header без боковых отступов, и 2px :focus-visible
+       outline (ширина задана глобально в global.css — при её изменении обновить 2px ниже)
+       у titleLink/правой ArrowBtn упирался бы в край. 2px padding + компенсирующий
+       отрицательный margin расширяют зону отрисовки, не сдвигая раскладку. */
+    padding-inline: 2px;
+    margin-inline: -2px;
   }
 
   .header {
