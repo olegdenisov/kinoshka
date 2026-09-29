@@ -141,13 +141,13 @@
 - Modify: `vite.config.ts`
 - Modify: `package.json` (`size-limit`)
 
-- [ ] добавить `/watchlist` в `router.tsx` через `lazyNamed`
-- [ ] добавить `ROUTE_CHROME['/watchlist']` и строку в комментарий-таблицу `AppLayout.tsx`
-- [ ] quick link «Watchlist» на `/profile` со счётчиком из `useWatchlist` и иконкой `PlusIcon` (как на кнопке)
-- [ ] группа `page-watchlist` в `codeSplitting` и запись в `size-limit`; в комментарии `vite.config.ts` (~стр. 114) «все 9 page-слайсов» → 10
-- [ ] лимиты по `build-budgets.md`: limit = измеренный gzip + 15% (не копировать число `page-watched`); `entry` пересчитать через `VITE_SENTRY_DSN=https://k@o1.ingest.sentry.io/1 make build-only && make size`
-- [ ] `Profile.test.tsx`: ссылка, счётчик, и `getAllByRole('link')` в регионе «Quick access» (стр. ~74) теперь 5, а не 4; тесты `AppLayout`/router, если перечисляют маршруты
-- [ ] запустить `make test`, затем `make build` и `make size` — всё должно пройти до задачи 5
+- [x] добавить `/watchlist` в `router.tsx` через `lazyNamed`
+- [x] добавить `ROUTE_CHROME['/watchlist']` и строку в комментарий-таблицу `AppLayout.tsx`
+- [x] quick link «Watchlist» на `/profile` со счётчиком из `useWatchlist` и иконкой `PlusIcon` (как на кнопке)
+- [x] группа `page-watchlist` в `codeSplitting` и запись в `size-limit`; в комментарии `vite.config.ts` (~стр. 114) «все 9 page-слайсов» → 10
+- [x] лимиты по `build-budgets.md`: limit = измеренный gzip + 15% (не копировать число `page-watched`); `entry` пересчитать через `VITE_SENTRY_DSN=https://k@o1.ingest.sentry.io/1 make build-only && make size`
+- [x] `Profile.test.tsx`: ссылка, счётчик, и `getAllByRole('link')` в регионе «Quick access» (стр. ~74) теперь 5, а не 4; тесты `AppLayout`/router, если перечисляют маршруты
+- [x] запустить `make test`, затем `make build` и `make size` — всё должно пройти до задачи 5
 
 ### Task 5: E2E-спека `watchlist`
 

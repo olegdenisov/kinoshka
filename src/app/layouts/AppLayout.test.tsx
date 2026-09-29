@@ -76,6 +76,10 @@ const renderAt = (path: string) =>
                 element: <div>Watched page content</div>,
               },
               {
+                path: '/watchlist',
+                element: <div>Watchlist page content</div>,
+              },
+              {
                 path: '/popular',
                 element: <div>Popular page content</div>,
               },
@@ -268,6 +272,17 @@ describe('AppLayout — мобильный рендерит MobileHeader+BottomN
 
     const banner = screen.getByRole('banner')
     expect(within(banner).getByText('Watched')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Lists/ }).className).toMatch(
+      /navItemActive/,
+    )
+  })
+
+  it('/watchlist: MobileHeader получает title="Watchlist", BottomNav — active="lists"', () => {
+    setViewportWidth(MOBILE_WIDTH)
+    renderAt('/watchlist')
+
+    const banner = screen.getByRole('banner')
+    expect(within(banner).getByText('Watchlist')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Lists/ }).className).toMatch(
       /navItemActive/,
     )
