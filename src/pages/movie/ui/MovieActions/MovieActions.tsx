@@ -33,6 +33,7 @@ const SecondaryAction = ({
   <button
     type='button'
     onClick={onClick}
+    aria-pressed={active}
     className={`${s.secondaryBtn}${active ? ` ${s.secondaryBtnActive}` : ''}`}
   >
     {icon}
@@ -43,9 +44,16 @@ const SecondaryAction = ({
 type MovieActionsProps = {
   liked: LikedState
   onChange: (l: LikedState) => void
+  watched: boolean
+  onWatchedChange: () => void
 }
 
-export const MovieActions = ({ liked, onChange }: MovieActionsProps) => {
+export const MovieActions = ({
+  liked,
+  onChange,
+  watched,
+  onWatchedChange,
+}: MovieActionsProps) => {
   return (
     <div className={s.actions}>
       <PrimaryAction
@@ -62,8 +70,8 @@ export const MovieActions = ({ liked, onChange }: MovieActionsProps) => {
       <SecondaryAction
         icon={<EyeIcon />}
         label='Watched'
-        active={liked.watched}
-        onClick={() => onChange({ ...liked, watched: !liked.watched })}
+        active={watched}
+        onClick={onWatchedChange}
       />
       <SecondaryAction
         icon={<HeartIcon filled={liked.fav} />}

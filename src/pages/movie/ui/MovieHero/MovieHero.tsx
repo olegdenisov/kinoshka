@@ -43,9 +43,17 @@ type MovieHeroProps = {
   movie: MovieDetail
   liked: LikedState
   onLikedChange: (l: LikedState) => void
+  watched: boolean
+  onWatchedToggle: () => void
 }
 
-export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
+export const MovieHero = ({
+  movie,
+  liked,
+  onLikedChange,
+  watched,
+  onWatchedToggle,
+}: MovieHeroProps) => {
   return (
     <section className={s.hero}>
       <div className={s.backdrop}>
@@ -132,7 +140,12 @@ export const MovieHero = ({ movie, liked, onLikedChange }: MovieHeroProps) => {
               />
             </div>
 
-            <MovieActions liked={liked} onChange={onLikedChange} />
+            <MovieActions
+              liked={liked}
+              onChange={onLikedChange}
+              watched={watched}
+              onWatchedChange={onWatchedToggle}
+            />
 
             <p className={s.synopsis}>
               {movie.shortSynopsis ?? movie.synopsis}

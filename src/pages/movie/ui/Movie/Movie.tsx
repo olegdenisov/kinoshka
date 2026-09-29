@@ -1,4 +1,5 @@
 import type { MovieDetail, MovieImage } from '@entities/movie'
+import { useWatched } from '@features/watched'
 import { useState } from 'react'
 
 import { MovieHero } from '../MovieHero'
@@ -30,14 +31,20 @@ export const Movie = ({ movie, images }: MovieProps) => {
   const [liked, setLiked] = useState<LikedState>({
     rate: false,
     list: false,
-    watched: true,
     fav: false,
   })
+  const { isWatched, toggle } = useWatched()
   const related = movie.similarMovies.slice(0, 6)
 
   return (
     <div className={s.root}>
-      <MovieHero movie={movie} liked={liked} onLikedChange={setLiked} />
+      <MovieHero
+        movie={movie}
+        liked={liked}
+        onLikedChange={setLiked}
+        watched={isWatched(movie.id)}
+        onWatchedToggle={() => toggle(movie.id)}
+      />
       <MovieTabsNav tabs={TABS} activeTab={tab} onTabChange={setTab} />
       <div className={s.tabContent}>
         {tab === 'Overview' && <OverviewTab m={movie} />}
