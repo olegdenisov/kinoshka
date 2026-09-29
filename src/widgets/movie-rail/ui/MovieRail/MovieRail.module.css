@@ -5,6 +5,14 @@
 
 .section {
   margin-bottom: 40px;
+
+  /* Браузер пропускает layout/paint rail-секций вне вьюпорта (замена
+     виртуализации для ≤10 карточек). Высота измерена в DevTools (~365px на
+     390px-вьюпорте; зависит от числа строк заголовка карточки). Единственный
+     <length> применяется к обеим осям, но ширину блочной секции задаёт
+     layout контейнера, так что на неё это не влияет. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 365px;
 }
 
 .header {
@@ -84,6 +92,9 @@
 @media (min-width: 720px) {
   .section {
     margin-bottom: 64px;
+
+    /* Измерено на 1280px: 441–477px в зависимости от строк заголовка. */
+    contain-intrinsic-size: auto 445px;
   }
 
   .header {

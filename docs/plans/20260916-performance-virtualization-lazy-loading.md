@@ -78,12 +78,12 @@ Discovery (см. ниже) показал, что буквальная реал�
 
 **Lighthouse Performance (`/`, `desktop`, медиана из 3 прогонов):**
 
-- Baseline (до, Task 1): _TBD_ (score / LCP / CLS / TBT, min–max)
+- Baseline (до, Task 1): score 100 (min 95, max 100) / LCP 527ms (526–1490) / CLS 0.005 (0.005–0.005) / TBT 0ms (0–0)
 - После (Task 4): _TBD_ (score / LCP / CLS / TBT, min–max)
 
 **Lighthouse Performance (`/movie/666`, `desktop`, медиана из 3 прогонов):**
 
-- Baseline (до, Task 1): _TBD_ (score / LCP / CLS / TBT, min–max)
+- Baseline (до, Task 1): score 92 (min 90, max 93) / LCP 1714ms (1558–1848; LCP-элемент — backdrop, не ErrorState) / CLS 0.001 (0.001–0.001) / TBT 0ms (0–0)
 - После (Task 4): _TBD_ (score / LCP / CLS / TBT, min–max)
 
 ## Solution Overview
@@ -152,16 +152,16 @@ Once-триггер: после первого `entry.isIntersecting === true` �
 - Modify: `src/widgets/movie-rail/ui/MovieRail/MovieRail.module.css`
 - Modify: `src/widgets/movie-rail/ui/MovieRail/MovieRailSkeleton.module.css`
 
-- [ ] на текущем `main` (до изменений): проверить наличие системного Chrome, прогнать серию по методологии из Progress Tracking (`make build-only` + `pnpm dlx @lhci/cli@0.15.1 collect … --numberOfRuns=3`, URL `/` и `/movie/666`), убедиться по первому отчёту, что `/movie/666` не отрисовал ErrorState; скопировать отчёты в scratchpad как `before`
-- [ ] записать медианы **и min/max-разброс** (score/LCP/CLS/TBT) по обеим страницам в секцию Progress Tracking этого файла (baseline)
-- [ ] измерить в DevTools реальную высоту `.section` в `MovieRail.module.css` отдельно на мобильной раскладке (base) и на `@media (min-width: 720px)` — раскладки отличаются (`grid-auto-columns` 140px vs 200px → разная высота постеров, плюс типографика/отступы, см. комментарий в файле про mobile-first базу)
-- [ ] добавить `content-visibility: auto;` и `contain-intrinsic-size: auto <base-height>px;` в базовый `.section`, и переопределить `contain-intrinsic-size: auto <desktop-height>px;` внутри существующего `@media (min-width: 720px)` блока — двумя разными числами, не одним на оба брейкпоинта; WHY-комментарий (на русском): однозначное `<length>` в `contain-intrinsic-size: auto <length>` применяется к обеим осям (ширина и высота), но для блочного `<section>` ширина всё равно берётся из layout контейнера, а не из intrinsic-size, так что практического эффекта на ширину нет
-- [ ] **важно, отдельно от rails:** на холодной загрузке `/` все 4 rails на старте рендерят не `MovieRail`, а `MovieRailSkeleton` (`<AsyncBoundary fallback={<MovieRailSkeleton />}>` в `Home.tsx`, свой CSS-модуль `MovieRailSkeleton.module.css`, `.section { margin-bottom: 64px }`, без `content-visibility`) — именно скелетоны занимают критический отрезок, который замеряет Lighthouse (LCP/TBT считаются до/около момента прихода данных), так что оптимизация `MovieRail.module.css` без изменений в `MovieRailSkeleton.module.css` не подействует в измеряемом окне. Измерить в DevTools реальную высоту `.section` в `MovieRailSkeleton.module.css` (она фиксирована — скелетон использует хардкод-пиксельные размеры `.scroll { height: 300px }`/`.poster { width: 200px; height: 300px }` без брейкпоинтов, так что одного числа достаточно) и добавить туда `content-visibility: auto; contain-intrinsic-size: auto <measured-height>px;` тем же способом
-- [ ] визуально проверить (`make dev`, DevTools → Rendering → "Layout Shift Regions" или Performance-панель) на обоих брейкпоинтах — при скролле вниз по `/` нет заметного CLS/дёрганья на появлении rails 2–4 (ни в состоянии skeleton, ни после загрузки данных) и `Footer` под rails не прыгает
-- [ ] визуально проверить сохранение горизонтальной прокрутки: проскроллить любой rail стрелкой вправо (`ArrowBtn`), увести страницу вниз за пределы вьюпорта и вернуться — позиция `scrollLeft` внутри `.scroll`-контейнера сохранилась (`content-visibility: auto` пропускает рендер поддерева, это исторически проблемное место для вложенных скролл-контейнеров)
-- [ ] `make lint` — stylelint по изменённым `*.module.css` чистый
-- [ ] убедиться, что `MovieRail.test.tsx` проходит без изменений (CSS-only правка не меняет поведение/DOM-структуру, новый юнит-тест не нужен — jsdom не считает `content-visibility`/layout)
-- [ ] run tests — должны пройти (`make test`)
+- [x] на текущем `main` (до изменений): проверить наличие системного Chrome, прогнать серию по методологии из Progress Tracking (`make build-only` + `pnpm dlx @lhci/cli@0.15.1 collect … --numberOfRuns=3`, URL `/` и `/movie/666`), убедиться по первому отчёту, что `/movie/666` не отрисовал ErrorState; скопировать отчёты в scratchpad как `before`
+- [x] записать медианы **и min/max-разброс** (score/LCP/CLS/TBT) по обеим страницам в секцию Progress Tracking этого файла (baseline)
+- [x] измерить в DevTools (мобильный ≈365px, десктоп ≈441–477px → 445px) реальную высоту `.section` в `MovieRail.module.css` отдельно на мобильной раскладке (base) и на `@media (min-width: 720px)` — раскладки отличаются (`grid-auto-columns` 140px vs 200px → разная высота постеров, плюс типографика/отступы, см. комментарий в файле про mobile-first базу)
+- [x] добавить `content-visibility: auto;` и `contain-intrinsic-size: auto <base-height>px;` в базовый `.section`, и переопределить `contain-intrinsic-size: auto <desktop-height>px;` внутри существующего `@media (min-width: 720px)` блока — двумя разными числами, не одним на оба брейкпоинта; WHY-комментарий (на русском): однозначное `<length>` в `contain-intrinsic-size: auto <length>` применяется к обеим осям (ширина и высота), но для блочного `<section>` ширина всё равно берётся из layout контейнера, а не из intrinsic-size, так что практического эффекта на ширину нет
+- [x] **важно, отдельно от rails:** на холодной загрузке `/` все 4 rails на старте рендерят не `MovieRail`, а `MovieRailSkeleton` (`<AsyncBoundary fallback={<MovieRailSkeleton />}>` в `Home.tsx`, свой CSS-модуль `MovieRailSkeleton.module.css`, `.section { margin-bottom: 64px }`, без `content-visibility`) — именно скелетоны занимают критический отрезок, который замеряет Lighthouse (LCP/TBT считаются до/около момента прихода данных), так что оптимизация `MovieRail.module.css` без изменений в `MovieRailSkeleton.module.css` не подействует в измеряемом окне. Измерить в DevTools реальную высоту `.section` в `MovieRailSkeleton.module.css` (она фиксирована — скелетон использует хардкод-пиксельные размеры `.scroll { height: 300px }`/`.poster { width: 200px; height: 300px }` без брейкпоинтов, так что одного числа достаточно) и добавить туда `content-visibility: auto; contain-intrinsic-size: auto <measured-height>px;` тем же способом
+- [x] (проверено программно через chrome-devtools: scrollHeight страницы не меняется при скролле вниз/вверх — 2958px; skeleton-высота 368px рассчитана из CSS, не измерена в DevTools) визуально проверить (`make dev`, DevTools → Rendering → "Layout Shift Regions" или Performance-панель) на обоих брейкпоинтах — при скролле вниз по `/` нет заметного CLS/дёрганья на появлении rails 2–4 (ни в состоянии skeleton, ни после загрузки данных) и `Footer` под rails не прыгает
+- [x] визуально проверить сохранение горизонтальной прокрутки: проскроллить любой rail стрелкой вправо (`ArrowBtn`), увести страницу вниз за пределы вьюпорта и вернуться — позиция `scrollLeft` внутри `.scroll`-контейнера сохранилась (`content-visibility: auto` пропускает рендер поддерева, это исторически проблемное место для вложенных скролл-контейнеров)
+- [x] `make lint` — stylelint по изменённым `*.module.css` чистый
+- [x] убедиться, что `MovieRail.test.tsx` проходит без изменений (CSS-only правка не меняет поведение/DOM-структуру, новый юнит-тест не нужен — jsdom не считает `content-visibility`/layout)
+- [x] run tests — должны пройти (`make test`)
 
 ### Task 2: `loading='lazy' decoding='async'` на постерах, аватарах каста и скриншотах
 
