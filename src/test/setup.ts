@@ -42,6 +42,42 @@ window.matchMedia = vi.fn().mockImplementation((query: string) => {
   } as unknown as MediaQueryList
 })
 
+// window.IntersectionObserver — jsdom его тоже не реализует (docs/plans/20260916-performance-
+// virtualization-lazy-loading.md, Task 3). Первый потребитель — useInView() в RelatedMovies.
+// Дефолт — «элемент сразу во viewport»: observe() синхронно вызывает колбэк с
+// isIntersecting: true (по аналогии с дефолтным matches: false у matchMedia-стаба выше), чтобы
+// тесты, монтирующие Movie/MoviePage/RelatedMovies, видели lazy-контент без специальной
+// подготовки. Сценарий «вне вьюпорта» тесты воспроизводят локальным override
+// window.IntersectionObserver с восстановлением оригинала в afterEach (см. useInView.test.ts).
+class IntersectionObserverStub implements IntersectionObserver {
+  readonly root = null
+  readonly rootMargin = '0px'
+  readonly scrollMargin = '0px'
+  readonly thresholds = [0]
+  private readonly callback: IntersectionObserverCallback
+
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback
+  }
+
+  observe(target: Element) {
+    this.callback(
+      [{ isIntersecting: true, target } as IntersectionObserverEntry],
+      this,
+    )
+  }
+
+  unobserve() {}
+
+  disconnect() {}
+
+  takeRecords(): IntersectionObserverEntry[] {
+    return []
+  }
+}
+
+window.IntersectionObserver = IntersectionObserverStub
+
 // Дефолтный MSW-хендлер для справочника жанров (Task 3, docs/plans/20260815-dynamic-genre-
 // dictionary.md) — без него любой тест, рендерящий Search/SearchSidebar (эти компоненты вызывают
 // useGenreDictionary → фоновый fetch), падает на `onUnhandledRequest: 'error'`. Отдельные тесты
