@@ -81,13 +81,13 @@
 - Create: `src/features/watchlist/model/useWatchlist.test.ts`
 - Create: `src/features/watchlist/model/useWatchlistMovies.test.tsx`
 
-- [ ] создать `watchlistSlot` (`kinoshka:watchlist`, zod `z.array(z.number())`, default `[]`)
-- [ ] реализовать `useWatchlist` (`ids`, `isInWatchlist`, `toggle`) на `useStorageSlot`
-- [ ] реализовать `useWatchlistMovies` = `use(getMoviesByIds(ids))`
-- [ ] экспортировать хуки из `index.ts`
-- [ ] тесты `useWatchlist`: добавление/снятие, порядок, два `toggle` в одном тике, недоступное хранилище (`set() === false`), битые данные в storage → `[]`
-- [ ] тесты `useWatchlistMovies`: фильмы и сериал (`tv-series`), пустой список
-- [ ] запустить `make test` — должно пройти до задачи 2
+- [x] создать `watchlistSlot` (`kinoshka:watchlist`, zod `z.array(z.number())`, default `[]`)
+- [x] реализовать `useWatchlist` (`ids`, `isInWatchlist`, `toggle`) на `useStorageSlot`
+- [x] реализовать `useWatchlistMovies` = `use(getMoviesByIds(ids))`
+- [x] экспортировать хуки из `index.ts`
+- [x] тесты `useWatchlist`: добавление/снятие, порядок, два `toggle` в одном тике, недоступное хранилище (`set() === false`), битые данные в storage → `[]`
+- [x] тесты `useWatchlistMovies`: фильмы и сериал (`tv-series`), пустой список
+- [x] запустить `make test` — должно пройти до задачи 2
 
 ### Task 2: Кнопка Watchlist на странице фильма
 
