@@ -72,6 +72,10 @@ const renderAt = (path: string) =>
                 element: <div>Favorites page content</div>,
               },
               {
+                path: '/watched',
+                element: <div>Watched page content</div>,
+              },
+              {
                 path: '/popular',
                 element: <div>Popular page content</div>,
               },
@@ -255,6 +259,17 @@ describe('AppLayout — мобильный рендерит MobileHeader+BottomN
     // это title MobileHeader, а не NavPill.
     expect(screen.queryAllByRole('button', { name: 'Favorites' })).toHaveLength(
       0,
+    )
+  })
+
+  it('/watched: MobileHeader получает title="Watched", BottomNav — active="lists"', () => {
+    setViewportWidth(MOBILE_WIDTH)
+    renderAt('/watched')
+
+    const banner = screen.getByRole('banner')
+    expect(within(banner).getByText('Watched')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Lists/ }).className).toMatch(
+      /navItemActive/,
     )
   })
 

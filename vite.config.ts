@@ -111,7 +111,7 @@ export default defineConfig(({ mode, command }) => {
           // output.codeSplitting.groups — актуальный Rolldown-нативный API (не
           // advancedChunks, задеприкейчен в пользу этого поля в rolldown@1.0.2).
           // Явные name на каждую страницу вместо имени, выведенного из
-          // содержимого чанка — все 8 page-слайсов импортируются через
+          // содержимого чанка — все 9 page-слайсов импортируются через
           // одинаковый барель index.tsx, что иначе рискует коллизией имён
           // (page-index-*.js, page-index2-*.js, ...). Отдельный chunkFileNames
           // не нужен — [name]-[hash].js подхватывает имя группы сам.
@@ -138,6 +138,7 @@ export default defineConfig(({ mode, command }) => {
               { name: 'page-home', test: /\/pages\/home\// },
               { name: 'page-movie', test: /\/pages\/movie\// },
               { name: 'page-favorites', test: /\/pages\/favorites\// },
+              { name: 'page-watched', test: /\/pages\/watched\// },
               { name: 'page-popular', test: /\/pages\/popular\// },
               {
                 name: 'page-recommendations',

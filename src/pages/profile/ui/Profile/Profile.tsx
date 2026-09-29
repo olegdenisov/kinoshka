@@ -6,9 +6,11 @@ import {
 } from '@features/profile'
 import { useTheme } from '@features/theme'
 import type { Theme } from '@features/theme'
+import { useWatched } from '@features/watched'
 import {
   AvatarCircle,
   ChevronRightIcon,
+  EyeIcon,
   ListsIcon,
   StarIcon,
   TrendingIcon,
@@ -40,6 +42,7 @@ type ProfileFailure = { action: 'save' | 'clear'; count: number }
 export const Profile = () => {
   const { name, initials, setName, clearName } = useProfile()
   const { ids } = useFavorites()
+  const { ids: watchedIds } = useWatched()
   const { theme, setTheme } = useTheme()
   const [draft, setDraft] = useState(name)
   const [prevName, setPrevName] = useState(name)
@@ -87,6 +90,12 @@ export const Profile = () => {
       label: 'Favorites',
       Icon: ListsIcon,
       count: ids.length,
+    },
+    {
+      to: '/watched',
+      label: 'Watched',
+      Icon: EyeIcon,
+      count: watchedIds.length,
     },
     { to: '/popular', label: 'Popular', Icon: TrendingIcon },
     { to: '/recommendations', label: 'Picks', Icon: StarIcon },
