@@ -236,14 +236,14 @@ Once-триггер: после первого `entry.isIntersecting === true` �
 - Modify: `plans/roadmap.md`
 - Move: `docs/plans/20260916-performance-virtualization-lazy-loading.md` → `docs/plans/completed/`
 
-- [ ] создать `.claude/rules/performance.md` с `paths:`-frontmatter (`src/widgets/movie-rail/**`, `src/pages/movie/ui/RelatedMovies/**`, `src/shared/lib/inView/**`, `src/test/setup.ts`) — в формате остальных rule-файлов (английский, коротко: правило + одна строка причины, история — ссылкой на план в `docs/plans/completed/`)
-- [ ] в `performance.md` — решение не виртуализировать rails главной: demo-лимит ≤10 карточек — **внешний факт, не читаемый из кода** для 3 из 4 rails (см. Context), конфликт с hover-arrow `scrollBy`; явно указать: пересмотреть при смене API-тарифа или добавлении явного `limit` в `getMovies.ts`
-- [ ] в `performance.md` — `content-visibility: auto` на `MovieRail` **и** `MovieRailSkeleton` (скелетон — это то, что видит Lighthouse), `contain-intrinsic-size` — измеренные высоты, разные по брейкпоинтам у `MovieRail`; при изменении раскладки rail — перемерить. Safari поддерживает `content-visibility` только с 18: на старых WebKit эффект отсутствует (деградация к обычному рендерингу), accepted limitation
-- [ ] в `performance.md` — `useInView()` (`@shared/lib`) как reusable-паттерн для lazy-mount тяжёлых always-mounted секций: явный параметр типа на DOM-call-site, once-триггер, default-стаб в `src/test/setup.ts` (`isIntersecting: true` сразу) и локальный override + restore в тестах «вне вьюпорта»; критерий выбора — `content-visibility` для чисто визуального offscreen-контента, `useInView` там, где нужен факт «замонтировано/не замонтировано» в React-дереве
-- [ ] в `performance.md` — `loading='lazy'` не ставить на above-the-fold/LCP-изображения (`PersonHero`)
-- [ ] добавить строку `.claude/rules/performance.md` в таблицу «Topic docs» в `AGENTS.md` (с теми же путями, что во frontmatter) — сам `AGENTS.md` больше ничем не дополнять
-- [ ] обновить `plans/roadmap.md` 2.7 — проставить чекбоксы согласно маппингу из Technical Details, добавить ссылку на этот план (путь в `docs/plans/completed/`)
-- [ ] переместить этот файл в `docs/plans/completed/`
+- [x] создать `.claude/rules/performance.md` с `paths:`-frontmatter (`src/widgets/movie-rail/**`, `src/pages/movie/ui/RelatedMovies/**`, `src/shared/lib/inView/**`, `src/test/setup.ts`) — в формате остальных rule-файлов (английский, коротко: правило + одна строка причины, история — ссылкой на план в `docs/plans/completed/`)
+- [x] в `performance.md` — решение не виртуализировать rails главной: demo-лимит ≤10 карточек — **внешний факт, не читаемый из кода** для 3 из 4 rails (см. Context), конфликт с hover-arrow `scrollBy`; явно указать: пересмотреть при смене API-тарифа или добавлении явного `limit` в `getMovies.ts`
+- [x] в `performance.md` — `content-visibility: auto` на `MovieRail` **и** `MovieRailSkeleton` (скелетон — это то, что видит Lighthouse), `contain-intrinsic-size` — измеренные высоты, разные по брейкпоинтам у `MovieRail`; при изменении раскладки rail — перемерить. Safari поддерживает `content-visibility` только с 18: на старых WebKit эффект отсутствует (деградация к обычному рендерингу), accepted limitation
+- [x] в `performance.md` — `useInView()` (`@shared/lib`) как reusable-паттерн для lazy-mount тяжёлых always-mounted секций: явный параметр типа на DOM-call-site, once-триггер, default-стаб в `src/test/setup.ts` (`isIntersecting: true` сразу) и локальный override + restore в тестах «вне вьюпорта»; критерий выбора — `content-visibility` для чисто визуального offscreen-контента, `useInView` там, где нужен факт «замонтировано/не замонтировано» в React-дереве
+- [x] в `performance.md` — `loading='lazy'` не ставить на above-the-fold/LCP-изображения (`PersonHero`)
+- [x] добавить строку `.claude/rules/performance.md` в таблицу «Topic docs» в `AGENTS.md` (с теми же путями, что во frontmatter) — сам `AGENTS.md` больше ничем не дополнять
+- [x] обновить `plans/roadmap.md` 2.7 — проставить чекбоксы согласно маппингу из Technical Details, добавить ссылку на этот план (путь в `docs/plans/completed/`)
+- [x] переместить этот файл в `docs/plans/completed/` (пропущено — перенос выполняет харнесс)
 
 ## Post-Completion
 
