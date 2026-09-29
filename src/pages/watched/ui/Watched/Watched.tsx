@@ -1,6 +1,7 @@
 import { Card, getMoviesByIds } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { useWatched, useWatchedMovies } from '@features/watched'
+import { useWatchlist } from '@features/watchlist'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Watched.module.css'
@@ -20,6 +21,7 @@ const WatchedGrid = () => {
   // бросает getMoviesByIds и ловит AsyncBoundary, поэтому текст — не про ошибку загрузки.
   const movies = useWatchedMovies()
   const { isFavorite, toggle } = useFavorites()
+  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   if (movies.length === 0) {
     return (
@@ -41,6 +43,8 @@ const WatchedGrid = () => {
           variant='grid'
           isFavorite={isFavorite(movie.id)}
           onToggleFavorite={toggle}
+          inWatchlist={isInWatchlist(movie.id)}
+          onToggleWatchlist={toggleWatchlist}
         />
       ))}
     </div>

@@ -1,6 +1,7 @@
 import type { Movie } from '@entities/movie'
 import { Card } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
+import { useWatchlist } from '@features/watchlist'
 import { useInView } from '@shared/lib'
 
 import s from './RelatedMovies.module.css'
@@ -12,6 +13,7 @@ type RelatedMoviesProps = {
 
 export const RelatedMovies = ({ movies, movieTitle }: RelatedMoviesProps) => {
   const { isFavorite, toggle } = useFavorites()
+  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
   const { ref, inView } = useInView()
 
   if (movies.length === 0) {
@@ -35,6 +37,8 @@ export const RelatedMovies = ({ movies, movieTitle }: RelatedMoviesProps) => {
                 variant='grid'
                 isFavorite={isFavorite(x.id)}
                 onToggleFavorite={toggle}
+                inWatchlist={isInWatchlist(x.id)}
+                onToggleWatchlist={toggleWatchlist}
               />
             ))
           : movies.map(x => (

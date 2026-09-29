@@ -98,6 +98,42 @@ describe('MovieRail — избранное', () => {
   })
 })
 
+describe('MovieRail — Watchlist', () => {
+  it('клик по кнопке Add карточки пишет id фильма в watchlist и не трогает избранное', async () => {
+    const user = userEvent.setup()
+    renderRail([makeMovie(1)])
+
+    await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
+
+    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
+    expect(localStorage.getItem('kinoshka:favorites')).toBeNull()
+  })
+
+  it('повторный клик снимает фильм из watchlist (toggle туда-обратно)', async () => {
+    const user = userEvent.setup()
+    renderRail([makeMovie(1)])
+
+    await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Remove from watchlist' }),
+    )
+
+    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[]')
+  })
+
+  it('фильм уже в watchlist — кнопка сразу в состоянии «Remove from watchlist»', () => {
+    localStorage.setItem('kinoshka:watchlist', '[1]')
+    renderRail([makeMovie(1), makeMovie(2)])
+
+    expect(
+      screen.getAllByRole('button', { name: 'Remove from watchlist' }),
+    ).toHaveLength(1)
+    expect(
+      screen.getAllByRole('button', { name: 'Add to watchlist' }),
+    ).toHaveLength(1)
+  })
+})
+
 describe('MovieRail — PopularMovie[] и rank-бейджи', () => {
   it('рейл с PopularMovie[] рендерит PopularBadge внутри карточек', () => {
     renderRail([makePopularMovie(1, 3), makePopularMovie(2, 7)])

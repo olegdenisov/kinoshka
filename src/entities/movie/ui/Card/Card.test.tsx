@@ -22,6 +22,8 @@ const renderCard = (
   props?: {
     isFavorite?: boolean
     onToggleFavorite?: (id: number) => void
+    inWatchlist?: boolean
+    onToggleWatchlist?: (id: number) => void
     rankBadge?: ReactNode
   },
 ) =>
@@ -118,6 +120,57 @@ describe('Card', () => {
     await user.click(screen.getByLabelText('Add to favorites'))
 
     expect(onToggleFavorite).toHaveBeenCalledWith(1)
+  })
+
+  it('без onToggleWatchlist кнопка Add остаётся декоративной (без aria-label «watchlist»)', () => {
+    renderCard(baseMovie)
+
+    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Add to watchlist' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('с onToggleWatchlist — клик по кнопке Add вызывает колбэк с movie.id', async () => {
+    const user = userEvent.setup()
+    const onToggleWatchlist = vi.fn()
+
+    renderCard(baseMovie, { onToggleWatchlist })
+
+    await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
+
+    expect(onToggleWatchlist).toHaveBeenCalledWith(1)
+  })
+
+  it('inWatchlist=true — label «Remove from watchlist», подпись «Added»', () => {
+    renderCard(baseMovie, { inWatchlist: true, onToggleWatchlist: vi.fn() })
+
+    expect(
+      screen.getByRole('button', { name: 'Remove from watchlist' }),
+    ).toHaveTextContent('Added')
+    expect(
+      screen.queryByRole('button', { name: 'Add to watchlist' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('клик по Add не триггерит переход по Link (location не меняется)', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route
+            path='/'
+            element={<Card movie={baseMovie} onToggleWatchlist={vi.fn()} />}
+          />
+          <Route path='/movie/:id' element={<div>movie page</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
+
+    expect(screen.queryByText('movie page')).not.toBeInTheDocument()
   })
 
   it('isFavorite=true — сердечко рендерится в filled-состоянии (label "Remove from favorites")', () => {

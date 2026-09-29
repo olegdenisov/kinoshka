@@ -1,5 +1,6 @@
 import { Card, getMoviesByIds } from '@entities/movie'
 import { useFavoriteMovies, useFavorites } from '@features/favorites'
+import { useWatchlist } from '@features/watchlist'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Favorites.module.css'
@@ -17,6 +18,7 @@ const FavoritesSkeletonGrid = () => (
 const FavoritesGrid = () => {
   const movies = useFavoriteMovies()
   const { isFavorite, toggle } = useFavorites()
+  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   if (movies.length === 0) {
     return (
@@ -38,6 +40,8 @@ const FavoritesGrid = () => {
           variant='grid'
           isFavorite={isFavorite(movie.id)}
           onToggleFavorite={toggle}
+          inWatchlist={isInWatchlist(movie.id)}
+          onToggleWatchlist={toggleWatchlist}
         />
       ))}
     </div>

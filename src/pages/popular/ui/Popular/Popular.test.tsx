@@ -75,6 +75,7 @@ const renderPage = async () => {
 
 beforeEach(() => {
   vi.stubEnv('DEV', true)
+  localStorage.clear()
   sessionStorage.clear()
   setViewportWidth(DESKTOP_WIDTH)
 })
@@ -127,6 +128,29 @@ describe('Popular — успешная загрузка', () => {
 
     expect(await screen.findByText('First Popular')).toBeInTheDocument()
     expect(screen.getByText('#1')).toBeInTheDocument()
+  })
+})
+
+describe('Popular — Watchlist', () => {
+  it('клик по кнопке Add карточки пишет id в watchlist, а карточка остаётся', async () => {
+    server.use(
+      http.get(LIST_ENDPOINT, () =>
+        successResponse([
+          listItem({ movie: movieDoc({ id: 1, name: 'First Popular' }) }),
+        ]),
+      ),
+    )
+
+    await renderPage()
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Add to watchlist' }),
+    )
+
+    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
+    expect(screen.getByText('First Popular')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Remove from watchlist' }),
+    ).toBeInTheDocument()
   })
 })
 

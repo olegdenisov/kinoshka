@@ -100,6 +100,23 @@ describe('Favorites — непустой список избранного', () 
   })
 })
 
+describe('Favorites — Watchlist на карточке', () => {
+  it('клик по кнопке Add пишет id в watchlist, а карточка остаётся в избранном', async () => {
+    const user = userEvent.setup()
+    setFavorites([1])
+    mockMovie(1, { name: 'First Favorite' })
+
+    await renderPage()
+    await user.click(
+      await screen.findByRole('button', { name: 'Add to watchlist' }),
+    )
+
+    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
+    expect(localStorage.getItem(FAVORITES_KEY)).toBe('[1]')
+    expect(screen.getByText('First Favorite')).toBeInTheDocument()
+  })
+})
+
 describe('Favorites — частичный отказ (404)', () => {
   it('карточка для 404-фильма не рендерится, остальные рендерятся', async () => {
     setFavorites([1, 404])
