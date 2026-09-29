@@ -71,7 +71,7 @@ describe('Profile', () => {
     renderProfile()
 
     const region = screen.getByRole('region', { name: 'Quick access' })
-    expect(within(region).getAllByRole('link')).toHaveLength(4)
+    expect(within(region).getAllByRole('link')).toHaveLength(5)
   })
 
   it('"Appearance" — заголовок h2 в outline и одновременно имя группы radio', () => {
@@ -394,6 +394,15 @@ describe('Profile', () => {
       'href',
       '/watched',
     )
+  })
+
+  it('счётчик watchlist отражает содержимое localStorage', () => {
+    localStorage.setItem('kinoshka:watchlist', JSON.stringify([1, 2, 3]))
+    renderProfile()
+
+    const link = screen.getByRole('link', { name: /^Watchlist/ })
+    expect(link).toHaveTextContent('3')
+    expect(link).toHaveAttribute('href', '/watchlist')
   })
 
   it('быстрые ссылки ведут на нужные пути', () => {

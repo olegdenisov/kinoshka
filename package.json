@@ -80,7 +80,7 @@
       "name": "entry",
       "path": "dist/assets/index-*.js",
       "gzip": true,
-      "limit": "3.6 KB"
+      "limit": "4.05 KB"
     },
     {
       "name": "vendor",
@@ -117,6 +117,12 @@
       "path": "dist/assets/page-watched-*.js",
       "gzip": true,
       "limit": "1.3 KB"
+    },
+    {
+      "name": "page-watchlist",
+      "path": "dist/assets/page-watchlist-*.js",
+      "gzip": true,
+      "limit": "1.25 KB"
     },
     {
       "name": "page-popular",

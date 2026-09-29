@@ -28,6 +28,10 @@ const FavoritesPage = lazyNamed(
   'FavoritesPage',
 )
 const WatchedPage = lazyNamed(() => import('../pages/watched'), 'WatchedPage')
+const WatchlistPage = lazyNamed(
+  () => import('../pages/watchlist'),
+  'WatchlistPage',
+)
 const PopularPage = lazyNamed(() => import('../pages/popular'), 'PopularPage')
 const RecommendationsPage = lazyNamed(
   () => import('../pages/recommendations'),
@@ -45,6 +49,7 @@ export const router = wrappedCreateBrowserRouter([
       { path: '/movie/:id', element: <MoviePage /> },
       { path: '/favorites', element: <FavoritesPage /> },
       { path: '/watched', element: <WatchedPage /> },
+      { path: '/watchlist', element: <WatchlistPage /> },
       { path: '/popular', element: <PopularPage /> },
       { path: '/recommendations', element: <RecommendationsPage /> },
       { path: '/search', element: <SearchPage /> },
