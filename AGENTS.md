@@ -12,6 +12,7 @@ This file holds only repo-wide conventions. Area-specific decisions and gotchas 
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.claude/rules/data-layer.md`    | `src/entities/movie/**`, `src/entities/person/**`, `src/shared/api/**`, `src/pages/{search,movie,popular,recommendations,person}/**`, favorites/catalog-filter/recommendations features, `AsyncBoundary`, `ErrorBoundary`, `ErrorState` |
 | `.claude/rules/watched.md`       | `src/features/watched/**`, `src/pages/watched/**`, `src/pages/movie/ui/MovieActions/**`, `e2e/watched.spec.ts`                                                                                                                          |
+| `.claude/rules/watchlist.md`     | `src/features/watchlist/**`, `src/pages/watchlist/**`, `src/pages/movie/ui/{Movie,MovieActions,MovieHero}/**`, `e2e/watchlist.spec.ts`                                                                                                  |
 | `.claude/rules/ui-patterns.md`   | `Card`, `YearRangeSlider`, `@features/theme`, `src/app/styles/**`                                                                                                                                                                       |
 | `.claude/rules/profile.md`       | `@features/profile`, `/profile`, `src/shared/lib/storage/**`, `AvatarCircle`, `BottomNav`                                                                                                                                               |
 | `.claude/rules/sentry.md`        | `src/app/sentry*`, `src/main.tsx`, `src/app/router.tsx`, `src/app/layouts/AppLayout.tsx`, `sentry*.config.ts`, `provision-sentry-telemetry.ts`, `.mcp.json`                                                                             |
@@ -80,7 +81,7 @@ src/
 ├── app/          # providers, router, layouts, global styles, sentry bootstrap
 ├── pages/        # route-level components
 ├── widgets/      # large reusable UI sections (header, mobile-chrome, movie-rail, search-sidebar)
-├── features/     # user-facing interactive features (catalog-filter, favorites, watched, theme, profile, recommendations)
+├── features/     # user-facing interactive features (catalog-filter, favorites, watched, watchlist, theme, profile, recommendations)
 ├── entities/     # business-domain objects (movie, person — types, api, hooks, UI)
 └── shared/       # cross-cutting utilities and primitives (api/, lib/, ui/, config/)
 ```
@@ -95,7 +96,7 @@ Import direction: `pages → widgets → features → entities → shared`. Neve
 
 React Router 7. Route config: `src/app/router.tsx` (every route lazy via `lazyNamed`, router wrapped with `Sentry.wrapCreateBrowserRouter`); providers: `src/app/providers.tsx`; chrome/layout: `src/app/layouts/AppLayout.tsx`.
 
-Routes: `/` (home feed), `/search` (search + filters), `/movie/:id` (overview, cast, media tabs), `/favorites`, `/watched` (watched movies and series, marked on the detail page), `/popular` (weekly popular with rank badges), `/recommendations` (rule-based from favorites), `/profile` (client-only profile), `/person/:id` (photo, bio meta, filmography, facts).
+Routes: `/` (home feed), `/search` (search + filters), `/movie/:id` (overview, cast, media tabs), `/favorites`, `/watched` (watched movies and series, marked on the detail page), `/watchlist` (saved to watch later, added on the detail page), `/popular` (weekly popular with rank badges), `/recommendations` (rule-based from favorites), `/profile` (client-only profile), `/person/:id` (photo, bio meta, filmography, facts).
 
 Adding a route touches: `router.tsx`, `AppLayout`'s `ROUTE_CHROME`, a `codeSplitting` group + `size-limit` entry (see `build-budgets.md`), and possibly the Lighthouse URL list and an e2e spec.
 
