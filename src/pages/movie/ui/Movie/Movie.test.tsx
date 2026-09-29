@@ -24,6 +24,8 @@ const renderMovie = (
     </MemoryRouter>,
   )
 
+beforeEach(() => localStorage.clear())
+
 describe('Movie — Overview (дефолтный таб)', () => {
   it('показывает tagline, синопсис-тизер, рейтинги и жанры из movie', () => {
     renderMovie()
@@ -109,6 +111,63 @@ describe('Movie — RelatedMovies', () => {
 
     expect(localStorage.getItem('kinoshka:favorites')).toBe(
       `[${MOVIE.similarMovies[0].id}]`,
+    )
+  })
+})
+
+describe('Movie — Watched', () => {
+  const watchedButton = () => screen.getByRole('button', { name: 'Watched' })
+
+  it('по умолчанию не нажата', () => {
+    renderMovie()
+
+    expect(watchedButton()).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('клик добавляет id в kinoshka:watched, повторный клик убирает', async () => {
+    const user = userEvent.setup()
+    renderMovie()
+
+    await user.click(watchedButton())
+
+    expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
+    expect(localStorage.getItem('kinoshka:watched')).toBe(`[${MOVIE.id}]`)
+
+    await user.click(watchedButton())
+
+    expect(watchedButton()).toHaveAttribute('aria-pressed', 'false')
+    expect(localStorage.getItem('kinoshka:watched')).toBe('[]')
+  })
+
+  it('состояние переживает перемонтирование страницы', async () => {
+    const user = userEvent.setup()
+    const { unmount } = renderMovie()
+
+    await user.click(watchedButton())
+    unmount()
+    renderMovie()
+
+    expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('остальные кнопки работают независимо от Watched', async () => {
+    const user = userEvent.setup()
+    renderMovie()
+
+    await user.click(screen.getByRole('button', { name: 'Favorite' }))
+    await user.click(screen.getByRole('button', { name: 'Add to list' }))
+
+    expect(screen.getByRole('button', { name: 'Favorite' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: 'Add to list' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(watchedButton()).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Share' })).not.toHaveAttribute(
+      'aria-pressed',
     )
   })
 })

@@ -85,15 +85,15 @@
 - Modify: `src/pages/movie/ui/MovieActions/MovieActions.tsx`
 - Modify: `src/pages/movie/ui/Movie/Movie.test.tsx` (`localStorage.clear()` в `beforeEach`)
 
-- [ ] убрать `watched` из `LikedState` и локального `useState` в `Movie.tsx`
-- [ ] в `Movie.tsx` подключить `useWatched()`; прокинуть `watched` и обработчик через `MovieHero` в `MovieActions`
-- [ ] `MovieActions({ liked, onChange, watched, onWatchedChange })`; кнопка Watched: `active={watched}`, клик → `toggle(movie.id)`
-- [ ] `SecondaryAction`: `aria-pressed={active}` при `active !== undefined`
-- [ ] тест: по умолчанию Watched не нажата (`aria-pressed=false`)
-- [ ] тест: клик по Watched добавляет id в `kinoshka:watched`, повторный клик удаляет
-- [ ] тест: состояние сохраняется после перемонтирования страницы
-- [ ] тест (в `Movie.test.tsx`): остальные кнопки (`Rate`, `Add to list`, `Favorite`) работают как раньше
-- [ ] запустить тесты — должны пройти до задачи 3
+- [x] убрать `watched` из `LikedState` и локального `useState` в `Movie.tsx`
+- [x] в `Movie.tsx` подключить `useWatched()`; прокинуть `watched` и обработчик через `MovieHero` в `MovieActions`
+- [x] `MovieActions({ liked, onChange, watched, onWatchedChange })`; кнопка Watched: `active={watched}`, клик → `toggle(movie.id)`
+- [x] `SecondaryAction`: `aria-pressed={active}` при `active !== undefined`
+- [x] тест: по умолчанию Watched не нажата (`aria-pressed=false`)
+- [x] тест: клик по Watched добавляет id в `kinoshka:watched`, повторный клик удаляет
+- [x] тест: состояние сохраняется после перемонтирования страницы
+- [x] тест (в `Movie.test.tsx`): остальные кнопки (`Rate`, `Add to list`, `Favorite`) работают как раньше
+- [x] запустить тесты — должны пройти до задачи 3
 
 ### Task 3: Страница `/watched`
 **Model:** sonnet — по образцу `pages/favorites`
