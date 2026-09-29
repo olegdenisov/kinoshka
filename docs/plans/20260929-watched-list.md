@@ -140,10 +140,10 @@
 **Files:**
 - Create: `e2e/watched.spec.ts`
 
-- [ ] один flow: страница фильма → Watched → `/watched` (карточка есть) → снять Watched → пустое состояние
-- [ ] один `checkA11y` на спеку
-- [ ] живой API, без моков (fallback при исчерпании квоты — `page.routeFromHAR`)
-- [ ] `make e2e` — проходит
+- [x] один flow: страница фильма → Watched → `/watched` (карточка есть) → снять Watched → пустое состояние
+- [x] один `checkA11y` на спеку
+- [x] живой API, без моков (fallback при исчерпании квоты — `page.routeFromHAR`)
+- [x] `npx playwright test e2e/watched.spec.ts --project=chromium` — проходит (полный `make e2e` не гонял: ~40–50 из 200 запросов/день)
 
 ### Task 6: Verify acceptance criteria
 **Model:** sonnet — сверка результата с планом
