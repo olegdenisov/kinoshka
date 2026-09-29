@@ -12,10 +12,9 @@ import { router } from './router'
 // собирает Sentry Performance (tracesSampleRate в src/app/sentry.ts), отдельный вызов не нужен.
 // Один раз на верхнем уровне модуля, до определения Providers — initAnalytics() рано выходит,
 // если !PROD || !VITE_PLAUSIBLE_DOMAIN (см. src/shared/lib/analytics/analytics.ts) — no-op в
-// dev/test-окружениях. registerChunkPreloadRecovery() — тоже один раз на верхнем уровне, но
-// безусловно (не гейтится PROD): слушает window's vite:preloadError и перезагружает страницу при
-// сбое загрузки чанка (см. WHY в chunkPreloadRecovery.ts) — в dev-режиме Vite это событие не
-// диспатчит настоящих сбоев (нет билд-чанков), так что регистрация там безвредна.
+// dev/test-окружениях. registerChunkPreloadRecovery() — тоже один раз на верхнем уровне: слушает
+// window's vite:preloadError и перезагружает страницу при сбое загрузки чанка (не чаще раза в
+// 10s, только в PROD — в dev обработчик ничего не делает, см. WHY в chunkPreloadRecovery.ts).
 initAnalytics()
 registerChunkPreloadRecovery()
 

@@ -9,6 +9,7 @@ import {
   within,
 } from '@testing-library/react'
 import { useEffect } from 'react'
+import type { ReactNode } from 'react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 
 import { AppLayout } from './AppLayout'
@@ -444,6 +445,8 @@ describe('AppLayout — page view tracking: смена pathname трекаетс
 // module-level флаг (не self-flipping внутри рендера) — React после ошибки в рендере синхронно
 // повторяет рендер ещё раз ДО того, как считать её настоящей ошибкой (см. ErrorBoundary.test.tsx).
 let shouldThrow = true
+// Фиксированный текст фолбэка per-route границы — сырое error.message пользователю не показываем.
+const ROUTE_FALLBACK_TEXT = 'An unexpected error occurred. Please try again.'
 const Bomb = () => {
   if (shouldThrow) throw new Error('boom')
   return <div>Recovered page content</div>
@@ -461,13 +464,16 @@ const PersonPlaceholder = () => {
 // Роутер монтируется один раз — навигация через router.navigate (как в tracking-describe выше).
 // Бомба стоит на /popular (а не на отдельном /broken), чтобы у роута был ROUTE_CHROME-конфиг и на
 // мобильном рендерился BottomNav — иначе проверка «chrome цел» на мобильном была бы пустой.
-const createErrorRouter = (initialPath: string) =>
+const createErrorRouter = (
+  initialPath: string,
+  homeElement: ReactNode = <div>Home page content</div>,
+) =>
   createMemoryRouter(
     [
       {
         element: <AppLayout />,
         children: [
-          { path: '/', element: <div>Home page content</div> },
+          { path: '/', element: homeElement },
           { path: '/popular', element: <Bomb /> },
           {
             path: '/favorites',
@@ -493,7 +499,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
     personMounts = 0
   })
 
-  it('десктоп: падение страницы — Header остаётся, вместо контента ErrorState с текстом ошибки и ссылкой на главную', () => {
+  it('десктоп: падение страницы — Header остаётся, вместо контента ErrorState с фиксированным текстом и ссылкой на главную', () => {
     render(<RouterProvider router={createErrorRouter('/popular')} />)
 
     expect(screen.getByRole('banner')).toBeInTheDocument()
@@ -503,8 +509,9 @@ describe('AppLayout — per-route ErrorBoundary', () => {
       }),
     ).toBeInTheDocument()
     expect(screen.getByText('Something went wrong')).toBeInTheDocument()
-    expect(screen.getByText('boom')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'На главную' })).toHaveAttribute(
+    expect(screen.getByText(ROUTE_FALLBACK_TEXT)).toBeInTheDocument()
+    expect(screen.queryByText('boom')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute(
       'href',
       '/',
     )
@@ -518,20 +525,32 @@ describe('AppLayout — per-route ErrorBoundary', () => {
       within(screen.getByRole('banner')).getByText('Popular'),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Lists/ })).toBeInTheDocument()
-    expect(screen.getByText('boom')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'На главную' })).toBeInTheDocument()
+    expect(screen.getByText(ROUTE_FALLBACK_TEXT)).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: 'Back to home' }),
+    ).toBeInTheDocument()
+  })
+
+  it('падение самой / — ссылки на главную нет (key не сменится, она была бы no-op), retry есть', () => {
+    render(<RouterProvider router={createErrorRouter('/', <Bomb />)} />)
+
+    expect(screen.getByText(ROUTE_FALLBACK_TEXT)).toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: 'Back to home' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('Попробовать снова')).toBeInTheDocument()
   })
 
   it('«Попробовать снова» восстанавливает страницу, если причина устранена — chrome вокруг сохраняется', () => {
     render(<RouterProvider router={createErrorRouter('/popular')} />)
 
-    expect(screen.getByText('boom')).toBeInTheDocument()
+    expect(screen.getByText(ROUTE_FALLBACK_TEXT)).toBeInTheDocument()
 
     shouldThrow = false
     fireEvent.click(screen.getByText('Попробовать снова'))
 
     expect(screen.getByText('Recovered page content')).toBeInTheDocument()
-    expect(screen.queryByText('boom')).not.toBeInTheDocument()
+    expect(screen.queryByText(ROUTE_FALLBACK_TEXT)).not.toBeInTheDocument()
     expect(screen.getByRole('banner')).toBeInTheDocument()
   })
 
@@ -554,7 +573,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
     expect(screen.getByText('boom')).toBeInTheDocument()
     // Фолбэк AsyncBoundary — без secondaryAction, ссылки на главную нет.
     expect(
-      screen.queryByRole('link', { name: 'На главную' }),
+      screen.queryByRole('link', { name: 'Back to home' }),
     ).not.toBeInTheDocument()
     expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(captureRouteError).not.toHaveBeenCalled()
@@ -564,14 +583,14 @@ describe('AppLayout — per-route ErrorBoundary', () => {
     const router = createErrorRouter('/popular')
     render(<RouterProvider router={router} />)
 
-    expect(screen.getByText('boom')).toBeInTheDocument()
+    expect(screen.getByText(ROUTE_FALLBACK_TEXT)).toBeInTheDocument()
 
     await act(async () => {
       await router.navigate('/')
     })
 
     expect(await screen.findByText('Home page content')).toBeInTheDocument()
-    expect(screen.queryByText('boom')).not.toBeInTheDocument()
+    expect(screen.queryByText(ROUTE_FALLBACK_TEXT)).not.toBeInTheDocument()
   })
 
   // Принятое следствие key={pathname} (см. Overview плана): смена параметра динамического роута

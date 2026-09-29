@@ -8,6 +8,8 @@ paths:
   - 'src/shared/lib/sessionCache/**'
   - 'src/shared/lib/cachedFetcher/**'
   - 'src/shared/ui/AsyncBoundary/**'
+  - 'src/shared/ui/ErrorBoundary/**'
+  - 'src/shared/ui/ErrorState/**'
   - 'src/pages/search/**'
   - 'src/pages/movie/**'
   - 'src/pages/popular/**'

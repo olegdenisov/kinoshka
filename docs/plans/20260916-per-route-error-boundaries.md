@@ -158,6 +158,11 @@ plan-review-агента):**
 
 `routeErrorFallback` — локальная функция в `AppLayout.tsx`:
 
+> Итоговая реализация после ревью: описание фиксированное (`'An unexpected error occurred.
+Please try again.'`, как в `GlobalErrorBoundary`), а не `error.message`; ссылка — `Back to home`
+> (язык остальной копии фолбэка) и не рендерится на самой `/` (там она была бы no-op). Код ниже —
+> исходный набросок.
+
 ```tsx
 const routeErrorFallback = ({
   error,
@@ -182,8 +187,8 @@ const routeErrorFallback = ({
 `s` — новый `AppLayout.module.css` (только стиль `.homeLink`, тот же паттерн токенов, что был бы у
 `.retryButton`: `var(--text-secondary)`, `var(--border-soft)`, `var(--bg-hover)` на hover).
 
-`captureRouteError` — `src/app/sentry.ts`, обёртка над `Sentry.captureException` с прокинутым React
-component stack (no-op, если `Sentry.init()` не вызывался — тот же неявный гейт, что и у остальных
+`captureRouteError` — `src/app/sentry.ts`, делегирует в `Sentry.captureReactException(error, errorInfo)`
+(тот же путь, что у `Sentry.ErrorBoundary`: component stack в `contexts.react` и как `cause`) (no-op, если `Sentry.init()` не вызывался — тот же неявный гейт, что и у остальных
 Sentry-вызовов в dev/test).
 
 Chrome (`Header`/`MobileHeader`+`BottomNav`) остаётся вне границы — рендерится в `AppLayout` до и
@@ -192,7 +197,13 @@ Chrome (`Header`/`MobileHeader`+`BottomNav`) остаётся вне грани�
 Отдельно, независимо от `ErrorBoundary`/`ErrorState` — `registerChunkPreloadRecovery()`
 (`src/app/providers.tsx`, вызывается один раз на верхнем уровне модуля, по прецеденту
 `initAnalytics()`): слушает `window`'s `vite:preloadError`, делает `event.preventDefault()` +
-`window.location.reload()`. Это событие Vite диспатчит ДО того, как та же ошибка дойдёт как
+`captureChunkLoadError(event.payload)` + `window.location.reload()` — только в `PROD` и не на
+документе, стартовавшем (`performance.timeOrigin`) < 10s после метки в `sessionStorage`, записанной
+перед прошлым recovery-reload (сравнение со стартом документа, а не с моментом сбоя — медленный чанк
+может упасть позже 10s после reload) и только первые 120s жизни такого документа
+(`performance.now()`) — иначе долгоживущая вкладка после recovery-reload уже не восстановилась бы
+на следующем деплое; такой сбой идёт без `preventDefault` в per-route `ErrorBoundary`, чтобы не
+зациклить reload. Это событие Vite диспатчит ДО того, как та же ошибка дойдёт как
 rejected promise до `Suspense`/`ErrorBoundary` — так что для настоящих chunk-load-сбоев страница в
 большинстве случаев успевает перезагрузиться раньше, чем пользователь увидит `ErrorState`-фолбэк
 вообще; `ErrorState`'s retry/«На главную» остаются на случай, если слушатель почему-то не
@@ -224,17 +235,22 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
   независимым от react-router — `<Link>` создаётся вызывающей стороной (`AppLayout`), а не внутри
   `ErrorState`.
 - `captureRouteError(error: Error, errorInfo: ErrorInfo): void` в `src/app/sentry.ts` —
-  `Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } }, mechanism: { handled: true } })`.
+  `Sentry.captureReactException(error, errorInfo)` (итог ревью; изначально планировался ручной
+  `captureException` с `contexts.react.componentStack` и `mechanism: { handled: true }`).
   Сигнатура берёт `errorInfo`, а не только `error`, чтобы не потерять React component stack — раньше
   эти же ошибки уходили в Sentry через `Sentry.ErrorBoundary`/`captureReactException`, который его
   прикладывает; голый `Sentry.captureException(error)` без `errorInfo` дал бы отчёт хуже, чем был
   до этого плана. `ErrorInfo` — тип из `react`, тот же, что уже в `onError`-пропе `ErrorBoundary`.
 - `registerChunkPreloadRecovery(): void` в `src/app/chunkPreloadRecovery.ts`, вызов — в
   `src/app/providers.tsx` (Task 5) —
-  `window.addEventListener('vite:preloadError', event => { event.preventDefault(); window.location.reload() })`.
-  Вызывается один раз, безусловно (не гейтится `PROD`, в отличие от `initSentry`/`initAnalytics`) —
-  само событие `vite:preloadError` в dev-режиме Vite не диспатчит настоящих chunk-load-сбоев (там
-  нет билд-чанков), так что регистрация безвредна и в dev, доп. `import.meta.env.PROD`-гейт не нужен.
+  `window.addEventListener('vite:preloadError', handler)`. Итог ревью: регистрация идемпотентна;
+  обработчик — no-op вне `PROD` (в dev reload спрятал бы ошибку); без reload, если документ
+  стартовал (`performance.timeOrigin`) < 10s после `sessionStorage`-метки прошлого recovery-reload
+  и документу ещё < 120s (`performance.now()`); без записи метки — без reload; пачка событий одного
+  сбоя — один reload (`isReloading`); матрица сценариев — в WHY-комментарии модуля; перед reload исходная ошибка уходит в
+  Sentry через `captureChunkLoadError` (tag `chunk_load`). `preventDefault()` заставляет Vite
+  резолвить `import()` в `undefined` — `lazyNamed` в этом случае возвращает «вечный» промис
+  (Suspense-спиннер до reload), а не бросает `TypeError`.
 
 ## What Goes Where
 
@@ -271,7 +287,7 @@ rejected promise до `Suspense`/`ErrorBoundary` — так что для нас
 - Modify: `src/app/sentry.ts`
 - Modify: `src/app/sentry.test.ts`
 
-- [x] добавить экспорт `captureRouteError(error: Error, errorInfo: ErrorInfo): void`, вызывающий `Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } }, mechanism: { handled: true } })`
+- [x] добавить экспорт `captureRouteError(error: Error, errorInfo: ErrorInfo): void`, вызывающий `Sentry.captureReactException(error, errorInfo)` (итог ревью; изначально — `captureException` с `contexts.react.componentStack`)
 - [x] короткий WHY-комментарий: перехватывается раньше `GlobalErrorBoundary`, поэтому репортинг явный; `errorInfo`/`componentStack` — чтобы не потерять то, что раньше давал `Sentry.ErrorBoundary`/`captureReactException`
 - [x] в `sentry.test.ts` переиспользовать существующий мок `@sentry/react` (`captureException: vi.fn()` там уже есть — используется тестом репортера localStorage); сбрасывать мок перед новым тестом (`vi.mocked(Sentry.captureException).mockClear()`), чтобы счётчик вызовов не пересекался с тестом репортера
 - [x] написать тест: `captureRouteError(error, errorInfo)` вызывает `Sentry.captureException` ровно один раз с этим `error` и с `contexts.react.componentStack === errorInfo.componentStack`

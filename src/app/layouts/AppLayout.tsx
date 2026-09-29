@@ -196,19 +196,28 @@ const SEARCH_CHROME: RouteChromeConfig = {
 
 /**
  * Фолбэк per-route `ErrorBoundary` (роадмап 2.6, docs/plans/20260916-per-route-error-boundaries.md)
- * — тот же `ErrorState`, что у `AsyncBoundary`'s дефолтного фолбэка, плюс ссылка на главную через
+ * — тот же `ErrorState`, что у `GlobalErrorBoundary`, плюс ссылка на главную через
  * `secondaryAction`-слот. `Link` передаётся снаружи, а не живёт внутри `ErrorState`: тот
  * рендерится и вне `<RouterProvider>` (`GlobalErrorBoundary`), где `Link` упал бы.
+ * Описание фиксированное, не `error.message`: сюда долетают баги рендера и сбои чанков, их текст
+ * ("Cannot read properties of undefined…", URL чанка) пользователю ничего не говорит.
+ * На самой `/` ссылки нет: `pathname` не меняется → `key` тот же → граница не сбросится, ссылка
+ * была бы no-op; остаётся только retry.
  */
-const routeErrorFallback = ({ error, reset }: ErrorFallbackParams) => (
+const renderRouteErrorFallback = (
+  { reset }: ErrorFallbackParams,
+  isHome: boolean,
+) => (
   <ErrorState
     title='Something went wrong'
-    description={error?.message || 'Please try again later'}
+    description='An unexpected error occurred. Please try again.'
     onRetry={reset}
     secondaryAction={
-      <Link className={s.homeLink} to='/'>
-        На главную
-      </Link>
+      isHome ? undefined : (
+        <Link className={s.homeLink} to='/'>
+          Back to home
+        </Link>
+      )
     }
   />
 )
@@ -299,10 +308,12 @@ export const AppLayout = () => {
       chrome вокруг. Перехватывает раньше GlobalErrorBoundary — поэтому сам репортит в Sentry
       через onError. `key={pathname}` сбрасывает границу при переходе на другой роут; принятое
       следствие — ремаунт Suspense+страницы и на смене параметра (`/movie/1 → /movie/2`), без
-      удержания старого контента во время загрузки нового. */}
+      удержания старого контента во время загрузки нового. Второе принятое следствие: на
+      `/search` смена `?q`/фильтров не меняет `pathname` — упавшая страница остаётся в фолбэке до
+      retry/перехода (ключ по `search` ремаунтил бы страницу на каждый ввод и клик по фильтру). */}
       <ErrorBoundary
         key={pathname}
-        fallback={routeErrorFallback}
+        fallback={params => renderRouteErrorFallback(params, pathname === '/')}
         onError={captureRouteError}
       >
         <Suspense fallback={<Spinner />}>

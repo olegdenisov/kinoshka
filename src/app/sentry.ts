@@ -165,17 +165,18 @@ const reportStorageErrorToSentry: StorageErrorReporter = ({
   )
 }
 
-// Перехватывается раньше GlobalErrorBoundary — требует явного репортинга. errorInfo/componentStack
-// содержит информацию, которую раньше давал Sentry.ErrorBoundary/captureReactException; не потеряем
-// это вызвав только captureException(error) без контекста.
+// Перехватывается раньше GlobalErrorBoundary — требует явного репортинга. captureReactException —
+// тот же путь, что у Sentry.ErrorBoundary: componentStack прикрепляется и в contexts.react, и как
+// `cause` ошибки (лучше группировка), mechanism выставляет сам SDK — не собираем это вручную.
 export const captureRouteError = (error: Error, errorInfo: ErrorInfo): void => {
-  Sentry.captureException(error, {
-    contexts: {
-      react: {
-        componentStack: errorInfo.componentStack,
-      },
-    },
-  })
+  Sentry.captureReactException(error, errorInfo)
+}
+
+// Сбой загрузки чанка, после которого chunkPreloadRecovery делает reload(): preventDefault()
+// глушит исходную ошибку (Vite не пробрасывает её дальше), поэтому без явной отправки здесь
+// настоящая причина до Sentry не дошла бы никогда. Тег отделяет эти события от прочих ошибок.
+export const captureChunkLoadError = (error: unknown): void => {
+  Sentry.captureException(error, { tags: { chunk_load: 'reload' } })
 }
 
 // Явная функция, а не side-effect при импорте — тестируема с разными import.meta.env.PROD /
