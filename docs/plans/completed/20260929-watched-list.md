@@ -1,12 +1,14 @@
 # Список просмотренных фильмов и сериалов
 
 ## Overview
+
 - Страница `/watched` со списком просмотренных фильмов и сериалов — по устройству как `/favorites`.
 - В список попадает всё, что пользователь отметил переключателем **Watched** на странице деталей (`/movie/:id`); повторное нажатие убирает из списка.
 - Сериалы отдельной логики не требуют: `MovieType` уже включает `tv-series`, `animated-series`, `anime`, `cartoon`, а список хранит только id.
 - Сейчас кнопка Watched в `MovieActions` — локальное состояние (`LikedState.watched` в `Movie.tsx`), которое теряется при уходе со страницы. План делает её персистентной.
 
 ## Context (from discovery)
+
 - образец: `src/features/favorites/` (`favoritesStorage.ts` — `createStorageSlot('kinoshka:favorites', z.array(z.number()), [])`, `useFavorites`, `useFavoriteMovies` = `use(getMoviesByIds(ids))`)
 - образец страницы: `src/pages/favorites/{index.tsx,FavoritesPage.tsx,ui/Favorites}` — `AsyncBoundary` + `Skeleton` + `EmptyState`, Retry → `getMoviesByIds.invalidate(ids)`
 - страница деталей: `src/pages/movie/ui/Movie/Movie.tsx` (локальный `useState<LikedState>`), `MovieHero`, `MovieActions`, `ui/types.ts`
@@ -16,6 +18,7 @@
 - правила: `.claude/rules/data-layer.md`, `profile.md` (storage-слоты), `build-budgets.md`, `e2e.md`
 
 ## Development Approach
+
 - **testing approach**: Regular (код, затем тесты в той же задаче)
 - каждая задача завершается полностью, затем следующая
 - небольшие сфокусированные изменения
@@ -26,14 +29,17 @@
 - комментарии в коде — на русском, объясняют «почему»
 
 ## Testing Strategy
+
 - **unit**: хук `useWatched`, `useWatchedMovies`, страница `Watched`, `MovieActions`/`Movie` (Testing Library + MSW, как у favorites)
 - **e2e**: `e2e/watched.spec.ts` (Playwright, по образцу `favorites.spec.ts`, живой API, один flow, один `checkA11y`); сериал покрывается unit-тестом с MSW-фикстурой `type: 'tv-series'`
 
 ## Progress Tracking
+
 - выполненное отмечать `[x]` сразу
 - новые задачи — с префиксом ➕, блокеры — с ⚠️
 
 ## Solution Overview
+
 - новый слайс `@features/watched` — копия структуры `@features/favorites` с ключом `kinoshka:watched` (массив id, порядок = порядок отметки)
 - `Movie.tsx` берёт `watched` из `useWatched()`, а не из локального состояния; остальные флаги (`rate`, `list`, `fav`) остаются локальными — вне объёма
 - страница `/watched` в `src/pages/watched`, отображает `Card variant='grid'` через `getMoviesByIds`
@@ -41,6 +47,7 @@
 - `useFavorites` не трогаем; общий «список id» в `@shared` не выносим.
 
 ## Technical Details
+
 - storage: `watchedSlot = createStorageSlot('kinoshka:watched', z.array(z.number()), [])`
 - `useWatched()` → `{ ids, isWatched, toggle }` (YAGNI: без `add`/`remove`/`clear`, тип результата не экспортируем — не нужен knip-ignore); `toggle: (id: number) => void` читает `watchedSlot.get()` (не замыкание). Аналитики нет — вне объёма (`trackEvent` не добавляем)
 - `useWatchedMovies()` → `use(getMoviesByIds(ids))`
@@ -50,15 +57,18 @@
 - `Watched` комбинирует `@features/watched`, `@features/favorites`, `@entities/movie` прямо в UI — по образцу `Favorites.tsx`, без `model/`-фасада
 
 ## What Goes Where
+
 - **Implementation Steps** — код, тесты, документация в репозитории
 - **Post-Completion** — ручная проверка, Lighthouse/Sentry не требуются
 
 ## Implementation Steps
 
 ### Task 1: Слайс `@features/watched` (хранилище и хуки)
+
 **Model:** sonnet — прямая копия паттерна favorites, тесты подскажут ошибки
 
 **Files:**
+
 - Create: `src/features/watched/index.ts`
 - Create: `src/features/watched/model/watchedStorage.ts`
 - Create: `src/features/watched/model/useWatched.ts`
@@ -76,9 +86,11 @@
 - [x] запустить тесты — должны пройти до задачи 2
 
 ### Task 2: Переключатель Watched на странице деталей
+
 **Model:** sonnet — точечная правка существующего UI, тесты покрывают
 
 **Files:**
+
 - Modify: `src/pages/movie/ui/types.ts`
 - Modify: `src/pages/movie/ui/Movie/Movie.tsx`
 - Modify: `src/pages/movie/ui/MovieHero/MovieHero.tsx`
@@ -96,9 +108,11 @@
 - [x] запустить тесты — должны пройти до задачи 3
 
 ### Task 3: Страница `/watched`
+
 **Model:** sonnet — по образцу `pages/favorites`
 
 **Files:**
+
 - Create: `src/pages/watched/index.tsx`
 - Create: `src/pages/watched/WatchedPage.tsx`
 - Create: `src/pages/watched/ui/Watched/index.tsx`
@@ -114,9 +128,11 @@
 - [x] запустить тесты — должны пройти до задачи 4
 
 ### Task 4: Маршрут, chrome и точка входа
+
 **Model:** sonnet — типовая настройка по `build-budgets.md`, проверки сборки ловят промахи
 
 **Files:**
+
 - Modify: `src/app/router.tsx`
 - Modify: `src/app/layouts/AppLayout.tsx`
 - Modify: `src/pages/profile/ui/Profile/Profile.tsx`
@@ -135,9 +151,11 @@
 - [x] запустить тесты — должны пройти до задачи 5
 
 ### Task 5: E2E
+
 **Model:** sonnet — по образцу `favorites.spec.ts`
 
 **Files:**
+
 - Create: `e2e/watched.spec.ts`
 
 - [x] один flow: страница фильма → Watched → `/watched` (карточка есть) → снять Watched → пустое состояние
@@ -146,30 +164,35 @@
 - [x] `npx playwright test e2e/watched.spec.ts --project=chromium` — проходит (полный `make e2e` не гонял: ~40–50 из 200 запросов/день)
 
 ### Task 6: Verify acceptance criteria
+
 **Model:** sonnet — сверка результата с планом
 
-- [ ] Watched на странице деталей сохраняется и переживает перезагрузку
-- [ ] `/watched` показывает и фильмы, и сериалы; пустое и ошибочное состояния корректны
-- [ ] без доступного `localStorage` приложение не падает, Watched не показывает ложное «просмотрено»
-- [ ] `make check`, `make test`, `make knip`, `make size`
-- [ ] покрытие не хуже текущего стандарта проекта
+- [x] Watched на странице деталей сохраняется и переживает перезагрузку
+- [x] `/watched` показывает и фильмы, и сериалы; пустое и ошибочное состояния корректны
+- [x] без доступного `localStorage` приложение не падает, Watched не показывает ложное «просмотрено»
+- [x] `make check`, `make test`, `make knip`, `make size`
+- [x] покрытие не хуже текущего стандарта проекта
 
 ### Task 7: [Final] Документация
+
 **Model:** sonnet — документация описывает построенное
 
-- [ ] создать `.claude/rules/watched.md` с `paths:` (`src/features/watched/**`, `src/pages/watched/**`, `e2e/watched.spec.ts`): ключ storage, почему отдельный слайс, что не храним
-- [ ] добавить строку в таблицу topic docs в `AGENTS.md`, `/watched` — в список маршрутов, `watched` — в список features
-- [ ] обновить `profile.md` (новая quick link), `data-layer.md` (список `Keys:` — добавить `kinoshka:watched`), `e2e.md` («all 8 routes» → 9)
-- [ ] переместить план в `docs/plans/completed/`
+- [x] создать `.claude/rules/watched.md` с `paths:` (`src/features/watched/**`, `src/pages/watched/**`, `e2e/watched.spec.ts`): ключ storage, почему отдельный слайс, что не храним
+- [x] добавить строку в таблицу topic docs в `AGENTS.md`, `/watched` — в список маршрутов, `watched` — в список features
+- [x] обновить `profile.md` (новая quick link), `data-layer.md` (список `Keys:` — добавить `kinoshka:watched`), `e2e.md` («all 8 routes» → 9)
+- [x] переместить план в `docs/plans/completed/`
 
 ## Post-Completion
-*Ручные действия, без чекбоксов*
+
+_Ручные действия, без чекбоксов_
 
 **Ручная проверка:**
+
 - на мобильном и десктопе: отметить фильм и сериал, проверить `/watched`, перезагрузку, приватный режим браузера
 - светлая и тёмная темы на новой странице
 
 **Вне объёма (возможные следующие шаги):**
+
 - дата просмотра, личная оценка, прогресс по сериям
 - отметка «просмотрено» прямо на карточках
 - синхронизация между устройствами — после появления бэкенда/авторизации
