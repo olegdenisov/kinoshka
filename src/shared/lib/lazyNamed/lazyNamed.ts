@@ -23,4 +23,14 @@ export const lazyNamed = <P extends object>(
   factory: () => Promise<Record<string, ComponentType<P>>>,
   exportName: string,
 ): LazyExoticComponent<ComponentType<P>> =>
-  lazy(() => factory().then(module => ({ default: module[exportName] })))
+  lazy(() =>
+    factory().then(module =>
+      // `undefined` вместо модуля — не опечатка, а сбой загрузки чанка, заглушённый обработчиком
+      // vite:preloadError (preventDefault → Vite резолвит import() в undefined) прямо перед
+      // reload(). Бросить здесь — значит показать фолбэк с бессмысленным TypeError и отправить его
+      // в Sentry вместо настоящей причины; «вечный» промис держит Suspense-спиннер до reload.
+      module == null
+        ? new Promise<never>(() => {})
+        : { default: module[exportName] },
+    ),
+  )

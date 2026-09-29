@@ -38,6 +38,30 @@ describe('lazyNamed', () => {
     await screen.findByText('caught')
     expect(caught).toBe(error)
   })
+
+  it('модуль undefined (заглушённый vite:preloadError перед reload) — держит Suspense, не бросает', async () => {
+    const onError = vi.fn()
+    const LazyPrevented = lazyNamed(
+      () =>
+        Promise.resolve(undefined) as unknown as Promise<
+          Record<string, typeof Greeting>
+        >,
+      'Greeting',
+    )
+
+    render(
+      <ErrorBoundaryProbe onError={onError}>
+        <Suspense fallback={<div>loading</div>}>
+          <LazyPrevented name='World' />
+        </Suspense>
+      </ErrorBoundaryProbe>,
+    )
+
+    expect(await screen.findByText('loading')).toBeInTheDocument()
+    await new Promise(resolve => setTimeout(resolve, 20))
+    expect(screen.getByText('loading')).toBeInTheDocument()
+    expect(onError).not.toHaveBeenCalled()
+  })
 })
 
 // Минимальный class-boundary только для этого теста — проверяет, что lazyNamed не глушит

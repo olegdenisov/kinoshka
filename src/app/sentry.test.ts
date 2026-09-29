@@ -4,6 +4,7 @@ import { setStorageErrorReporter } from '@shared/lib'
 
 import { SENTRY_TRACES_SAMPLE_RATE } from '../../sentry.config'
 import {
+  captureChunkLoadError,
   captureRouteError,
   initSentry,
   scrubApiKeyHeader,
@@ -14,6 +15,7 @@ import {
 vi.mock('@sentry/react', () => ({
   init: vi.fn(),
   captureException: vi.fn(),
+  captureReactException: vi.fn(),
   reactRouterBrowserTracingIntegration: vi.fn(() => ({
     name: 'ReactRouterBrowserTracing',
   })),
@@ -346,22 +348,27 @@ describe('initSentry', () => {
 })
 
 describe('captureRouteError', () => {
-  it('вызывает Sentry.captureException с ошибкой и componentStack из errorInfo', () => {
+  it('делегирует в Sentry.captureReactException с ошибкой и errorInfo', () => {
     const error = new Error('Route render failed')
     const errorInfo = {
       componentStack: 'ComponentA > ComponentB > ComponentC',
     }
 
-    vi.mocked(Sentry.captureException).mockClear()
     captureRouteError(error, errorInfo)
 
-    expect(Sentry.captureException).toHaveBeenCalledTimes(1)
-    expect(vi.mocked(Sentry.captureException)).toHaveBeenCalledWith(error, {
-      contexts: {
-        react: {
-          componentStack: 'ComponentA > ComponentB > ComponentC',
-        },
-      },
+    expect(Sentry.captureReactException).toHaveBeenCalledTimes(1)
+    expect(Sentry.captureReactException).toHaveBeenCalledWith(error, errorInfo)
+  })
+})
+
+describe('captureChunkLoadError', () => {
+  it('отправляет исходную ошибку загрузки чанка с тегом chunk_load', () => {
+    const error = new Error('Failed to fetch dynamically imported module')
+
+    captureChunkLoadError(error)
+
+    expect(Sentry.captureException).toHaveBeenCalledWith(error, {
+      tags: { chunk_load: 'reload' },
     })
   })
 })
