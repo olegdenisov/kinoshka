@@ -46,6 +46,8 @@ type MovieActionsProps = {
   onChange: (l: LikedState) => void
   watched: boolean
   onWatchedToggle: () => void
+  inWatchlist: boolean
+  onWatchlistToggle: () => void
 }
 
 export const MovieActions = ({
@@ -53,6 +55,8 @@ export const MovieActions = ({
   onChange,
   watched,
   onWatchedToggle,
+  inWatchlist,
+  onWatchlistToggle,
 }: MovieActionsProps) => {
   return (
     <div className={s.actions}>
@@ -63,9 +67,9 @@ export const MovieActions = ({
       />
       <SecondaryAction
         icon={<PlusIcon />}
-        label='Add to list'
-        active={liked.list}
-        onClick={() => onChange({ ...liked, list: !liked.list })}
+        label='Watchlist'
+        active={inWatchlist}
+        onClick={onWatchlistToggle}
       />
       <SecondaryAction
         icon={<EyeIcon />}

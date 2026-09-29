@@ -162,13 +162,13 @@ describe('Movie — Watched', () => {
     renderMovie()
 
     await user.click(screen.getByRole('button', { name: 'Favorite' }))
-    await user.click(screen.getByRole('button', { name: 'Add to list' }))
+    await user.click(screen.getByRole('button', { name: 'Watchlist' }))
 
     expect(screen.getByRole('button', { name: 'Favorite' })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
-    expect(screen.getByRole('button', { name: 'Add to list' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Watchlist' })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
@@ -176,6 +176,72 @@ describe('Movie — Watched', () => {
     expect(screen.getByRole('button', { name: 'Share' })).not.toHaveAttribute(
       'aria-pressed',
     )
+  })
+})
+
+describe('Movie — Watchlist', () => {
+  const watchlistButton = () =>
+    screen.getByRole('button', { name: 'Watchlist' })
+  const watchedButton = () => screen.getByRole('button', { name: 'Watched' })
+
+  it('по умолчанию не нажата', () => {
+    renderMovie()
+
+    expect(watchlistButton()).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('клик добавляет id в kinoshka:watchlist, повторный клик убирает', async () => {
+    const user = userEvent.setup()
+    renderMovie()
+
+    await user.click(watchlistButton())
+
+    expect(watchlistButton()).toHaveAttribute('aria-pressed', 'true')
+    expect(localStorage.getItem('kinoshka:watchlist')).toBe(`[${MOVIE.id}]`)
+
+    await user.click(watchlistButton())
+
+    expect(watchlistButton()).toHaveAttribute('aria-pressed', 'false')
+    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[]')
+  })
+
+  it('состояние переживает перемонтирование страницы', async () => {
+    const user = userEvent.setup()
+    const { unmount } = renderMovie()
+
+    await user.click(watchlistButton())
+    unmount()
+    renderMovie()
+
+    expect(watchlistButton()).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('Watched не меняет watchlist и наоборот', async () => {
+    const user = userEvent.setup()
+    renderMovie()
+
+    await user.click(watchedButton())
+
+    expect(watchlistButton()).toHaveAttribute('aria-pressed', 'false')
+    expect(localStorage.getItem('kinoshka:watchlist')).toBeNull()
+
+    await user.click(watchlistButton())
+    await user.click(watchedButton())
+
+    expect(watchedButton()).toHaveAttribute('aria-pressed', 'false')
+    expect(watchlistButton()).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('просмотренный тайтл можно добавить в watchlist', async () => {
+    localStorage.setItem('kinoshka:watched', JSON.stringify([MOVIE.id]))
+    const user = userEvent.setup()
+    renderMovie()
+
+    await user.click(watchlistButton())
+
+    expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
+    expect(watchlistButton()).toHaveAttribute('aria-pressed', 'true')
+    expect(localStorage.getItem('kinoshka:watched')).toBe(`[${MOVIE.id}]`)
   })
 })
 
