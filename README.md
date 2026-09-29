@@ -54,7 +54,7 @@ src/
 ├── app/        # провайдеры, роутер, глобальные стили
 ├── pages/      # компоненты уровня роута
 ├── widgets/    # крупные переиспользуемые секции UI (header, mobile-chrome, movie-rail, search-sidebar)
-├── features/   # интерактивные фичи (catalog-filter, favorites, watched, theme, recommendations, profile)
+├── features/   # интерактивные фичи (catalog-filter, favorites, watched, watchlist, theme, recommendations, profile)
 ├── entities/   # бизнес-объекты (movie, person — типы, данные, UI)
 └── shared/     # утилиты и примитивы (lib/, ui/)
 ```

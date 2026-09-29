@@ -171,6 +171,21 @@ describe('AppLayout — десктоп рендерит Header, не MobileHeade
     ).not.toBeInTheDocument()
   })
 
+  it('/watchlist: Header без подсвеченного nav-pill, BottomNav не рендерится', () => {
+    renderAt('/watchlist')
+
+    const banner = screen.getByRole('banner')
+    expect(screen.getByText('Watchlist page content')).toBeInTheDocument()
+    expect(
+      within(banner)
+        .getAllByRole('button')
+        .some(btn => btn.className.match(/navPillActive/)),
+    ).toBe(false)
+    expect(
+      screen.queryByRole('button', { name: 'Lists' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('/recommendations: activeNav="recommendations" подсвечивает пункт "Picks"', () => {
     renderAt('/recommendations')
 

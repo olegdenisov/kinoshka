@@ -121,6 +121,9 @@ describe('Watchlist — независимость от Watched', () => {
     await renderPage()
 
     expect(await screen.findByText('Both Lists')).toBeInTheDocument()
+    // Страница не трогает watched: ключ остаётся как был.
+    expect(localStorage.getItem('kinoshka:watched')).toBe('[1]')
+    expect(localStorage.getItem(WATCHLIST_KEY)).toBe('[1]')
   })
 })
 
@@ -128,12 +131,14 @@ describe('Watchlist — частичный отказ (404)', () => {
   it('карточка для 404-фильма не рендерится, остальные рендерятся', async () => {
     setWatchlist([1, 404])
     mockMovie(1, { name: 'Still Here' })
+    // Имя в моке 404-фильма — то, которое отрисовала бы карточка, если бы фильтр не сработал.
+    mockMovie(404, { name: 'Gone Movie' })
     mockMovieError(404, 404)
 
     await renderPage()
 
     expect(await screen.findByText('Still Here')).toBeInTheDocument()
-    expect(screen.queryByText('Movie 404')).not.toBeInTheDocument()
+    expect(screen.queryByText('Gone Movie')).not.toBeInTheDocument()
   })
 })
 
@@ -151,6 +156,9 @@ describe('Watchlist — полный отказ загрузки', () => {
     expect(
       screen.queryByText('Nothing in your watchlist yet'),
     ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /Попробовать снова/ }),
+    ).not.toBeInTheDocument()
   })
 
   it('5xx → error-фолбэк AsyncBoundary с Retry, а не EmptyState', async () => {
@@ -161,6 +169,9 @@ describe('Watchlist — полный отказ загрузки', () => {
     await renderPage()
 
     expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /Попробовать снова/ }),
+    ).toBeInTheDocument()
     expect(
       screen.queryByText('Watchlist titles unavailable'),
     ).not.toBeInTheDocument()

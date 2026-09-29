@@ -115,7 +115,7 @@ const ROUTE_CHROME: Record<string, RouteChromeConfig> = {
     active: 'lists',
     title: 'Watched',
   },
-  // Как /watched: у Header нет nav-pill для Watchlist, active='lists' — паритет с /favorites.
+  // Как /watched: у Header нет nav-pill для Watchlist, active='lists' — как у остальных списков.
   '/watchlist': {
     active: 'lists',
     title: 'Watchlist',

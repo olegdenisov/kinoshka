@@ -420,6 +420,10 @@ describe('Profile', () => {
       'href',
       '/recommendations',
     )
+    expect(screen.getByRole('link', { name: /^Watchlist/ })).toHaveAttribute(
+      'href',
+      '/watchlist',
+    )
   })
 
   it('выбор темы сохраняет её и отмечает выбранный вариант, включая system', async () => {

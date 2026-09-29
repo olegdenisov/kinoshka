@@ -19,6 +19,6 @@ History: `docs/plans/completed/20260929-watched-list.md`.
 - **Квота:** по одному `getMovieDetail` на id, без лимита и пагинации; демо-тариф API — 200 запросов/день, длинный список его быстро съедает (кэш 24h смягчает повторные заходы).
 - **Все id 404:** `getMoviesByIds` возвращает `[]` → `EmptyState` «Watched titles unavailable» (без Retry — повторять нечего). Снять id можно только на странице фильма.
 - **Chrome:** `ROUTE_CHROME['/watched'] = { active: 'lists', title: 'Watched' }`, без `activeNav`. В `BottomNav` пункта нет — вход через quick link на `/profile` (со счётчиком).
-- **Бюджеты:** группа `page-watched` в `vite.config.ts`; лимит `entry` поднят до 3.6 KB (на `main` он уже был 3502 B — нулевой запас).
+- **Бюджеты:** группа `page-watched` в `vite.config.ts`; лимит `entry` поднят (актуальное значение — в `package.json`; на `main` он уже был 3502 B — нулевой запас).
 - **Аналитики нет** (`trackEvent` не вызывается).
 - **E2E:** `e2e/watched.spec.ts` — один flow против живого API (карточка с главной → Watched → `/watched` → снять → пустое состояние), один `checkA11y`.
