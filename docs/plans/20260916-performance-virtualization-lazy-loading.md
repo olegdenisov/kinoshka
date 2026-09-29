@@ -176,14 +176,14 @@ Once-триггер: после первого `entry.isIntersecting === true` �
 - Modify: `src/pages/movie/ui/tabs/MediaTab/MediaTab.tsx`
 - Create: `src/pages/movie/ui/tabs/MediaTab/MediaTab.test.tsx`
 
-- [ ] `Poster.tsx`: добавить `decoding='async'` к существующему `<img ... loading='lazy' .../>`
-- [ ] `CastTab.tsx`: добавить `loading='lazy' decoding='async'` к `<img className={s.avatar} src={c.photo} alt='' />` (`alt=''` и WHY-комментарий над ним не трогать; fallback-градиент без `photo` не трогать — там нет `<img>`)
-- [ ] `MediaTab.tsx`: добавить `loading='lazy' decoding='async'` к `<img>` в `.screenshotsGrid`
-- [ ] `PersonHero.tsx` **не трогать** (LCP-кандидат, см. Overview)
-- [ ] обновить `Poster.test.tsx`: расширить существующий тест на `loading=lazy` проверкой `decoding=async` на том же элементе (обновить и название кейса)
-- [ ] дополнить существующий `CastTab.test.tsx` одним кейсом: персона с `photo` → `img` с `loading=lazy`/`decoding=async` (через `container.querySelector('img')` — `alt=''` делает картинку presentational, `getByRole('img')` её не найдёт); кейс без `photo` уже покрыт — не дублировать
-- [ ] написать `MediaTab.test.tsx`: непустые `images` → screenshot-`img`-элементы с `loading=lazy`/`decoding=async` (тоже через `querySelectorAll('img')`, `alt=''`); `previewUrl` есть → `src` берётся из него, нет → из `url`; пустой `images` → секция "Screenshots" не рендерится; `trailerUrl` есть/нет → блок "Trailer" рендерится/не рендерится
-- [ ] run tests — должны пройти (`make test`)
+- [x] `Poster.tsx`: добавить `decoding='async'` к существующему `<img ... loading='lazy' .../>`
+- [x] `CastTab.tsx`: добавить `loading='lazy' decoding='async'` к `<img className={s.avatar} src={c.photo} alt='' />` (`alt=''` и WHY-комментарий над ним не трогать; fallback-градиент без `photo` не трогать — там нет `<img>`)
+- [x] `MediaTab.tsx`: добавить `loading='lazy' decoding='async'` к `<img>` в `.screenshotsGrid`
+- [x] `PersonHero.tsx` **не трогать** (LCP-кандидат, см. Overview)
+- [x] обновить `Poster.test.tsx`: расширить существующий тест на `loading=lazy` проверкой `decoding=async` на том же элементе (обновить и название кейса)
+- [x] дополнить существующий `CastTab.test.tsx` одним кейсом: персона с `photo` → `img` с `loading=lazy`/`decoding=async` (через `container.querySelector('img')` — `alt=''` делает картинку presentational, `getByRole('img')` её не найдёт); кейс без `photo` уже покрыт — не дублировать
+- [x] написать `MediaTab.test.tsx`: непустые `images` → screenshot-`img`-элементы с `loading=lazy`/`decoding=async` (тоже через `querySelectorAll('img')`, `alt=''`); `previewUrl` есть → `src` берётся из него, нет → из `url`; пустой `images` → секция "Screenshots" не рендерится; `trailerUrl` есть/нет → блок "Trailer" рендерится/не рендерится
+- [x] run tests — должны пройти (`make test`)
 
 ### Task 3: `useInView()` (`@shared/lib`) + lazy-mount `RelatedMovies`
 

@@ -20,11 +20,15 @@ const renderCastTab = (cast: CastMember[]) =>
   )
 
 describe('CastTab — ссылки на страницу персоны', () => {
-  it('рендерит карточку актёра как ссылку на /person/:id', () => {
-    renderCastTab([makeCast()])
+  it('рендерит карточку актёра как ссылку на /person/:id с фото, загруженным асинхронно', () => {
+    const { container } = renderCastTab([makeCast()])
 
     const link = screen.getByRole('link', { name: /Liv Korhonen/ })
     expect(link).toHaveAttribute('href', '/person/10')
+
+    const img = container.querySelector('img')
+    expect(img).toHaveAttribute('loading', 'lazy')
+    expect(img).toHaveAttribute('decoding', 'async')
   })
 
   it('у персоны без фото рендерится градиентная заглушка, ссылка сохраняет доступное имя', () => {

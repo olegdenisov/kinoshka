@@ -20,7 +20,13 @@ export const CastTab = ({ cast }: CastTabProps) => {
           const avatar = c.photo ? (
             // alt='' — декоративное фото: доступное имя ссылки уже есть в .actorName,
             // задваивать его через alt не нужно.
-            <img className={s.avatar} src={c.photo} alt='' />
+            <img
+              className={s.avatar}
+              src={c.photo}
+              alt=''
+              loading='lazy'
+              decoding='async'
+            />
           ) : (
             <div
               className={s.avatar}

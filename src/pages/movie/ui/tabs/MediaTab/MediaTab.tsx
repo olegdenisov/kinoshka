@@ -43,6 +43,8 @@ export const MediaTab = ({ m, images }: MediaTabProps) => {
                 className={s.screenshot}
                 src={image.previewUrl ?? image.url}
                 alt=''
+                loading='lazy'
+                decoding='async'
               />
             ))}
           </div>

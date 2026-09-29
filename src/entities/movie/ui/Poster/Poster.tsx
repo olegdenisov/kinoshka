@@ -25,7 +25,13 @@ export const Poster = ({
   return (
     <div className={s.poster} style={{ aspectRatio: ratio, background: bg }}>
       {movie.poster && (
-        <img src={movie.poster} alt='' loading='lazy' className={s.img} />
+        <img
+          src={movie.poster}
+          alt=''
+          loading='lazy'
+          decoding='async'
+          className={s.img}
+        />
       )}
       <div className={s.grain} />
       <div className={s.highlight} />
