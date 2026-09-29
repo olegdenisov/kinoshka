@@ -34,6 +34,8 @@ const WatchlistGrid = () => {
 
   return (
     <div className={s.grid}>
+      {/* Без onToggleWatchlist намеренно: снятие меняет ids → новый кэш-ключ getMoviesByIds →
+          перезагрузка всего грида. Убрать из списка можно со страницы фильма или с других списков. */}
       {movies.map(movie => (
         <Card
           key={movie.id}
