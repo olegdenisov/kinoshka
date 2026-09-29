@@ -25,7 +25,7 @@ const { invalidate, getMoviesByIdsMock, getFetchAttempts } = vi.hoisted(() => {
       fetchAttempts++
       const promise =
         fetchAttempts === 1
-          ? Promise.reject(new Error('Failed to load favorite movies'))
+          ? Promise.reject(new Error('Failed to load movies by ids'))
           : Promise.resolve(
               ids.map(id => ({
                 id,
@@ -82,7 +82,7 @@ describe('invalidateRecommendations — Retry реально сбрасывае�
 
     // Первый вызов — сетевой провал.
     await expect(getMoviesByIds(ids)).rejects.toThrow(
-      'Failed to load favorite movies',
+      'Failed to load movies by ids',
     )
     expect(getFetchAttempts()).toBe(1)
 

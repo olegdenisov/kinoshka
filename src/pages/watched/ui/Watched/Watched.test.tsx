@@ -65,6 +65,20 @@ describe('Watched — пустой список', () => {
     expect(screen.getByRole('heading', { name: 'Watched' })).toBeInTheDocument()
     expect(screen.getByText('No watched titles yet')).toBeInTheDocument()
   })
+
+  it('не делает запросов за фильмами', async () => {
+    const requested = vi.fn()
+    server.use(
+      http.get('*/v1.5/movie/*', () => {
+        requested()
+        return HttpResponse.json(movieDoc(1))
+      }),
+    )
+
+    await renderPage()
+
+    expect(requested).not.toHaveBeenCalled()
+  })
 })
 
 describe('Watched — непустой список', () => {
@@ -108,7 +122,7 @@ describe('Watched — частичный отказ (404)', () => {
 })
 
 describe('Watched — полный отказ загрузки', () => {
-  it('все id 404 → сообщение об ошибке загрузки, а не пустой грид', async () => {
+  it('все id 404 → сообщение «titles unavailable», а не пустой грид', async () => {
     setWatched([404, 405])
     mockMovieError(404, 404)
     mockMovieError(405, 404)
@@ -116,7 +130,7 @@ describe('Watched — полный отказ загрузки', () => {
     await renderPage()
 
     expect(
-      await screen.findByText("Couldn't load your watched titles"),
+      await screen.findByText('Watched titles unavailable'),
     ).toBeInTheDocument()
     expect(screen.queryByText('No watched titles yet')).not.toBeInTheDocument()
   })
@@ -130,7 +144,7 @@ describe('Watched — полный отказ загрузки', () => {
 
     expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
     expect(
-      screen.queryByText("Couldn't load your watched titles"),
+      screen.queryByText('Watched titles unavailable'),
     ).not.toBeInTheDocument()
   })
 })

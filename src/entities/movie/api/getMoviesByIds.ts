@@ -23,13 +23,13 @@ const fetchMoviesByIds = async (ids: number[]): Promise<Movie[]> => {
   )
 
   if (movies.length === 0 && hasRecoverableFailure) {
-    throw new Error('Failed to load favorite movies')
+    throw new Error('Failed to load movies by ids')
   }
 
   return movies
 }
 
 export const getMoviesByIds = createCachedFetcher<number[], Movie[]>(
-  'favorite-movies',
+  'movies-by-ids',
   fetchMoviesByIds,
 )

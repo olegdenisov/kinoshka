@@ -58,4 +58,40 @@ describe('useWatchedMovies', () => {
     expect(screen.getByText('Watched Movie')).toBeInTheDocument()
     expect(screen.getByText('Watched Series')).toBeInTheDocument()
   })
+
+  it('404 у одного id → он выпадает из списка', async () => {
+    watchedSlot.set([611, 612])
+    mockMovie(611, { name: 'Alive' })
+    server.use(
+      http.get('*/v1.5/movie/612', () =>
+        HttpResponse.json(
+          { statusCode: 404, message: 'nf', error: 'nf' },
+          { status: 404 },
+        ),
+      ),
+    )
+
+    await act(async () => {
+      render(
+        <AsyncBoundary>
+          <Probe />
+        </AsyncBoundary>,
+      )
+    })
+
+    expect(screen.getByText('Alive')).toBeInTheDocument()
+    expect(screen.queryByText('Movie 612')).not.toBeInTheDocument()
+  })
+
+  it('пустые ids → пустой список', async () => {
+    await act(async () => {
+      render(
+        <AsyncBoundary>
+          <Probe />
+        </AsyncBoundary>,
+      )
+    })
+
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0)
+  })
 })

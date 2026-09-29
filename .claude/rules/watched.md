@@ -16,6 +16,8 @@ History: `docs/plans/completed/20260929-watched-list.md`.
 - **Единственный писатель — кнопка Watched в `MovieActions`** (через `Movie.tsx`). Остальные флаги `LikedState` (`rate`, `list`, `fav`) по-прежнему локальный `useState` и не сохраняются. По умолчанию Watched **не нажата** (раньше был `true`).
 - **`aria-pressed`** выставляет общий `SecondaryAction` всем toggle-кнопкам (`active !== undefined`); у `Share` его нет.
 - **`/watched`** (`Watched.tsx`) — копия `Favorites` (`AsyncBoundary` + `getMoviesByIds`, Retry → `invalidate(ids)`); сердечко на карточке пишет в избранное, карточку из списка не убирает — снять «просмотрено» можно только на странице фильма.
+- **Квота:** по одному `getMovieDetail` на id, без лимита и пагинации; демо-тариф API — 200 запросов/день, длинный список его быстро съедает (кэш 24h смягчает повторные заходы).
+- **Все id 404:** `getMoviesByIds` возвращает `[]` → `EmptyState` «Watched titles unavailable» (без Retry — повторять нечего). Снять id можно только на странице фильма.
 - **Chrome:** `ROUTE_CHROME['/watched'] = { active: 'lists', title: 'Watched' }`, без `activeNav`. В `BottomNav` пункта нет — вход через quick link на `/profile` (со счётчиком).
 - **Бюджеты:** группа `page-watched` в `vite.config.ts`; лимит `entry` поднят до 3.6 KB (на `main` он уже был 3502 B — нулевой запас).
 - **Аналитики нет** (`trackEvent` не вызывается).

@@ -45,14 +45,14 @@ type MovieActionsProps = {
   liked: LikedState
   onChange: (l: LikedState) => void
   watched: boolean
-  onWatchedChange: () => void
+  onWatchedToggle: () => void
 }
 
 export const MovieActions = ({
   liked,
   onChange,
   watched,
-  onWatchedChange,
+  onWatchedToggle,
 }: MovieActionsProps) => {
   return (
     <div className={s.actions}>
@@ -71,7 +71,7 @@ export const MovieActions = ({
         icon={<EyeIcon />}
         label='Watched'
         active={watched}
-        onClick={onWatchedChange}
+        onClick={onWatchedToggle}
       />
       <SecondaryAction
         icon={<HeartIcon filled={liked.fav} />}

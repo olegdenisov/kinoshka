@@ -144,7 +144,7 @@ export const MovieHero = ({
               liked={liked}
               onChange={onLikedChange}
               watched={watched}
-              onWatchedChange={onWatchedToggle}
+              onWatchedToggle={onWatchedToggle}
             />
 
             <p className={s.synopsis}>
