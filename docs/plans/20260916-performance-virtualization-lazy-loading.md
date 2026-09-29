@@ -79,12 +79,12 @@ Discovery (см. ниже) показал, что буквальная реал�
 **Lighthouse Performance (`/`, `desktop`, медиана из 3 прогонов):**
 
 - Baseline (до, Task 1): score 100 (min 95, max 100) / LCP 527ms (526–1490) / CLS 0.005 (0.005–0.005) / TBT 0ms (0–0)
-- После (Task 4): _TBD_ (score / LCP / CLS / TBT, min–max)
+- После (Task 4): score 100 (min 99, max 100) / LCP 530ms (526–895) / CLS 0.005 (0.005–0.005) / TBT 0ms (0–0) — дельта: score 0, LCP +3ms (+0.6%, ниже обоих порогов), CLS/TBT без изменений → регрессии нет
 
 **Lighthouse Performance (`/movie/666`, `desktop`, медиана из 3 прогонов):**
 
 - Baseline (до, Task 1): score 92 (min 90, max 93) / LCP 1714ms (1558–1848; LCP-элемент — backdrop, не ErrorState) / CLS 0.001 (0.001–0.001) / TBT 0ms (0–0)
-- После (Task 4): _TBD_ (score / LCP / CLS / TBT, min–max)
+- После (Task 4): score 93 (min 92, max 95) / LCP 1556ms (1442–1684; LCP-элемент — backdrop) / CLS 0.001 (0.001–0.001) / TBT 0ms (0–0) — дельта: score +1, LCP −158ms (−9%, улучшение в пределах разброса live-API TTFB), CLS/TBT без изменений → регрессии нет
 
 ## Solution Overview
 
@@ -214,16 +214,16 @@ Once-триггер: после первого `entry.isIntersecting === true` �
 
 **Модель:** `opus` · effort `high` — финальная приёмка: повторный замер, сравнение по двухусловному критерию, поиск виновной задачи при регрессии, бюджеты и квота
 
-- [ ] verify all requirements from Overview are implemented
-- [ ] повторно прогнать серию Lighthouse по той же методологии из Progress Tracking (тот же `@lhci/cli@0.15.1`, те же `/` и `/movie/666`, `--numberOfRuns=3`) — скопировать отчёты в scratchpad как `after`, записать медианы и min/max в Progress Tracking ("После")
-- [ ] сравнить baseline/after медианы по критерию приёмки из Progress Tracking (**дословно, не по памяти**: для LCP/CLS/TBT регрессия засчитывается, только если одновременно >5% от baseline-медианы **и** выше абсолютного шумового порога — CLS>0.01, TBT>20ms, LCP>50ms; для score — только 5%, без абсолютного порога); при регрессии, удовлетворяющей обоим условиям — определить, какая задача (1/2/3) виновата, исправить или откатить именно её; зафиксировать итоговую дельту в описании PR
-- [ ] `make test` — полный набор проходит
-- [ ] `make check` (`format-check` + `lint` + `build`, т.е. `typecheck` через `build`) — чисто
-- [ ] `make knip` — новые файлы `src/shared/lib/inView/*` и новые тестовые файлы не всплывают как unused (barrel-экспорт `useInView` из `@shared/lib` используется `RelatedMovies` — без добавления в `ignore`, см. `.claude/rules/build-budgets.md`)
-- [ ] `make size` — бюджеты `shared` (22.6 KB gzip, `useInView` попадёт в `shared`-чанк через группу `/(widgets|features|entities|shared)\//`) и `page-movie` (8.75 KB) не превышены; актуальные лимиты — в `package.json`
-- [ ] проверить остаток суточной квоты demo-API перед `make e2e`: Task 1 (baseline) + этот шаг (after) вместе уже потратили ~36 запросов; если обе фазы выполнялись в один день с этим шагом — либо убедиться, что оставшейся квоты хватает на `make e2e` (~40-50 запросов), либо перенести `make e2e` на следующий день (не блокирует завершение плана, см. Post-Completion)
-- [ ] `make e2e` (если локально настроен `VITE_API_KEY` с доступной квотой; предварительно `make build-only`) — существующие `e2e/home.spec.ts`/`e2e/movie-detail.spec.ts` не сломаны (селекторы по role/label, не зависят от `content-visibility`/момента маунта `RelatedMovies`)
-- [ ] визуально проверить `/movie/666` в браузере — заголовок "More like ..." виден сразу, карточки в сетке подгружаются при скролле без заметного скачка layout, на обоих брейкпоинтах (мобильном и `≥720px`)
+- [x] verify all requirements from Overview are implemented
+- [x] повторно прогнать серию Lighthouse по той же методологии из Progress Tracking (тот же `@lhci/cli@0.15.1`, те же `/` и `/movie/666`, `--numberOfRuns=3`) — скопировать отчёты в scratchpad как `after`, записать медианы и min/max в Progress Tracking ("После")
+- [x] (регрессий нет ни по одной метрике — см. Progress Tracking) сравнить baseline/after медианы по критерию приёмки из Progress Tracking (**дословно, не по памяти**: для LCP/CLS/TBT регрессия засчитывается, только если одновременно >5% от baseline-медианы **и** выше абсолютного шумового порога — CLS>0.01, TBT>20ms, LCP>50ms; для score — только 5%, без абсолютного порога); при регрессии, удовлетворяющей обоим условиям — определить, какая задача (1/2/3) виновата, исправить или откатить именно её; зафиксировать итоговую дельту в описании PR
+- [x] `make test` — полный набор проходит
+- [x] `make check` (`format-check` + `lint` + `build`, т.е. `typecheck` через `build`) — чисто
+- [x] `make knip` — новые файлы `src/shared/lib/inView/*` и новые тестовые файлы не всплывают как unused (barrel-экспорт `useInView` из `@shared/lib` используется `RelatedMovies` — без добавления в `ignore`, см. `.claude/rules/build-budgets.md`)
+- [x] (shared 18.27/22.6 KB, page-movie 7.76/8.75 KB) `make size` — бюджеты `shared` (22.6 KB gzip, `useInView` попадёт в `shared`-чанк через группу `/(widgets|features|entities|shared)\//`) и `page-movie` (8.75 KB) не превышены; актуальные лимиты — в `package.json`
+- [x] (API не отдаёт дневной остаток — только посекундный `x-ratelimit-*`; оценка ~40–70 потрачено за день, запас достаточен для урезанного прогона) проверить остаток суточной квоты demo-API перед `make e2e`: Task 1 (baseline) + этот шаг (after) вместе уже потратили ~36 запросов; если обе фазы выполнялись в один день с этим шагом — либо убедиться, что оставшейся квоты хватает на `make e2e` (~40-50 запросов), либо перенести `make e2e` на следующий день (не блокирует завершение плана, см. Post-Completion)
+- [x] (прогнаны только `home.spec.ts`/`movie-detail.spec.ts` на `chromium` — 3 passed; WebKit локально на macOS 14 не запускается; полный набор не гонялся ради квоты) `make e2e` (если локально настроен `VITE_API_KEY` с доступной квотой; предварительно `make build-only`) — существующие `e2e/home.spec.ts`/`e2e/movie-detail.spec.ts` не сломаны (селекторы по role/label, не зависят от `content-visibility`/момента маунта `RelatedMovies`)
+- [x] (chrome-devtools на prod-preview: 1280px и 500px — заголовок сразу, 6 плейсхолдеров → 6 карточек при скролле, 0 layout-shift во время скролла) визуально проверить `/movie/666` в браузере — заголовок "More like ..." виден сразу, карточки в сетке подгружаются при скролле без заметного скачка layout, на обоих брейкпоинтах (мобильном и `≥720px`)
 
 ### Task 5: [Final] Update documentation
 
