@@ -123,11 +123,11 @@
 - Create: `src/pages/watchlist/ui/Watchlist/Watchlist.test.tsx`
 - Create: `src/pages/watchlist/ui/Watchlist/Watchlist.retry.test.tsx`
 
-- [ ] скопировать структуру `src/pages/watched` и заменить хуки на `useWatchlist`/`useWatchlistMovies`
-- [ ] пустое состояние («Nothing in your watchlist yet») и `EmptyState` «Watchlist titles unavailable» для случая «все id 404» (без Retry)
-- [ ] Retry → `getMoviesByIds.invalidate(ids)`
-- [ ] тесты: рендер карточек (фильм + сериал), пустой список, все id 404, ошибка загрузки и Retry, сердечко на карточке пишет в избранное и не убирает карточку, тайтл одновременно в watched и watchlist отображается на `/watchlist` (независимость)
-- [ ] запустить `make test` — должно пройти до задачи 4
+- [x] скопировать структуру `src/pages/watched` и заменить хуки на `useWatchlist`/`useWatchlistMovies`
+- [x] пустое состояние («Nothing in your watchlist yet») и `EmptyState` «Watchlist titles unavailable» для случая «все id 404» (без Retry)
+- [x] Retry → `getMoviesByIds.invalidate(ids)`
+- [x] тесты: рендер карточек (фильм + сериал), пустой список, все id 404, ошибка загрузки и Retry, сердечко на карточке пишет в избранное и не убирает карточку, тайтл одновременно в watched и watchlist отображается на `/watchlist` (независимость)
+- [x] запустить `make test` — должно пройти до задачи 4
 
 ### Task 4: Маршрут, chrome, ссылка из профиля, бюджеты
 

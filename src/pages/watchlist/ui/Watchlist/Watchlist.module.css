@@ -1,0 +1,59 @@
+.page {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+.main {
+  padding: 20px 16px 40px;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+
+.stateWrap {
+  padding: 12px 0 40px;
+}
+
+/*
+  Число колонок задаётся через auto-fill/minmax, а не отдельными grid-template-columns на
+  каждый брейкпоинт — одна декларация покрывает и мобильную, и десктопную раскладку, реальное
+  число колонок браузер считает сам исходя из доступной ширины и minmax.
+*/
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+@media (min-width: 720px) {
+  .page {
+    padding-bottom: 0;
+  }
+
+  .main {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 32px 40px 80px;
+  }
+
+  .heading {
+    font-size: 28px;
+    margin: 0 0 24px;
+  }
+
+  .stateWrap {
+    padding: 0;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+  }
+}
