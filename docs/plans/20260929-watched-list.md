@@ -105,13 +105,13 @@
 - Create: `src/pages/watched/ui/Watched/Watched.module.css`
 - Create: `src/pages/watched/ui/Watched/Watched.test.tsx`
 
-- [ ] `Watched` (по образцу `Favorites.tsx`): заголовок «Watched», `EmptyState` при пустом списке («No watched titles yet» + подсказка про кнопку Watched на странице фильма)
-- [ ] `AsyncBoundary` со скелетоном, Retry → `getMoviesByIds.invalidate(ids)`, пустой ответ при непустых ids → `EmptyState` «Couldn't load your watched titles»
-- [ ] сетка `Card variant='grid'`; избранное на карточках подключить через `useFavorites` как в `Favorites`
-- [ ] стили: mobile-first, переносом из `Favorites.module.css`, десктоп-переопределения в `@media (min-width: 720px)`, только токены цветов
-- [ ] тесты `Watched.test.tsx`: пустое состояние, список с фикстурой `type: 'tv-series'` (сериал открывается тем же `getMoviesByIds`), скелетон
-- [ ] тест Retry — в отдельном `Watched.retry.test.tsx`, как `Favorites.retry.test.tsx`, если нужен свой MSW-сетап
-- [ ] запустить тесты — должны пройти до задачи 4
+- [x] `Watched` (по образцу `Favorites.tsx`): заголовок «Watched», `EmptyState` при пустом списке («No watched titles yet» + подсказка про кнопку Watched на странице фильма)
+- [x] `AsyncBoundary` со скелетоном, Retry → `getMoviesByIds.invalidate(ids)`, пустой ответ при непустых ids → `EmptyState` «Couldn't load your watched titles»
+- [x] сетка `Card variant='grid'`; избранное на карточках подключить через `useFavorites` как в `Favorites`
+- [x] стили: mobile-first, переносом из `Favorites.module.css`, десктоп-переопределения в `@media (min-width: 720px)`, только токены цветов
+- [x] тесты `Watched.test.tsx`: пустое состояние, список с фикстурой `type: 'tv-series'` (сериал открывается тем же `getMoviesByIds`), скелетон
+- [x] тест Retry — в отдельном `Watched.retry.test.tsx`, как `Favorites.retry.test.tsx`, если нужен свой MSW-сетап
+- [x] запустить тесты — должны пройти до задачи 4
 
 ### Task 4: Маршрут, chrome и точка входа
 **Model:** sonnet — типовая настройка по `build-budgets.md`, проверки сборки ловят промахи
