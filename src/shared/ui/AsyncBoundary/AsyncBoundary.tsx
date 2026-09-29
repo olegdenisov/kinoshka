@@ -1,13 +1,13 @@
 import { Suspense, useRef, type ReactNode } from 'react'
 
-import { ErrorBoundary } from '../ErrorBoundary'
+import {
+  ErrorBoundary,
+  type ErrorBoundaryFallbackParams,
+} from '../ErrorBoundary'
 import { ErrorState } from '../ErrorState'
 import { Spinner } from '../Spinner'
 
-export type ErrorFallbackParams = {
-  error: Error | null
-  reset: () => void
-}
+export type ErrorFallbackParams = ErrorBoundaryFallbackParams
 
 type Props = {
   children: ReactNode

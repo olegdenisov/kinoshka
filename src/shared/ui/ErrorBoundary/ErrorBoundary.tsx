@@ -1,8 +1,13 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 
+export type ErrorBoundaryFallbackParams = {
+  error: Error | null
+  reset: () => void
+}
+
 type Props = {
   children: ReactNode
-  fallback: (params: { error: Error | null; reset: () => void }) => ReactNode
+  fallback: (params: ErrorBoundaryFallbackParams) => ReactNode
   onError?: (error: Error, errorInfo: ErrorInfo) => void
 }
 

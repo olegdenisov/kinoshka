@@ -6,7 +6,7 @@ import {
   ShareIcon,
   Spinner,
 } from '@shared/ui'
-import type { ErrorFallbackParams } from '@shared/ui'
+import type { ErrorBoundaryFallbackParams } from '@shared/ui'
 import { Header } from '@widgets/header'
 import { BottomNav, MobileHeader } from '@widgets/mobile-chrome'
 import type { ReactNode } from 'react'
@@ -205,7 +205,7 @@ const SEARCH_CHROME: RouteChromeConfig = {
  * была бы no-op; остаётся только retry.
  */
 const renderRouteErrorFallback = (
-  { reset }: ErrorFallbackParams,
+  { reset }: ErrorBoundaryFallbackParams,
   isHome: boolean,
 ) => (
   <ErrorState
