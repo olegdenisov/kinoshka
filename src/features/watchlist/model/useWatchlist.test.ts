@@ -49,6 +49,16 @@ describe('useWatchlist', () => {
     expect(result.current.ids).toEqual([1, 3, 2])
   })
 
+  it('два экземпляра хука синхронизируются через слот', () => {
+    const first = renderHook(() => useWatchlist())
+    const second = renderHook(() => useWatchlist())
+
+    act(() => first.result.current.toggle(5))
+
+    expect(second.result.current.ids).toEqual([5])
+    expect(second.result.current.isInWatchlist(5)).toBe(true)
+  })
+
   it('сохраняет в localStorage под ключом kinoshka:watchlist', () => {
     const { result } = renderHook(() => useWatchlist())
 

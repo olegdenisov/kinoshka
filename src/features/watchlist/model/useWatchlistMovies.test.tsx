@@ -28,6 +28,17 @@ const mockMovie = (id: number, overrides: Record<string, unknown> = {}) => {
   )
 }
 
+const mockError = (id: number, status: number) => {
+  server.use(
+    http.get(`*/v1.5/movie/${id}`, () =>
+      HttpResponse.json(
+        { statusCode: status, message: 'err', error: 'err' },
+        { status },
+      ),
+    ),
+  )
+}
+
 const Probe = () => {
   const movies = useWatchlistMovies()
   return (
@@ -62,14 +73,8 @@ describe('useWatchlistMovies', () => {
   it('404 у одного id → он выпадает из списка', async () => {
     watchlistSlot.set([711, 712])
     mockMovie(711, { name: 'Alive' })
-    server.use(
-      http.get('*/v1.5/movie/712', () =>
-        HttpResponse.json(
-          { statusCode: 404, message: 'nf', error: 'nf' },
-          { status: 404 },
-        ),
-      ),
-    )
+    mockMovie(712, { name: 'Dead' })
+    mockError(712, 404)
 
     await act(async () => {
       render(
@@ -80,7 +85,41 @@ describe('useWatchlistMovies', () => {
     })
 
     expect(screen.getByText('Alive')).toBeInTheDocument()
-    expect(screen.queryByText('Movie 712')).not.toBeInTheDocument()
+    expect(screen.queryByText('Dead')).not.toBeInTheDocument()
+  })
+
+  it('все id 404 → пустой список', async () => {
+    watchlistSlot.set([721, 722])
+    mockError(721, 404)
+    mockError(722, 404)
+
+    await act(async () => {
+      render(
+        <AsyncBoundary>
+          <Probe />
+        </AsyncBoundary>,
+      )
+    })
+
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0)
+  })
+
+  it('5xx → ошибка уходит в AsyncBoundary, список не рендерится', async () => {
+    watchlistSlot.set([731])
+    mockError(731, 500)
+
+    await act(async () => {
+      render(
+        <AsyncBoundary>
+          <Probe />
+        </AsyncBoundary>,
+      )
+    })
+
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0)
+    expect(
+      screen.getByRole('button', { name: /Попробовать снова/ }),
+    ).toBeInTheDocument()
   })
 
   it('пустые ids → пустой список', async () => {
