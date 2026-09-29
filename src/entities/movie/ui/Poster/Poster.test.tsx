@@ -16,11 +16,12 @@ const MOVIE: Movie = {
 }
 
 describe('Poster', () => {
-  it('рендерит img с loading=lazy, чтобы постеры за пределами первого экрана не грузились сразу', () => {
+  it('рендерит img с loading=lazy и decoding=async для отложенной загрузки и декодирования постеров', () => {
     const { container } = render(<Poster movie={MOVIE} />)
 
     const img = container.querySelector('img')
     expect(img).toHaveAttribute('loading', 'lazy')
+    expect(img).toHaveAttribute('decoding', 'async')
   })
 
   it('не рендерит img, когда у фильма нет постера', () => {
