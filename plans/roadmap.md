@@ -360,10 +360,10 @@
 
 ### 2.7 Performance — virtualization
 
-- [ ] `@tanstack/react-virtual` (либо `react-window`) для rails на главной (много карточек в DOM одновременно).
-- [ ] Если `/search` перейдёт на infinite scroll (вместо нумерованной пагинации из 1.4) — виртуализация грида там же; при обычной постраничке (20-50 карточек) виртуализация избыточна.
-- [ ] `<img loading="lazy" decoding="async" />` на постерах.
-- [ ] Lighthouse Performance измерен до/после.
+- [ ] `@tanstack/react-virtual` (либо `react-window`) для rails на главной — не реализовано: demo-тариф API ограничивает rails ≤10 карточками (limit: 10), виртуализация списка такого размера не даёт измеримого выигрыша и конфликтует по сложности с hover-arrow `scrollBy`. Вместо этого — `content-visibility: auto` на rail-секциях. См. `docs/plans/completed/20260916-performance-virtualization-lazy-loading.md`.
+- [ ] Виртуализация грида `/search` при infinite scroll — не применимо: `/search` остаётся на нумерованной пагинации (1.4, MAX_PAGE=10), infinite scroll не внедрялся.
+- [x] `<img loading="lazy" decoding="async" />` на постерах — постеры (`Poster.tsx`), аватары каста (`CastTab.tsx`), скриншоты (`MediaTab.tsx`); hero-фото персоны (`PersonHero.tsx`) осознанно без lazy — LCP-кандидат.
+- [x] Lighthouse Performance измерен до/после — см. Progress Tracking в `docs/plans/completed/20260916-performance-virtualization-lazy-loading.md`.
 
 **Как лучше:** React Compiler уже мемоизирует — `useMemo`/`useCallback` НЕ добавляй (см. AGENTS.md). `IntersectionObserver` для lazy-mount тяжёлых секций (related movies, cast tab). `content-visibility: auto` в CSS для off-screen rails — браузер сам пропускает рендер невидимого.
 

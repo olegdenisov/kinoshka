@@ -19,6 +19,7 @@ This file holds only repo-wide conventions. Area-specific decisions and gotchas 
 | `.claude/rules/csp.md`           | `vercel.json`, `index.html`, `public/font-swap.js`                                                                                                                                                                                      |
 | `.claude/rules/e2e.md`           | `e2e/**`, `playwright.config.ts`, `.github/workflows/e2e.yml`                                                                                                                                                                           |
 | `.claude/rules/lighthouse.md`    | `lighthouserc.cjs`, `.github/workflows/lighthouse.yml`, `.github/scripts/**`                                                                                                                                                            |
+| `.claude/rules/performance.md`   | `src/widgets/movie-rail/**`, `src/pages/movie/ui/RelatedMovies/**`, `src/shared/lib/inView/**`, `src/test/setup.ts`                                                                                                                     |
 
 When a new area-specific decision is worth recording, add it to the matching rule file (or create one with a `paths:` frontmatter and a row in this table) — not here. Record the rule and the one-line reason; the story of how it was found belongs in the plan.
 
