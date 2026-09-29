@@ -24,6 +24,14 @@ describe('Poster', () => {
     expect(img).toHaveAttribute('decoding', 'async')
   })
 
+  it('eager: img без loading=lazy и decoding=async — above-the-fold постер не откладывается', () => {
+    const { container } = render(<Poster movie={MOVIE} eager />)
+
+    const img = container.querySelector('img')
+    expect(img).toHaveAttribute('loading', 'eager')
+    expect(img).not.toHaveAttribute('decoding')
+  })
+
   it('не рендерит img, когда у фильма нет постера', () => {
     const { container } = render(
       <Poster movie={{ ...MOVIE, poster: undefined }} />,
