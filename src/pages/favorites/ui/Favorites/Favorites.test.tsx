@@ -1,4 +1,4 @@
-import { act, screen } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
@@ -147,7 +147,7 @@ describe('Favorites — полный отказ загрузки (все id 404)
 })
 
 describe('Favorites — полный отказ загрузки (сетевая/5xx ошибка)', () => {
-  it('показывает error-фолбэк AsyncBoundary с Retry, а не EmptyState', async () => {
+  it('показывает error-фолбэк QueryBoundary с Retry, а не EmptyState', async () => {
     setFavorites([500, 501])
     mockMovieError(500, 500)
     mockMovieError(501, 500)
@@ -179,7 +179,10 @@ describe('Favorites — снятие с избранного на самой с�
       )
     })
 
-    expect(screen.queryByText('First Favorite')).not.toBeInTheDocument()
+    // Список перезапрашивается по новому набору id, до ответа остаётся прежняя сетка (без скелетона).
+    await waitFor(() =>
+      expect(screen.queryByText('First Favorite')).not.toBeInTheDocument(),
+    )
     expect(screen.getByText('Second Favorite')).toBeInTheDocument()
   })
 

@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw'
 import { makeStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import { hashHue } from '../lib/hashHue'
-import { fetchMovieDetail, movieApi } from './movieApi'
+import { fetchMovieDetail, movieApi, movieByIdsApi } from './movieApi'
 
 const MOVIE_ENDPOINT = '*/v1.5/movie'
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
@@ -384,5 +384,102 @@ describe('getMovieImages', () => {
     const result = await getImages(2)
 
     expect(result.error).toMatchObject({ status: 403 })
+  })
+})
+
+const movieError = (status: number) =>
+  HttpResponse.json(
+    { statusCode: status, message: 'err', error: 'err' },
+    { status },
+  )
+
+const mockDetail = (id: number, counter?: { count: number }) => {
+  server.use(
+    http.get(`*/v1.5/movie/${id}`, () => {
+      if (counter) counter.count++
+      return HttpResponse.json(movieDoc(id, { name: `Movie ${id}` }))
+    }),
+  )
+}
+
+const getByIds = (ids: number[], store = makeStore()) =>
+  store.dispatch(movieByIdsApi.endpoints.getMoviesByIds.initiate(ids))
+
+describe('getMoviesByIds', () => {
+  it('отдаёт Movie по каждому id в порядке ids', async () => {
+    mockDetail(11)
+    mockDetail(12)
+
+    const result = await getByIds([11, 12])
+
+    expect(result.data?.map(movie => movie.id)).toEqual([11, 12])
+  })
+
+  it('404 у одного id молча выпадает', async () => {
+    mockDetail(21)
+    server.use(http.get('*/v1.5/movie/22', () => movieError(404)))
+
+    const result = await getByIds([21, 22])
+
+    expect(result.data?.map(movie => movie.id)).toEqual([21])
+    expect(result.error).toBeUndefined()
+  })
+
+  it('все id 404 — пустой массив без ошибки', async () => {
+    server.use(
+      http.get('*/v1.5/movie/31', () => movieError(404)),
+      http.get('*/v1.5/movie/32', () => movieError(404)),
+    )
+
+    const result = await getByIds([31, 32])
+
+    expect(result.data).toEqual([])
+    expect(result.error).toBeUndefined()
+  })
+
+  it('полный сбой (не 404) — ошибка', async () => {
+    server.use(
+      http.get('*/v1.5/movie/41', () => movieError(500)),
+      http.get('*/v1.5/movie/42', () => movieError(404)),
+    )
+
+    const result = await getByIds([41, 42])
+
+    expect(result.error).toMatchObject({
+      message: 'Failed to load movies by ids',
+    })
+  })
+
+  it('частичный сбой не 404 при наличии фильмов — отдаёт найденные', async () => {
+    mockDetail(51)
+    server.use(http.get('*/v1.5/movie/52', () => movieError(500)))
+
+    const result = await getByIds([51, 52])
+
+    expect(result.data?.map(movie => movie.id)).toEqual([51])
+  })
+
+  it('кеш detail общий: id, уже загруженный как detail, не запрашивается повторно', async () => {
+    const counter = { count: 0 }
+    mockDetail(61, counter)
+    const store = makeStore()
+
+    await store.dispatch(movieApi.endpoints.getMovieDetail.initiate(61))
+    await getByIds([61], store)
+
+    expect(counter.count).toBe(1)
+  })
+
+  it('пересечение двух списков: общий id запрашивается один раз', async () => {
+    const counter = { count: 0 }
+    mockDetail(71, counter)
+    mockDetail(72)
+    mockDetail(73)
+    const store = makeStore()
+
+    await getByIds([71, 72], store)
+    await getByIds([71, 73], store)
+
+    expect(counter.count).toBe(1)
   })
 })

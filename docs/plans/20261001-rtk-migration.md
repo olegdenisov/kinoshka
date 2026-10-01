@@ -342,15 +342,15 @@ export const store = makeStore()
 - Modify: `src/pages/{favorites,watched,watchlist}/**` и их тесты
 - Modify: `src/entities/movie/index.ts`
 
-- [ ] endpoint `getMoviesByIds(ids)`: `queryFn` получает каждый id через `dispatch(getMovieDetail.initiate(id, { subscribe: false }))` — кеш деталей общий с `/movie/:id`
-- [ ] сохранить: 404-id молча выпадает (проверка `QueryError.status === 404` вместо `instanceof ApiError`); если фильмов 0 и есть не-404 сбой — ошибка
-- [ ] старый `getMoviesByIds.ts` и его экспорт из barrel **не удалять** — до Task 12 `useRecommendedMovies` зовёт `use(getMoviesByIds(ids))` сам (id из `useFavorites()`), т.к. `useFavoriteMovies` больше не Suspense-значение
-- [ ] `useFavoriteMovies`/`useWatchedMovies`/`useWatchlistMovies` возвращают результат query
-- [ ] страницы `/favorites`, `/watched`, `/watchlist`: `QueryBoundary`; пустое состояние при пустом списке id без запроса (`skip`)
-- [ ] при изменении списка сетка не должна мигать скелетоном — рендер от `data` (держит предыдущий результат) + `isFetching`
-- [ ] тесты endpoint (успех, частичный 404, полный сбой, переиспользование кеша detail — один запрос на id)
-- [ ] обновить тесты хуков и страниц
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] endpoint `getMoviesByIds(ids)`: `queryFn` получает каждый id через `dispatch(getMovieDetail.initiate(id, { subscribe: false }))` — кеш деталей общий с `/movie/:id`
+- [x] сохранить: 404-id молча выпадает (проверка `QueryError.status === 404` вместо `instanceof ApiError`); если фильмов 0 и есть не-404 сбой — ошибка
+- [x] старый `getMoviesByIds.ts` и его экспорт из barrel **не удалять** — до Task 12 `useRecommendedMovies` зовёт `use(getMoviesByIds(ids))` сам (id из `useFavorites()`), т.к. `useFavoriteMovies` больше не Suspense-значение
+- [x] `useFavoriteMovies`/`useWatchedMovies`/`useWatchlistMovies` возвращают результат query
+- [x] страницы `/favorites`, `/watched`, `/watchlist`: `QueryBoundary`; пустое состояние при пустом списке id без запроса (`skip`)
+- [x] при изменении списка сетка не должна мигать скелетоном — рендер от `data` (держит предыдущий результат) + `isFetching`
+- [x] тесты endpoint (успех, частичный 404, полный сбой, переиспользование кеша detail — один запрос на id)
+- [x] обновить тесты хуков и страниц
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 11: Каталог и поиск — server-side pagination
 

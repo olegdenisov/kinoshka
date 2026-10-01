@@ -1,10 +1,10 @@
-import { getMoviesByIds, type Movie } from '@entities/movie'
-import { use } from 'react'
+import { useGetMoviesByIdsQuery } from '@entities/movie'
 
 import { useWatchlist } from './useWatchlist'
 
-export const useWatchlistMovies = (): Movie[] => {
+// Пустой список id — запрос не нужен (страница рисует своё пустое состояние).
+export const useWatchlistMovies = () => {
   const { ids } = useWatchlist()
 
-  return use(getMoviesByIds(ids))
+  return useGetMoviesByIdsQuery(ids, { skip: ids.length === 0 })
 }
