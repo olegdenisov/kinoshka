@@ -453,12 +453,12 @@ export const store = makeStore()
 - Modify: `package.json` (`size-limit`)
 - Create: `docs/concepts/rtk-bundle-diff.md` (сырые цифры для README)
 
-- [ ] `make build-only && make size` на ветке; записать gzip-размеры всех чанков
-- [ ] те же цифры для `main` (из текущих лимитов `size-limit`/CI или сборкой `main` в отдельном worktree)
-- [ ] обновить лимиты `vendor`/`shared`/`page-*` под фактические размеры с тем же запасом, что принят в проекте (см. `.claude/rules/build-budgets.md`)
-- [ ] проверить, что `@reduxjs/toolkit`/`react-redux` попали в `vendor`, а не в page-чанки
-- [ ] записать таблицу diff по чанкам в `docs/concepts/rtk-bundle-diff.md`
-- [ ] `make size` — зелёный
+- [x] `make build-only && make size` на ветке; записать gzip-размеры всех чанков
+- [x] те же цифры для `main` (из текущих лимитов `size-limit`/CI или сборкой `main` в отдельном worktree)
+- [x] обновить лимиты `vendor`/`shared`/`page-*` под фактические размеры с тем же запасом, что принят в проекте (см. `.claude/rules/build-budgets.md`)
+- [x] проверить, что `@reduxjs/toolkit`/`react-redux` попали в `vendor`, а не в page-чанки
+- [x] записать таблицу diff по чанкам в `docs/concepts/rtk-bundle-diff.md`
+- [x] `make size` — зелёный
 
 ### Task 16: Verify acceptance criteria
 

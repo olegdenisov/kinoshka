@@ -88,7 +88,7 @@
       "name": "vendor",
       "path": "dist/assets/vendor-*.js",
       "gzip": true,
-      "limit": "184.7 KB"
+      "limit": "223.5 KB"
     },
     {
       "name": "shared",
@@ -136,7 +136,7 @@
       "name": "page-recommendations",
       "path": "dist/assets/page-recommendations-*.js",
       "gzip": true,
-      "limit": "1.35 KB"
+      "limit": "1.7 KB"
     },
     {
       "name": "page-search",
