@@ -28,7 +28,7 @@ describe('filterOptions', () => {
 
   it('getCountryLabel: шорт-лист — по-английски', () => {
     expect(getCountryLabel('США')).toBe('USA')
-    expect(getCountryLabel('Южная Корея')).toBe('South Korea')
+    expect(getCountryLabel('Корея Южная')).toBe('South Korea')
   })
 
   it.each([

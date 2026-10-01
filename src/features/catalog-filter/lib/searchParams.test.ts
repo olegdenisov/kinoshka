@@ -122,7 +122,7 @@ describe('новые поля: countries, duration, platforms, list', () => {
     getFilterFromSearchParams(filtersToSearchParams(filters))
 
   it.each<[string, Partial<FilterState>]>([
-    ['countries', { countries: ['США', 'Южная Корея'] }],
+    ['countries', { countries: ['США', 'Корея Южная'] }],
     ['duration', { duration: 'medium' }],
     ['platforms', { platforms: ['Иви', 'Kinopoisk HD'] }],
     ['list', { list: '100_greatest_movies_XXI' }],
@@ -183,6 +183,28 @@ describe('новые поля: countries, duration, platforms, list', () => {
     const result = getFilterFromSearchParams(sp)
     expect(result.countries).toEqual(['США', 'Франция'])
     expect(result.platforms).toEqual(['Okko'])
+  })
+
+  it('неизвестные платформа/подборка проходят как есть (не валидируются по списку опций)', () => {
+    // Осознанно: в отличие от duration, свободные строки не роняют весь FilterState —
+    // неизвестное значение просто даёт пустую выдачу.
+    const sp = new URLSearchParams('list=garbage&platforms=foo')
+    const result = getFilterFromSearchParams(sp)
+    expect(result.list).toBe('garbage')
+    expect(result.platforms).toEqual(['foo'])
+  })
+
+  it('percent-encoded кириллица читается и переживает round-trip', () => {
+    const sp = new URLSearchParams(
+      'countries=%D0%A1%D0%A8%D0%90,%D0%9A%D0%BE%D1%80%D0%B5%D1%8F%20%D0%AE%D0%B6%D0%BD%D0%B0%D1%8F',
+    )
+    const result = getFilterFromSearchParams(sp)
+    expect(result.countries).toEqual(['США', 'Корея Южная'])
+    expect(
+      getFilterFromSearchParams(
+        new URLSearchParams(filtersToSearchParams(result).toString()),
+      ),
+    ).toEqual(result)
   })
 })
 

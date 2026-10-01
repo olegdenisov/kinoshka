@@ -106,7 +106,12 @@ export const ChipSelect = ({
       {restItems.length > 0 && (
         <button
           type='button'
-          onClick={() => setShowAll(prev => !prev)}
+          onClick={() => {
+            // Поле поиска скрыто в свёрнутом виде — старый текст не должен молча
+            // фильтровать список при повторном раскрытии.
+            if (showAll) setQuery('')
+            setShowAll(!showAll)
+          }}
           aria-label={
             showAll
               ? `Свернуть: ${groupLabel}`

@@ -3,7 +3,10 @@ import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
 import { countryDictionarySlot } from '../api/countryDictionaryCache'
-import { DICTIONARY_TTL_MS } from '../api/createDictionaryCache'
+import {
+  BACKGROUND_RETRY_COOLDOWN_MS,
+  DICTIONARY_TTL_MS,
+} from '../api/createDictionaryCache'
 import { genreDictionarySlot } from '../api/genreDictionaryCache'
 import { STATIC_FALLBACK_COUNTRIES } from '../model/country'
 import { useCountryDictionary } from './useCountryDictionary'
@@ -85,11 +88,11 @@ describe('useCountryDictionary — устаревший кэш', () => {
       fetchedAt: now - DICTIONARY_TTL_MS - 1,
     })
 
-    const { result, rerender } = renderHook(() => useCountryDictionary())
+    const { result } = renderHook(() => useCountryDictionary())
 
     expect(result.current).toEqual(['старая страна'])
-    rerender()
-    rerender()
+    // Второй потребитель, смонтированный до ответа, дедуплицируется in-flight-промисом.
+    renderHook(() => useCountryDictionary())
 
     await waitFor(() => {
       expect(result.current).toEqual(['США', 'Франция'])
@@ -111,12 +114,40 @@ describe('useCountryDictionary — ошибка', () => {
       }),
     )
 
-    const { result, rerender } = renderHook(() => useCountryDictionary())
+    const first = renderHook(() => useCountryDictionary())
 
     await waitFor(() => {
       expect(calls.count).toBe(1)
     })
-    rerender()
+    expect(first.result.current).toEqual(STATIC_FALLBACK_COUNTRIES)
+    first.unmount()
+
+    // Ремаунт перезапускает эффект — rerender() этого не делает (deps не меняются).
+    now += BACKGROUND_RETRY_COOLDOWN_MS - 1
+    const second = renderHook(() => useCountryDictionary())
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(calls.count).toBe(1)
+    expect(second.result.current).toEqual(STATIC_FALLBACK_COUNTRIES)
+    second.unmount()
+
+    now += 2
+    renderHook(() => useCountryDictionary())
+    await waitFor(() => {
+      expect(calls.count).toBe(2)
+    })
+  })
+})
+
+describe('useCountryDictionary — пустой ответ', () => {
+  it('items: [] оставляет фолбэк и не зацикливает запросы', async () => {
+    const calls = mockSuccess([])
+    const { result, unmount } = renderHook(() => useCountryDictionary())
+
+    await waitFor(() => {
+      expect(countryDictionarySlot.get().fetchedAt).toBe(now)
+    })
+    unmount()
+    renderHook(() => useCountryDictionary())
     await new Promise(resolve => setTimeout(resolve, 0))
 
     expect(calls.count).toBe(1)

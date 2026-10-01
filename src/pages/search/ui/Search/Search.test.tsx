@@ -649,6 +649,9 @@ describe('Search — пагинация: сброс ?page на 1 при смен
       <HeaderQuerySetter />,
     )
     expect(lastSearch).toContain('duration=long')
+    // Группа Country открыта deep-link'ом — ждём фоновый fetch словаря стран («Аргентина» вне
+    // шорт-листа даёт кнопку «Показать все»), чтобы он не долетел в соседний тест.
+    await screen.findByRole('button', { name: /Показать все.*Country/ })
 
     await act(async () => {
       fireEvent.click(

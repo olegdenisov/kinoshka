@@ -93,11 +93,25 @@ const DEFAULT_GENRE_DICTIONARY_ITEMS = [
 ]
 
 // Справочник стран — то же самое для CountrySelector (useCountryDictionary → фоновый fetch).
-const DEFAULT_COUNTRY_DICTIONARY_ITEMS = [
-  { id: 1, name: 'США', slug: null, enName: null },
-  { id: 2, name: 'Франция', slug: null, enName: null },
-  { id: 3, name: 'Аргентина', slug: null, enName: null },
+// Содержит весь шорт-лист STATIC_FALLBACK_COUNTRIES в написании живого API (country.test.ts
+// это проверяет) плюс «Аргентину» — страну только из словаря, по ней видно, что словарь загрузился.
+export const DEFAULT_COUNTRY_DICTIONARY_NAMES = [
+  'США',
+  'Россия',
+  'Великобритания',
+  'Франция',
+  'Германия',
+  'Италия',
+  'Япония',
+  'Корея Южная',
+  'Испания',
+  'Канада',
+  'Аргентина',
 ]
+
+const DEFAULT_COUNTRY_DICTIONARY_ITEMS = DEFAULT_COUNTRY_DICTIONARY_NAMES.map(
+  (name, i) => ({ id: i + 1, name, slug: null, enName: null }),
+)
 
 export const server = setupServer(
   http.get('*/v1.5/dictionary/genres', () =>

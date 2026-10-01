@@ -122,6 +122,51 @@ describe('createDictionaryCache — invalidate и resetState', () => {
     await cache.refresh()
     expect(fetchItems).toHaveBeenCalledTimes(2)
   })
+
+  it('ответ запроса, стартовавшего до resetState, не пишет в слот', async () => {
+    let resolveFetch: (items: string[]) => void = () => {}
+    const cache = createDictionaryCache({
+      storageKey: nextKey(),
+      fetchItems: () =>
+        new Promise<string[]>(resolve => {
+          resolveFetch = resolve
+        }),
+    })
+
+    const pending = cache.refresh()
+    cache.resetState()
+    resolveFetch(['США'])
+    await pending
+
+    expect(cache.slot.get()).toEqual({ items: [], fetchedAt: 0 })
+  })
+
+  it('запоздавший старый запрос не сбрасывает in-flight нового после invalidate', async () => {
+    const resolvers: Array<(items: string[]) => void> = []
+    const fetchItems = vi.fn(
+      () =>
+        new Promise<string[]>(resolve => {
+          resolvers.push(resolve)
+        }),
+    )
+    const cache = createDictionaryCache({ storageKey: nextKey(), fetchItems })
+
+    const stale = cache.refresh()
+    cache.invalidate()
+    const fresh = cache.refresh()
+
+    resolvers[0](['старая страна'])
+    await stale
+    // Новый запрос всё ещё in-flight — повторный вызов (уже вне кулдауна) дедуплицируется,
+    // а не стартует третий.
+    now += BACKGROUND_RETRY_COOLDOWN_MS + 1
+    void cache.refresh()
+    expect(fetchItems).toHaveBeenCalledTimes(2)
+
+    resolvers[1](['США'])
+    await fresh
+    expect(cache.slot.get().items).toEqual(['США'])
+  })
 })
 
 describe('createDictionaryCache — изоляция экземпляров', () => {

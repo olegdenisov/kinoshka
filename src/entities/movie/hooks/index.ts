@@ -11,7 +11,6 @@ export {
   resetGenreDictionaryState,
   useGenreDictionary,
 } from './useGenreDictionary'
-export {
-  resetCountryDictionaryState,
-  useCountryDictionary,
-} from './useCountryDictionary'
+export { useCountryDictionary } from './useCountryDictionary'
+// Тестовая утилита для глобального afterEach (src/test/setup.ts) — напрямую из api, без хука.
+export { resetCountryDictionaryState } from '../api/countryDictionaryCache'
