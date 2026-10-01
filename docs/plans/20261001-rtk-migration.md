@@ -219,13 +219,13 @@ export const store = makeStore()
 - Modify: `src/features/watched/index.ts`, `src/features/watchlist/index.ts`
 - Modify: `src/app/store.ts`
 
-- [ ] `watchedSlice`/`watchlistSlice`: `{ ids }`, редьюсеры `toggled(id)`, `hydrated(ids)`, селектор `selectIds`
-- [ ] подключить редьюсеры и persist в `app/store.ts`
-- [ ] `useWatched`/`useWatchlist` на `useSelector`/`useDispatch`, возвращаемая форма та же
-- [ ] списки независимы друг от друга и от Favorites (см. `.claude/rules/user-lists.md`) — никаких перекрёстных редьюсеров
-- [ ] тесты slices; два `toggled` подряд в одном тике не затирают друг друга
-- [ ] обновить тесты хуков и потребителей
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `watchedSlice`/`watchlistSlice`: `{ ids }`, редьюсеры `toggled(id)`, `hydrated(ids)`, селектор `selectIds`
+- [x] подключить редьюсеры и persist в `app/store.ts`
+- [x] `useWatched`/`useWatchlist` на `useSelector`/`useDispatch`, возвращаемая форма та же
+- [x] списки независимы друг от друга и от Favorites (см. `.claude/rules/user-lists.md`) — никаких перекрёстных редьюсеров
+- [x] тесты slices; два `toggled` подряд в одном тике не затирают друг друга
+- [x] обновить тесты хуков и потребителей
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 5: Profile slice
 
