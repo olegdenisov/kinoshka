@@ -61,6 +61,52 @@ src/
 
 Направление импортов: `pages → widgets → features → entities → shared`. Импорты вверх по слоям запрещены.
 
+## Ветка `rtk`: Redux Toolkit
+
+Ветка повторяет функциональность `main`, но весь стейт идёт через Redux Toolkit: клиентский — `createSlice` + persist через listener middleware, серверный — RTK Query. Второго механизма кеша в ветке нет (`createCachedFetcher`, `sessionCache`, `use()` + `AsyncBoundary`, `useStorageSlot` удалены). Поведение и ключи `localStorage` (`kinoshka:*`) те же, что на `main`. Ветка живёт параллельно `main` и в него не мержится (roadmap, Фаза 3).
+
+### Разбор паттернов
+
+- **Slices в фичах без `RootState`.** Каждая фича (`theme`, `favorites`, `watched`, `watchlist`, `profile`) владеет своим `createSlice` и знает только свой срез; корневой стор собирается в `src/app/store.ts`. Общий код (`persistSlice`, `subscribeSlot`) дженерик по форме стейта — `shared` не импортирует вышележащие слои.
+- **Persist через listener middleware + rollback.** `persistSlice` слушает экшены среза и пишет значение в `localStorage` синхронно внутри `dispatch`; если запись не удалась (`set()` вернул `false`), диспатчится `rollback` со значением до экшена. Синхронность важна: к возврату из `dispatch` стейт уже записан или откатан, поэтому вызывающий узнаёт результат сравнением стейта. Обратное направление — `subscribeSlot`: `storage`-событие из другой вкладки приходит в стор как `hydrated`.
+- **Optimistic mutation поверх `localStorage`.** `toggleFavorite` — RTK Query mutation, где «сервером» служит слот: `onQueryStarted` сразу применяет изменение к стейту, `queryFn` пишет в слот, при отказе изменение откатывается.
+- **`queryFn` + `initiate` для композиции кеша.** Endpoint, которому нужны данные других endpoint'ов (`getMoviesByIds`, `getMoviesPage`, `getRecommendations`), вызывает их через `dispatch(endpoint.initiate(arg, { subscribe: false })).unwrap()`. Кеш общий: детали фильма с `/movie/:id` переиспользуются в списках, шаги курсора — в каталоге.
+- **Обход курсора.** API фильтров отдаёт только cursor-based страницы, поэтому «страница N» — это проход курсора 1..N; каждый шаг — отдельная запись кеша `getCatalogCursorStep`, так что переход на N+1 стоит одного запроса.
+- **Теги.** `getRecommendations` без аргумента читает id избранного из стейта, его ключ кеша сам не меняется; обновляет его тег `Recommendations`, который инвалидирует успешный `toggleFavorite` (и синхронизация вкладок).
+- **`QueryBoundary`** (`@shared/ui`) вместо Suspense + `AsyncBoundary`: принимает структурный тип результата хука, Retry = `refetch`.
+
+### Плюсы и минусы
+
+- Плюсы: единый кеш с дедупликацией, инвалидацией по тегам и подписками «из коробки»; DevTools и предсказуемый поток экшенов; optimistic update без ручного кеша; тестовые сторы создаются на каждый тест, глобальный сброс кеша не нужен.
+- Минусы: заметно больше бойлерплейта (slice + persist-регистрация + селекторы на каждый слот); композиция запросов — вручную через `queryFn`; сериализуемые ошибки (`QueryError`) вместо `ApiError`; +26 KB gzip в `vendor`.
+- Потеряно относительно `main`: Suspense/`use()` и декларативные границы загрузки (теперь явные флаги `isLoading`/`isError` через `QueryBoundary`); in-flight-дедупликация и TTL кеша теперь зависят от настроек RTK Query (`keepUnusedDataFor: 300`); sessionStorage-кеш ответов в DEV.
+
+### Разница бандла с `main`
+
+Gzip-размеры из `size-limit`, оба билда с `VITE_SENTRY_DSN` (подробности — `docs/concepts/rtk-bundle-diff.md`).
+
+| Чанк                 | main, KB | rtk, KB | diff, KB |
+| -------------------- | -------- | ------- | -------- |
+| entry                | 3.53     | 3.83    | +0.30    |
+| vendor               | 169.15   | 194.32  | +25.17   |
+| shared               | 21.57    | 22.38   | +0.81    |
+| page-home            | 2.58     | 2.47    | -0.11    |
+| page-movie           | 8.04     | 8.07    | +0.03    |
+| page-favorites       | 1.15     | 1.18    | +0.03    |
+| page-watched         | 1.14     | 1.17    | +0.03    |
+| page-watchlist       | 1.09     | 1.12    | +0.03    |
+| page-popular         | 1.13     | 1.17    | +0.04    |
+| page-recommendations | 1.24     | 1.46    | +0.22    |
+| page-search          | 5.88     | 5.58    | -0.30    |
+| page-profile         | 2.79     | 2.80    | +0.01    |
+| page-person          | 3.82     | 3.84    | +0.02    |
+
+Итого около +26.2 KB gzip, почти всё в `vendor` (`@reduxjs/toolkit` и `react-redux`).
+
+### Оговорка про `toggleFavorite`
+
+Mutation поверх `localStorage` сделана ради демонстрации optimistic update (roadmap 3.1). В реальном проекте без серверного избранного достаточно slice с listener-persist (как у `watched`/`watchlist`); mutation оправдана, когда запись может отказать асинхронно (сетевой запрос).
+
 ## Адаптивность
 
 Mobile-first: у каждой страницы/виджета один компонент и один CSS-модуль — мобильная раскладка безусловная (базовая), десктопные переопределения идут в блоках `@media (min-width: 720px)` поверх неё. Пары `*Desktop`/`*Mobile` не используются. Breakpoint: **720px** (`MOBILE_BREAKPOINT`, `src/shared/lib/viewport/useViewport.ts`).

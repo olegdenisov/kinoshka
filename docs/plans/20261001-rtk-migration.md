@@ -482,14 +482,14 @@ export const store = makeStore()
 - Modify: `.claude/rules/{data-layer,storage,build-budgets,search-catalog}.md`, `AGENTS.md`
 - Modify: `plans/roadmap.md`
 
-- [ ] `README.md`: раздел ветки `rtk` — разбор паттернов (slices в фичах без `RootState`, persist через listener + rollback, optimistic mutation поверх `localStorage`, `queryFn` + `initiate` для композиции кеша, обход курсора, теги), плюсы/минусы, что потеряно относительно `main`, таблица bundle-size diff из Task 15
-- [ ] `README.md`: оговорка про `toggleFavorite` — mutation поверх `localStorage` сделана ради демонстрации optimistic update (roadmap 3.1); в реальном проекте без серверного избранного достаточно slice с listener-persist, а mutation оправдана, когда запись может отказать асинхронно
-- [ ] `.claude/rules/data-layer.md` (на английском): заменить разделы про `createCachedFetcher`/`AsyncBoundary`/`invalidate*` на решения ветки — только неочевидное и причины, без пересказа кода
-- [ ] `paths:` во frontmatter `data-layer.md` — под новые файлы (`*Api.ts`, `QueryBoundary`, `pages/recommendations/api`); поправить упоминания удалённых механизмов в `build-budgets.md` и `search-catalog.md`
-- [ ] `.claude/rules/storage.md` (на английском): slices как единственные читатели слотов, синхронный rollback, favorites пишется только через mutation
-- [ ] `AGENTS.md`: раздел «Data (summary)», строки таблицы топиков, gotcha про `useDeferredValue` (если больше не применима в коде — убрать)
-- [ ] `plans/roadmap.md`: отметить `[x]` пункты 3.1 и обновить трекер прогресса
-- [ ] перенести этот план в `docs/plans/completed/`
+- [x] `README.md`: раздел ветки `rtk` — разбор паттернов (slices в фичах без `RootState`, persist через listener + rollback, optimistic mutation поверх `localStorage`, `queryFn` + `initiate` для композиции кеша, обход курсора, теги), плюсы/минусы, что потеряно относительно `main`, таблица bundle-size diff из Task 15
+- [x] `README.md`: оговорка про `toggleFavorite` — mutation поверх `localStorage` сделана ради демонстрации optimistic update (roadmap 3.1); в реальном проекте без серверного избранного достаточно slice с listener-persist, а mutation оправдана, когда запись может отказать асинхронно
+- [x] `.claude/rules/data-layer.md` (на английском): заменить разделы про `createCachedFetcher`/`AsyncBoundary`/`invalidate*` на решения ветки — только неочевидное и причины, без пересказа кода
+- [x] `paths:` во frontmatter `data-layer.md` — под новые файлы (`*Api.ts`, `QueryBoundary`, `pages/recommendations/api`); поправить упоминания удалённых механизмов в `build-budgets.md` и `search-catalog.md`
+- [x] `.claude/rules/storage.md` (на английском): slices как единственные читатели слотов, синхронный rollback, favorites пишется только через mutation
+- [x] `AGENTS.md`: раздел «Data (summary)», строки таблицы топиков, gotcha про `useDeferredValue` (если больше не применима в коде — убрать)
+- [x] `plans/roadmap.md`: отметить `[x]` пункты 3.1 и обновить трекер прогресса
+- [x] перенести этот план в `docs/plans/completed/` (skipped - перенос делает харнес после всех фаз)
 
 ## Post-Completion
 

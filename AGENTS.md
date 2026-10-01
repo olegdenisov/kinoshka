@@ -10,9 +10,9 @@ This file holds only repo-wide conventions. Area-specific decisions and gotchas 
 
 | Doc                 | Topic                                                                     |
 | ------------------- | ------------------------------------------------------------------------- |
-| `data-layer.md`     | fetch caching, `AsyncBoundary`/Retry, endpoint quirks, id-list fetching   |
+| `data-layer.md`     | RTK Query, `QueryBoundary`/Retry, endpoint quirks, id-list fetching       |
 | `search-catalog.md` | `/search` URL state, text-vs-filter modes, genres                         |
-| `storage.md`        | `createStorageSlot` semantics and failure handling                        |
+| `storage.md`        | `createStorageSlot` semantics, store slices persist, rollback             |
 | `user-lists.md`     | Watched/Watchlist: independence, relation to Favorites                    |
 | `profile.md`        | `/profile`, avatar contrast, `BottomNav`                                  |
 | `ui-patterns.md`    | `Card` stacking/stretched link, `YearRangeSlider`, theming, contrast test |
@@ -155,11 +155,10 @@ Formatters over API numbers/dates (`formatCurrency()`/`formatDate()`, `@entities
 
 ## Data (summary)
 
-Async data is read with Suspense `use()` inside `AsyncBoundary`; client state lives in `localStorage` via `createStorageSlot`. Details → `data-layer.md`, `storage.md`. Check for an existing live-data hook before reaching for mock data.
+Server data is RTK Query (`baseApi` + `injectEndpoints`), read through hooks inside `QueryBoundary`; client state lives in Redux slices persisted to `localStorage` via `createStorageSlot` + listener middleware. Details → `data-layer.md`, `storage.md`. Check for an existing live-data hook before reaching for mock data.
 
 Repo-wide gotchas worth knowing everywhere:
 
-- **`useDeferredValue` over `useSearchParams()`-derived values is a silent no-op** — `setSearchParams` runs inside `startTransition`, so the deferred and live values change in the same commit. Mirror the value into `useState` from a `useEffect` first (see `useCatalogUpdateStatus.ts`).
 - **`createStorageSlot().set()` returns `boolean`** (`false` on quota/private-mode failure) instead of throwing — gate side effects (analytics, "saved" UI) on it.
 
 ## Testing
