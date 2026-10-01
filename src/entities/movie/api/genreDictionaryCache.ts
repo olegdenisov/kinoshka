@@ -1,97 +1,24 @@
-import { createStorageSlot } from '@shared/lib'
-import { z } from 'zod'
-
+import { createDictionaryCache } from './createDictionaryCache'
 import { getGenreDictionary } from './getGenreDictionary'
 
 /**
- * localStorage-кэш справочника жанров. Хранит русские названия как есть (канонический
- * жанр из плана docs/plans/20260815-dynamic-genre-dictionary.md) плюс отметку времени
- * последней успешной загрузки. Никакого блокирующего TTL — пустой/устаревший кэш всё
- * равно синхронно отдаётся вызывающей стороне (см. useGenreDictionary.ts), протухание
- * лишь триггерит фоновое обновление.
+ * Кэш справочника жанров — экземпляр общей фабрики (кулдаун/дедупликация/TTL — в
+ * createDictionaryCache.ts). Хранит русские названия как есть: канонический жанр из плана
+ * docs/plans/20260815-dynamic-genre-dictionary.md.
  */
-const genreDictionarySchema = z.object({
-  items: z.array(z.string()),
-  fetchedAt: z.number(),
+const genreDictionaryCache = createDictionaryCache({
+  storageKey: 'kinoshka:genres',
+  fetchItems: () =>
+    getGenreDictionary().then(genres => genres.map(genre => genre.name)),
 })
 
-export type GenreDictionaryCacheValue = z.infer<typeof genreDictionarySchema>
+export {
+  BACKGROUND_RETRY_COOLDOWN_MS,
+  DICTIONARY_TTL_MS as GENRE_DICTIONARY_TTL_MS,
+} from './createDictionaryCache'
 
-const FALLBACK_VALUE: GenreDictionaryCacheValue = { items: [], fetchedAt: 0 }
-
-export const GENRE_DICTIONARY_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 дней
-export const BACKGROUND_RETRY_COOLDOWN_MS = 60 * 1000 // 60 секунд
-
-// Фикс референциальной стабильности createStorageSlot.get() из Task 1 — обязателен здесь,
-// потому что genreDictionarySlot.get передаётся в useSyncExternalStore как getSnapshot
-// (через useStorageSlot), а значение — объект/массив.
-export const genreDictionarySlot = createStorageSlot(
-  'kinoshka:genres',
-  genreDictionarySchema,
-  FALLBACK_VALUE,
-)
-
-export const isGenreDictionaryStale = (fetchedAt: number): boolean =>
-  Date.now() - fetchedAt > GENRE_DICTIONARY_TTL_MS
-
-// In-memory (не персистится специально — рестарт вкладки/страницы сбрасывает кулдаун,
-// это приемлемо, см. Technical Details плана) метка последней НЕУДАЧНОЙ попытки фонового
-// обновления + module-level in-flight-промис для дедупликации параллельных вызовов.
-let lastAttemptAt = 0
-let inFlight: Promise<void> | null = null
-
-/**
- * Фоновое (не блокирующее рендер) обновление справочника жанров. Дедуплицирует параллельные
- * вызовы через `inFlight`. Если с последней попытки (успешной или нет) прошло меньше
- * `BACKGROUND_RETRY_COOLDOWN_MS` — no-op, сетевой запрос не уходит (защита от эндпоинта,
- * стабильно отдающего 403/500, **и** от бесконечного цикла при 200 OK с пустым `items`:
- * `lastAttemptAt` ставится сразу при старте попытки, а не только в `.catch`, — иначе успешный
- * ответ с `items: []` каждый раз обновляет `fetchedAt` в слоте, `useGenreDictionary`'s
- * `useEffect` видит `items.length === 0` снова и без кулдауна тут же запускает новый фетч).
- * Успех пишет `{ items, fetchedAt }` в localStorage-слот (реактивно долетает до подписчиков
- * useStorageSlot); неудача помимо `lastAttemptAt` существующий кэш больше ничего не трогает.
- */
-export const refreshGenreDictionary = (): Promise<void> => {
-  if (inFlight) {
-    return inFlight
-  }
-
-  if (Date.now() - lastAttemptAt < BACKGROUND_RETRY_COOLDOWN_MS) {
-    return Promise.resolve()
-  }
-
-  lastAttemptAt = Date.now()
-
-  inFlight = getGenreDictionary()
-    .then(genres => {
-      genreDictionarySlot.set({
-        items: genres.map(genre => genre.name),
-        fetchedAt: Date.now(),
-      })
-    })
-    .catch(() => {
-      // lastAttemptAt уже проставлен выше, до сетевого запроса
-    })
-    .finally(() => {
-      inFlight = null
-    })
-
-  return inFlight
-}
-
-/** Ручной форс-рефреш: чистит слот и сбрасывает in-memory состояние (кулдаун/in-flight). */
-export const invalidateGenreDictionary = (): void => {
-  genreDictionarySlot.remove()
-  lastAttemptAt = 0
-  inFlight = null
-}
-
-/**
- * Тестовая утилита (см. `src/test/setup.ts`, вызывается в глобальном `afterEach` по аналогии
- * с `resetAllCachedFetchers`): сбрасывает in-memory состояние модуля (кулдаун/in-flight) без
- * прямого доступа к замыканию. localStorage чистится отдельно (`localStorage.clear()`).
- */
-export const resetGenreDictionaryState = (): void => {
-  lastAttemptAt = 0
-  inFlight = null
-}
+export const genreDictionarySlot = genreDictionaryCache.slot
+export const isGenreDictionaryStale = genreDictionaryCache.isStale
+export const refreshGenreDictionary = genreDictionaryCache.refresh
+export const invalidateGenreDictionary = genreDictionaryCache.invalidate
+export const resetGenreDictionaryState = genreDictionaryCache.resetState

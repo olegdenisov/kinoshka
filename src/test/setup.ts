@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom/vitest'
-import { resetGenreDictionaryState } from '@entities/movie'
+import {
+  resetCountryDictionaryState,
+  resetGenreDictionaryState,
+} from '@entities/movie'
 import { resetAllCachedFetchers } from '@shared/lib'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
@@ -89,12 +92,26 @@ const DEFAULT_GENRE_DICTIONARY_ITEMS = [
   { id: 3, name: 'триллер', slug: null, enName: null },
 ]
 
+// Справочник стран — то же самое для CountrySelector (useCountryDictionary → фоновый fetch).
+const DEFAULT_COUNTRY_DICTIONARY_ITEMS = [
+  { id: 1, name: 'США', slug: null, enName: null },
+  { id: 2, name: 'Франция', slug: null, enName: null },
+  { id: 3, name: 'Аргентина', slug: null, enName: null },
+]
+
 export const server = setupServer(
   http.get('*/v1.5/dictionary/genres', () =>
     HttpResponse.json({
       type: 'genres',
       total: DEFAULT_GENRE_DICTIONARY_ITEMS.length,
       items: DEFAULT_GENRE_DICTIONARY_ITEMS,
+    }),
+  ),
+  http.get('*/v1.5/dictionary/countries', () =>
+    HttpResponse.json({
+      type: 'countries',
+      total: DEFAULT_COUNTRY_DICTIONARY_ITEMS.length,
+      items: DEFAULT_COUNTRY_DICTIONARY_ITEMS,
     }),
   ),
 )
@@ -106,11 +123,12 @@ afterEach(() => server.resetHandlers())
 // as an earlier test would silently get a stale cached promise instead of exercising the
 // current test's MSW handler. See createCachedFetcher.ts's resetAllCachedFetchers docblock.
 afterEach(() => resetAllCachedFetchers())
-// genreDictionaryCache's localStorage slot + in-memory cooldown/in-flight state are module-
-// level too — same rationale as resetAllCachedFetchers above, plus localStorage.clear() so a
-// cached dictionary from one test doesn't leak into the next (see genreDictionaryCache.ts).
+// Dictionary caches (genres, countries): localStorage slot + in-memory cooldown/in-flight state
+// are module-level too — same rationale as resetAllCachedFetchers above, plus localStorage.clear()
+// so a cached dictionary from one test doesn't leak into the next (see createDictionaryCache.ts).
 afterEach(() => {
   localStorage.clear()
   resetGenreDictionaryState()
+  resetCountryDictionaryState()
 })
 afterAll(() => server.close())
