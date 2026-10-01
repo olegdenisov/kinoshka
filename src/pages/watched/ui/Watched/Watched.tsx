@@ -1,8 +1,8 @@
-import { Card, getMoviesByIds } from '@entities/movie'
+import { Card, type Movie } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { useWatched, useWatchedMovies } from '@features/watched'
 import { useWatchlist } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { EmptyState, QueryBoundary, Skeleton } from '@shared/ui'
 
 import s from './Watched.module.css'
 
@@ -16,10 +16,11 @@ const WatchedSkeletonGrid = () => (
   </div>
 )
 
-const WatchedGrid = () => {
+type WatchedGridProps = { movies: Movie[] }
+
+const WatchedGrid = ({ movies }: WatchedGridProps) => {
   // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои
-  // бросает getMoviesByIds и ловит AsyncBoundary, поэтому текст — не про ошибку загрузки.
-  const movies = useWatchedMovies()
+  // отдаёт endpoint getMoviesByIds как ошибку, её ловит QueryBoundary, поэтому текст — не про ошибку загрузки.
   const { isFavorite, toggle } = useFavorites()
   const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
@@ -55,6 +56,7 @@ const WatchedGrid = () => {
 // Chrome (Header/MobileHeader+BottomNav) рисует `AppLayout`, страница его не выбирает.
 export const Watched = () => {
   const { ids } = useWatched()
+  const query = useWatchedMovies()
 
   return (
     <div className={s.page}>
@@ -68,12 +70,9 @@ export const Watched = () => {
             />
           </div>
         ) : (
-          <AsyncBoundary
-            fallback={<WatchedSkeletonGrid />}
-            onRetry={() => getMoviesByIds.invalidate(ids)}
-          >
-            <WatchedGrid />
-          </AsyncBoundary>
+          <QueryBoundary query={query} fallback={<WatchedSkeletonGrid />}>
+            {movies => <WatchedGrid movies={movies} />}
+          </QueryBoundary>
         )}
       </main>
     </div>

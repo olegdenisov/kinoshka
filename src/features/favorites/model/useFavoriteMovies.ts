@@ -1,10 +1,10 @@
-import { getMoviesByIds, type Movie } from '@entities/movie'
-import { use } from 'react'
+import { useGetMoviesByIdsQuery } from '@entities/movie'
 
 import { useFavorites } from './useFavorites'
 
-export const useFavoriteMovies = (): Movie[] => {
+// Пустой список id — запрос не нужен (страница рисует своё пустое состояние).
+export const useFavoriteMovies = () => {
   const { ids } = useFavorites()
 
-  return use(getMoviesByIds(ids))
+  return useGetMoviesByIdsQuery(ids, { skip: ids.length === 0 })
 }

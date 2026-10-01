@@ -1,5 +1,5 @@
-import { AsyncBoundary } from '@shared/ui'
-import { act, screen } from '@testing-library/react'
+import { QueryBoundary } from '@shared/ui'
+import { screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
 import { renderWithStore } from '../../../test/renderWithStore'
@@ -30,13 +30,17 @@ const mockMovie = (id: number, overrides: Record<string, unknown> = {}) => {
 }
 
 const Probe = () => {
-  const movies = useWatchedMovies()
+  const query = useWatchedMovies()
   return (
-    <ul>
-      {movies.map(movie => (
-        <li key={movie.id}>{movie.title}</li>
-      ))}
-    </ul>
+    <QueryBoundary query={query}>
+      {movies => (
+        <ul>
+          {movies.map(movie => (
+            <li key={movie.id}>{movie.title}</li>
+          ))}
+        </ul>
+      )}
+    </QueryBoundary>
   )
 }
 
@@ -48,15 +52,9 @@ describe('useWatchedMovies', () => {
     mockMovie(601, { name: 'Watched Movie' })
     mockMovie(602, { name: 'Watched Series', type: 'tv-series' })
 
-    await act(async () => {
-      renderWithStore(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
-    })
+    renderWithStore(<Probe />)
 
-    expect(screen.getByText('Watched Movie')).toBeInTheDocument()
+    expect(await screen.findByText('Watched Movie')).toBeInTheDocument()
     expect(screen.getByText('Watched Series')).toBeInTheDocument()
   })
 
@@ -72,26 +70,14 @@ describe('useWatchedMovies', () => {
       ),
     )
 
-    await act(async () => {
-      renderWithStore(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
-    })
+    renderWithStore(<Probe />)
 
-    expect(screen.getByText('Alive')).toBeInTheDocument()
+    expect(await screen.findByText('Alive')).toBeInTheDocument()
     expect(screen.queryByText('Movie 612')).not.toBeInTheDocument()
   })
 
   it('пустые ids → пустой список', async () => {
-    await act(async () => {
-      renderWithStore(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
-    })
+    renderWithStore(<Probe />)
 
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
