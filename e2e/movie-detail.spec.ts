@@ -67,7 +67,7 @@ test('movie detail: unknown id renders the not-found ErrorState', async ({
   page,
 }) => {
   // Единственный тест на error/404-путь во всём сьюте — AGENTS.md
-  // документирует ApiError + AsyncBoundary.errorFallback как переиспользуемый
+  // документирует ApiError + QueryBoundary.errorFallback как переиспользуемый
   // паттерн (MoviePage.tsx: 'Movie not found' ErrorState с рабочим Retry), но
   // до этого ни один e2e-спек не проверял его в реальном браузере. Стоит
   // максимум 1 доп. запрос к живому API (сам 404-ответ) — дёшево относительно
