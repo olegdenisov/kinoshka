@@ -37,7 +37,9 @@ export const Card = ({
       */}
       <div className={s.info}>
         <Link to={`/movie/${movie.id}`} className={s.title}>
-          {movie.title}
+          {/* Ссылка без текста валит Lighthouse `link-name` (a11y-гейт CI), поэтому
+              для фильма без единого названия показываем запасной текст. */}
+          {movie.title || 'Untitled'}
         </Link>
         <div className={s.meta}>
           <span>{movie.year ? movie.year : 'Unknown'}</span>
