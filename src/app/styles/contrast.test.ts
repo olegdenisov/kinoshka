@@ -211,7 +211,7 @@ describe('light-theme WCAG contrast (regression for Lighthouse a11y color-contra
   // (композит ~4.97:1), так что --bg-secondary — худший из реальных случаев.
   const accentWarmSoft = extractRgbaToken(light, 'accent-warm-soft')
 
-  it('--accent-warm on --accent-warm-soft composited over --bg-secondary meets 4.5:1 (GenreSelector.chipActive, SearchSidebar.ratingBtnActive, ActiveFilterChips.chip)', () => {
+  it('--accent-warm on --accent-warm-soft composited over --bg-secondary meets 4.5:1 (GenreSelector.chipActive, FilterPanel.ratingBtnActive, ActiveFilterChips.chip)', () => {
     expect(
       contrastRatioRgb(
         hexToRgb(accentWarm),

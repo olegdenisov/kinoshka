@@ -1,4 +1,11 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { useEffect } from 'react'
@@ -816,5 +823,108 @@ describe('Search (mobile-ветка) — избранное в гриде рез
     await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
 
     expect(localStorage.getItem('kinoshka:favorites')).toBe('[801]')
+  })
+})
+
+// Новые фильтры (Duration и т.п.) живут в свёрнутых группах общего FilterPanel — и в сайдбаре,
+// и в шторке. Проверяем путь «клик в UI → URL → запрос каталога с movieLength», а не только
+// запись в URL: новое поле, забытое в areFiltersEqual, меняет URL, но не перезапрашивает каталог.
+describe('Search — фильтр длительности из UI доходит до запроса каталога', () => {
+  const trackCatalogRequests = () => {
+    const urls: URL[] = []
+    server.use(
+      http.get(CATALOG_ENDPOINT, ({ request }) => {
+        urls.push(new URL(request.url))
+        return HttpResponse.json({
+          docs: [catalogDoc('Short Film', 950)],
+          limit: 10,
+          next: null,
+          hasNext: false,
+          hasPrev: false,
+          total: 1,
+        })
+      }),
+    )
+    return urls
+  }
+
+  const pickShortDuration = async (
+    user: ReturnType<typeof userEvent.setup>,
+  ) => {
+    await user.click(screen.getByText('Duration'))
+    await user.click(
+      await screen.findByRole('button', { name: 'Under 90 min' }),
+    )
+  }
+
+  it('десктоп: пресет в сайдбаре пишет ?duration и уходит запрос с movieLength', async () => {
+    const urls = trackCatalogRequests()
+    const user = userEvent.setup()
+
+    await renderSearch(['/search'])
+    expect(urls.some(u => u.searchParams.has('movieLength'))).toBe(false)
+
+    await pickShortDuration(user)
+
+    expect(lastSearch).toContain('duration=short')
+    await waitFor(() =>
+      expect(
+        urls.some(u => u.searchParams.getAll('movieLength').includes('1-89')),
+      ).toBe(true),
+    )
+  })
+
+  it('мобильная шторка: пресет пишет ?duration и уходит запрос с movieLength', async () => {
+    setViewportWidth(MOBILE_WIDTH)
+    const urls = trackCatalogRequests()
+    const user = userEvent.setup()
+
+    // Свой ?type: кэш каталога модульный, иначе ответы десктопного теста выше берутся из кэша
+    // и запрос не уходит.
+    await renderSearch(['/search?type=series'])
+    await user.click(screen.getByRole('button', { name: /Filters/ }))
+
+    await pickShortDuration(user)
+
+    expect(lastSearch).toContain('duration=short')
+    await waitFor(() =>
+      expect(
+        urls.some(
+          u =>
+            u.searchParams.getAll('movieLength').includes('1-89') &&
+            u.searchParams.getAll('type').includes('tv-series'),
+        ),
+      ).toBe(true),
+    )
+  })
+})
+
+describe('Search — deep link с новыми фильтрами', () => {
+  it('?duration=long&list=top250 раскрывает группы Duration/Collection и показывает чипы', async () => {
+    mockCatalog([catalogDoc('Long Classic', 960)])
+
+    await renderSearch(['/search?duration=long&list=top250'])
+
+    const sidebar = document.querySelector('aside')!
+    for (const title of ['Duration', 'Collection']) {
+      expect(within(sidebar).getByText(title).closest('details')!.open).toBe(
+        true,
+      )
+    }
+    for (const title of ['Country', 'Streaming']) {
+      expect(within(sidebar).getByText(title).closest('details')!.open).toBe(
+        false,
+      )
+    }
+    expect(
+      within(sidebar).getByRole('button', { name: 'Over 2 hours' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(sidebar).getByRole('button', { name: 'Top 250' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+
+    const main = document.querySelector('main')!
+    expect(within(main).getByText('Over 2 hours')).toBeInTheDocument()
+    expect(within(main).getByText('Top 250')).toBeInTheDocument()
   })
 })

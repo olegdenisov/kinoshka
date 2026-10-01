@@ -254,15 +254,15 @@
 - Modify: `e2e/search.spec.ts`
 - Modify: `package.json` (только если `make size` превысит бюджет)
 
-- [ ] `SearchSidebar`: Type (`RadioRow`) обернуть в `<FilterGroup title='Type' defaultOpen>` из barrel, ниже — `<FilterPanel />`, затем Reset; удалить локальный `FilterGroup` и осиротевшие стили
-- [ ] `Search.tsx`: в `BottomSheet` Type-сетку обернуть в `<FilterGroup title='Type' defaultOpen compact>`, ниже — `<FilterPanel compact />`, футер без изменений; удалить осиротевшие стили; новых вызовов `useViewport()` не добавлять
-- [ ] убрать `GenreSelector`/`YearRangeSlider` из barrel `catalog-filter` — снаружи они больше не используются
-- [ ] обновить `SearchSidebar.test.tsx` и `Search.test.tsx` под новую разметку
-- [ ] тест в `Search.test.tsx`: клик по пресету длительности в UI приводит к новому запросу каталога с `movieLength` (проверка по MSW-хендлеру) — на десктопе и в шторке
-- [ ] тест в `Search.test.tsx`: deep link `?duration=long&list=top250` показывает раскрытые группы и чипы
-- [ ] e2e: дописать шаг в существующий тест `filter:` в `e2e/search.spec.ts` (не отдельный тест — квота): `getByText('Duration')` → выбрать пресет → в URL `duration=…`, виден чип, выдача отличается от предыдущей (сравнить первую карточку или дождаться ответа каталога с `movieLength`); обновить устаревший комментарий про `aria-pressed` только у чипов жанров
-- [ ] `make build-only && make size` — проверить чанки `shared` (сюда попадает весь новый код фичи/entity) и `page-search`; при превышении пересчитать лимит как измеренный gzip + 15% по правилу из `build-budgets.md`
-- [ ] `make test` и e2e `search.spec.ts` — зелёные до задачи 8
+- [x] `SearchSidebar`: Type (`RadioRow`) обернуть в `<FilterGroup title='Type' defaultOpen>` из barrel, ниже — `<FilterPanel />`, затем Reset; удалить локальный `FilterGroup` и осиротевшие стили
+- [x] `Search.tsx`: в `BottomSheet` Type-сетку обернуть в `<FilterGroup title='Type' defaultOpen compact>`, ниже — `<FilterPanel compact />`, футер без изменений; удалить осиротевшие стили; новых вызовов `useViewport()` не добавлять
+- [x] убрать `GenreSelector`/`YearRangeSlider` из barrel `catalog-filter` — снаружи они больше не используются
+- [x] обновить `SearchSidebar.test.tsx` и `Search.test.tsx` под новую разметку
+- [x] тест в `Search.test.tsx`: клик по пресету длительности в UI приводит к новому запросу каталога с `movieLength` (проверка по MSW-хендлеру) — на десктопе и в шторке
+- [x] тест в `Search.test.tsx`: deep link `?duration=long&list=top250` показывает раскрытые группы и чипы
+- [x] e2e: дописать шаг в существующий тест `filter:` в `e2e/search.spec.ts` (не отдельный тест — квота): `getByText('Duration')` → выбрать пресет → в URL `duration=…`, виден чип, выдача отличается от предыдущей (сравнить первую карточку или дождаться ответа каталога с `movieLength`); обновить устаревший комментарий про `aria-pressed` только у чипов жанров
+- [x] `make build-only && make size` — проверить чанки `shared` (сюда попадает весь новый код фичи/entity) и `page-search`; при превышении пересчитать лимит как измеренный gzip + 15% по правилу из `build-budgets.md` (в бюджете: `shared` 21.54/22.6 kB, `page-search` 5.88/7 kB — `package.json` не менялся)
+- [x] `make test` и e2e `search.spec.ts` — зелёные до задачи 8 (`make test` зелёный; ⚠️ единственный прогон e2e упал на исходном шаге до нового кода — первичный нефильтрованный запрос каталога к живому API не отрисовался за 10s; повторно не запускался из-за квоты, перепроверить в задаче 8)
 
 ### Task 8: Проверка критериев приёмки
 

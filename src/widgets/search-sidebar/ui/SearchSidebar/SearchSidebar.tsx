@@ -1,27 +1,15 @@
 import type { FilterState } from '@features/catalog-filter'
-import { GenreSelector, YearRangeSlider } from '@features/catalog-filter'
+import { FilterGroup, FilterPanel } from '@features/catalog-filter'
 
 import s from './SearchSidebar.module.css'
 
 type SearchSidebarProps = {
   filters: FilterState
   onFiltersChange: (f: FilterState) => void
-  onToggleGenre: (g: string) => void
   onReset: () => void
   /** Variant A: активный текстовый поиск (?q) не сочетается с фильтрами каталога — сайдбар задизейблен. */
   disabled?: boolean
 }
-
-type FilterGroupProps = React.PropsWithChildren<{
-  title: string
-}>
-
-const FilterGroup = ({ title, children }: FilterGroupProps) => (
-  <div className={s.filterGroup}>
-    <div className={s.filterGroupTitle}>{title}</div>
-    {children}
-  </div>
-)
 
 type RadioRowProps = {
   label: string
@@ -59,13 +47,12 @@ const RadioRow = ({
 export const SearchSidebar = ({
   filters,
   onFiltersChange,
-  onToggleGenre,
   onReset,
   disabled,
 }: SearchSidebarProps) => {
   return (
     <aside className={`${s.sidebar} ${disabled ? s.sidebarDisabled : ''}`}>
-      <FilterGroup title='Type'>
+      <FilterGroup title='Type' defaultOpen>
         <div className={s.radioList}>
           {[
             { key: 'movie', label: 'Movies', count: '42,180' },
@@ -84,45 +71,11 @@ export const SearchSidebar = ({
         </div>
       </FilterGroup>
 
-      <FilterGroup title='Genre'>
-        <GenreSelector
-          selected={filters.genres}
-          onToggle={onToggleGenre}
-          disabled={disabled}
-        />
-      </FilterGroup>
-
-      <FilterGroup title='Year'>
-        <YearRangeSlider
-          yearFrom={filters.yearFrom}
-          yearTo={filters.yearTo}
-          onChange={(yearFrom, yearTo) =>
-            onFiltersChange({ ...filters, yearFrom, yearTo })
-          }
-          disabled={disabled}
-        />
-      </FilterGroup>
-
-      <FilterGroup title='Rating'>
-        <div className={s.ratingList}>
-          {[5, 6, 7, 8, 9].map(r => (
-            <button
-              type='button'
-              key={r}
-              disabled={disabled}
-              onClick={() =>
-                onFiltersChange({
-                  ...filters,
-                  rating: filters.rating === r ? null : r,
-                })
-              }
-              className={`${s.ratingBtn} ${filters.rating === r ? s.ratingBtnActive : ''}`}
-            >
-              {r}+
-            </button>
-          ))}
-        </div>
-      </FilterGroup>
+      <FilterPanel
+        filters={filters}
+        onFiltersChange={onFiltersChange}
+        disabled={disabled}
+      />
 
       <div className={s.resetSection}>
         <button
