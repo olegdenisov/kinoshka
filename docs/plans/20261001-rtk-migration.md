@@ -239,13 +239,13 @@ export const store = makeStore()
 - Modify: `src/app/store.ts`
 - Modify: тесты потребителей (`ProfileAvatar`, страница `/profile`, шапки)
 
-- [ ] `profileSlice`: `{ name }`, редьюсеры `nameSet`, `hydrated`, селектор `selectName`
-- [ ] `useProfile`: `setName`/`clearName` по-прежнему возвращают `boolean` — диспатч, затем сравнение `selectName(store.getState())` с ожидаемым значением (через `useStore<{ profile: ProfileState }>()`); WHY-комментарий со ссылкой на синхронный rollback из Task 2
-- [ ] `normalizeProfileName` применяется до диспатча, как сейчас
-- [ ] имя пользователя не должно попадать в `aria-label`/`title` новыми путями (см. `.claude/rules/sentry.md`)
-- [ ] тесты slice; тест `setName` → `false` и стейт не изменился при отказе `localStorage`
-- [ ] обновить тесты потребителей
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `profileSlice`: `{ name }`, редьюсеры `nameSet`, `hydrated`, селектор `selectName`
+- [x] `useProfile`: `setName`/`clearName` по-прежнему возвращают `boolean` — диспатч, затем сравнение `selectName(store.getState())` с ожидаемым значением (через `useStore<{ profile: ProfileState }>()`); WHY-комментарий со ссылкой на синхронный rollback из Task 2
+- [x] `normalizeProfileName` применяется до диспатча, как сейчас
+- [x] имя пользователя не должно попадать в `aria-label`/`title` новыми путями (см. `.claude/rules/sentry.md`)
+- [x] тесты slice; тест `setName` → `false` и стейт не изменился при отказе `localStorage`
+- [x] обновить тесты потребителей
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 6: Favorites slice и mutation `toggleFavorite` с optimistic update
 

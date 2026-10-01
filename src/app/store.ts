@@ -1,4 +1,9 @@
 import {
+  profileReducer,
+  profileReducerPath,
+  registerProfilePersistence,
+} from '@features/profile'
+import {
   registerThemePersistence,
   themeReducer,
   themeReducerPath,
@@ -21,6 +26,7 @@ import type { StartListening } from '@shared/lib'
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
   [themeReducerPath]: themeReducer,
+  [profileReducerPath]: profileReducer,
   [watchedReducerPath]: watchedReducer,
   [watchlistReducerPath]: watchlistReducer,
 })
@@ -41,6 +47,7 @@ const setupPersistence = (
 ): (() => void) => {
   const unsubscribers: Array<() => void> = [
     registerThemePersistence(store, startListening),
+    registerProfilePersistence(store, startListening),
     registerWatchedPersistence(store, startListening),
     registerWatchlistPersistence(store, startListening),
   ]
