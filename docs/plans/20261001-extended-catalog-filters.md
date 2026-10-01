@@ -211,13 +211,13 @@
 - Create: `src/features/catalog-filter/ui/CountrySelector/CountrySelector.tsx`
 - Create: `src/features/catalog-filter/ui/CountrySelector/CountrySelector.test.tsx`
 
-- [ ] создать `FilterGroup` на `<details>/<summary>`: заголовок, счётчик `count` (скрыт при 0), маркер раскрытия — CSS, варианты `compact`; стили — по текущим `filterGroup`/`fieldLabel`, mobile-first
-- [ ] раскрытие хранить в `useState(defaultOpen)` и синхронизировать через `onToggle` — `open` не привязывать к пропу после монтирования (WHY-комментарий: `FilterPanel` пересчитывает `defaultOpen` из `filters` на каждом рендере, и снятие последнего чипа иначе схлопнуло бы группу под рукой пользователя)
-- [ ] дети закрытой группы не рендерятся до первого раскрытия (флаг «открывалась ли») — WHY-комментарий: словарь стран не должен тратить квоту API, пока группа закрыта
-- [ ] создать `CountrySelector`: `ChipSelect` + `useCountryDictionary()`, `defaults` = `STATIC_FALLBACK_COUNTRIES`, `getLabel` = `getCountryLabel`, `searchable`
-- [ ] тесты `FilterGroup`: `defaultOpen` true/false; счётчик; клик по `summary` раскрывает, дети остаются после сворачивания; смена пропа `defaultOpen` после монтирования не закрывает группу. В jsdom `toggle` приходит асинхронно — после клика ждать через `await screen.findBy…`/`waitFor` (при fake timers — продвинуть таймеры). Клавиатурный тест не писать: `user-event` не превращает Enter на `summary` в click, это нативное поведение браузера (см. Post-Completion)
-- [ ] тесты `CountrySelector`: шорт-лист до загрузки словаря; полный список после «Показать все»; выбор вызывает `onToggle` с русским каноническим именем
-- [ ] `make test` — зелёные до задачи 6
+- [x] создать `FilterGroup` на `<details>/<summary>`: заголовок, счётчик `count` (скрыт при 0), маркер раскрытия — CSS, варианты `compact`; стили — по текущим `filterGroup`/`fieldLabel`, mobile-first
+- [x] раскрытие хранить в `useState(defaultOpen)` и синхронизировать через `onToggle` — `open` не привязывать к пропу после монтирования (WHY-комментарий: `FilterPanel` пересчитывает `defaultOpen` из `filters` на каждом рендере, и снятие последнего чипа иначе схлопнуло бы группу под рукой пользователя)
+- [x] дети закрытой группы не рендерятся до первого раскрытия (флаг «открывалась ли») — WHY-комментарий: словарь стран не должен тратить квоту API, пока группа закрыта
+- [x] создать `CountrySelector`: `ChipSelect` + `useCountryDictionary()`, `defaults` = `STATIC_FALLBACK_COUNTRIES`, `getLabel` = `getCountryLabel`, `searchable`
+- [x] тесты `FilterGroup`: `defaultOpen` true/false; счётчик; клик по `summary` раскрывает, дети остаются после сворачивания; смена пропа `defaultOpen` после монтирования не закрывает группу. В jsdom `toggle` приходит асинхронно — после клика ждать через `await screen.findBy…`/`waitFor` (при fake timers — продвинуть таймеры). Клавиатурный тест не писать: `user-event` не превращает Enter на `summary` в click, это нативное поведение браузера (см. Post-Completion)
+- [x] тесты `CountrySelector`: шорт-лист до загрузки словаря; полный список после «Показать все»; выбор вызывает `onToggle` с русским каноническим именем
+- [x] `make test` — зелёные до задачи 6
 
 ### Task 6: Общий FilterPanel
 
