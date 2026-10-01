@@ -23,7 +23,6 @@ export const mapDtoToMovieDetail = (doc: MovieDtoV14): MovieDetail => ({
   tagline: doc.slogan ?? '',
   synopsis: doc.description ?? '',
   shortSynopsis: doc.shortDescription ?? undefined,
-  backdrop: doc.backdrop?.previewUrl ?? undefined,
   trailerUrl: doc.videos?.trailers
     ?.map(trailer => trailer.url)
     .filter((url): url is string => !!url)[0],

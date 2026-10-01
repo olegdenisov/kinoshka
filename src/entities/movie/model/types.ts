@@ -39,7 +39,6 @@ export type MovieDetail = Movie & {
   tagline: string
   synopsis: string
   shortSynopsis?: string
-  backdrop?: string
   trailerUrl?: string
   cast: CastMember[]
   crew: CrewMember[]

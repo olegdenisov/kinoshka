@@ -245,6 +245,18 @@ describe('Movie — Watchlist', () => {
   })
 })
 
+describe('Movie — фон героя', () => {
+  it('фон героя — только градиент, без фото-бэкдропа (оно мешало читать текст)', () => {
+    const { container } = renderMovie()
+
+    expect(
+      container.querySelector('[class*="backdropGradient"]'),
+    ).not.toBeNull()
+    expect(container.querySelector('[class*="backdropImage"]')).toBeNull()
+    expect(container.querySelector('[style*="url("]')).toBeNull()
+  })
+})
+
 describe('Movie — fallback-ветки при отсутствующих опциональных полях', () => {
   it('Hero: votesKp/criticScore отсутствуют — рейтинги "—", кнопка трейлера скрыта', () => {
     renderMovie(MOVIE_NO_OPTIONALS, [])

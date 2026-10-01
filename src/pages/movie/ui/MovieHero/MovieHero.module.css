@@ -15,17 +15,10 @@
   filter: blur(40px);
 }
 
-.backdropImage {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center 20%;
-}
-
 .backdropOverlay {
   position: absolute;
   inset: 0;
-  /* Scrim over the backdrop photo — stays theme-reactive so the
+  /* Scrim over the backdrop gradient — stays theme-reactive so the
      theme-reactive text painted on top of it (.heading/.tagline/.ratings/
      .synopsis etc.) keeps sufficient contrast in both themes; stops are
      built from var(--bg-primary) via color-mix instead of a hardcoded
