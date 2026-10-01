@@ -7,6 +7,10 @@ paths:
   - 'src/entities/movie/hooks/useGenreDictionary.ts'
   - 'src/entities/movie/api/genreDictionaryCache.ts'
   - 'src/entities/movie/model/genre.ts'
+  - 'src/entities/movie/api/createDictionaryCache.ts'
+  - 'src/entities/movie/api/countryDictionaryCache.ts'
+  - 'src/entities/movie/hooks/useCountryDictionary.ts'
+  - 'src/entities/movie/model/country.ts'
 ---
 
 # `/search`, filters, genres
@@ -22,3 +26,10 @@ paths:
 
 - The canonical filter value is the **Russian** `name` from the live dictionary; English is display-only. Result cards show genres in Russian — accepted. Legacy English `?genres=Drama` links match nothing — accepted, no migration.
 - `useGenreDictionary()` is **synchronous**, not Suspense (cached/static fallback + background refresh) — no `AsyncBoundary` needed.
+- The same rule applies to countries — canonical value is the Russian `name`, the API has no `enName`, English labels exist only for the shortlist.
+
+## Filters
+
+- `list` (collection) is single-select because the API ORs multiple `lists` values, which produces unpredictable results when combined with AND-filters like genre/country.
+- Platforms and lists are hardcoded in `filterOptions.ts` — the API has no platform dictionary, and `/list` is dominated by auto-generated collections (`country1`, `year2018`, etc.) that are not useful as user-facing filters.
+- Every new `FilterState` field must also be added to `areFiltersEqual` in `useCatalogUpdateStatus.ts`, otherwise a URL change updates `activeChips` and the display but does not refetch the catalog.

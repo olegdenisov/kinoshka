@@ -278,10 +278,10 @@
 
 **Model:** haiku — точный текст и пути заданы планом
 
-- [ ] в frontmatter `paths:` файла `.claude/rules/search-catalog.md` добавить: `src/entities/movie/api/createDictionaryCache.ts`, `src/entities/movie/api/countryDictionaryCache.ts`, `src/entities/movie/hooks/useCountryDictionary.ts`, `src/entities/movie/model/country.ts`
-- [ ] в раздел про жанры дописать (на английском): the same rule applies to countries — canonical value is the Russian `name`, the API has no `enName`, English labels exist only for the shortlist
-- [ ] добавить раздел `## Filters` (на английском, только решения): `list` is single-select because the API ORs multiple `lists`; platforms and lists are hardcoded in `filterOptions.ts` — the API has no platform dictionary and `/list` is dominated by auto-generated collections; a new `FilterState` field must also be added to `areFiltersEqual` in `useCatalogUpdateStatus.ts`, otherwise the URL changes but the catalog is not refetched
-- [ ] перенести этот план в `docs/plans/completed/`
+- [x] в frontmatter `paths:` файла `.claude/rules/search-catalog.md` добавить: `src/entities/movie/api/createDictionaryCache.ts`, `src/entities/movie/api/countryDictionaryCache.ts`, `src/entities/movie/hooks/useCountryDictionary.ts`, `src/entities/movie/model/country.ts`
+- [x] в раздел про жанры дописать (на английском): the same rule applies to countries — canonical value is the Russian `name`, the API has no `enName`, English labels exist only for the shortlist
+- [x] добавить раздел `## Filters` (на английском, только решения): `list` is single-select because the API ORs multiple `lists`; platforms and lists are hardcoded in `filterOptions.ts` — the API has no platform dictionary and `/list` is dominated by auto-generated collections; a new `FilterState` field must also be added to `areFiltersEqual` in `useCatalogUpdateStatus.ts`, otherwise the URL changes but the catalog is not refetched
+- [x] перенести этот план в `docs/plans/completed/` (harness moves the plan after reviews)
 
 ## Post-Completion
 
