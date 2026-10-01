@@ -1,8 +1,9 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router'
 
+import { renderWithStore } from '../../test/renderWithStore'
 import { server } from '../../test/setup'
 import { MoviePage } from './MoviePage'
 
@@ -71,10 +72,10 @@ const mockImages = (docs: Record<string, unknown>[] = []) => {
 }
 
 const renderMoviePage = async (initialEntry: string) => {
-  let result: ReturnType<typeof render> | undefined
+  let result: ReturnType<typeof renderWithStore> | undefined
 
   await act(async () => {
-    result = render(
+    result = renderWithStore(
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route path='/movie/:id' element={<MoviePage />} />
@@ -96,7 +97,7 @@ describe('MoviePage — /movie/1, пока запрос не завершён', 
     server.use(http.get('*/v1.5/movie/1', () => new Promise(() => {})))
     mockImages([])
 
-    const { container } = render(
+    const { container } = renderWithStore(
       <MemoryRouter initialEntries={['/movie/1']}>
         <Routes>
           <Route path='/movie/:id' element={<MoviePage />} />

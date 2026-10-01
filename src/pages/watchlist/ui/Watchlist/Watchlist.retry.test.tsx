@@ -1,8 +1,9 @@
 import type * as EntitiesMovie from '@entities/movie'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { vi } from 'vitest'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { Watchlist } from './Watchlist'
 
 // Мокаем весь `getMoviesByIds` (а не MSW-эндпоинт) для точного контроля тайминга —
@@ -80,7 +81,7 @@ describe('Watchlist — Retry реально переинвалидирует к
     localStorage.setItem(WATCHLIST_KEY, JSON.stringify([1]))
 
     await act(async () => {
-      render(
+      renderWithStore(
         <MemoryRouter>
           <Watchlist />
         </MemoryRouter>,

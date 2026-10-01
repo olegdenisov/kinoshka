@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 
+import { createStoreWrapper } from '../../../test/renderWithStore'
 import { useWatched } from './useWatched'
 import { watchedSlot } from './watchedStorage'
 
@@ -9,14 +10,18 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('useWatched', () => {
   it('по умолчанию список пуст', () => {
-    const { result } = renderHook(() => useWatched())
+    const { result } = renderHook(() => useWatched(), {
+      wrapper: createStoreWrapper(),
+    })
 
     expect(result.current.ids).toEqual([])
     expect(result.current.isWatched(1)).toBe(false)
   })
 
   it('toggle добавляет отсутствующий id и убирает присутствующий', () => {
-    const { result } = renderHook(() => useWatched())
+    const { result } = renderHook(() => useWatched(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.toggle(1))
     expect(result.current.ids).toEqual([1])
@@ -28,7 +33,9 @@ describe('useWatched', () => {
   })
 
   it('два toggle подряд в одном act не затирают друг друга', () => {
-    const { result } = renderHook(() => useWatched())
+    const { result } = renderHook(() => useWatched(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => {
       result.current.toggle(1)
@@ -40,7 +47,9 @@ describe('useWatched', () => {
 
   it('toggle убирает один id из середины, порядок добавления сохраняется', () => {
     watchedSlot.set([1, 2, 3])
-    const { result } = renderHook(() => useWatched())
+    const { result } = renderHook(() => useWatched(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.toggle(2))
     expect(result.current.ids).toEqual([1, 3])
@@ -50,7 +59,9 @@ describe('useWatched', () => {
   })
 
   it('сохраняет в localStorage под ключом kinoshka:watched', () => {
-    const { result } = renderHook(() => useWatched())
+    const { result } = renderHook(() => useWatched(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.toggle(7))
 
@@ -60,13 +71,17 @@ describe('useWatched', () => {
   it('невалидное значение в storage → []', () => {
     localStorage.setItem('kinoshka:watched', JSON.stringify(['a', 'b']))
 
-    const { result } = renderHook(() => useWatched())
+    const { result } = renderHook(() => useWatched(), {
+      wrapper: createStoreWrapper(),
+    })
 
     expect(result.current.ids).toEqual([])
   })
 
   it('недоступное хранилище: toggle не меняет состояние и не бросает', () => {
-    const { result } = renderHook(() => useWatched())
+    const { result } = renderHook(() => useWatched(), {
+      wrapper: createStoreWrapper(),
+    })
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('quota', 'QuotaExceededError')
     })

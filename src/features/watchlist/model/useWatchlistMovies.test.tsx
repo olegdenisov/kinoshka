@@ -1,7 +1,8 @@
 import { AsyncBoundary } from '@shared/ui'
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { renderWithStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import { useWatchlistMovies } from './useWatchlistMovies'
 import { watchlistSlot } from './watchlistStorage'
@@ -59,7 +60,7 @@ describe('useWatchlistMovies', () => {
     mockMovie(702, { name: 'Watchlist Series', type: 'tv-series' })
 
     await act(async () => {
-      render(
+      renderWithStore(
         <AsyncBoundary>
           <Probe />
         </AsyncBoundary>,
@@ -77,7 +78,7 @@ describe('useWatchlistMovies', () => {
     mockError(712, 404)
 
     await act(async () => {
-      render(
+      renderWithStore(
         <AsyncBoundary>
           <Probe />
         </AsyncBoundary>,
@@ -94,7 +95,7 @@ describe('useWatchlistMovies', () => {
     mockError(722, 404)
 
     await act(async () => {
-      render(
+      renderWithStore(
         <AsyncBoundary>
           <Probe />
         </AsyncBoundary>,
@@ -109,7 +110,7 @@ describe('useWatchlistMovies', () => {
     mockError(731, 500)
 
     await act(async () => {
-      render(
+      renderWithStore(
         <AsyncBoundary>
           <Probe />
         </AsyncBoundary>,
@@ -124,7 +125,7 @@ describe('useWatchlistMovies', () => {
 
   it('пустые ids → пустой список', async () => {
     await act(async () => {
-      render(
+      renderWithStore(
         <AsyncBoundary>
           <Probe />
         </AsyncBoundary>,

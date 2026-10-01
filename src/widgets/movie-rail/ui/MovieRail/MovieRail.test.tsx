@@ -1,8 +1,9 @@
 import type { Movie, PopularMovie } from '@entities/movie'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { MovieRail } from './MovieRail'
 
 const makeMovie = (id: number): Movie => ({
@@ -24,7 +25,7 @@ const makePopularMovie = (id: number, position: number): PopularMovie => ({
 })
 
 const renderRail = (items: (Movie | PopularMovie)[], href?: string) =>
-  render(
+  renderWithStore(
     <MemoryRouter>
       <MovieRail
         title='Popular'

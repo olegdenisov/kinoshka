@@ -1,7 +1,8 @@
 import { AsyncBoundary } from '@shared/ui'
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { renderWithStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import { favoritesSlot } from './favoritesStorage'
 import { useFavoriteMovies } from './useFavoriteMovies'
@@ -48,7 +49,7 @@ describe('useFavoriteMovies', () => {
     mockMovie(502, { name: 'Second Favorite' })
 
     await act(async () => {
-      render(
+      renderWithStore(
         <AsyncBoundary>
           <Probe />
         </AsyncBoundary>,

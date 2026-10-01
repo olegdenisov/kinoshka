@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 
+import { createStoreWrapper } from '../../../test/renderWithStore'
 import { useWatchlist } from './useWatchlist'
 import { watchlistSlot } from './watchlistStorage'
 
@@ -9,14 +10,18 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('useWatchlist', () => {
   it('по умолчанию список пуст', () => {
-    const { result } = renderHook(() => useWatchlist())
+    const { result } = renderHook(() => useWatchlist(), {
+      wrapper: createStoreWrapper(),
+    })
 
     expect(result.current.ids).toEqual([])
     expect(result.current.isInWatchlist(1)).toBe(false)
   })
 
   it('toggle добавляет отсутствующий id и убирает присутствующий', () => {
-    const { result } = renderHook(() => useWatchlist())
+    const { result } = renderHook(() => useWatchlist(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.toggle(1))
     expect(result.current.ids).toEqual([1])
@@ -28,7 +33,9 @@ describe('useWatchlist', () => {
   })
 
   it('два toggle подряд в одном act не затирают друг друга', () => {
-    const { result } = renderHook(() => useWatchlist())
+    const { result } = renderHook(() => useWatchlist(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => {
       result.current.toggle(1)
@@ -40,7 +47,9 @@ describe('useWatchlist', () => {
 
   it('toggle убирает один id из середины, порядок добавления сохраняется', () => {
     watchlistSlot.set([1, 2, 3])
-    const { result } = renderHook(() => useWatchlist())
+    const { result } = renderHook(() => useWatchlist(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.toggle(2))
     expect(result.current.ids).toEqual([1, 3])
@@ -50,8 +59,12 @@ describe('useWatchlist', () => {
   })
 
   it('два экземпляра хука синхронизируются через слот', () => {
-    const first = renderHook(() => useWatchlist())
-    const second = renderHook(() => useWatchlist())
+    const first = renderHook(() => useWatchlist(), {
+      wrapper: createStoreWrapper(),
+    })
+    const second = renderHook(() => useWatchlist(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => first.result.current.toggle(5))
 
@@ -60,7 +73,9 @@ describe('useWatchlist', () => {
   })
 
   it('сохраняет в localStorage под ключом kinoshka:watchlist', () => {
-    const { result } = renderHook(() => useWatchlist())
+    const { result } = renderHook(() => useWatchlist(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.toggle(7))
 
@@ -70,13 +85,17 @@ describe('useWatchlist', () => {
   it('невалидное значение в storage → []', () => {
     localStorage.setItem('kinoshka:watchlist', JSON.stringify(['a', 'b']))
 
-    const { result } = renderHook(() => useWatchlist())
+    const { result } = renderHook(() => useWatchlist(), {
+      wrapper: createStoreWrapper(),
+    })
 
     expect(result.current.ids).toEqual([])
   })
 
   it('недоступное хранилище: toggle не меняет состояние и не бросает', () => {
-    const { result } = renderHook(() => useWatchlist())
+    const { result } = renderHook(() => useWatchlist(), {
+      wrapper: createStoreWrapper(),
+    })
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('quota', 'QuotaExceededError')
     })

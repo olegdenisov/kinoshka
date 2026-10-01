@@ -1,16 +1,10 @@
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { useEffect } from 'react'
 import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { Search } from './Search'
 
@@ -132,9 +126,9 @@ const renderSearch = async (
   extra?: React.ReactNode,
 ) => {
   lastSearch = ''
-  let result: ReturnType<typeof render> | undefined
+  let result: ReturnType<typeof renderWithStore> | undefined
   await act(async () => {
-    result = render(
+    result = renderWithStore(
       <MemoryRouter initialEntries={initialEntries}>
         <Search />
         {extra}
