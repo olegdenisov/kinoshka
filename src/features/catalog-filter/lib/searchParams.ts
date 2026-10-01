@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import type { FilterState } from '../model/useFilterState'
+import { DURATION_VALUES } from './filterOptions'
 
 /** URL-ключи фильтров (без сортировки) — используются и для чтения/записи, и для удаления. */
 export const FILTER_URL_KEYS = [
@@ -9,6 +10,10 @@ export const FILTER_URL_KEYS = [
   'yearFrom',
   'yearTo',
   'rating',
+  'countries',
+  'duration',
+  'platforms',
+  'list',
 ] as const
 
 /**
@@ -25,6 +30,10 @@ export const EMPTY_FILTERS: FilterState = {
   yearFrom: null,
   yearTo: null,
   rating: null,
+  countries: [],
+  duration: null,
+  platforms: [],
+  list: null,
 }
 
 // Zod-схема границы URL: мусор (нечисловой год/рейтинг вне 0-10 и т.п.) → весь FilterState
@@ -35,6 +44,10 @@ const FilterStateSchema = z.object({
   yearFrom: z.number().finite().int().nullable(),
   yearTo: z.number().finite().int().nullable(),
   rating: z.number().finite().min(0).max(10).nullable(),
+  countries: z.array(z.string()),
+  duration: z.enum(DURATION_VALUES).nullable(),
+  platforms: z.array(z.string()),
+  list: z.string().nullable(),
 }) satisfies z.ZodType<FilterState>
 
 const parseIntOrNull = (raw: string | null): number | null => {
@@ -44,18 +57,23 @@ const parseIntOrNull = (raw: string | null): number | null => {
   return Number(raw)
 }
 
+const parseCsv = (raw: string | null): string[] =>
+  raw ? raw.split(',').filter(Boolean) : []
+
 /** URLSearchParams → FilterState. Невалидные/мусорные значения → EMPTY_FILTERS (не крашит). */
 export const getFilterFromSearchParams = (
   searchParams: URLSearchParams,
 ): FilterState => {
-  const rawGenres = searchParams.get('genres')
-
   const candidate = {
     type: searchParams.get('type') || null,
-    genres: rawGenres ? rawGenres.split(',').filter(Boolean) : [],
+    genres: parseCsv(searchParams.get('genres')),
     yearFrom: parseIntOrNull(searchParams.get('yearFrom')),
     yearTo: parseIntOrNull(searchParams.get('yearTo')),
     rating: parseIntOrNull(searchParams.get('rating')),
+    countries: parseCsv(searchParams.get('countries')),
+    duration: searchParams.get('duration') || null,
+    platforms: parseCsv(searchParams.get('platforms')),
+    list: searchParams.get('list') || null,
   }
 
   const parsed = FilterStateSchema.safeParse(candidate)
@@ -83,6 +101,18 @@ export const filtersToSearchParams = (
   }
   if (filters.rating != null) {
     params.set('rating', String(filters.rating))
+  }
+  if (filters.countries.length > 0) {
+    params.set('countries', filters.countries.join(','))
+  }
+  if (filters.duration) {
+    params.set('duration', filters.duration)
+  }
+  if (filters.platforms.length > 0) {
+    params.set('platforms', filters.platforms.join(','))
+  }
+  if (filters.list) {
+    params.set('list', filters.list)
   }
 
   return params

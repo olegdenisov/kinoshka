@@ -1,6 +1,7 @@
 import { trackEvent } from '@shared/lib'
 import { useSearchParams } from 'react-router'
 
+import type { Duration } from '../lib/filterOptions'
 import { getGenreLabel } from '../lib/genreMap'
 import {
   EMPTY_FILTERS,
@@ -15,6 +16,10 @@ export type FilterState = {
   yearFrom: number | null
   yearTo: number | null
   rating: number | null
+  countries: string[]
+  duration: Duration | null
+  platforms: string[]
+  list: string | null
 }
 
 export type ActiveChip = {
@@ -31,7 +36,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 /**
  * URL — единственный источник истины для фильтров и сортировки (`?type`, `?genres`,
- * `?yearFrom`, `?yearTo`, `?rating`, `?sort`). Хук не хранит собственный стейт —
+ * `?yearFrom`, `?yearTo`, `?rating`, `?countries`, `?duration`, `?platforms`, `?list`, `?sort`). Хук не хранит собственный стейт —
  * каждое чтение выводится из `useSearchParams`, каждая запись идёт через
  * `setSearchParams(..., { replace: true })`, не задевая посторонние параметры (`?q`, `?page`).
  */

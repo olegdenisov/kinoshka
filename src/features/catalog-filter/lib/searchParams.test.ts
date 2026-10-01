@@ -19,6 +19,7 @@ describe('getFilterFromSearchParams', () => {
     const result = getFilterFromSearchParams(sp)
 
     expect(result).toEqual<FilterState>({
+      ...EMPTY_FILTERS,
       type: 'movie',
       genres: ['Drama', 'Action'],
       yearFrom: 2020,
@@ -66,6 +67,7 @@ describe('filtersToSearchParams', () => {
 
   it('заполненный FilterState → соответствующие ключи в URL', () => {
     const filters: FilterState = {
+      ...EMPTY_FILTERS,
       type: 'movie',
       genres: ['Drama', 'Action'],
       yearFrom: 2020,
@@ -83,6 +85,7 @@ describe('filtersToSearchParams', () => {
 
   it('null/пустые поля не пишутся в URL', () => {
     const filters: FilterState = {
+      ...EMPTY_FILTERS,
       type: null,
       genres: [],
       yearFrom: null,
@@ -100,6 +103,7 @@ describe('filtersToSearchParams', () => {
 
   it('round-trip: getFilterFromSearchParams(filtersToSearchParams(f)) === f', () => {
     const filters: FilterState = {
+      ...EMPTY_FILTERS,
       type: 'anime',
       genres: ['Fantasy'],
       yearFrom: 2018,
@@ -113,12 +117,86 @@ describe('filtersToSearchParams', () => {
   })
 })
 
+describe('новые поля: countries, duration, platforms, list', () => {
+  const roundTrip = (filters: FilterState) =>
+    getFilterFromSearchParams(filtersToSearchParams(filters))
+
+  it.each<[string, Partial<FilterState>]>([
+    ['countries', { countries: ['США', 'Южная Корея'] }],
+    ['duration', { duration: 'medium' }],
+    ['platforms', { platforms: ['Иви', 'Kinopoisk HD'] }],
+    ['list', { list: '100_greatest_movies_XXI' }],
+  ])('round-trip %s', (_, patch) => {
+    const filters: FilterState = { ...EMPTY_FILTERS, ...patch }
+    expect(roundTrip(filters)).toEqual(filters)
+  })
+
+  it('round-trip всех полей сразу', () => {
+    const filters: FilterState = {
+      type: 'movie',
+      genres: ['драма'],
+      yearFrom: 2000,
+      yearTo: 2020,
+      rating: 7,
+      countries: ['Франция', 'Италия'],
+      duration: 'long',
+      platforms: ['Okko', 'КИОН'],
+      list: 'top250',
+    }
+    expect(roundTrip(filters)).toEqual(filters)
+  })
+
+  it('пишет новые поля в URL: списки через запятую', () => {
+    const params = filtersToSearchParams({
+      ...EMPTY_FILTERS,
+      countries: ['США', 'Франция'],
+      duration: 'short',
+      platforms: ['Иви', 'Okko'],
+      list: 'top500',
+    })
+    expect(params.get('countries')).toBe('США,Франция')
+    expect(params.get('duration')).toBe('short')
+    expect(params.get('platforms')).toBe('Иви,Okko')
+    expect(params.get('list')).toBe('top500')
+  })
+
+  it('пустые/null новые поля не пишутся в URL', () => {
+    const params = filtersToSearchParams(EMPTY_FILTERS)
+    expect(params.has('countries')).toBe(false)
+    expect(params.has('duration')).toBe(false)
+    expect(params.has('platforms')).toBe(false)
+    expect(params.has('list')).toBe(false)
+  })
+
+  it('?duration=foo (неизвестный пресет) → весь FilterState откатывается на дефолт', () => {
+    const sp = new URLSearchParams('duration=foo&type=movie&countries=США')
+    expect(getFilterFromSearchParams(sp)).toEqual(EMPTY_FILTERS)
+  })
+
+  it('пустые значения в URL (?countries=&platforms=&list=&duration=) → пустые массивы/null', () => {
+    const sp = new URLSearchParams('countries=&platforms=&list=&duration=')
+    expect(getFilterFromSearchParams(sp)).toEqual(EMPTY_FILTERS)
+  })
+
+  it('лишние запятые в списках отбрасываются', () => {
+    const sp = new URLSearchParams('countries=США,,Франция,&platforms=,Okko')
+    const result = getFilterFromSearchParams(sp)
+    expect(result.countries).toEqual(['США', 'Франция'])
+    expect(result.platforms).toEqual(['Okko'])
+  })
+})
+
 describe('stripFilterAndSortParams', () => {
-  it('удаляет все 6 ключей (5 фильтров + sort), не трогая q/page', () => {
+  it('удаляет все ключи фильтров и sort, не трогая q/page', () => {
     const sp = new URLSearchParams(
-      'q=inception&page=3&type=movie&genres=Drama,Action&yearFrom=2020&yearTo=2025&rating=7&sort=Newest',
+      'q=inception&page=3&type=movie&genres=Drama,Action&yearFrom=2020&yearTo=2025&rating=7&countries=США&duration=long&platforms=Okko&list=top250&sort=Newest',
     )
     const result = stripFilterAndSortParams(sp)
+
+    expect(result.has('countries')).toBe(false)
+    expect(result.has('duration')).toBe(false)
+    expect(result.has('platforms')).toBe(false)
+    expect(result.has('list')).toBe(false)
 
     expect(result.has('type')).toBe(false)
     expect(result.has('genres')).toBe(false)

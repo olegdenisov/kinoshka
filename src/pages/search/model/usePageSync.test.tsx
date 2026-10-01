@@ -1,4 +1,5 @@
 import type { FilterState } from '@features/catalog-filter'
+import { EMPTY_FILTERS } from '@features/catalog-filter'
 import { act, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
@@ -6,14 +7,6 @@ import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
 import type * as ReactRouterModule from 'react-router'
 
 import { usePageSync } from './usePageSync'
-
-const EMPTY_FILTERS: FilterState = {
-  type: null,
-  genres: [],
-  yearFrom: null,
-  yearTo: null,
-  rating: null,
-}
 
 /** Перехватывает опции (`replace: true`), с которыми хук вызывает `setSearchParams`. */
 let setSearchParamsCalls: Array<[unknown, unknown]> = []

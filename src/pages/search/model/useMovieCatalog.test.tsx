@@ -1,5 +1,5 @@
 import { filtersToParams } from '@features/catalog-filter'
-import type { FilterState } from '@features/catalog-filter'
+import { EMPTY_FILTERS } from '@features/catalog-filter'
 import { AsyncBoundary } from '@shared/ui'
 import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
@@ -17,14 +17,6 @@ const importUseMovieCatalog = async () => {
   vi.resetModules()
   const mod = await import('./useMovieCatalog')
   return mod.useMovieCatalog
-}
-
-const EMPTY_FILTERS: FilterState = {
-  type: null,
-  genres: [],
-  yearFrom: null,
-  yearTo: null,
-  rating: null,
 }
 
 const SEARCH_ENDPOINT = '*/v1.5/movie/search'

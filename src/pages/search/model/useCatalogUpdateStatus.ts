@@ -1,13 +1,21 @@
 import type { FilterState } from '@features/catalog-filter'
 import { useDeferredValue, useEffect, useState } from 'react'
 
+const areArraysEqual = (a: string[], b: string[]): boolean =>
+  a.length === b.length && a.every((item, index) => item === b[index])
+
+// Поля перечислены поимённо: новое поле FilterState, не добавленное сюда, меняет URL,
+// но не deferredFilters — каталог не перезапрашивается (typecheck этого не ловит).
 const areFiltersEqual = (a: FilterState, b: FilterState): boolean =>
   a.type === b.type &&
   a.yearFrom === b.yearFrom &&
   a.yearTo === b.yearTo &&
   a.rating === b.rating &&
-  a.genres.length === b.genres.length &&
-  a.genres.every((genre, index) => genre === b.genres[index])
+  a.duration === b.duration &&
+  a.list === b.list &&
+  areArraysEqual(a.genres, b.genres) &&
+  areArraysEqual(a.countries, b.countries) &&
+  areArraysEqual(a.platforms, b.platforms)
 
 export type CatalogUpdateStatusParams = {
   query: string

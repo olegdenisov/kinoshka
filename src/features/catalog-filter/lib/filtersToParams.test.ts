@@ -1,13 +1,6 @@
 import type { FilterState } from '../model/useFilterState'
 import { filtersToParams } from './filtersToParams'
-
-const EMPTY_FILTERS: FilterState = {
-  type: null,
-  genres: [],
-  yearFrom: null,
-  yearTo: null,
-  rating: null,
-}
+import { EMPTY_FILTERS } from './searchParams'
 
 describe('filtersToParams', () => {
   it('пустой фильтр без sort → { limit: 12 }', () => {
@@ -95,11 +88,16 @@ describe('filtersToParams', () => {
 
   it('комбинация всех фильтров + sort собирается в один объект', () => {
     const filters: FilterState = {
+      ...EMPTY_FILTERS,
       type: 'movie',
       genres: ['драма'],
       yearFrom: 2020,
       yearTo: 2024,
       rating: 6,
+      countries: ['США'],
+      duration: 'medium',
+      platforms: ['Okko'],
+      list: 'top250',
     }
     const params = filtersToParams(filters, 'Highest rated')
 
@@ -109,8 +107,50 @@ describe('filtersToParams', () => {
       'genres.name': ['драма'],
       year: ['2020-2024'],
       'rating.kp': ['6-10'],
+      'countries.name': ['США'],
+      movieLength: ['90-120'],
+      'watchability.items.name': ['Okko'],
+      lists: ['top250'],
       sortField: ['rating.kp'],
       sortType: ['-1'],
     })
+  })
+
+  it.each([
+    ['short', '1-89'],
+    ['medium', '90-120'],
+    ['long', '121-999'],
+  ] as const)('duration "%s" → movieLength: ["%s"]', (duration, range) => {
+    const params = filtersToParams({ ...EMPTY_FILTERS, duration })
+    expect(params.movieLength).toEqual([range])
+  })
+
+  it('countries → "countries.name" как есть', () => {
+    const params = filtersToParams({
+      ...EMPTY_FILTERS,
+      countries: ['США', 'Франция'],
+    })
+    expect(params['countries.name']).toEqual(['США', 'Франция'])
+  })
+
+  it('platforms → "watchability.items.name" как есть', () => {
+    const params = filtersToParams({
+      ...EMPTY_FILTERS,
+      platforms: ['Иви', 'Okko'],
+    })
+    expect(params['watchability.items.name']).toEqual(['Иви', 'Okko'])
+  })
+
+  it('list → lists: [slug]', () => {
+    const params = filtersToParams({ ...EMPTY_FILTERS, list: 'top250' })
+    expect(params.lists).toEqual(['top250'])
+  })
+
+  it('пустые новые поля не попадают в параметры', () => {
+    const params = filtersToParams(EMPTY_FILTERS)
+    expect(params['countries.name']).toBeUndefined()
+    expect(params.movieLength).toBeUndefined()
+    expect(params['watchability.items.name']).toBeUndefined()
+    expect(params.lists).toBeUndefined()
   })
 })

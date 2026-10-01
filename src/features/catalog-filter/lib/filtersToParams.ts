@@ -1,6 +1,7 @@
 import type { MovieControllerFindManyByQueryV15Data } from '@shared/api'
 
 import type { FilterState } from '../model/useFilterState'
+import { DURATION_OPTIONS } from './filterOptions'
 
 export type CatalogQueryParams = NonNullable<
   MovieControllerFindManyByQueryV15Data['query']
@@ -69,6 +70,27 @@ export const filtersToParams = (
 
   if (filters.rating != null) {
     params['rating.kp'] = [`${filters.rating}-10`]
+  }
+
+  if (filters.countries.length > 0) {
+    params['countries.name'] = filters.countries
+  }
+
+  const durationRange = DURATION_OPTIONS.find(
+    option => option.value === filters.duration,
+  )?.range
+  if (durationRange) {
+    params.movieLength = [durationRange]
+  }
+
+  if (filters.platforms.length > 0) {
+    params['watchability.items.name'] = filters.platforms
+  }
+
+  if (filters.list) {
+    // Одиночный выбор: несколько `lists` API объединяет по ИЛИ, что рядом с остальными
+    // И-фильтрами даёт непредсказуемую выдачу.
+    params.lists = [filters.list]
   }
 
   const sortMapping = sort ? SORT_MAP[sort] : undefined
