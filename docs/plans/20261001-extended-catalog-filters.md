@@ -120,18 +120,18 @@
 - Modify: `src/pages/search/model/useMovieCatalog.test.tsx`
 - Modify: `src/widgets/search-sidebar/ui/SearchSidebar/SearchSidebar.test.tsx`
 
-- [ ] создать ветку `feat/extended-catalog-filters`
-- [ ] создать `filterOptions.ts`: `DURATION_OPTIONS`, `PLATFORM_OPTIONS`, `LIST_OPTIONS`, `COUNTRY_LABELS` и `getDurationLabel`/`getPlatformLabel`/`getListLabel`/`getCountryLabel` со значениями из Technical Details
-- [ ] добавить в `FilterState` поля `countries`, `duration`, `platforms`, `list`; обновить `EMPTY_FILTERS`, `FILTER_URL_KEYS`, `FilterStateSchema`
-- [ ] дополнить `getFilterFromSearchParams` и `filtersToSearchParams` новыми ключами (пустые/`null` в URL не пишутся)
-- [ ] дополнить `filtersToParams`: `countries.name`, `movieLength` из пресета, `watchability.items.name`, `lists`
-- [ ] дополнить `areFiltersEqual` в `useCatalogUpdateStatus.ts` новыми полями — без этого смена только нового фильтра обновляет URL и чип, но не `deferredFilters`, и запрос каталога не уходит (typecheck это не ловит)
-- [ ] починить литералы `FilterState` в тестах: локальные копии `EMPTY_FILTERS` (`filtersToParams.test.ts`, `usePageSync.test.tsx`, `useCatalogUpdateStatus.test.tsx`, `useMovieCatalog.test.tsx`) заменить импортом из `@features/catalog-filter`; поправить литералы в `searchParams.test.ts` и `baseFilters` в `SearchSidebar.test.tsx`
-- [ ] тесты `filterOptions`: лейблы известных значений и фолбэк на сырое значение
-- [ ] тесты `searchParams`: round-trip каждого нового поля и всех сразу; `?duration=foo` → `EMPTY_FILTERS`; пустые значения (`?countries=`) → пустой массив; `stripFilterAndSortParams` удаляет новые ключи и не трогает `?q`/`?page`
-- [ ] тесты `filtersToParams`: каждый пресет длительности → свой диапазон; массивы стран/платформ; `list` → `lists: [slug]`; пустой фильтр по-прежнему даёт `{ limit: 12 }`
-- [ ] тесты `useCatalogUpdateStatus`: смена только `duration`, только `countries`, только `platforms`, только `list` меняет `deferredFilters`
-- [ ] `make typecheck` и `make test` — зелёные до задачи 2
+- [x] создать ветку `feat/extended-catalog-filters` (ветка уже существовала)
+- [x] создать `filterOptions.ts`: `DURATION_OPTIONS`, `PLATFORM_OPTIONS`, `LIST_OPTIONS`, `COUNTRY_LABELS` и `getDurationLabel`/`getPlatformLabel`/`getListLabel`/`getCountryLabel` со значениями из Technical Details
+- [x] добавить в `FilterState` поля `countries`, `duration`, `platforms`, `list`; обновить `EMPTY_FILTERS`, `FILTER_URL_KEYS`, `FilterStateSchema`
+- [x] дополнить `getFilterFromSearchParams` и `filtersToSearchParams` новыми ключами (пустые/`null` в URL не пишутся)
+- [x] дополнить `filtersToParams`: `countries.name`, `movieLength` из пресета, `watchability.items.name`, `lists`
+- [x] дополнить `areFiltersEqual` в `useCatalogUpdateStatus.ts` новыми полями — без этого смена только нового фильтра обновляет URL и чип, но не `deferredFilters`, и запрос каталога не уходит (typecheck это не ловит)
+- [x] починить литералы `FilterState` в тестах: локальные копии `EMPTY_FILTERS` (`filtersToParams.test.ts`, `usePageSync.test.tsx`, `useCatalogUpdateStatus.test.tsx`, `useMovieCatalog.test.tsx`) заменить импортом из `@features/catalog-filter`; поправить литералы в `searchParams.test.ts` и `baseFilters` в `SearchSidebar.test.tsx` (`SearchSidebar.test.tsx` уже строит `baseFilters` спредом `EMPTY_FILTERS` — правка не потребовалась)
+- [x] тесты `filterOptions`: лейблы известных значений и фолбэк на сырое значение
+- [x] тесты `searchParams`: round-trip каждого нового поля и всех сразу; `?duration=foo` → `EMPTY_FILTERS`; пустые значения (`?countries=`) → пустой массив; `stripFilterAndSortParams` удаляет новые ключи и не трогает `?q`/`?page`
+- [x] тесты `filtersToParams`: каждый пресет длительности → свой диапазон; массивы стран/платформ; `list` → `lists: [slug]`; пустой фильтр по-прежнему даёт `{ limit: 12 }`
+- [x] тесты `useCatalogUpdateStatus`: смена только `duration`, только `countries`, только `platforms`, только `list` меняет `deferredFilters`
+- [x] `make typecheck` и `make test` — зелёные до задачи 2
 
 ### Task 2: Чипы активных фильтров для новых полей
 

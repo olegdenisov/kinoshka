@@ -1,15 +1,8 @@
 import type { FilterState } from '@features/catalog-filter'
+import { EMPTY_FILTERS } from '@features/catalog-filter'
 import { renderHook, waitFor } from '@testing-library/react'
 
 import { useCatalogUpdateStatus } from './useCatalogUpdateStatus'
-
-const EMPTY_FILTERS: FilterState = {
-  type: null,
-  genres: [],
-  yearFrom: null,
-  yearTo: null,
-  rating: null,
-}
 
 describe('useCatalogUpdateStatus', () => {
   it('isUpdating=false, пока параметры не меняются между рендерами', () => {
@@ -209,4 +202,29 @@ describe('useCatalogUpdateStatus', () => {
       expect(isAllOld || isAllNew).toBe(true)
     })
   })
+
+  it.each<[string, Partial<FilterState>]>([
+    ['duration', { duration: 'short' }],
+    ['countries', { countries: ['США'] }],
+    ['platforms', { platforms: ['Okko'] }],
+    ['list', { list: 'top250' }],
+  ])(
+    'смена только %s меняет deferredFilters (иначе URL меняется, а каталог не перезапрашивается)',
+    async (_, patch) => {
+      const filtersB: FilterState = { ...EMPTY_FILTERS, ...patch }
+
+      const { result, rerender } = renderHook(
+        ({ filters }: { filters: FilterState }) =>
+          useCatalogUpdateStatus({ query: '', filters, sort: '', page: 1 }),
+        { initialProps: { filters: { ...EMPTY_FILTERS } } },
+      )
+
+      rerender({ filters: filtersB })
+
+      await waitFor(() => {
+        expect(result.current.deferredFilters).toBe(filtersB)
+      })
+      expect(result.current.isUpdating).toBe(false)
+    },
+  )
 })
