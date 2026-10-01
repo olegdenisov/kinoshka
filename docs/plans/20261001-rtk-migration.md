@@ -437,12 +437,12 @@ export const store = makeStore()
 - Modify: `src/test/setup.ts`
 - Modify: устаревшие упоминания `AsyncBoundary` в `src/app/GlobalErrorBoundary{,.test}.tsx`, `src/app/layouts/AppLayout{,.test}.tsx`, `src/shared/ui/ErrorBoundary/*.test.tsx`, `e2e/movie-detail.spec.ts`, `e2e/recommendations.spec.ts` (только комментарии, сценарии не меняются)
 
-- [ ] grep по `createCachedFetcher`, `createSessionCache`, `resetAllCachedFetchers`, `AsyncBoundary`, `useStorageSlot`, `invalidate[A-Z]`, `use(` — потребителей не осталось
-- [ ] удалить модули и экспорты из barrel-файлов
-- [ ] `setup.ts`: убрать `resetAllCachedFetchers` и устаревшие комментарии
-- [ ] обновить комментарии в коде, ссылающиеся на удалённые механизмы
-- [ ] `make knip` — без новых находок
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] grep по `createCachedFetcher`, `createSessionCache`, `resetAllCachedFetchers`, `AsyncBoundary`, `useStorageSlot`, `invalidate[A-Z]`, `use(` — потребителей не осталось
+- [x] удалить модули и экспорты из barrel-файлов
+- [x] `setup.ts`: убрать `resetAllCachedFetchers` и устаревшие комментарии
+- [x] обновить комментарии в коде, ссылающиеся на удалённые механизмы
+- [x] `make knip` — без новых находок (knip: 14 unused exported types от Task 1–13, новых от удаления нет)
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 15: Бюджеты бандла и замер разницы с `main`
 

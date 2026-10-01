@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom/vitest'
 import { resetDictionaryCooldowns } from '@entities/movie'
-import { resetAllCachedFetchers } from '@shared/lib'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
@@ -129,11 +128,6 @@ export const server = setupServer(
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => server.resetHandlers())
-// createCachedFetcher's in-memory cache is module-level (survives across tests within the
-// same file and across files) — without this, tests hitting the same {query, page, ...} key
-// as an earlier test would silently get a stale cached promise instead of exercising the
-// current test's MSW handler. See createCachedFetcher.ts's resetAllCachedFetchers docblock.
-afterEach(() => resetAllCachedFetchers())
 // Справочники (жанры, страны): localStorage-слот и кулдаун повторов модульные — свежий стор на
 // тест их не сбрасывает; без этого кеш или кулдаун одного теста глушил бы запрос следующего
 // (см. createDictionaryCache.ts).

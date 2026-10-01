@@ -1,5 +1,5 @@
 import type * as SharedLib from '@shared/lib'
-import { AsyncBoundary } from '@shared/ui'
+import { ErrorBoundary } from '@shared/ui'
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
@@ -519,9 +519,11 @@ const createErrorRouter = (
             element: (
               <div>
                 <div>Favorites page shell</div>
-                <AsyncBoundary>
+                <ErrorBoundary
+                  fallback={({ error }) => <div>{error?.message}</div>}
+                >
                   <Bomb />
-                </AsyncBoundary>
+                </ErrorBoundary>
               </div>
             ),
           },
@@ -604,15 +606,14 @@ describe('AppLayout — per-route ErrorBoundary', () => {
     expect(errorInfo).toHaveProperty('componentStack')
   })
 
-  // Страничный AsyncBoundary ближе к ошибке — перехватывает её сам; per-route граница не
-  // срабатывает, и в Sentry такая ошибка не уходит (принятый gap: AsyncBoundary не прокидывает
-  // onError).
-  it('ошибку внутри страничного AsyncBoundary ловит он, а не per-route граница — captureRouteError не вызван', () => {
+  // Страничный ErrorBoundary ближе к ошибке — перехватывает её сам; per-route граница не
+  // срабатывает, и в Sentry такая ошибка не уходит (принятый gap: страничная граница без onError).
+  it('ошибку внутри страничного ErrorBoundary ловит он, а не per-route граница — captureRouteError не вызван', () => {
     renderWithStore(<RouterProvider router={createErrorRouter('/favorites')} />)
 
     expect(screen.getByText('Favorites page shell')).toBeInTheDocument()
     expect(screen.getByText('boom')).toBeInTheDocument()
-    // Фолбэк AsyncBoundary — без secondaryAction, ссылки на главную нет.
+    // Фолбэк страничной границы — без secondaryAction, ссылки на главную нет.
     expect(
       screen.queryByRole('link', { name: 'Back to home' }),
     ).not.toBeInTheDocument()
