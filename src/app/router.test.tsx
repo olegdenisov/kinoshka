@@ -204,7 +204,7 @@ describe('router — оставшиеся 7 роутов резолвят сво
   })
 
   it('/search → SearchPage', async () => {
-    // Пустой ?q → SearchResults идёт через getMoviesPage() (@entities/movie), тот же
+    // Пустой ?q → каталог через getCatalog → getMoviesPage (@entities/movie), тот же
     // MOVIE_ENDPOINT, что и рейлы Home — заголовок 'Browse catalog' рендерится безусловно,
     // независимо от результата каталога.
     server.use(http.get(MOVIE_ENDPOINT, () => successResponse()))

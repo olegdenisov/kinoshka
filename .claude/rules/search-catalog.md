@@ -34,4 +34,3 @@ paths:
 
 - `list` (collection) is single-select because the API ORs multiple `lists` values, which produces unpredictable results when combined with AND-filters like genre/country.
 - Platforms and lists are hardcoded in `filterOptions.ts` — the API has no platform dictionary, and `/list` is dominated by auto-generated collections (`country1`, `year2018`, etc.) that are not useful as user-facing filters.
-- Every new `FilterState` field must also be added to `areFiltersEqual` in `useCatalogUpdateStatus.ts`, otherwise a URL change updates `activeChips` and the display but does not refetch the catalog.

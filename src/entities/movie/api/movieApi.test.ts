@@ -3,7 +3,13 @@ import { http, HttpResponse } from 'msw'
 import { makeStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import { hashHue } from '../lib/hashHue'
-import { fetchMovieDetail, movieApi, movieByIdsApi } from './movieApi'
+import {
+  catalogApi,
+  fetchMovieDetail,
+  movieApi,
+  movieByIdsApi,
+  moviePageApi,
+} from './movieApi'
 
 const MOVIE_ENDPOINT = '*/v1.5/movie'
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
@@ -481,5 +487,337 @@ describe('getMoviesByIds', () => {
     await getByIds([71, 73], store)
 
     expect(counter.count).toBe(1)
+  })
+})
+
+const SEARCH_ENDPOINT = '*/v1.5/movie/search'
+
+const movieNamed = (name: string) => ({
+  id: 1,
+  title: name,
+  year: 2024,
+  rating: 8.1,
+  type: 'movie',
+  genre: ['drama'],
+  runtime: '120',
+  poster: 'https://example.com/poster.jpg',
+  hue: hashHue(1),
+})
+
+// Цепочка курсоров: старт (без next) → c2 → c3 → конец списка.
+const CHAIN = [
+  { cursor: null, name: 'Page1', next: 'c2' },
+  { cursor: 'c2', name: 'Page2', next: 'c3' },
+  { cursor: 'c3', name: 'Page3', next: null },
+]
+
+// total: null — ответ без total (withCount не отработал)
+const mockChain = (total: number | null = 25) => {
+  const requests: URL[] = []
+
+  server.use(
+    http.get(MOVIE_ENDPOINT, ({ request }) => {
+      const url = new URL(request.url)
+      requests.push(url)
+      const cursor = url.searchParams.get('next')
+      const step = CHAIN.find(s => s.cursor === cursor)
+
+      if (!step) {
+        throw new Error(`unexpected cursor: ${cursor}`)
+      }
+
+      return HttpResponse.json({
+        docs: [doc({ name: step.name })],
+        limit: 12,
+        next: step.next,
+        hasNext: step.next !== null,
+        hasPrev: step.cursor !== null,
+        ...(step.cursor === null && total !== null ? { total } : {}),
+      })
+    }),
+  )
+
+  return requests
+}
+
+const getPage = (page: number, store = makeStore(), params = {}) =>
+  store.dispatch(
+    moviePageApi.endpoints.getMoviesPage.initiate({ params, page }),
+  )
+
+describe('getCatalogCursorStep', () => {
+  it('первый шаг — без next, с withCount:true; следующий — с next, без withCount', async () => {
+    const requests = mockChain()
+    const store = makeStore()
+
+    const first = await store.dispatch(
+      movieApi.endpoints.getCatalogCursorStep.initiate({ params: {} }),
+    )
+    await store.dispatch(
+      movieApi.endpoints.getCatalogCursorStep.initiate({
+        params: {},
+        cursor: 'c2',
+      }),
+    )
+
+    expect(first.data).toEqual({
+      movies: [movieNamed('Page1')],
+      next: 'c2',
+      total: 25,
+    })
+    expect(requests[0].searchParams.has('next')).toBe(false)
+    expect(requests[0].searchParams.get('withCount')).toBe('true')
+    expect(requests[0].searchParams.get('limit')).toBe('12')
+    expect(requests[1].searchParams.get('next')).toBe('c2')
+    expect(requests[1].searchParams.get('withCount')).toBe('false')
+  })
+})
+
+describe('getMoviesPage', () => {
+  it('страница N делает N запросов, результат — доки N-го шага', async () => {
+    const requests = mockChain()
+
+    const result = await getPage(3)
+
+    expect(requests).toHaveLength(3)
+    expect(result.data).toEqual({
+      movies: [movieNamed('Page3')],
+      totalPages: 3,
+    })
+  })
+
+  it('страница N+1 после N — один запрос (шаги из кеша)', async () => {
+    const requests = mockChain()
+    const store = makeStore()
+
+    await getPage(2, store)
+    expect(requests).toHaveLength(2)
+
+    const result = await getPage(3, store)
+
+    expect(requests).toHaveLength(3)
+    expect(result.data?.movies).toEqual([movieNamed('Page3')])
+  })
+
+  it('уже пройденная страница — без новых запросов', async () => {
+    const requests = mockChain()
+    const store = makeStore()
+
+    await getPage(3, store)
+    const page2 = await getPage(2, store)
+
+    expect(requests).toHaveLength(3)
+    expect(page2.data?.movies).toEqual([movieNamed('Page2')])
+  })
+
+  it('курсор кончился раньше целевой страницы — пустой хвост, totalPages из total', async () => {
+    const requests = mockChain(5)
+
+    const result = await getPage(5)
+
+    expect(result.data).toEqual({ movies: [], totalPages: 1 })
+    // цепочка оборвалась на третьем шаге — дальше не ходим
+    expect(requests).toHaveLength(3)
+  })
+
+  it.each([
+    [115, 10],
+    [125, 10],
+    [15, 2],
+  ])('total=%i → totalPages=%i', async (total, totalPages) => {
+    mockChain(total)
+
+    const result = await getPage(1)
+
+    expect(result.data?.totalPages).toBe(totalPages)
+  })
+
+  it('total недоступен — totalPages = MAX_PAGES', async () => {
+    mockChain(null)
+
+    const result = await getPage(1)
+
+    expect(result.data?.totalPages).toBe(10)
+  })
+
+  it('ошибка шага — QueryError со status', async () => {
+    server.use(
+      http.get(MOVIE_ENDPOINT, () =>
+        HttpResponse.json(errorBody(403), { status: 403 }),
+      ),
+    )
+
+    const result = await getPage(2)
+
+    expect(result.error).toMatchObject({ status: 403 })
+  })
+
+  it('после ошибки повторный запрос реально идёт в сеть', async () => {
+    let attempts = 0
+    server.use(
+      http.get(MOVIE_ENDPOINT, () => {
+        attempts += 1
+        return attempts === 1
+          ? HttpResponse.json(errorBody(403), { status: 403 })
+          : HttpResponse.json({ docs: [doc()], next: null, total: 1 })
+      }),
+    )
+    const store = makeStore()
+
+    const failed = store.dispatch(
+      moviePageApi.endpoints.getMoviesPage.initiate({ params: {}, page: 1 }),
+    )
+    expect((await failed).isError).toBe(true)
+
+    const retried = await failed.refetch()
+
+    expect(retried.data?.movies).toHaveLength(1)
+    expect(attempts).toBe(2)
+    failed.unsubscribe()
+  })
+})
+
+const mockSearch = (
+  docs: Record<string, unknown>[],
+  overrides: Record<string, unknown> = {},
+) => {
+  const requests: URL[] = []
+  server.use(
+    http.get(SEARCH_ENDPOINT, ({ request }) => {
+      requests.push(new URL(request.url))
+      return HttpResponse.json({
+        docs,
+        total: docs.length,
+        page: 1,
+        pages: 1,
+        limit: 12,
+        ...overrides,
+      })
+    }),
+  )
+  return requests
+}
+
+const getSearch = (query: string, page = 1) =>
+  makeStore().dispatch(
+    movieApi.endpoints.getSearchMovies.initiate({ query, page }),
+  )
+
+describe('getSearchMovies', () => {
+  it('уходит на /v1.5/movie/search с query, page и limit:12', async () => {
+    const requests = mockSearch([doc()])
+
+    await getSearch('matrix', 2)
+
+    expect(requests[0].searchParams.get('query')).toBe('matrix')
+    expect(requests[0].searchParams.get('page')).toBe('2')
+    expect(requests[0].searchParams.get('limit')).toBe('12')
+  })
+
+  it('результат — { movies, totalPages }, totalPages = pages из ответа', async () => {
+    mockSearch([doc()], { pages: 4 })
+
+    const result = await getSearch('pages-under-cap')
+
+    expect(result.data).toEqual({
+      movies: [movieNamed('Test Movie')],
+      totalPages: 4,
+    })
+  })
+
+  it('pages больше demo-потолка — totalPages клампится к 10', async () => {
+    mockSearch([doc()], { pages: 37 })
+
+    const result = await getSearch('pages-over-cap')
+
+    expect(result.data?.totalPages).toBe(10)
+  })
+
+  it('ответ без docs — { movies: [], totalPages: 0 }', async () => {
+    server.use(
+      http.get(SEARCH_ENDPOINT, () => HttpResponse.json({ unexpected: true })),
+    )
+
+    const result = await getSearch('no-docs')
+
+    expect(result.data).toEqual({ movies: [], totalPages: 0 })
+  })
+
+  it('HTTP-ошибка — QueryError со status', async () => {
+    server.use(
+      http.get(SEARCH_ENDPOINT, () =>
+        HttpResponse.json(errorBody(403), { status: 403 }),
+      ),
+    )
+
+    const result = await getSearch('forbidden')
+
+    expect(result.error).toMatchObject({ status: 403 })
+  })
+})
+
+describe('getCatalog', () => {
+  it('непустой query — ветка поиска, каталог не запрашивается', async () => {
+    const searchRequests = mockSearch([doc({ name: 'Matrix' })], { pages: 3 })
+    const catalogRequests = mockChain()
+
+    const result = await makeStore().dispatch(
+      catalogApi.endpoints.getCatalog.initiate({ query: 'matrix', page: 1 }),
+    )
+
+    expect(result.data).toEqual({
+      movies: [movieNamed('Matrix')],
+      totalPages: 3,
+    })
+    expect(searchRequests).toHaveLength(1)
+    expect(catalogRequests).toHaveLength(0)
+  })
+
+  it('пустой query — ветка каталога с params, поиск не запрашивается', async () => {
+    const searchRequests = mockSearch([doc()])
+    const catalogRequests = mockChain()
+
+    const result = await makeStore().dispatch(
+      catalogApi.endpoints.getCatalog.initiate({
+        query: '',
+        params: { type: ['movie'] },
+        page: 2,
+      }),
+    )
+
+    expect(result.data?.movies).toEqual([movieNamed('Page2')])
+    expect(catalogRequests).toHaveLength(2)
+    expect(catalogRequests[0].searchParams.getAll('type')).toEqual(['movie'])
+    expect(searchRequests).toHaveLength(0)
+  })
+
+  it('делит кеш с getMoviesPage — уже загруженная страница не запрашивается', async () => {
+    const requests = mockChain()
+    const store = makeStore()
+
+    await getPage(2, store)
+    await store.dispatch(
+      catalogApi.endpoints.getCatalog.initiate({
+        query: '',
+        params: {},
+        page: 2,
+      }),
+    )
+
+    expect(requests).toHaveLength(2)
+  })
+
+  it('ошибка нижнего endpoint — QueryError со status', async () => {
+    server.use(
+      http.get(SEARCH_ENDPOINT, () =>
+        HttpResponse.json(errorBody(403), { status: 403 }),
+      ),
+    )
+
+    const result = await makeStore().dispatch(
+      catalogApi.endpoints.getCatalog.initiate({ query: 'x', page: 1 }),
+    )
+
+    expect(result.error).toMatchObject({ status: 403 })
   })
 })
