@@ -7,6 +7,24 @@ on:
     branches: [main]
 
 jobs:
+  # Временный стоп-кран: ветка rtk не должна попасть в main, пока миграция не
+  # готова. Job обязателен в ruleset protect-main, поэтому падение блокирует
+  # merge. Чтобы разрешить слияние — убрать rtk из BLOCKED_BRANCHES.
+  branch-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Block merging protected-from-merge branches
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BLOCKED_BRANCHES: rtk
+        run: |
+          for branch in $BLOCKED_BRANCHES; do
+            if [ "$HEAD_REF" = "$branch" ]; then
+              echo "::error::Branch '$branch' is blocked from merging into main"
+              exit 1
+            fi
+          done
+
   lint:
     runs-on: ubuntu-latest
     steps:
