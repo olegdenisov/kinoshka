@@ -290,6 +290,7 @@ export const Search = () => {
             onClose={() => setFiltersOpen(false)}
             title='Filters'
           >
+            {/* Без `count`: Type — одиночный выбор, значение есть всегда. */}
             <FilterGroup title='Type' defaultOpen compact>
               <div className={s.typeGrid}>
                 {[

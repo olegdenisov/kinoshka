@@ -6,6 +6,7 @@ import {
   isDuration,
   LIST_OPTIONS,
   PLATFORM_OPTIONS,
+  RATING_VALUES,
 } from '../../lib/filterOptions'
 import type { FilterState } from '../../model/useFilterState'
 import { ChipSelect } from '../ChipSelect'
@@ -24,7 +25,12 @@ type FilterPanelProps = {
   compact?: boolean
 }
 
-const RATINGS = [5, 6, 7, 8, 9]
+// Единый источник заголовка группы: он же `groupLabel` у ChipSelect (accessible name).
+const TITLES = {
+  duration: 'Duration',
+  platforms: 'Streaming',
+  list: 'Collection',
+} as const
 
 const DURATION_ITEMS = [...DURATION_VALUES]
 const PLATFORM_VALUES = PLATFORM_OPTIONS.map(o => o.value)
@@ -92,7 +98,7 @@ export const FilterPanel = ({
         <div
           className={`${s.ratingList} ${compact ? s.ratingListCompact : ''}`}
         >
-          {RATINGS.map(r => (
+          {RATING_VALUES.map(r => (
             <button
               type='button'
               key={r}
@@ -132,7 +138,7 @@ export const FilterPanel = ({
       </FilterGroup>
 
       <FilterGroup
-        title='Duration'
+        title={TITLES.duration}
         count={filters.duration !== null ? 1 : 0}
         defaultOpen={filters.duration !== null}
         compact={compact}
@@ -150,12 +156,12 @@ export const FilterPanel = ({
           }
           disabled={disabled}
           compact={compact}
-          groupLabel='Duration'
+          groupLabel={TITLES.duration}
         />
       </FilterGroup>
 
       <FilterGroup
-        title='Streaming'
+        title={TITLES.platforms}
         count={filters.platforms.length}
         defaultOpen={filters.platforms.length > 0}
         compact={compact}
@@ -172,12 +178,12 @@ export const FilterPanel = ({
           }
           disabled={disabled}
           compact={compact}
-          groupLabel='Streaming'
+          groupLabel={TITLES.platforms}
         />
       </FilterGroup>
 
       <FilterGroup
-        title='Collection'
+        title={TITLES.list}
         count={filters.list !== null ? 1 : 0}
         defaultOpen={filters.list !== null}
         compact={compact}
@@ -194,7 +200,7 @@ export const FilterPanel = ({
           }
           disabled={disabled}
           compact={compact}
-          groupLabel='Collection'
+          groupLabel={TITLES.list}
         />
       </FilterGroup>
     </>
