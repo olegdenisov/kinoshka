@@ -155,4 +155,21 @@ describe('FilterPanel', () => {
     await screen.findByRole('button', { name: /Показать все.*Genre/ })
     expect(requests).toBe(0)
   })
+
+  it('в открытой панели нет двух кнопок с одинаковым accessible name', async () => {
+    const { user } = setup({
+      ...EMPTY_FILTERS,
+      duration: 'short',
+      list: 'top250',
+    })
+    await open(user, 'Country')
+    await open(user, 'Streaming')
+    await screen.findByRole('button', { name: /Показать все.*Genre/ })
+
+    const names = screen
+      .getAllByRole('button')
+      .map(b => b.getAttribute('aria-label') ?? b.textContent?.trim() ?? '')
+    const duplicates = names.filter((n, i) => names.indexOf(n) !== i)
+    expect(duplicates).toEqual([])
+  })
 })

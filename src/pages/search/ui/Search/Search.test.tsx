@@ -639,6 +639,28 @@ describe('Search — пагинация: сброс ?page на 1 при смен
       'Default',
     )
   })
+
+  it('появление ?q зачищает новые параметры countries/duration/platforms/list', async () => {
+    mockCatalog([catalogDoc('Dune Part Two', 202)])
+    mockSearch([searchDoc('Matrix Reloaded', 102)])
+
+    await renderSearch(
+      ['/search?countries=США&duration=long&platforms=Okko&list=top250'],
+      <HeaderQuerySetter />,
+    )
+    expect(lastSearch).toContain('duration=long')
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'simulate header q write' }),
+      )
+    })
+
+    expect(lastSearch).toContain('q=matrix')
+    for (const key of ['countries=', 'duration=', 'platforms=', 'list=']) {
+      expect(lastSearch).not.toContain(key)
+    }
+  })
 })
 
 // ---------------------------------------------------------------------------------------------
