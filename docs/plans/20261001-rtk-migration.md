@@ -299,13 +299,13 @@ export const store = makeStore()
 - Delete: `src/entities/movie/api/{getMovies,getPopularMovies}.ts` и их тесты (логика уезжает в `queryFn`)
 - Modify: `src/pages/home/ui/Home/Home.tsx`, `src/pages/popular/ui/Popular/Popular.tsx`, виджет рейла (`src/widgets/movie-rail/**`) и их тесты
 
-- [ ] `movieApi = baseApi.injectEndpoints(...)`: `getMovies(params)`, `getPopularMovies(params)` — `queryFn` поверх `apiClient`, маппинг и проверка error-DTO (`'statusCode' in response.data`) сохраняются
-- [ ] хуки `usePopularMovies`/`useNewMovies`/`useTopRatedMovies` возвращают результат query с теми же фиксированными параметрами; экспорты `invalidate*` удалить
-- [ ] `Home`, `Popular`, рейлы: `AsyncBoundary` → `QueryBoundary`, Retry = `refetch`; скелетоны и тексты ошибок те же
-- [ ] не сломать lazy-mount/`content-visibility` рейлов (см. `.claude/rules/performance.md`)
-- [ ] тесты endpoints (успех, HTTP-ошибка → `QueryError` со `status`, error-DTO)
-- [ ] обновить тесты хуков, `Home`, `Popular`, рейлов (включая Retry)
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `movieApi = baseApi.injectEndpoints(...)`: `getMovies(params)`, `getPopularMovies(params)` — `queryFn` поверх `apiClient`, маппинг и проверка error-DTO (`'statusCode' in response.data`) сохраняются
+- [x] хуки `usePopularMovies`/`useNewMovies`/`useTopRatedMovies` возвращают результат query с теми же фиксированными параметрами; экспорты `invalidate*` удалить
+- [x] `Home`, `Popular`, рейлы: `AsyncBoundary` → `QueryBoundary`, Retry = `refetch`; скелетоны и тексты ошибок те же
+- [x] не сломать lazy-mount/`content-visibility` рейлов (см. `.claude/rules/performance.md`)
+- [x] тесты endpoints (успех, HTTP-ошибка → `QueryError` со `status`, error-DTO)
+- [x] обновить тесты хуков, `Home`, `Popular`, рейлов (включая Retry)
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 9: Endpoints детальных страниц (movie, person)
 

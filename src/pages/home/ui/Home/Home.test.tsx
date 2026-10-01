@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { useEffect } from 'react'
 import { MemoryRouter, useLocation } from 'react-router'
@@ -7,14 +7,13 @@ import { renderWithStore } from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { Home } from './Home'
 
-// Реальный retry (roadmap 1.6): рейл падает → ErrorState с Retry → клик реально бьёт
-// в сеть заново (invalidateTopRatedMovies/invalidatePopularMovies из hooks/index.ts), а не
-// просто перерисовывает тот же rejected-промис из cooldown. Только TopAnimeRails (единственный
+// Реальный retry (roadmap 1.6): рейл падает → ErrorState с Retry → клик (refetch из QueryBoundary)
+// реально бьёт в сеть заново. Только TopAnimeRails (единственный
 // рейл на /v1.5/movie с уникальным ключом query — rating.kp + type=anime, никто другой его не
 // делит) мокается падающим, чтобы у теста была ровно одна ErrorState-инстанция для клика.
 const MOVIE_ENDPOINT = '*/v1.5/movie'
 // PopularMoviesRail не делит эндпоинт/кэш с PersonalRails — он на отдельном курируемом списке
-// /v1.5/list/{slug} (usePopularMovies() → getPopularMovies).
+// /v1.5/list/{slug} (usePopularMovies() → getPopularMovies endpoint).
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
 
 const doc = (overrides: Record<string, unknown> = {}) => ({
@@ -209,11 +208,13 @@ describe('Home — реальный retry для рейлов (перенесе�
 
     await renderHome()
 
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
     expect(requestsByKind.topAnime).toBe(1)
 
     // остальные три рейла успешны и уже отрендерили карточки
-    expect(screen.getAllByText('Other Movie').length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('Other Movie')).length).toBeGreaterThan(
+      0,
+    )
     expect(screen.queryByText('Anime Recovered')).not.toBeInTheDocument()
 
     const retryButton = screen.getByText('Попробовать снова')
@@ -224,7 +225,7 @@ describe('Home — реальный retry для рейлов (перенесе�
 
     // новый реальный запрос, не тот же rejected-промис
     expect(requestsByKind.topAnime).toBe(2)
-    expect(screen.getByText('Anime Recovered')).toBeInTheDocument()
+    expect(await screen.findByText('Anime Recovered')).toBeInTheDocument()
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
   })
 
@@ -272,9 +273,11 @@ describe('Home — реальный retry для рейлов (перенесе�
     await renderHome()
 
     // Раздельные кэш-ключи/эндпоинты -> два независимых сетевых запроса, оба падают.
+    await waitFor(() =>
+      expect(screen.getAllByText('Something went wrong')).toHaveLength(2),
+    )
     expect(requestsByKind.popularList).toBe(1)
     expect(requestsByKind.sharedTopRated).toBe(1)
-    expect(screen.getAllByText('Something went wrong')).toHaveLength(2)
 
     const retryButtons = screen.getAllByText('Попробовать снова')
     expect(retryButtons).toHaveLength(2)
@@ -287,7 +290,7 @@ describe('Home — реальный retry для рейлов (перенесе�
     expect(requestsByKind.popularList).toBe(2)
     // PersonalRails никак не задет retry-ем PopularMoviesRail — раздельные кэши.
     expect(requestsByKind.sharedTopRated).toBe(1)
-    expect(screen.getByText('Popular Recovered')).toBeInTheDocument()
+    expect(await screen.findByText('Popular Recovered')).toBeInTheDocument()
     expect(screen.getAllByText('Something went wrong')).toHaveLength(1)
 
     // Клик по retry оставшегося рейла (PersonalRails).
@@ -299,8 +302,8 @@ describe('Home — реальный retry для рейлов (перенесе�
 
     expect(requestsByKind.sharedTopRated).toBe(2)
     expect(requestsByKind.popularList).toBe(2)
+    expect(await screen.findByText('Personal Recovered')).toBeInTheDocument()
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
-    expect(screen.getByText('Personal Recovered')).toBeInTheDocument()
   })
 
   it('без ошибок все 4 рейла рендерят данные, EmptyState/ErrorState отсутствуют', async () => {
@@ -315,8 +318,8 @@ describe('Home — реальный retry для рейлов (перенесе�
 
     await renderHome()
 
+    expect(await screen.findByText('Popular Movie')).toBeInTheDocument()
+    expect((await screen.findAllByText('Any Movie')).length).toBeGreaterThan(0)
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
-    expect(screen.getAllByText('Any Movie').length).toBeGreaterThan(0)
-    expect(screen.getByText('Popular Movie')).toBeInTheDocument()
   })
 })
