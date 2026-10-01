@@ -30,4 +30,4 @@ paths:
 ## Images
 
 - Below-the-fold images are `loading='lazy'`; home rail cards stay lazy even in the first viewport (in-viewport lazy images are fetched immediately, `/` LCP unaffected).
-- **Never lazy-load an LCP candidate** (`PersonHero` photo, `MovieHero` poster via `<Poster eager />`). No `fetchPriority='high'` on the movie poster: on desktop the LCP element is the CSS backdrop and would compete with it.
+- **Never lazy-load an LCP candidate** (`PersonHero` photo, `MovieHero` poster via `<Poster eager />`). The `MovieHero` backdrop is a gradient only (no photo), so it is not an LCP candidate; the `fetchPriority` question for the poster is open — re-check with Lighthouse before adding it.

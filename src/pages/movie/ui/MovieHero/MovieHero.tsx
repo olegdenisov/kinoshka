@@ -61,19 +61,14 @@ export const MovieHero = ({
   return (
     <section className={s.hero}>
       <div className={s.backdrop}>
-        {movie.backdrop ? (
-          <div
-            className={s.backdropImage}
-            style={{ backgroundImage: `url(${movie.backdrop})` }}
-          />
-        ) : (
-          <div
-            className={s.backdropGradient}
-            style={{
-              background: `radial-gradient(ellipse 50% 60% at 30% 30%, oklch(0.32 0.1 ${movie.hue} / 0.6), transparent 70%), radial-gradient(ellipse 40% 50% at 75% 40%, oklch(0.28 0.08 ${movie.hue + 30} / 0.4), transparent 70%), var(--bg-primary)`,
-            }}
-          />
-        )}
+        {/* Фото-бэкдроп убрано намеренно: под текстом героя оно мешало читать
+            заголовок и описание. Фон — только градиент по `hue` фильма. */}
+        <div
+          className={s.backdropGradient}
+          style={{
+            background: `radial-gradient(ellipse 50% 60% at 30% 30%, oklch(0.32 0.1 ${movie.hue} / 0.6), transparent 70%), radial-gradient(ellipse 40% 50% at 75% 40%, oklch(0.28 0.08 ${movie.hue + 30} / 0.4), transparent 70%), var(--bg-primary)`,
+          }}
+        />
         <div className={s.backdropOverlay} />
         <div className={s.backdropLines} />
       </div>

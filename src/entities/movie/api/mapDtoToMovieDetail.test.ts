@@ -67,7 +67,6 @@ describe('mapDtoToMovieDetail — полностью заполненный doc'
       tagline: "Some stories don't resolve.",
       synopsis: 'Full synopsis text.',
       shortSynopsis: 'Short synopsis.',
-      backdrop: 'https://example.com/backdrop.jpg',
       trailerUrl: 'https://example.com/trailer.mp4',
       cast: [
         {
