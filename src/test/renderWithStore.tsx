@@ -1,13 +1,30 @@
-import { makeStore } from '@app/store'
-import type { AppStore } from '@app/store'
+import { makeStore as makeAppStore } from '@app/store'
+import type { AppStore, RootState } from '@app/store'
 import { render, type RenderOptions } from '@testing-library/react'
 import type { PropsWithChildren, ReactElement } from 'react'
 import { Provider } from 'react-redux'
+import { afterEach } from 'vitest'
 
-// Реэкспорт для тестов слоёв ниже app: им самим импортировать @app запрещает FSD-линтер, а тесту
-// иногда нужен один стор на несколько render/renderHook.
-export { makeStore }
 export type { AppStore }
+
+// Подписки стора на слоты висят на window и общем emitter'е слотов: без teardown стор из прошлого
+// теста продолжал бы ловить storage-события и записи следующего. Все сторы, созданные через этот
+// модуль, снимаются после каждого теста — afterEach на верхнем уровне модуля регистрируется в
+// каждом тест-файле, который его импортирует (как auto-cleanup у Testing Library).
+const createdStores = new Set<AppStore>()
+
+afterEach(() => {
+  for (const created of createdStores) created.teardown()
+  createdStores.clear()
+})
+
+// Для тестов слоёв ниже app: им самим импортировать @app запрещает FSD-линтер, а тесту иногда нужен
+// один стор на несколько render/renderHook.
+export const makeStore = (preloadedState?: Partial<RootState>) => {
+  const created = makeAppStore(preloadedState)
+  createdStores.add(created)
+  return created
+}
 
 type RenderWithStoreOptions = RenderOptions & { store?: AppStore }
 

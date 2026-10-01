@@ -3,3 +3,4 @@ export type {
   ListenerMiddlewareInstance,
   StartListening,
 } from './listenerMiddleware'
+export { persistSlice, subscribeSlot } from './persistSlice'
