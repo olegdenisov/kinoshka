@@ -105,7 +105,7 @@ describe('GenreSelector', () => {
     render(<GenreSelector selected={[]} onToggle={vi.fn()} />)
 
     const toggle = await screen.findByRole('button', {
-      name: 'Показать все (1)',
+      name: 'Показать все (1): Genre',
     })
     expect(
       screen.queryByRole('button', { name: 'комедия' }),
@@ -114,15 +114,17 @@ describe('GenreSelector', () => {
     fireEvent.click(toggle)
 
     expect(screen.getByRole('button', { name: 'комедия' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Свернуть' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Свернуть: Genre' }),
+    ).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Свернуть' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Свернуть: Genre' }))
 
     expect(
       screen.queryByRole('button', { name: 'комедия' }),
     ).not.toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Показать все (1)' }),
+      screen.getByRole('button', { name: 'Показать все (1): Genre' }),
     ).toBeInTheDocument()
   })
 
@@ -186,7 +188,7 @@ describe('GenreSelector', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: 'Показать все (1)' }),
+        screen.getByRole('button', { name: 'Показать все (1): Genre' }),
       ).toBeInTheDocument()
     })
   })
