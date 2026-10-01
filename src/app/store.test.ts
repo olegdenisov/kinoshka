@@ -41,6 +41,16 @@ describe('makeStore', () => {
     ).toBe('pong')
   })
 
+  it('teardown снимает подписки, стор остаётся рабочим', async () => {
+    const created = makeStore()
+
+    expect(() => created.teardown()).not.toThrow()
+    await created.dispatch(testApi.endpoints.storeTestPing.initiate())
+    expect(
+      testApi.endpoints.storeTestPing.select()(created.getState()).data,
+    ).toBe('pong')
+  })
+
   it('singleton store создан тем же makeStore', () => {
     expect(store.getState()).toHaveProperty(baseApi.reducerPath)
   })

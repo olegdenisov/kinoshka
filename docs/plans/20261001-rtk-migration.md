@@ -174,18 +174,19 @@ export const store = makeStore()
 - Modify: `src/shared/lib/store/index.ts`, `src/shared/lib/index.ts`
 - Modify: `src/app/store.ts`
 
-- [ ] `persistSlice({ startListening, slot, select, matcher, rollback })`: эффект пишет `select(getState())` в слот; при `false` диспатчит `rollback(select(getOriginalState()))`
-- [ ] `subscribeSlot(store, slot, { select, hydrated })`: `slot.subscribe` → `dispatch(hydrated(slot.get()))`, только если значение слота отличается от `select(getState())` (подписка срабатывает и на `set()` своей вкладки); возвращает unsubscribe
-- [ ] rollback-экшен и `hydrated` не должны попадать под `matcher`
-- [ ] `persistSlice` — дженерик по форме стейта (`shared` не знает `RootState`)
-- [ ] WHY-комментарий: эффект стартует синхронно внутри `dispatch`, поэтому вызывающий код видит итоговый стейт сразу после `dispatch`
-- [ ] в `app/store.ts` — точка регистрации persist (`setupPersistence(store)`), пока без slices; listener'ы не должны дублироваться при повторном `makeStore()`, а подписки на слоты — утекать между тестами (teardown у стора/`renderWithStore`)
-- [ ] тест: экшен из `matcher` → значение в `localStorage`
-- [ ] тест: `slot.set` возвращает `false` → стейт откатан синхронно, сразу после `dispatch`
-- [ ] тест: `hydrated` обновляет стейт и не вызывает `slot.set`
-- [ ] тест: `storage`-событие из другой вкладки попадает в стор
-- [ ] тест: запись из своей вкладки не порождает `hydrated`
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `persistSlice({ startListening, slot, select, matcher, rollback })`: эффект пишет `select(getState())` в слот; при `false` диспатчит `rollback(select(getOriginalState()))`
+- [x] `subscribeSlot(store, slot, { select, hydrated })`: `slot.subscribe` → `dispatch(hydrated(slot.get()))`, только если значение слота отличается от `select(getState())` (подписка срабатывает и на `set()` своей вкладки); возвращает unsubscribe
+- [x] rollback-экшен и `hydrated` не должны попадать под `matcher`
+- [x] `persistSlice` — дженерик по форме стейта (`shared` не знает `RootState`)
+- [x] WHY-комментарий: эффект стартует синхронно внутри `dispatch`, поэтому вызывающий код видит итоговый стейт сразу после `dispatch`
+- [x] в `app/store.ts` — точка регистрации persist (`setupPersistence(store)`), пока без slices; listener'ы не должны дублироваться при повторном `makeStore()`, а подписки на слоты — утекать между тестами (teardown у стора/`renderWithStore`)
+  - ➕ решение: `makeStore()` возвращает стор с `teardown()` (отписка от слотов + `clearListeners()`); `renderWithStore`/реэкспорт `makeStore` из `src/test/renderWithStore.tsx` регистрируют созданные сторы и снимают их в `afterEach`; `persistSlice` сам исключает `rollback` из `matcher` (`rollback` — action creator с `.match`), `hydrated` исключает вызывающий; `subscribeSlot` сравнивает значения через `JSON.stringify`
+- [x] тест: экшен из `matcher` → значение в `localStorage`
+- [x] тест: `slot.set` возвращает `false` → стейт откатан синхронно, сразу после `dispatch`
+- [x] тест: `hydrated` обновляет стейт и не вызывает `slot.set`
+- [x] тест: `storage`-событие из другой вкладки попадает в стор
+- [x] тест: запись из своей вкладки не порождает `hydrated`
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 3: Theme slice
 
