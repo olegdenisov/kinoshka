@@ -1,7 +1,13 @@
 import { trackEvent } from '@shared/lib'
 import { useSearchParams } from 'react-router'
 
-import type { Duration } from '../lib/filterOptions'
+import {
+  type Duration,
+  getCountryLabel,
+  getDurationLabel,
+  getListLabel,
+  getPlatformLabel,
+} from '../lib/filterOptions'
 import { getGenreLabel } from '../lib/genreMap'
 import {
   EMPTY_FILTERS,
@@ -127,6 +133,39 @@ export const useFilterState = () => {
     activeChips.push({
       label: `Rating ${filters.rating}+`,
       onRemove: () => setFilters(f => ({ ...f, rating: null })),
+    })
+  }
+
+  filters.countries.forEach(c =>
+    activeChips.push({
+      label: getCountryLabel(c),
+      onRemove: () =>
+        setFilters(f => ({
+          ...f,
+          countries: f.countries.filter(x => x !== c),
+        })),
+    }),
+  )
+  if (filters.duration) {
+    activeChips.push({
+      label: getDurationLabel(filters.duration),
+      onRemove: () => setFilters(f => ({ ...f, duration: null })),
+    })
+  }
+  filters.platforms.forEach(p =>
+    activeChips.push({
+      label: getPlatformLabel(p),
+      onRemove: () =>
+        setFilters(f => ({
+          ...f,
+          platforms: f.platforms.filter(x => x !== p),
+        })),
+    }),
+  )
+  if (filters.list) {
+    activeChips.push({
+      label: getListLabel(filters.list),
+      onRemove: () => setFilters(f => ({ ...f, list: null })),
     })
   }
 
