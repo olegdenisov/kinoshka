@@ -281,12 +281,12 @@ export const store = makeStore()
 - Create: `src/shared/ui/QueryBoundary/index.tsx`, `src/shared/ui/QueryBoundary/QueryBoundary.test.tsx`
 - Modify: `src/shared/ui/index.ts`
 
-- [ ] пропсы: `query: { data?: T; isLoading: boolean; isError: boolean; error?: unknown; refetch: () => unknown }`, `fallback?`, `errorFallback?: ({ error, reset }) => ReactNode`, `children: (data: T) => ReactNode` — структурный тип, без импорта RTK
-- [ ] `isError` → `errorFallback` (по умолчанию `ErrorState`), `reset` = `refetch` — даже если есть старые `data`; `isLoading` или `data === undefined` → `fallback` (по умолчанию `Spinner`); иначе `children(data)` — `children` никогда не получает `undefined`
-- [ ] сообщение ошибки берётся из `QueryError.message`
-- [ ] `ErrorState` по-прежнему не зависит от `react-router`
-- [ ] тесты: три состояния, Retry вызывает `refetch`, кастомный `errorFallback`, пропущенный запрос (`data === undefined`, не loading) → `fallback`, ошибка перезапроса при старых данных → ошибка
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] пропсы: `query: { data?: T; isLoading: boolean; isError: boolean; error?: unknown; refetch: () => unknown }`, `fallback?`, `errorFallback?: ({ error, reset }) => ReactNode`, `children: (data: T) => ReactNode` — структурный тип, без импорта RTK
+- [x] `isError` → `errorFallback` (по умолчанию `ErrorState`), `reset` = `refetch` — даже если есть старые `data`; `isLoading` или `data === undefined` → `fallback` (по умолчанию `Spinner`); иначе `children(data)` — `children` никогда не получает `undefined`
+- [x] сообщение ошибки берётся из `QueryError.message`
+- [x] `ErrorState` по-прежнему не зависит от `react-router`
+- [x] тесты: три состояния, Retry вызывает `refetch`, кастомный `errorFallback`, пропущенный запрос (`data === undefined`, не loading) → `fallback`, ошибка перезапроса при старых данных → ошибка
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 8: Endpoints рейлов и страницы Home/Popular
 
