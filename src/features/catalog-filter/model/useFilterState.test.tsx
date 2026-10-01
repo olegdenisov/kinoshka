@@ -179,6 +179,78 @@ describe('useFilterState', () => {
     expect(result.current.filters.rating).toBeNull()
   })
 
+  it('activeChips: новые поля дают чипы с подписями (страна из шорт-листа — EN, прочие как есть)', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper([
+        '/search?countries=США,Исландия&duration=medium&platforms=Иви,Okko&list=top250',
+      ]),
+    })
+
+    expect(result.current.activeChips.map(c => c.label)).toEqual([
+      'USA',
+      'Исландия',
+      '90–120 min',
+      'Ivi',
+      'Okko',
+      'Top 250',
+    ])
+  })
+
+  it('activeChips onRemove: чип страны/платформы убирает только свою', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper([
+        '/search?q=x&countries=США,Франция&platforms=Иви,Okko',
+      ]),
+    })
+
+    act(() =>
+      result.current.activeChips.find(c => c.label === 'USA')!.onRemove(),
+    )
+    expect(result.current.filters.countries).toEqual(['Франция'])
+    expect(result.current.filters.platforms).toEqual(['Иви', 'Okko'])
+
+    act(() =>
+      result.current.activeChips.find(c => c.label === 'Ivi')!.onRemove(),
+    )
+    expect(result.current.filters.platforms).toEqual(['Okko'])
+    expect(result.current.filters.countries).toEqual(['Франция'])
+  })
+
+  it('activeChips onRemove: чипы duration и list меняют только своё поле', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper(['/search?duration=long&list=top250&rating=7']),
+    })
+
+    act(() =>
+      result.current.activeChips
+        .find(c => c.label === 'Over 2 hours')!
+        .onRemove(),
+    )
+    expect(result.current.filters).toEqual({
+      ...EMPTY_FILTERS,
+      list: 'top250',
+      rating: 7,
+    })
+
+    act(() =>
+      result.current.activeChips.find(c => c.label === 'Top 250')!.onRemove(),
+    )
+    expect(result.current.filters).toEqual({ ...EMPTY_FILTERS, rating: 7 })
+  })
+
+  it('resetFilters очищает новые ключи, не трогая ?q', () => {
+    const { result } = renderHook(() => useFilterState(), {
+      wrapper: wrapper([
+        '/search?q=x&countries=США&duration=short&platforms=Иви&list=top250',
+      ]),
+    })
+
+    act(() => result.current.resetFilters())
+
+    expect(result.current.filters).toEqual(EMPTY_FILTERS)
+    expect(result.current.activeChips).toEqual([])
+  })
+
   it('toggleGenre добавляет жанр в ?genres с replace:true', () => {
     const { result } = renderHook(() => useFilterState(), {
       wrapper: wrapper(['/search']),
