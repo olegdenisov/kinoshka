@@ -1,5 +1,2 @@
 export { QueryBoundary } from './QueryBoundary'
-export type {
-  QueryBoundaryQuery,
-  QueryBoundaryErrorParams,
-} from './QueryBoundary'
+export type { QueryBoundaryErrorParams } from './QueryBoundary'

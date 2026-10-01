@@ -4,12 +4,10 @@ export { PopularBadge } from './ui/PopularBadge'
 export type {
   Movie,
   MovieDetail,
-  MovieType,
   CastMember,
   CrewMember,
   PopularMovie,
 } from './model/types'
-export type { Genre } from './model/genre'
 export { STATIC_FALLBACK_GENRES } from './model/genre'
 export { STATIC_FALLBACK_COUNTRIES } from './model/country'
 export type { CatalogParams } from './api/movieApi'

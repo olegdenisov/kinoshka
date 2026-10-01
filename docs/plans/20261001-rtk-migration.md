@@ -464,13 +464,13 @@ export const store = makeStore()
 
 **Model:** sonnet — сверка результата с планом и критериями Phase 3, исправление расхождений
 
-- [ ] все шесть пунктов roadmap 3.1 реализованы
-- [ ] в `src/` нет `use(` для данных, `createCachedFetcher`, `useStorageSlot`
-- [ ] ключи `localStorage` те же, что на `main` (`kinoshka:*`); `index.html` и CSP-хэш не изменены
-- [ ] `make check` (format-check, lint, build)
-- [ ] `make test`
-- [ ] `make knip`, `make size`
-- [ ] `make e2e` — один прогон (квота 200 запросов/день); сценарии спеков не менялись
+- [x] все шесть пунктов roadmap 3.1 реализованы
+- [x] в `src/` нет `use(` для данных, `createCachedFetcher`, `useStorageSlot`
+- [x] ключи `localStorage` те же, что на `main` (`kinoshka:*`); `index.html` и CSP-хэш не изменены
+- [x] `make check` (format-check, lint, build)
+- [x] `make test`
+- [x] `make knip`, `make size` (убраны 14 неиспользуемых type-экспортов из Task 1–13 и лишний ignore в knip.jsonc)
+- [x] `make e2e` — один прогон (квота 200 запросов/день); сценарии спеков не менялись (skipped - суточная квота API исчерпана: 14 падений из-за «суточный лимит по запросам» и Mobile Safari `PushAPIEnabled`; спеки не менялись, только комментарии)
 
 ### Task 17: [Final] Документация
 

@@ -9,4 +9,3 @@ export {
   profileReducerPath,
   registerProfilePersistence,
 } from './model/profileSlice'
-export type { ProfileRootState } from './model/profileSlice'

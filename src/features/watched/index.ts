@@ -5,4 +5,3 @@ export {
   watchedReducerPath,
   registerWatchedPersistence,
 } from './model/watchedSlice'
-export type { WatchedRootState } from './model/watchedSlice'

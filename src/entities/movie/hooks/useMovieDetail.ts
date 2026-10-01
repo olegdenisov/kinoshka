@@ -2,7 +2,7 @@ import { useGetMovieDetailQuery, useGetMovieImagesQuery } from '../api/movieApi'
 import type { MovieImage } from '../api/movieApi'
 import type { MovieDetail } from '../model/types'
 
-export type MovieDetailBundle = {
+type MovieDetailBundle = {
   detail: MovieDetail
   images: MovieImage[]
 }
