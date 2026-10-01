@@ -165,16 +165,16 @@
 - Modify: `src/entities/movie/index.ts`
 - Modify: `src/test/setup.ts`
 
-- [ ] вынести логику `genreDictionaryCache.ts` в фабрику `createDictionaryCache({ storageKey, fetchItems })`, где `fetchItems: () => Promise<string[]>`; кулдаун, in-flight дедупликация и установка `lastAttemptAt` до запроса сохраняются как есть, состояние живёт в замыкании экземпляра, слот создаётся один раз на экземпляр
-- [ ] переписать `genreDictionaryCache.ts` как экземпляр фабрики с ключом `kinoshka:genres` (`fetchItems` = `getGenreDictionary` + `.map(g => g.name)`), сохранив все существующие экспорты и их сигнатуры; `genreDictionaryCache.test.ts` и тесты `useGenreDictionary` не правятся — они и есть регрессионная сетка рефакторинга
-- [ ] создать `model/country.ts` с `STATIC_FALLBACK_COUNTRIES` (только имена; подписи живут в фиче, как `genreMap`)
-- [ ] создать `getCountryDictionary.ts` (`getV15DictionaryByType({ path: { type: 'countries' } })`, сужение ошибки как в `getGenreDictionary`, возвращает `string[]`) и `countryDictionaryCache.ts` (экземпляр с ключом `kinoshka:countries`; отдельный `invalidate` для стран не экспортировать)
-- [ ] создать `useCountryDictionary()` по образцу `useGenreDictionary` — синхронный, с фолбэком на `STATIC_FALLBACK_COUNTRIES`; реэкспортировать из него `resetCountryDictionaryState`
-- [ ] экспортировать из `src/entities/movie/index.ts`: `useCountryDictionary`, `STATIC_FALLBACK_COUNTRIES`, `resetCountryDictionaryState`
-- [ ] добавить в `src/test/setup.ts` дефолтный MSW-хендлер `*/v1.5/dictionary/countries` и вызов `resetCountryDictionaryState()` в глобальном `afterEach`
-- [ ] тесты `createDictionaryCache`: успех пишет слот; параллельные вызовы дают один запрос; кулдаун после ошибки и после `200` с пустым `items`; два экземпляра не делят состояние
-- [ ] тесты `getCountryDictionary` (успех, ответ с `statusCode` → `ApiError`) и `useCountryDictionary` (фолбэк → данные из API; устаревший кэш отдаётся сразу и обновляется в фоне)
-- [ ] `make test` — зелёные (включая нетронутые жанровые тесты) до задачи 4
+- [x] вынести логику `genreDictionaryCache.ts` в фабрику `createDictionaryCache({ storageKey, fetchItems })`, где `fetchItems: () => Promise<string[]>`; кулдаун, in-flight дедупликация и установка `lastAttemptAt` до запроса сохраняются как есть, состояние живёт в замыкании экземпляра, слот создаётся один раз на экземпляр
+- [x] переписать `genreDictionaryCache.ts` как экземпляр фабрики с ключом `kinoshka:genres` (`fetchItems` = `getGenreDictionary` + `.map(g => g.name)`), сохранив все существующие экспорты и их сигнатуры (кроме типа `GenreDictionaryCacheValue` — внешних потребителей нет, после рефакторинга knip флагует его как unused); `genreDictionaryCache.test.ts` и тесты `useGenreDictionary` не правятся — они и есть регрессионная сетка рефакторинга
+- [x] создать `model/country.ts` с `STATIC_FALLBACK_COUNTRIES` (только имена; подписи живут в фиче, как `genreMap`)
+- [x] создать `getCountryDictionary.ts` (`getV15DictionaryByType({ path: { type: 'countries' } })`, сужение ошибки как в `getGenreDictionary`, возвращает `string[]`) и `countryDictionaryCache.ts` (экземпляр с ключом `kinoshka:countries`; отдельный `invalidate` для стран не экспортировать)
+- [x] создать `useCountryDictionary()` по образцу `useGenreDictionary` — синхронный, с фолбэком на `STATIC_FALLBACK_COUNTRIES`; реэкспортировать из него `resetCountryDictionaryState`
+- [x] экспортировать из `src/entities/movie/index.ts`: `useCountryDictionary`, `STATIC_FALLBACK_COUNTRIES`, `resetCountryDictionaryState`
+- [x] добавить в `src/test/setup.ts` дефолтный MSW-хендлер `*/v1.5/dictionary/countries` и вызов `resetCountryDictionaryState()` в глобальном `afterEach`
+- [x] тесты `createDictionaryCache`: успех пишет слот; параллельные вызовы дают один запрос; кулдаун после ошибки и после `200` с пустым `items`; два экземпляра не делят состояние
+- [x] тесты `getCountryDictionary` (успех, ответ с `statusCode` → `ApiError`) и `useCountryDictionary` (фолбэк → данные из API; устаревший кэш отдаётся сразу и обновляется в фоне)
+- [x] `make test` — зелёные (включая нетронутые жанровые тесты) до задачи 4
 
 ### Task 4: Generic ChipSelect и перевод GenreSelector на него
 

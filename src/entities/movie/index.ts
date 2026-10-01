@@ -11,6 +11,7 @@ export type {
 } from './model/types'
 export type { Genre } from './model/genre'
 export { STATIC_FALLBACK_GENRES } from './model/genre'
+export { STATIC_FALLBACK_COUNTRIES } from './model/country'
 export { getMoviesPage, invalidateMoviesPage } from './api/getMoviesPage'
 export type { CatalogParams, CatalogPageResult } from './api/getMoviesPage'
 export { getSearchMovies } from './api/getSearchMovies'
