@@ -16,7 +16,7 @@ test('favorites: add on home, persists after reload, appears on /favorites', asy
   ).toBeVisible()
 
   // Рейлы рендерятся в фиксированном DOM-порядке (Home.tsx), но четыре
-  // Suspense-границы резолвятся независимо, поэтому карточка идентифицируется
+  // запроса рейлов (QueryBoundary у каждого) резолвятся независимо, поэтому карточка идентифицируется
   // по названию (title), а не по голой позиции после reload.
   const title = await firstCard.textContent()
   if (!title) {

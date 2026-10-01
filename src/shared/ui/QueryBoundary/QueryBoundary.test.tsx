@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 
-import { QueryBoundary, type QueryBoundaryQuery } from './QueryBoundary'
+import { QueryBoundary } from './QueryBoundary'
+import type { QueryBoundaryQuery } from './QueryBoundary'
 
 const makeQuery = (
   patch: Partial<QueryBoundaryQuery<string>> = {},
@@ -63,6 +64,25 @@ describe('QueryBoundary', () => {
     renderBoundary(makeQuery({ isError: true, error: undefined }))
 
     expect(screen.getByText('Please try again later')).toBeInTheDocument()
+  })
+
+  it.each([
+    ['пустая строка', { message: '' }],
+    ['не строка', { message: 42 }],
+    ['не объект', 'boom'],
+  ])('message %s -> дефолтный текст', (_label, error) => {
+    renderBoundary(makeQuery({ isError: true, error }))
+
+    expect(screen.getByText('Please try again later')).toBeInTheDocument()
+  })
+
+  it('isLoading при уже имеющихся data -> fallback, не children', () => {
+    renderBoundary(makeQuery({ isLoading: true, data: 'hello' }), {
+      fallback: <div data-testid='skeleton' />,
+    })
+
+    expect(screen.getByTestId('skeleton')).toBeInTheDocument()
+    expect(screen.queryByTestId('content')).not.toBeInTheDocument()
   })
 
   it('кастомный errorFallback получает error и reset', () => {

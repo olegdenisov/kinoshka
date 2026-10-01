@@ -82,7 +82,7 @@ Import direction: `pages → widgets → features → entities → shared`. Neve
 
 **Public API:** every slice in `widgets/` and `features/` (and every `entities/*` slice) exposes an `index.ts`. Import only through it — `import { Header } from '@widgets/header'`, never `@widgets/header/ui/Header` (lint error). Same for `@shared/{ui,lib,api,config}`. The barrel `index.ts` is the source of truth for what a slice exports — read it before adding a new hook; an equivalent may already exist.
 
-**Page-slice `model/` facade.** When a page needs to combine more than one downward slice (e.g. `@features/*` + `@entities/*`), put the composing hook in `src/pages/<page>/model/` — a lower slice can't import a higher one. Page-internal, not exported. Examples: `useMovieCatalog`, `useRecommendedMovies`, `useSearchAnalytics`.
+**Page-slice `model/` facade.** When a page needs to combine more than one downward slice (e.g. `@features/*` + `@entities/*`), put the composing hook in `src/pages/<page>/model/` — a lower slice can't import a higher one. Page-internal, not exported. Examples: `useMovieCatalog`, `useRecommendedMovies`, `useSearchAnalytics`. Same rule for RTK Query: an endpoint that composes endpoints of several lower slices is injected from `src/pages/<page>/api/` (e.g. `recommendationsApi`), not from a feature.
 
 ## Routing
 
@@ -155,7 +155,7 @@ Formatters over API numbers/dates (`formatCurrency()`/`formatDate()`, `@entities
 
 ## Data (summary)
 
-Server data is RTK Query (`baseApi` + `injectEndpoints`), read through hooks inside `QueryBoundary`; client state lives in Redux slices persisted to `localStorage` via `createStorageSlot` + listener middleware. Details → `data-layer.md`, `storage.md`. Check for an existing live-data hook before reaching for mock data.
+Server data is RTK Query (`baseApi` in `@shared/api` + `injectEndpoints`), read through hooks inside `QueryBoundary` (`@shared/ui`); client state lives in Redux slices persisted to `localStorage` via `createStorageSlot` + listener middleware (`@shared/lib` store helpers). The store is assembled only in `src/app/store.ts` (`makeStore`) — slices below `app` never import it. Details → `data-layer.md`, `storage.md`. Check for an existing live-data hook before reaching for mock data.
 
 Repo-wide gotchas worth knowing everywhere:
 
@@ -163,4 +163,4 @@ Repo-wide gotchas worth knowing everywhere:
 
 ## Testing
 
-Vitest config is inline in `vite.config.ts` (`jsdom`, `globals: true`, `e2e/**` excluded via `configDefaults.exclude`). API calls are mocked with **MSW** (`src/test/setup.ts`, `onUnhandledRequest: 'error'`). **Zod** validates only the `localStorage`/`sessionStorage` boundary — API responses are trusted against the generated types. Pure logic is extracted from config files (`sentry.config.ts`, `bundle.config.ts`, `sentry-telemetry.config.ts`) specifically to be unit-tested — follow that precedent instead of testing `vite.config.ts` directly.
+Vitest config is inline in `vite.config.ts` (`jsdom`, `globals: true`, `e2e/**` excluded via `configDefaults.exclude`). API calls are mocked with **MSW** (`src/test/setup.ts`, `onUnhandledRequest: 'error'`). **Zod** validates only the `localStorage`/`sessionStorage` boundary — API responses are trusted against the generated types. Components and hooks that need the store are tested through `src/test/renderWithStore.tsx` (`renderWithStore`, `createStoreWrapper`, `makeStore` — a fresh store per test, torn down automatically); tests below `app` import it by relative path, since FSD lint forbids `@app/*` there. Pure logic is extracted from config files (`sentry.config.ts`, `bundle.config.ts`, `sentry-telemetry.config.ts`) specifically to be unit-tested — follow that precedent instead of testing `vite.config.ts` directly.

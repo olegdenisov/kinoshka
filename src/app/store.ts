@@ -23,10 +23,13 @@ import {
   watchlistReducer,
   watchlistReducerPath,
 } from '@features/watchlist'
-import { combineReducers, configureStore } from '@reduxjs/toolkit'
+import {
+  combineReducers,
+  configureStore,
+  createListenerMiddleware,
+} from '@reduxjs/toolkit'
 import { baseApi } from '@shared/api'
-import { createAppListenerMiddleware } from '@shared/lib'
-import type { StartListening } from '@shared/lib'
+import type { StartListening, SubscribableStore } from '@shared/lib'
 
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
@@ -39,16 +42,11 @@ const rootReducer = combineReducers({
 
 export type RootState = ReturnType<typeof rootReducer>
 
-type PersistenceStore = {
-  getState: () => RootState
-  dispatch: (action: { type: string }) => unknown
-}
-
 // Единая точка регистрации persist: persistSlice (стор → слот) и subscribeSlot (другая вкладка →
 // стор) для каждой фичи с localStorage-стейтом. Возвращает teardown, снимающий подписки на слоты —
 // они висят на window/общем emitter'е и без отписки переживали бы свой стор.
 const setupPersistence = (
-  store: PersistenceStore,
+  store: SubscribableStore<RootState>,
   startListening: StartListening<RootState>,
 ): (() => void) => {
   const unsubscribers: Array<() => void> = [
@@ -68,11 +66,13 @@ const setupPersistence = (
 // глобальный сброс кеша RTK Query между тестами не нужен. Listener middleware тоже создаётся на
 // каждый стор — общий экземпляр копил бы listener'ы от всех сторов, созданных в тестах.
 export const makeStore = (preloadedState?: Partial<RootState>) => {
-  const listenerMiddleware = createAppListenerMiddleware()
+  const listenerMiddleware = createListenerMiddleware()
 
   const store = configureStore({
     reducer: rootReducer,
     preloadedState,
+    // В проде DevTools выключены: в сторе имя профиля и списки фильмов пользователя.
+    devTools: import.meta.env.DEV,
     middleware: getDefaultMiddleware =>
       getDefaultMiddleware()
         .prepend(listenerMiddleware.middleware)

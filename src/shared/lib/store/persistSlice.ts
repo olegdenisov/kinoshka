@@ -36,7 +36,8 @@ export const persistSlice = <State, T>({
     },
   })
 
-type SubscribableStore<State> = {
+// Минимальная форма стора, которую видят фичи и shared: полный AppStore живёт в app.
+export type SubscribableStore<State> = {
   getState: () => State
   dispatch: (action: UnknownAction) => unknown
 }
@@ -48,6 +49,8 @@ type SubscribeSlotOptions<State, T> = {
 
 // Слот хранит JSON, а slot.get() отдаёт свежераспарсенный объект — сравнение по ссылке всегда
 // давало бы «изменилось». Сравниваем сериализованные формы, как они лежат в localStorage.
+// JSON.stringify зависит от порядка ключей: для массивов и примитивов (все слоты сейчас) это
+// безопасно, для слота-объекта с другим порядком ключей сравнение дало бы ложное «изменилось».
 const isSameValue = (a: unknown, b: unknown) =>
   a === b || JSON.stringify(a) === JSON.stringify(b)
 
@@ -65,3 +68,38 @@ export const subscribeSlot = <State, T>(
     if (isSameValue(value, select(store.getState()))) return
     store.dispatch(hydrated(value))
   })
+
+type RegisterSlotPersistenceOptions<State, T> = {
+  store: SubscribableStore<State>
+  startListening: StartListening<State>
+  slot: StorageSlot<T>
+  select: (state: State) => T
+  matcher: (action: UnknownAction) => boolean
+  // Один экшен на оба направления: приём из другой вкладки и откат при отказе записи.
+  hydrated: PayloadActionCreator<T>
+}
+
+// Обе стороны синхронизации фичи со слотом: стор → слот (persistSlice) и другая вкладка → стор
+// (subscribeSlot). Возвращает общий unsubscribe.
+export const registerSlotPersistence = <State, T>({
+  store,
+  startListening,
+  slot,
+  select,
+  matcher,
+  hydrated,
+}: RegisterSlotPersistenceOptions<State, T>) => {
+  const stopPersist = persistSlice({
+    startListening,
+    slot,
+    select,
+    matcher,
+    rollback: hydrated,
+  })
+  const stopSubscribe = subscribeSlot(store, slot, { select, hydrated })
+
+  return () => {
+    stopPersist()
+    stopSubscribe()
+  }
+}

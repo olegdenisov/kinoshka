@@ -1,5 +1,5 @@
 import { genreDictionaryCache } from '../api/createDictionaryCache'
-import { useGetGenreDictionaryQuery } from '../api/movieApi'
+import { useGetGenreDictionaryQuery } from '../api/dictionaryApi'
 import type { Genre } from '../model/genre'
 import { STATIC_FALLBACK_GENRES } from '../model/genre'
 

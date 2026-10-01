@@ -6,9 +6,5 @@ export { useInView } from './inView'
 export { lazyNamed } from './lazyNamed'
 export { initAnalytics, trackEvent, trackPageview } from './analytics'
 export { PROFILE_ARIA_LABEL_PREFIX } from './profileAriaLabel'
-export {
-  createAppListenerMiddleware,
-  persistSlice,
-  subscribeSlot,
-} from './store'
-export type { ListenerMiddlewareInstance, StartListening } from './store'
+export { registerSlotPersistence, subscribeSlot, toggleId } from './store'
+export type { StartListening, SubscribableStore } from './store'

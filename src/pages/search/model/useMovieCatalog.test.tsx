@@ -4,7 +4,8 @@ import { http, HttpResponse } from 'msw'
 
 import { createStoreWrapper } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
-import { useMovieCatalog, type MovieCatalogParams } from './useMovieCatalog'
+import { useMovieCatalog } from './useMovieCatalog'
+import type { MovieCatalogParams } from './useMovieCatalog'
 
 const SEARCH_ENDPOINT = '*/v1.5/movie/search'
 const CATALOG_ENDPOINT = '*/v1.5/movie'
@@ -230,7 +231,7 @@ describe('useMovieCatalog — смена аргументов', () => {
     expect(requests).toHaveLength(1)
   })
 
-  it('переключение каталог → поиск: сетка каталога держится, mode — от новых аргументов', async () => {
+  it('переключение каталог → поиск: сетка каталога держится, mode/query — от аргументов этих data', async () => {
     mockCatalog([catalogDoc('Dune')])
 
     const { result, rerender } = renderCatalog({
@@ -245,10 +246,15 @@ describe('useMovieCatalog — смена аргументов', () => {
     rerender({ query: 'matrix', filters: EMPTY_FILTERS, sort: '', page: 1 })
 
     expect(titles(result)).toEqual(['Dune'])
-    expect(result.current.data?.mode).toBe('search')
+    // прежняя сетка каталога — и режим её, иначе пустой каталог показал бы «ничего не найдено по …»
+    expect(result.current.data).toMatchObject({ mode: 'catalog', query: '' })
     expect(result.current.isUpdating).toBe(true)
 
     await waitFor(() => expect(titles(result)).toEqual(['Matrix']))
+    expect(result.current.data).toMatchObject({
+      mode: 'search',
+      query: 'matrix',
+    })
   })
 })
 

@@ -1,10 +1,7 @@
 import { useMovieDetail } from '@entities/movie'
-import type { QueryError } from '@shared/api'
-import {
-  ErrorState,
-  QueryBoundary,
-  type QueryBoundaryErrorParams,
-} from '@shared/ui'
+import { asQueryError } from '@shared/api'
+import { ErrorState, QueryBoundary } from '@shared/ui'
+import type { QueryBoundaryErrorParams } from '@shared/ui'
 import { useParams } from 'react-router'
 
 import { Movie } from './ui/Movie'
@@ -18,7 +15,7 @@ type MovieDetailContentProps = {
 }
 
 const movieErrorFallback = ({ error, reset }: QueryBoundaryErrorParams) => {
-  const queryError = error as QueryError | undefined
+  const queryError = error === undefined ? undefined : asQueryError(error)
   const isNotFound = queryError?.status === 404
 
   return (

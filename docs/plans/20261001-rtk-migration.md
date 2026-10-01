@@ -113,6 +113,9 @@ persistSlice({
   rollback,                // (previous: T) => Action — диспатчится при set() === false
 })
 subscribeSlot(store, slot, hydrated) // вкладка → стор
+// Публичный API слоя (`@shared/lib`) — `registerSlotPersistence` (обе стороны разом) и
+// `subscribeSlot` (favorites: только приём из вкладок). `persistSlice` — внутренняя часть
+// `registerSlotPersistence`, экспортируется из файла только для своего теста.
 
 // src/app/store.ts
 export const makeStore = (preloadedState?) => configureStore({ ... })
@@ -500,6 +503,10 @@ export const store = makeStore()
 - две вкладки: изменение избранного/темы в одной отражается в другой
 - `/search`: при смене страницы/фильтра старая сетка остаётся на экране с индикатором обновления
 - приватный режим/переполненный `localStorage`: избранное не «залипает» в UI, `/profile` показывает ошибку сохранения
+
+**Не проверено на ветке**
+
+- [ ] `make e2e` не прогнан зелёным (Task 16: суточная квота API исчерпана, Mobile Safari `PushAPIEnabled`) — паритет поведения с `main` в браузере не подтверждён; перезапустить после сброса квоты, минимум chromium-проекты
 
 **Наблюдать после миграции**
 

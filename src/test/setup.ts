@@ -1,8 +1,11 @@
 import '@testing-library/jest-dom/vitest'
-import { resetDictionaryCooldowns } from '@entities/movie'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+
+// Относительный путь, мимо публичного index.ts @entities/movie: тестовая утилита в public API
+// сущности не нужна.
+import { resetDictionaryCooldowns } from '../entities/movie/api/createDictionaryCache'
 
 // window.matchMedia — jsdom вообще не реализует этот API (docs/plans/20260819-theme-toggle.md,
 // Task 4). useTheme() безусловно вызывает `window.matchMedia('(prefers-color-scheme: dark)')`,

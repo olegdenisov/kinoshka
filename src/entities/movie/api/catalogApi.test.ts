@@ -3,12 +3,8 @@ import { http, HttpResponse } from 'msw'
 import { makeStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import { hashHue } from '../lib/hashHue'
-import {
-  BACKGROUND_RETRY_COOLDOWN_MS,
-  countryDictionaryCache,
-  genreDictionaryCache,
-} from './createDictionaryCache'
-import { catalogApi, movieApi, movieByIdsApi, moviePageApi } from './movieApi'
+import { catalogApi, moviePageApi, movieListApi } from './catalogApi'
+import { MAX_PAGES } from './paginationConfig'
 
 const MOVIE_ENDPOINT = '*/v1.5/movie'
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
@@ -46,8 +42,8 @@ const errorBody = (status: number) => ({
 })
 
 const getMovies = (
-  params: Parameters<typeof movieApi.endpoints.getMovies.initiate>[0],
-) => makeStore().dispatch(movieApi.endpoints.getMovies.initiate(params))
+  params: Parameters<typeof movieListApi.endpoints.getMovies.initiate>[0],
+) => makeStore().dispatch(movieListApi.endpoints.getMovies.initiate(params))
 
 const listItem = (overrides: Record<string, unknown> = {}) => ({
   position: 1,
@@ -85,7 +81,7 @@ const mockList = (docs: Record<string, unknown>[]) => {
 }
 
 const getPopular = (params: { slug: string; limit: number }) =>
-  makeStore().dispatch(movieApi.endpoints.getPopularMovies.initiate(params))
+  makeStore().dispatch(movieListApi.endpoints.getPopularMovies.initiate(params))
 
 describe('getMovies', () => {
   it('маппит docs-элемент в Movie', async () => {
@@ -253,229 +249,6 @@ describe('getPopularMovies', () => {
   })
 })
 
-const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
-  id,
-  name: 'Test Movie',
-  year: 2024,
-  type: 'movie',
-  rating: { kp: 8.1, imdb: 7.9 },
-  genres: [{ name: 'drama' }],
-  movieLength: 120,
-  poster: { previewUrl: 'https://example.com/poster.jpg' },
-  persons: [],
-  countries: [],
-  ...overrides,
-})
-
-const getDetail = (id: number) =>
-  makeStore().dispatch(movieApi.endpoints.getMovieDetail.initiate(id))
-
-describe('getMovieDetail', () => {
-  it('маппит ответ в MovieDetail', async () => {
-    server.use(
-      http.get('*/v1.5/movie/1', () =>
-        HttpResponse.json(movieDoc(1, { name: 'Orbit of Silence' })),
-      ),
-    )
-
-    const result = await getDetail(1)
-
-    expect(result.data).toMatchObject({ id: 1, title: 'Orbit of Silence' })
-  })
-
-  it('404 — QueryError со status', async () => {
-    server.use(
-      http.get('*/v1.5/movie/2', () =>
-        HttpResponse.json(
-          { statusCode: 404, message: 'Not found', error: 'Not Found' },
-          { status: 404 },
-        ),
-      ),
-    )
-
-    const result = await getDetail(2)
-
-    expect(result.error).toMatchObject({ status: 404 })
-  })
-
-  it('error-DTO в теле 200 — QueryError со status из тела', async () => {
-    server.use(
-      http.get('*/v1.5/movie/3', () =>
-        HttpResponse.json({ statusCode: 403, message: 'Quota', error: 'x' }),
-      ),
-    )
-
-    const result = await getDetail(3)
-
-    expect(result.error).toEqual({ status: 403, message: 'Quota' })
-  })
-})
-
-const image = (overrides: Record<string, unknown> = {}) => ({
-  movieId: 1,
-  type: 'frame',
-  url: 'https://example.com/frame.jpg',
-  previewUrl: 'https://example.com/frame-preview.jpg',
-  ...overrides,
-})
-
-const mockImages = (docs: Record<string, unknown>[]) => {
-  let request: Request | undefined
-  server.use(
-    http.get('*/v1.5/image', ({ request: req }) => {
-      request = req
-      return HttpResponse.json({
-        docs,
-        limit: 8,
-        next: null,
-        prev: null,
-        hasNext: false,
-        hasPrev: false,
-      })
-    }),
-  )
-  return () => request
-}
-
-const getImages = (id: number) =>
-  makeStore().dispatch(movieApi.endpoints.getMovieImages.initiate(id))
-
-describe('getMovieImages', () => {
-  it('уходит на /v1.5/image с movieId, type:[frame,screenshot], limit:8, selectFields', async () => {
-    const getRequest = mockImages([image()])
-
-    await getImages(1)
-
-    const url = new URL(getRequest()!.url)
-    expect(url.searchParams.getAll('movieId')).toEqual(['1'])
-    expect(url.searchParams.getAll('type')).toEqual(['frame', 'screenshot'])
-    expect(url.searchParams.get('limit')).toBe('8')
-    expect(url.searchParams.getAll('selectFields')).toEqual([
-      'url',
-      'previewUrl',
-    ])
-  })
-
-  it('docs маппятся в { url, previewUrl }, запись без url отфильтровывается', async () => {
-    mockImages([image({ url: undefined }), image({ previewUrl: undefined })])
-
-    const result = await getImages(1)
-
-    expect(result.data).toEqual([
-      { url: 'https://example.com/frame.jpg', previewUrl: undefined },
-    ])
-  })
-
-  it('403 — QueryError со status', async () => {
-    server.use(
-      http.get('*/v1.5/image', () =>
-        HttpResponse.json(errorBody(403), { status: 403 }),
-      ),
-    )
-
-    const result = await getImages(2)
-
-    expect(result.error).toMatchObject({ status: 403 })
-  })
-})
-
-const movieError = (status: number) =>
-  HttpResponse.json(
-    { statusCode: status, message: 'err', error: 'err' },
-    { status },
-  )
-
-const mockDetail = (id: number, counter?: { count: number }) => {
-  server.use(
-    http.get(`*/v1.5/movie/${id}`, () => {
-      if (counter) counter.count++
-      return HttpResponse.json(movieDoc(id, { name: `Movie ${id}` }))
-    }),
-  )
-}
-
-const getByIds = (ids: number[], store = makeStore()) =>
-  store.dispatch(movieByIdsApi.endpoints.getMoviesByIds.initiate(ids))
-
-describe('getMoviesByIds', () => {
-  it('отдаёт Movie по каждому id в порядке ids', async () => {
-    mockDetail(11)
-    mockDetail(12)
-
-    const result = await getByIds([11, 12])
-
-    expect(result.data?.map(movie => movie.id)).toEqual([11, 12])
-  })
-
-  it('404 у одного id молча выпадает', async () => {
-    mockDetail(21)
-    server.use(http.get('*/v1.5/movie/22', () => movieError(404)))
-
-    const result = await getByIds([21, 22])
-
-    expect(result.data?.map(movie => movie.id)).toEqual([21])
-    expect(result.error).toBeUndefined()
-  })
-
-  it('все id 404 — пустой массив без ошибки', async () => {
-    server.use(
-      http.get('*/v1.5/movie/31', () => movieError(404)),
-      http.get('*/v1.5/movie/32', () => movieError(404)),
-    )
-
-    const result = await getByIds([31, 32])
-
-    expect(result.data).toEqual([])
-    expect(result.error).toBeUndefined()
-  })
-
-  it('полный сбой (не 404) — ошибка', async () => {
-    server.use(
-      http.get('*/v1.5/movie/41', () => movieError(500)),
-      http.get('*/v1.5/movie/42', () => movieError(404)),
-    )
-
-    const result = await getByIds([41, 42])
-
-    expect(result.error).toMatchObject({
-      message: 'Failed to load movies by ids',
-    })
-  })
-
-  it('частичный сбой не 404 при наличии фильмов — отдаёт найденные', async () => {
-    mockDetail(51)
-    server.use(http.get('*/v1.5/movie/52', () => movieError(500)))
-
-    const result = await getByIds([51, 52])
-
-    expect(result.data?.map(movie => movie.id)).toEqual([51])
-  })
-
-  it('кеш detail общий: id, уже загруженный как detail, не запрашивается повторно', async () => {
-    const counter = { count: 0 }
-    mockDetail(61, counter)
-    const store = makeStore()
-
-    await store.dispatch(movieApi.endpoints.getMovieDetail.initiate(61))
-    await getByIds([61], store)
-
-    expect(counter.count).toBe(1)
-  })
-
-  it('пересечение двух списков: общий id запрашивается один раз', async () => {
-    const counter = { count: 0 }
-    mockDetail(71, counter)
-    mockDetail(72)
-    mockDetail(73)
-    const store = makeStore()
-
-    await getByIds([71, 72], store)
-    await getByIds([71, 73], store)
-
-    expect(counter.count).toBe(1)
-  })
-})
-
 const SEARCH_ENDPOINT = '*/v1.5/movie/search'
 
 const movieNamed = (name: string) => ({
@@ -537,10 +310,10 @@ describe('getCatalogCursorStep', () => {
     const store = makeStore()
 
     const first = await store.dispatch(
-      movieApi.endpoints.getCatalogCursorStep.initiate({ params: {} }),
+      movieListApi.endpoints.getCatalogCursorStep.initiate({ params: {} }),
     )
     await store.dispatch(
-      movieApi.endpoints.getCatalogCursorStep.initiate({
+      movieListApi.endpoints.getCatalogCursorStep.initiate({
         params: {},
         cursor: 'c2',
       }),
@@ -556,6 +329,28 @@ describe('getCatalogCursorStep', () => {
     expect(requests[0].searchParams.get('limit')).toBe('12')
     expect(requests[1].searchParams.get('next')).toBe('c2')
     expect(requests[1].searchParams.get('withCount')).toBe('false')
+  })
+
+  it('error-DTO в теле 200-ответа — пустой шаг без курсора и total', async () => {
+    server.use(
+      http.get(MOVIE_ENDPOINT, () => HttpResponse.json(errorBody(403))),
+    )
+
+    const result = await makeStore().dispatch(
+      movieListApi.endpoints.getCatalogCursorStep.initiate({ params: {} }),
+    )
+
+    expect(result.data).toEqual({ movies: [], next: null, total: null })
+  })
+
+  it('error-DTO на первом шаге — страница пустая, totalPages = MAX_PAGES', async () => {
+    server.use(
+      http.get(MOVIE_ENDPOINT, () => HttpResponse.json(errorBody(403))),
+    )
+
+    const result = await getPage(1)
+
+    expect(result.data).toEqual({ movies: [], totalPages: MAX_PAGES })
   })
 })
 
@@ -638,6 +433,36 @@ describe('getMoviesPage', () => {
     expect(result.error).toMatchObject({ status: 403 })
   })
 
+  it.each([0, -1])(
+    'page=%i — отдаёт первую страницу одним запросом',
+    async page => {
+      const requests = mockChain()
+
+      const result = await getPage(page)
+
+      expect(requests).toHaveLength(1)
+      expect(result.data?.movies).toEqual([movieNamed('Page1')])
+    },
+  )
+
+  it('ошибка на шаге k>1 — QueryError, дальше по курсору не идёт', async () => {
+    const requests: (string | null)[] = []
+    server.use(
+      http.get(MOVIE_ENDPOINT, ({ request }) => {
+        const cursor = new URL(request.url).searchParams.get('next')
+        requests.push(cursor)
+        return cursor === 'c2'
+          ? HttpResponse.json(errorBody(500), { status: 500 })
+          : HttpResponse.json({ docs: [doc()], next: 'c2', total: 36 })
+      }),
+    )
+
+    const result = await getPage(3)
+
+    expect(result.error).toMatchObject({ status: 500 })
+    expect(requests).toEqual([null, 'c2'])
+  })
+
   it('после ошибки повторный запрос реально идёт в сеть', async () => {
     let attempts = 0
     server.use(
@@ -686,7 +511,7 @@ const mockSearch = (
 
 const getSearch = (query: string, page = 1) =>
   makeStore().dispatch(
-    movieApi.endpoints.getSearchMovies.initiate({ query, page }),
+    movieListApi.endpoints.getSearchMovies.initiate({ query, page }),
   )
 
 describe('getSearchMovies', () => {
@@ -754,6 +579,7 @@ describe('getCatalog', () => {
     expect(result.data).toEqual({
       movies: [movieNamed('Matrix')],
       totalPages: 3,
+      query: 'matrix',
     })
     expect(searchRequests).toHaveLength(1)
     expect(catalogRequests).toHaveLength(0)
@@ -772,6 +598,7 @@ describe('getCatalog', () => {
     )
 
     expect(result.data?.movies).toEqual([movieNamed('Page2')])
+    expect(result.data?.query).toBe('')
     expect(catalogRequests).toHaveLength(2)
     expect(catalogRequests[0].searchParams.getAll('type')).toEqual(['movie'])
     expect(searchRequests).toHaveLength(0)
@@ -805,133 +632,5 @@ describe('getCatalog', () => {
     )
 
     expect(result.error).toMatchObject({ status: 403 })
-  })
-})
-
-describe('getGenreDictionary / getCountryDictionary', () => {
-  const GENRES_ENDPOINT = '*/v1.5/dictionary/genres'
-  const COUNTRIES_ENDPOINT = '*/v1.5/dictionary/countries'
-
-  const mockDictionary = (endpoint: string, names: string[], status = 200) => {
-    const calls = { count: 0, url: '' }
-    server.use(
-      http.get(endpoint, ({ request }) => {
-        calls.count += 1
-        calls.url = request.url
-        return status === 200
-          ? HttpResponse.json({
-              type: 'x',
-              total: names.length,
-              items: names.map((name, i) => ({
-                id: i,
-                name,
-                slug: null,
-                enName: null,
-              })),
-            })
-          : HttpResponse.json(errorBody(status), { status })
-      }),
-    )
-    return calls
-  }
-
-  let now = 1_000_000
-
-  beforeEach(() => {
-    now = 1_000_000
-    vi.spyOn(Date, 'now').mockImplementation(() => now)
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  it('успех: отдаёт имена и пишет их в слот со временем загрузки', async () => {
-    const calls = mockDictionary(GENRES_ENDPOINT, ['драма', 'боевик'])
-
-    const result = await makeStore().dispatch(
-      movieApi.endpoints.getGenreDictionary.initiate(),
-    )
-
-    expect(new URL(calls.url).pathname).toBe('/v1.5/dictionary/genres')
-    expect(result.data).toEqual(['драма', 'боевик'])
-    expect(genreDictionaryCache.slot.get()).toEqual({
-      items: ['драма', 'боевик'],
-      fetchedAt: now,
-    })
-  })
-
-  it('страны пишутся в свой слот, жанровый не трогается', async () => {
-    const calls = mockDictionary(COUNTRIES_ENDPOINT, ['США'])
-
-    await makeStore().dispatch(
-      movieApi.endpoints.getCountryDictionary.initiate(),
-    )
-
-    expect(new URL(calls.url).pathname).toBe('/v1.5/dictionary/countries')
-    expect(countryDictionaryCache.slot.get().items).toEqual(['США'])
-    expect(genreDictionaryCache.slot.get().items).toEqual([])
-  })
-
-  it('ошибка → QueryError со status, существующий кеш не тронут', async () => {
-    genreDictionaryCache.save(['триллер'])
-    const before = genreDictionaryCache.slot.get()
-    mockDictionary(GENRES_ENDPOINT, [], 403)
-
-    const result = await makeStore().dispatch(
-      movieApi.endpoints.getGenreDictionary.initiate(),
-    )
-
-    expect(result.error).toEqual({ status: 403, message: 'Forbidden' })
-    expect(genreDictionaryCache.slot.get()).toEqual(before)
-  })
-
-  it('пустой ответ не затирает кеш', async () => {
-    genreDictionaryCache.save(['триллер'])
-    now += 1000
-    mockDictionary(GENRES_ENDPOINT, [])
-
-    const result = await makeStore().dispatch(
-      movieApi.endpoints.getGenreDictionary.initiate(),
-    )
-
-    expect(result.data).toEqual([])
-    expect(genreDictionaryCache.slot.get()).toEqual({
-      items: ['триллер'],
-      fetchedAt: 1_000_000,
-    })
-  })
-
-  it('параллельные подписки дают один запрос', async () => {
-    const calls = mockDictionary(GENRES_ENDPOINT, ['драма'])
-    const store = makeStore()
-
-    await Promise.all([
-      store.dispatch(movieApi.endpoints.getGenreDictionary.initiate()),
-      store.dispatch(movieApi.endpoints.getGenreDictionary.initiate()),
-    ])
-
-    expect(calls.count).toBe(1)
-  })
-
-  it('после ошибки повтор в пределах кулдауна не бьёт в сеть, после — бьёт', async () => {
-    const calls = mockDictionary(COUNTRIES_ENDPOINT, [], 500)
-    const store = makeStore()
-    const refetch = () =>
-      store.dispatch(
-        movieApi.endpoints.getCountryDictionary.initiate(undefined, {
-          forceRefetch: true,
-        }),
-      )
-
-    await refetch()
-    now += BACKGROUND_RETRY_COOLDOWN_MS - 1
-    const blocked = await refetch()
-    expect(blocked.isError).toBe(true)
-    expect(calls.count).toBe(1)
-
-    now += 1
-    await refetch()
-    expect(calls.count).toBe(2)
   })
 })

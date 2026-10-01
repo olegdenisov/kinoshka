@@ -1,5 +1,5 @@
 import { countryDictionaryCache } from '../api/createDictionaryCache'
-import { useGetCountryDictionaryQuery } from '../api/movieApi'
+import { useGetCountryDictionaryQuery } from '../api/dictionaryApi'
 import { STATIC_FALLBACK_COUNTRIES } from '../model/country'
 
 /**

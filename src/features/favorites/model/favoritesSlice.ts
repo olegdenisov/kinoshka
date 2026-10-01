@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import { baseApi } from '@shared/api'
-import { subscribeSlot } from '@shared/lib'
-import type { StartListening } from '@shared/lib'
+import { subscribeSlot, toggleId } from '@shared/lib'
+import type { StartListening, SubscribableStore } from '@shared/lib'
 
 import { favoritesSlot } from './favoritesStorage'
 
@@ -15,15 +15,17 @@ const favoritesSlice = createSlice({
   name: 'favorites',
   initialState: (): FavoritesState => ({ ids: favoritesSlot.get() }),
   reducers: {
-    // Оптимистичное изменение и его откат (mutation toggleFavorite). Редьюсер читает ids из state,
-    // а не из замыкания хука: два toggled подряд в одном тике не затирают друг друга.
+    // Оптимистичное изменение (mutation toggleFavorite).
     toggled: (state, action: PayloadAction<number>) => {
-      const index = state.ids.indexOf(action.payload)
-      if (index === -1) state.ids.push(action.payload)
-      else state.ids.splice(index, 1)
+      toggleId(state.ids, action.payload)
     },
     // Значение пришло из слота другой вкладки.
     hydrated: (state, action: PayloadAction<number[]>) => {
+      state.ids = action.payload
+    },
+    // Откат неудачной записи к значению слота. Отдельно от hydrated: тот инвалидирует рекомендации,
+    // а откат возвращает стейт к тому, по чему они уже построены.
+    rolledBack: (state, action: PayloadAction<number[]>) => {
       state.ids = action.payload
     },
   },
@@ -32,22 +34,20 @@ const favoritesSlice = createSlice({
   },
 })
 
-export const { toggled: favoritesToggled, hydrated: favoritesHydrated } =
-  favoritesSlice.actions
+export const {
+  toggled: favoritesToggled,
+  hydrated: favoritesHydrated,
+  rolledBack: favoritesRolledBack,
+} = favoritesSlice.actions
 export const { selectIds: selectFavoriteIds } = favoritesSlice.selectors
 export const favoritesReducer = favoritesSlice.reducer
 export const favoritesReducerPath = favoritesSlice.reducerPath
-
-type PersistenceStore = {
-  getState: () => FavoritesRootState
-  dispatch: (action: { type: string }) => unknown
-}
 
 // В отличие от остальных фич, persistSlice здесь не регистрируется: единственный путь записи в слот —
 // mutation toggleFavorite (см. favoritesApi.ts), иначе запись шла бы дважды. Остаётся только приём
 // изменений из других вкладок. Возвращает общий unsubscribe.
 export const registerFavoritesPersistence = (
-  store: PersistenceStore,
+  store: SubscribableStore<FavoritesRootState>,
   startListening: StartListening<FavoritesRootState>,
 ) => {
   const stopSubscribe = subscribeSlot<FavoritesRootState, number[]>(

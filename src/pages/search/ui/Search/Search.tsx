@@ -60,7 +60,7 @@ const SearchResults = ({
         <EmptyState title='Nothing found' description={emptyDescription} />
         {/*
           Deep-linked/устаревший ?page может указывать за пределы реальной выдачи (курсор
-          закончился раньше целевой страницы — см. getMoviesPage в movieApi.ts) — movies пуст,
+          закончился раньше целевой страницы — см. getMoviesPage в catalogApi.ts) — movies пуст,
           но totalPages всё равно приходит из total. Без Pagination тут это тупик: EmptyState
           не даёт способа вернуться на валидную страницу.
         */}
@@ -220,13 +220,13 @@ export const Search = () => {
               query={catalog}
               fallback={<SearchResultSkeletonGrid />}
             >
-              {({ movies, mode, totalPages }) => (
+              {({ movies, mode, query: resultQuery, totalPages }) => (
                 <SearchResults
                   movies={movies}
                   totalPages={totalPages}
                   emptyDescription={
                     mode === 'search'
-                      ? `Ничего не найдено по «${query}»`
+                      ? `Ничего не найдено по «${resultQuery}»`
                       : 'Try adjusting the filters'
                   }
                   page={page}

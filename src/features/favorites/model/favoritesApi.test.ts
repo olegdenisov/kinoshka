@@ -32,6 +32,9 @@ const testApi = baseApi.injectEndpoints({
   }),
 })
 
+const selectRecommendations = (store: ReturnType<typeof makeStore>) =>
+  testApi.endpoints.testRecommendations.select()(store.getState())
+
 const toggle = (store: ReturnType<typeof makeStore>, id: number) =>
   store.dispatch(favoritesApi.endpoints.toggleFavorite.initiate(id))
 
@@ -120,6 +123,36 @@ describe('toggleFavorite — отказ записи', () => {
   })
 })
 
+describe('toggleFavorite — конкурентные toggle', () => {
+  it('первый toggle падает, второй (другой id) успешен — стейт совпадает со слотом', async () => {
+    const store = makeStore()
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new DOMException('full', 'QuotaExceededError')
+    })
+
+    const first = toggle(store, 1)
+    const second = toggle(store, 2)
+    const [failed, succeeded] = await Promise.all([first, second])
+
+    expect(failed.error).toEqual({ message: 'Failed to save favorites' })
+    expect(succeeded.data).toEqual({ added: true })
+    await waitFor(() =>
+      expect(selectFavoriteIds(store.getState())).toEqual([2]),
+    )
+    expect(favoritesSlot.get()).toEqual([2])
+  })
+
+  it('один id дважды в одном тике — стейт и слот возвращаются к исходному', async () => {
+    favoritesSlot.set([5])
+    const store = makeStore()
+
+    await Promise.all([toggle(store, 1), toggle(store, 1)])
+
+    expect(selectFavoriteIds(store.getState())).toEqual([5])
+    expect(favoritesSlot.get()).toEqual([5])
+  })
+})
+
 describe('toggleFavorite — инвалидация Recommendations', () => {
   it('успешный toggle перезапрашивает подписанный запрос, и перезапрос видит обновлённые id', async () => {
     const store = makeStore()
@@ -142,13 +175,18 @@ describe('toggleFavorite — инвалидация Recommendations', () => {
       testApi.endpoints.testRecommendations.initiate(),
     )
     await subscription
+    const { requestId } = selectRecommendations(store)
     failWrites()
 
     await toggle(store, 7)
     await waitFor(() => expect(selectFavoriteIds(store.getState())).toEqual([]))
-    // Даём инвалидации шанс сработать, если бы она была запланирована.
-    await new Promise(resolve => setTimeout(resolve, 20))
 
+    // Инвалидация по результату mutation диспатчит refetch синхронно — новый requestId появился бы
+    // уже к резолву toggle; ждать по таймеру не нужно.
+    expect(selectRecommendations(store)).toMatchObject({
+      status: 'fulfilled',
+      requestId,
+    })
     expect(recommendationsCalls).toHaveBeenCalledTimes(1)
     subscription.unsubscribe()
   })
@@ -190,9 +228,11 @@ describe('toggleFavorite — инвалидация Recommendations', () => {
 
     await toggle(store, 3)
     await waitFor(() => expect(recommendationsCalls).toHaveBeenCalledTimes(2))
-    await new Promise(resolve => setTimeout(resolve, 20))
 
+    // hydrated диспатчил бы subscribeSlot синхронно внутри slot.set() — к резолву toggle он уже
+    // был бы в списке.
     expect(dispatched).not.toContain('favorites/hydrated')
+    expect(selectRecommendations(store).status).toBe('fulfilled')
     expect(recommendationsCalls).toHaveBeenCalledTimes(2)
     subscription.unsubscribe()
   })

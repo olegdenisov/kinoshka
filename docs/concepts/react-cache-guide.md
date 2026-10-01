@@ -169,3 +169,7 @@ Loading UI `Suspense` / `AsyncBoundary`
 
 В связке React 19 `cache()`, `use()` и `Suspense` образуют единый
 механизм работы с асинхронными ресурсами.
+
+> На ветке `rtk-migration` `AsyncBoundary` удалён: данные идут через RTK
+> Query, loading/error/Retry — через `QueryBoundary` (`@shared/ui`). Строки
+> про `AsyncBoundary` в таблице относятся к `main`.
