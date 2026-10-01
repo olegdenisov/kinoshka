@@ -139,5 +139,58 @@ describe('ChipSelect', () => {
       expect(screen.queryAllByRole('button')).toHaveLength(0)
       expect(screen.getByRole('searchbox')).toBeInTheDocument()
     })
+
+    it('ищет по переведённому лейблу, а не только по значению', () => {
+      const labels: Record<string, string> = { США: 'USA', Франция: 'France' }
+      renderSelect({
+        searchable: true,
+        defaults: undefined,
+        items: ['США', 'Франция'],
+        getLabel: v => labels[v] ?? v,
+      })
+
+      fireEvent.change(screen.getByRole('searchbox'), {
+        target: { value: 'usa' },
+      })
+
+      expect(screen.getByRole('button', { name: 'USA' })).toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: 'France' }),
+      ).not.toBeInTheDocument()
+    })
+
+    it('строка из пробелов не фильтрует список', () => {
+      renderSelect({ searchable: true, defaults: undefined })
+
+      fireEvent.change(screen.getByRole('searchbox'), {
+        target: { value: '   ' },
+      })
+
+      expect(screen.getAllByRole('button')).toHaveLength(ITEMS.length)
+    })
+
+    it('disabled дизейблит поле поиска', () => {
+      renderSelect({ searchable: true, defaults: undefined, disabled: true })
+
+      expect(screen.getByRole('searchbox')).toBeDisabled()
+    })
+
+    it('«Свернуть» сбрасывает текст поиска', () => {
+      renderSelect({ searchable: true })
+
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Показать все (2): Test' }),
+      )
+      fireEvent.change(screen.getByRole('searchbox'), {
+        target: { value: 'c' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: 'Свернуть: Test' }))
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Показать все (2): Test' }),
+      )
+
+      expect(screen.getByRole('searchbox')).toHaveValue('')
+      expect(screen.getByRole('button', { name: 'D' })).toBeInTheDocument()
+    })
   })
 })

@@ -27,6 +27,8 @@ paths:
 - The canonical filter value is the **Russian** `name` from the live dictionary; English is display-only. Result cards show genres in Russian — accepted. Legacy English `?genres=Drama` links match nothing — accepted, no migration.
 - `useGenreDictionary()` is **synchronous**, not Suspense (cached/static fallback + background refresh) — no `AsyncBoundary` needed.
 - The same rule applies to countries — canonical value is the Russian `name`, the API has no `enName`, English labels exist only for the shortlist.
+- Shortlist names (`STATIC_FALLBACK_COUNTRIES`) must match the live dictionary spelling exactly (it's `Корея Южная`, not `Южная Корея`) — a mismatch sends a dead `countries.name` and the chip drops out of the shortlist once the dictionary loads.
+- A new dictionary is a new `createDictionaryCache` instance (own `kinoshka:<name>` key, own cooldown/in-flight), not a copy of the genre cache.
 
 ## Filters
 

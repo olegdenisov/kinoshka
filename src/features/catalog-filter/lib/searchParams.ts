@@ -57,6 +57,8 @@ const parseIntOrNull = (raw: string | null): number | null => {
   return Number(raw)
 }
 
+// Запятая — разделитель: значения с запятой развалятся. Платформы и подборки захардкожены без
+// запятых, в названиях стран словаря её нет — при появлении нужен другой формат (повтор ключа).
 const parseCsv = (raw: string | null): string[] =>
   raw ? raw.split(',').filter(Boolean) : []
 

@@ -1,9 +1,9 @@
 import {
-  DURATION_OPTIONS,
   DURATION_VALUES,
   getDurationLabel,
   getListLabel,
   getPlatformLabel,
+  isDuration,
   LIST_OPTIONS,
   PLATFORM_OPTIONS,
 } from '../../lib/filterOptions'
@@ -26,6 +26,7 @@ type FilterPanelProps = {
 
 const RATINGS = [5, 6, 7, 8, 9]
 
+const DURATION_ITEMS = [...DURATION_VALUES]
 const PLATFORM_VALUES = PLATFORM_OPTIONS.map(o => o.value)
 const LIST_VALUES = LIST_OPTIONS.map(o => o.value)
 
@@ -137,16 +138,14 @@ export const FilterPanel = ({
         compact={compact}
       >
         <ChipSelect
-          items={DURATION_OPTIONS.map(o => o.value)}
+          items={DURATION_ITEMS}
           selected={filters.duration ? [filters.duration] : []}
           getLabel={getDurationLabel}
           onToggle={value =>
             onFiltersChange({
               ...filters,
               duration:
-                filters.duration === value
-                  ? null
-                  : (DURATION_VALUES.find(d => d === value) ?? null),
+                filters.duration !== value && isDuration(value) ? value : null,
             })
           }
           disabled={disabled}

@@ -42,6 +42,10 @@ export const createDictionaryCache = ({
   // экземпляры (жанры, страны) не делят кулдаун друг с другом.
   let lastAttemptAt = 0
   let inFlight: Promise<void> | null = null
+  // Поколение состояния: resetState/invalidate его увеличивают, и запоздавший ответ запроса,
+  // стартовавшего до сброса, не пишет в слот (иначе в тестах он протекает после
+  // localStorage.clear(), а после invalidate перезаписывает свежий кэш старым ответом).
+  let generation = 0
 
   const isStale = (fetchedAt: number): boolean =>
     Date.now() - fetchedAt > DICTIONARY_TTL_MS
@@ -63,19 +67,25 @@ export const createDictionaryCache = ({
     }
 
     lastAttemptAt = Date.now()
+    const startedIn = generation
 
-    inFlight = fetchItems()
+    const attempt = fetchItems()
       .then(items => {
-        slot.set({ items, fetchedAt: Date.now() })
+        if (startedIn === generation) {
+          slot.set({ items, fetchedAt: Date.now() })
+        }
       })
       .catch(() => {
         // lastAttemptAt уже проставлен выше, до сетевого запроса
       })
       .finally(() => {
-        inFlight = null
+        if (inFlight === attempt) {
+          inFlight = null
+        }
       })
+    inFlight = attempt
 
-    return inFlight
+    return attempt
   }
 
   /**
@@ -83,6 +93,7 @@ export const createDictionaryCache = ({
    * состояние экземпляра без доступа к замыканию. localStorage чистится отдельно.
    */
   const resetState = (): void => {
+    generation += 1
     lastAttemptAt = 0
     inFlight = null
   }

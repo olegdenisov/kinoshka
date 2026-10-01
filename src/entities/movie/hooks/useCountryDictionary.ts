@@ -25,5 +25,3 @@ export const useCountryDictionary = (): string[] => {
 
   return items.length === 0 ? STATIC_FALLBACK_COUNTRIES : items
 }
-
-export { resetCountryDictionaryState } from '../api/countryDictionaryCache'

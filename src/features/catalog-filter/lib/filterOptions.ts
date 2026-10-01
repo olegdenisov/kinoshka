@@ -14,6 +14,9 @@ export const DURATION_VALUES = ['short', 'medium', 'long'] as const
 
 export type Duration = (typeof DURATION_VALUES)[number]
 
+export const isDuration = (value: string): value is Duration =>
+  (DURATION_VALUES as ReadonlyArray<string>).includes(value)
+
 /** Пресет длительности → лейбл и диапазон `movieLength` (минуты) для API. */
 export const DURATION_OPTIONS: ReadonlyArray<
   FilterOption<Duration> & { range: string }
@@ -58,7 +61,7 @@ const COUNTRY_LABELS: Record<string, string> = {
   Германия: 'Germany',
   Италия: 'Italy',
   Япония: 'Japan',
-  'Южная Корея': 'South Korea',
+  'Корея Южная': 'South Korea',
   Испания: 'Spain',
   Канада: 'Canada',
 }

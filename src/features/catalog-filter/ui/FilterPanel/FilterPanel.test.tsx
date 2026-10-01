@@ -36,6 +36,11 @@ const settleGenres = () => {
   )
 }
 
+// В дефолтном мок-словаре стран есть «Аргентина» вне шорт-листа: кнопка «Показать все» у
+// Country появляется только после загрузки словаря — по ней ждём конца фонового fetch.
+const settleCountries = () =>
+  screen.findByRole('button', { name: /Показать все.*Country/ })
+
 const setup = (filters: FilterState = EMPTY_FILTERS, disabled?: boolean) => {
   settleGenres()
   const onFiltersChange = vi.fn()
@@ -88,6 +93,7 @@ describe('FilterPanel', () => {
     const { onFiltersChange, user } = setup()
 
     await open(user, 'Country')
+    await settleCountries()
     await user.click(screen.getByRole('button', { name: 'USA' }))
     expect(onFiltersChange).toHaveBeenLastCalledWith({
       ...EMPTY_FILTERS,
@@ -163,6 +169,7 @@ describe('FilterPanel', () => {
       list: 'top250',
     })
     await open(user, 'Country')
+    await settleCountries()
     await open(user, 'Streaming')
     await screen.findByRole('button', { name: /Показать все.*Genre/ })
 
@@ -171,5 +178,68 @@ describe('FilterPanel', () => {
       .map(b => b.getAttribute('aria-label') ?? b.textContent?.trim() ?? '')
     const duplicates = names.filter((n, i) => names.indexOf(n) !== i)
     expect(duplicates).toEqual([])
+  })
+
+  it('клик по невыбранному жанру добавляет его', async () => {
+    const { onFiltersChange, user } = setup()
+    await screen.findByRole('button', { name: /Показать все.*Genre/ })
+
+    await user.click(screen.getByRole('button', { name: 'Drama' }))
+    expect(onFiltersChange).toHaveBeenLastCalledWith({
+      ...EMPTY_FILTERS,
+      genres: ['драма'],
+    })
+  })
+
+  it('клик по выбранному жанру снимает его', async () => {
+    const { onFiltersChange, user } = setup({
+      ...EMPTY_FILTERS,
+      genres: ['драма'],
+    })
+    await screen.findByRole('button', { name: /Показать все.*Genre/ })
+
+    await user.click(screen.getByRole('button', { name: 'Drama' }))
+    expect(onFiltersChange).toHaveBeenLastCalledWith(EMPTY_FILTERS)
+  })
+
+  it('мультиселект стран и платформ снимает уже выбранное значение', async () => {
+    const filters = {
+      ...EMPTY_FILTERS,
+      countries: ['США', 'Франция'],
+      platforms: ['Okko'],
+    }
+    const { onFiltersChange, user } = setup(filters)
+    await settleCountries()
+
+    await user.click(screen.getByRole('button', { name: 'USA' }))
+    expect(onFiltersChange).toHaveBeenLastCalledWith({
+      ...filters,
+      countries: ['Франция'],
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Okko' }))
+    expect(onFiltersChange).toHaveBeenLastCalledWith({
+      ...filters,
+      platforms: [],
+    })
+    await screen.findByRole('button', { name: /Показать все.*Genre/ })
+  })
+
+  it('счётчики: Country/Streaming по числу значений, Year — 1 при любой границе', async () => {
+    setup({
+      ...EMPTY_FILTERS,
+      yearTo: 2000,
+      countries: ['США', 'Франция'],
+      platforms: ['Okko', 'Wink', 'START'],
+    })
+    await settleCountries()
+
+    const summary = (title: string) =>
+      details(title).querySelector('summary')?.textContent
+    expect(summary('Year')).toBe('Year1')
+    expect(summary('Country')).toBe('Country2')
+    expect(summary('Streaming')).toBe('Streaming3')
+    expect(summary('Rating')).toBe('Rating')
+    await screen.findByRole('button', { name: /Показать все.*Genre/ })
   })
 })
