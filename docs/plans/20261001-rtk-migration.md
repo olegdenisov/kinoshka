@@ -389,16 +389,17 @@ export const store = makeStore()
 - Delete: `src/entities/movie/api/{getMoviesByIds,getMoviesPage}.ts` и их тесты
 - Modify: `src/entities/movie/index.ts`
 
-- [ ] endpoint `getRecommendations()` (без аргумента): `selectFavoriteIds(getState())` → `getMoviesByIds.initiate` → `computeRecommendationQuery` → `getMoviesPage.initiate({ params, page: 1 })`; возвращает `Movie[] | null`; `providesTags: ['Recommendations']`
-- [ ] `useRecommendedMovies` — тонкая обёртка над query; модульная переменная `lastQuery` и `invalidateRecommendations` удаляются
-- [ ] страница: `QueryBoundary`, различие `null` (нет правила) vs `[]` (пусто) сохраняется; Retry = `refetch`
-- [ ] карточки по-прежнему без favorite-toggle, но с watchlist-toggle
-- [ ] удалить старые фетчеры `getMoviesByIds.ts`/`getMoviesPage.ts` и их экспорты из barrel — последний потребитель ушёл
-- [ ] тест: `toggleFavorite` при активной подписке вызывает перезапрос рекомендаций (инвалидация по тегу), и перезапрос видит уже обновлённые id
-- [ ] тест: без подписчика запись кеша сбрасывается и перезапрашивается при следующем заходе на страницу
-- [ ] тесты endpoint: пустое избранное → `null`, успех, ошибка
-- [ ] обновить тесты страницы
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] endpoint `getRecommendations()` (без аргумента): `selectFavoriteIds(getState())` → `getMoviesByIds.initiate` → `computeRecommendationQuery` → `getMoviesPage.initiate({ params, page: 1 })`; возвращает `Movie[] | null`; `providesTags: ['Recommendations']`
+- [x] `useRecommendedMovies` — тонкая обёртка над query; модульная переменная `lastQuery` и `invalidateRecommendations` удаляются
+- [x] страница: `QueryBoundary`, различие `null` (нет правила) vs `[]` (пусто) сохраняется; Retry = `refetch`
+- [x] карточки по-прежнему без favorite-toggle, но с watchlist-toggle
+- [x] удалить старые фетчеры `getMoviesByIds.ts`/`getMoviesPage.ts` и их экспорты из barrel — последний потребитель ушёл
+- [x] тест: `toggleFavorite` при активной подписке вызывает перезапрос рекомендаций (инвалидация по тегу), и перезапрос видит уже обновлённые id
+- [x] тест: без подписчика запись кеша сбрасывается и перезапрашивается при следующем заходе на страницу
+- [x] тесты endpoint: пустое избранное → `null`, успех, ошибка
+- [x] обновить тесты страницы
+- ➕ решение: мост `fetchMovieDetail` (Task 9) встроен обратно в `queryFn` `getMovieDetail` вместе со своим тестом — последний его потребитель (`getMoviesByIds.ts`) удалён; хуковые тесты `useRecommendedMovies{,.retry}.test.tsx` удалены — хук стал тонкой обёрткой, их сценарии перенесены в `recommendationsApi.test.ts`
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 13: Справочники жанров и стран на RTK Query
 

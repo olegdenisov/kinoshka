@@ -3,13 +3,7 @@ import { http, HttpResponse } from 'msw'
 import { makeStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import { hashHue } from '../lib/hashHue'
-import {
-  catalogApi,
-  fetchMovieDetail,
-  movieApi,
-  movieByIdsApi,
-  moviePageApi,
-} from './movieApi'
+import { catalogApi, movieApi, movieByIdsApi, moviePageApi } from './movieApi'
 
 const MOVIE_ENDPOINT = '*/v1.5/movie'
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
@@ -309,19 +303,6 @@ describe('getMovieDetail', () => {
     const result = await getDetail(3)
 
     expect(result.error).toEqual({ status: 403, message: 'Quota' })
-  })
-
-  it('fetchMovieDetail (мост для getMoviesByIds) бросает ApiError со status', async () => {
-    server.use(
-      http.get('*/v1.5/movie/4', () =>
-        HttpResponse.json(
-          { statusCode: 404, message: 'Not found', error: 'Not Found' },
-          { status: 404 },
-        ),
-      ),
-    )
-
-    await expect(fetchMovieDetail(4)).rejects.toMatchObject({ status: 404 })
   })
 })
 

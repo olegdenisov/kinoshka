@@ -1,12 +1,9 @@
-import { Card } from '@entities/movie'
+import { Card, type Movie } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { useWatchlist } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { EmptyState, QueryBoundary, Skeleton } from '@shared/ui'
 
-import {
-  invalidateRecommendations,
-  useRecommendedMovies,
-} from '../../model/useRecommendedMovies'
+import { useRecommendedMovies } from '../../model/useRecommendedMovies'
 
 import s from './Recommendations.module.css'
 
@@ -20,14 +17,12 @@ const RecommendationsSkeletonGrid = () => (
   </div>
 )
 
-// Без isFavorite/onToggleFavorite — намеренно (см. Technical Details плана
-// docs/plans/20260825-recommendations-rule-based.md): передача toggle сюда меняла бы
-// `ids` в useFavorites() при каждом клике по сердечку → новый кэш-ключ getMoviesByIds(ids)
-// → весь грид уходит в Suspense заново → новый computeRecommendationQuery → новый запрос
-// getMoviesPage — полный skeleton-flash и пересчёт подборки на каждый клик.
-// Watchlist сюда подключён спокойно: подборка от него не зависит, кэш-ключ не меняется.
-const RecommendationsGrid = () => {
-  const movies = useRecommendedMovies()
+// Без isFavorite/onToggleFavorite — намеренно: клик по сердечку меняет вход правила (избранное) →
+// инвалидация тега Recommendations → подборка пересчитывается и перестраивается прямо под курсором.
+// Watchlist подключён спокойно: подборка от него не зависит.
+type RecommendationsGridProps = { movies: Movie[] | null }
+
+const RecommendationsGrid = ({ movies }: RecommendationsGridProps) => {
   const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   if (movies === null) {
@@ -74,6 +69,7 @@ const RecommendationsGrid = () => {
 // снаружи. Recommendations больше не вызывает useViewport и не решает, какой chrome показать.
 export const Recommendations = () => {
   const { ids } = useFavorites()
+  const query = useRecommendedMovies()
 
   return (
     <div className={s.page}>
@@ -87,12 +83,12 @@ export const Recommendations = () => {
             />
           </div>
         ) : (
-          <AsyncBoundary
+          <QueryBoundary
+            query={query}
             fallback={<RecommendationsSkeletonGrid />}
-            onRetry={() => invalidateRecommendations(ids)}
           >
-            <RecommendationsGrid />
-          </AsyncBoundary>
+            {movies => <RecommendationsGrid movies={movies} />}
+          </QueryBoundary>
         )}
       </main>
     </div>

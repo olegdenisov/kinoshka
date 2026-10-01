@@ -1,6 +1,5 @@
 import {
   apiClient,
-  ApiError,
   baseApi,
   toQueryError,
   type QueryError,
@@ -45,26 +44,24 @@ export type MovieImage = {
   previewUrl?: string
 }
 
-// Чистая функция запроса без стора: её зовёт и queryFn getMovieDetail, и временный мост
-// getMoviesByIds (до Task 12 рекомендации читают его через createCachedFetcher). Бросает ApiError —
-// мост различает 404 по instanceof.
-export const fetchMovieDetail = async (id: number): Promise<MovieDetail> => {
-  const response = await apiClient.getV15MovieById({ path: { id } })
-
-  if ('statusCode' in response.data) {
-    // нужно чтобы сузить тип
-    throw new ApiError(response.data.message, response.data.statusCode)
-  }
-
-  return mapDtoToMovieDetail(response.data)
-}
-
 export const movieApi = baseApi.injectEndpoints({
   endpoints: build => ({
     getMovieDetail: build.query<MovieDetail, number>({
       queryFn: async id => {
         try {
-          return { data: await fetchMovieDetail(id) }
+          const response = await apiClient.getV15MovieById({ path: { id } })
+
+          if ('statusCode' in response.data) {
+            // нужно чтобы сузить тип
+            return {
+              error: {
+                status: response.data.statusCode,
+                message: response.data.message,
+              },
+            }
+          }
+
+          return { data: mapDtoToMovieDetail(response.data) }
         } catch (error) {
           return { error: toQueryError(error) }
         }

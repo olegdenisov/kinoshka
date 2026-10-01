@@ -6,10 +6,9 @@ import { renderWithStore } from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { Recommendations } from './Recommendations'
 
-// Реальные MSW-хендлеры (не мок модуля) на /v1.5/movie/:id (favorites, через getMoviesByIds)
-// и /v1.5/movie (каталог, через getMoviesPage) — тот же подход, что FavoritesDesktop.test.tsx/
-// PopularDesktop.test.tsx: composed-хук (useRecommendedMovies) делит один и тот же реальный
-// createCachedFetcher-кэш, так что Retry по-настоящему инвалидирует и бьёт в сеть заново.
+// Реальные MSW-хендлеры (не мок модуля) на /v1.5/movie/:id (детали избранного) и /v1.5/movie
+// (каталог): getRecommendations композирует оба endpoint'а через общий кеш RTK Query, так что Retry
+// по-настоящему перезапрашивает упавший шаг.
 const FAVORITES_KEY = 'kinoshka:favorites'
 const MOVIE_ENDPOINT = (id: number) => `*/v1.5/movie/${id}`
 const CATALOG_ENDPOINT = '*/v1.5/movie'
@@ -248,8 +247,8 @@ describe('Recommendations — каталог не вернул совпаден�
   })
 })
 
-describe('Recommendations — Retry реально переинвалидирует кэш каталога, а не только избранного', () => {
-  it('клик Retry вызывает invalidateRecommendations и повторно запрашивает каталог', async () => {
+describe('Recommendations — Retry повторяет упавший запрос каталога', () => {
+  it('клик Retry вызывает refetch и повторно запрашивает каталог', async () => {
     setFavorites([605, 606])
     mockFavorite(605, { genres: [{ name: 'триллер' }], rating: { kp: 8.0 } })
     mockFavorite(606, { genres: [{ name: 'драма' }], rating: { kp: 6.0 } })

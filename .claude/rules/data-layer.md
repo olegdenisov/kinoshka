@@ -43,5 +43,5 @@ paths:
 
 ## `/recommendations`
 
-- `invalidateRecommendations` retries the last computed query kept in a module variable: favorites load async and aren't available at the `onRetry` call site.
+- `getRecommendations` takes no argument and reads favorite ids from state, so its cache key never changes on its own — the `Recommendations` tag is the only refresh path (`toggleFavorite` on success, tab-sync `hydrated`).
 - Cards get no favorite toggle (a click changes the rule's input → recompute and refetch the grid), but do get the watchlist one — the query doesn't depend on it.
