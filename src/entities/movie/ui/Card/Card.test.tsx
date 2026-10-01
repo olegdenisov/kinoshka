@@ -66,6 +66,15 @@ describe('Card', () => {
     )
   })
 
+  it('movie.title пустой — у ссылки есть запасной текст "Untitled" (иначе a11y link-name)', () => {
+    renderCard({ ...baseMovie, title: '' })
+
+    expect(screen.getByRole('link', { name: 'Untitled' })).toHaveAttribute(
+      'href',
+      '/movie/1',
+    )
+  })
+
   it('ссылка не содержит вложенных <button> (валидный HTML, нет вложенного interactive-content)', () => {
     renderCard(baseMovie, { isFavorite: false, onToggleFavorite: vi.fn() })
 

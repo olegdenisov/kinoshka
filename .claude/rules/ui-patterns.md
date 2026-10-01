@@ -12,6 +12,7 @@ paths:
 
 - **Stretched link:** no interactive elements inside `<a>`. The `<Link>` wraps only the title and its `::after` stretches the hit area; action buttons are DOM **siblings** with a higher `z-index`. Use this for any card with a primary link + secondary actions.
 - `.topBadges` stays at implicit `z-index: auto` — an explicit `z-index: 1` ties with `.title::after` inside the `isolation: isolate` context and, by DOM order, creates a dead click zone. New overlay badges: check which corner is free and whether they must out-stack the stretched link.
+- The title `<Link>` must always have text: Lighthouse `link-name` is part of the a11y gate (≥0.95) and the demo API can return a movie with an empty `name`. `mapDocToMovie` falls through empty strings (`||`), `Card` shows `Untitled` as the last resort.
 - `.actions` (incl. the watchlist `Add`) is hidden on `hover: none` — an action that must work on touch needs another entry point (today: the movie page).
 
 ## `YearRangeSlider`

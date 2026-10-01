@@ -21,7 +21,9 @@ export type MovieDocLike = {
 
 export const mapDocToMovie = (doc: MovieDocLike): Movie => ({
   id: doc.id ?? 0,
-  title: doc.name ?? doc.alternativeName ?? doc.enName ?? '',
+  // `||`, а не `??`: пустая строка в `name` не должна перекрывать запасные названия —
+  // иначе заголовок карточки остаётся пустым.
+  title: doc.name || doc.alternativeName || doc.enName || '',
   year: doc.year ?? undefined,
   rating: doc.rating?.kp ?? doc.rating?.imdb ?? 0,
   type: (doc.type ?? 'movie') as MovieType,

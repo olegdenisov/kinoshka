@@ -54,6 +54,25 @@ describe('mapDocToMovie — fallback названия name ?? alternativeName ??
     ).toBe('En')
   })
 
+  it('name — пустая строка: используется alternativeName, а не пустое название', () => {
+    expect(
+      mapDocToMovie(doc({ name: '', alternativeName: 'Alt', enName: 'En' }))
+        .title,
+    ).toBe('Alt')
+  })
+
+  it('name и alternativeName — пустые строки: используется enName', () => {
+    expect(
+      mapDocToMovie(doc({ name: '', alternativeName: '', enName: 'En' })).title,
+    ).toBe('En')
+  })
+
+  it('все три названия — пустые строки: пустая строка (запасной текст — забота Card)', () => {
+    expect(
+      mapDocToMovie(doc({ name: '', alternativeName: '', enName: '' })).title,
+    ).toBe('')
+  })
+
   it('name, alternativeName и enName отсутствуют — пустая строка', () => {
     expect(
       mapDocToMovie(doc({ name: null, alternativeName: null, enName: null }))
