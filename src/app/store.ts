@@ -1,4 +1,9 @@
 import {
+  favoritesReducer,
+  favoritesReducerPath,
+  registerFavoritesPersistence,
+} from '@features/favorites'
+import {
   profileReducer,
   profileReducerPath,
   registerProfilePersistence,
@@ -26,6 +31,7 @@ import type { StartListening } from '@shared/lib'
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
   [themeReducerPath]: themeReducer,
+  [favoritesReducerPath]: favoritesReducer,
   [profileReducerPath]: profileReducer,
   [watchedReducerPath]: watchedReducer,
   [watchlistReducerPath]: watchlistReducer,
@@ -47,6 +53,7 @@ const setupPersistence = (
 ): (() => void) => {
   const unsubscribers: Array<() => void> = [
     registerThemePersistence(store, startListening),
+    registerFavoritesPersistence(store, startListening),
     registerProfilePersistence(store, startListening),
     registerWatchedPersistence(store, startListening),
     registerWatchlistPersistence(store, startListening),

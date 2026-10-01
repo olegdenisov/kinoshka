@@ -1,12 +1,12 @@
 import type * as SharedLib from '@shared/lib'
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 
-import { createStoreWrapper } from '../../../test/renderWithStore'
+import { createStoreWrapper, makeStore } from '../../../test/renderWithStore'
+import { favoritesSlot } from './favoritesStorage'
 import { useFavorites } from './useFavorites'
 
-// Мокаем только trackEvent, остальные реальные экспорты @shared/lib (useStorageSlot и т.д.)
-// сохраняем через vi.importActual — тот же паттерн, что useFilterState.test.tsx использует
-// (Task 7).
+// Мокаем только trackEvent, остальные реальные экспорты @shared/lib (createStorageSlot и т.д.)
+// сохраняем через importOriginal.
 vi.mock('@shared/lib', async importOriginal => {
   const actual = await importOriginal<typeof SharedLib>()
   return { ...actual, trackEvent: vi.fn() }
@@ -19,29 +19,20 @@ beforeEach(() => {
   vi.mocked(trackEvent).mockClear()
 })
 
-// Страховка для теста со spyOn(Storage.prototype, 'setItem') ниже: если expect упадёт до
-// mockRestore(), бросающий spy иначе утёк бы в последующие тесты файла.
+// Страховка для тестов со spyOn(Storage.prototype, 'setItem'): если expect упадёт до восстановления,
+// бросающий spy иначе утёк бы в последующие тесты файла.
 afterEach(() => vi.restoreAllMocks())
 
-describe('useFavorites — успешные сценарии', () => {
-  it('add добавляет id в ids и isFavorite начинает возвращать true', () => {
-    const { result } = renderHook(() => useFavorites(), {
-      wrapper: createStoreWrapper(),
-    })
-
-    act(() => result.current.add(1))
-
-    expect(result.current.ids).toEqual([1])
-    expect(result.current.isFavorite(1)).toBe(true)
+const failWrites = () =>
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    throw new DOMException('full', 'QuotaExceededError')
   })
 
-  it('remove убирает id из ids', () => {
+describe('useFavorites — успешные сценарии', () => {
+  it('по умолчанию список пуст', () => {
     const { result } = renderHook(() => useFavorites(), {
       wrapper: createStoreWrapper(),
     })
-
-    act(() => result.current.add(1))
-    act(() => result.current.remove(1))
 
     expect(result.current.ids).toEqual([])
     expect(result.current.isFavorite(1)).toBe(false)
@@ -54,100 +45,89 @@ describe('useFavorites — успешные сценарии', () => {
 
     act(() => result.current.toggle(1))
     expect(result.current.ids).toEqual([1])
+    expect(result.current.isFavorite(1)).toBe(true)
 
     act(() => result.current.toggle(1))
     expect(result.current.ids).toEqual([])
+    expect(result.current.isFavorite(1)).toBe(false)
   })
 
-  it('toggle на отсутствующем id (добавление) вызывает trackEvent("favorite added")', () => {
+  it('toggle сохраняет в localStorage под ключом kinoshka:favorites', () => {
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
+
+    act(() => result.current.toggle(7))
+
+    expect(JSON.parse(localStorage.getItem('kinoshka:favorites')!)).toEqual([7])
+  })
+
+  it('toggle на отсутствующем id (добавление) вызывает trackEvent("favorite added")', async () => {
     const { result } = renderHook(() => useFavorites(), {
       wrapper: createStoreWrapper(),
     })
 
     act(() => result.current.toggle(1))
 
-    expect(trackEvent).toHaveBeenCalledWith('favorite added')
+    await waitFor(() =>
+      expect(trackEvent).toHaveBeenCalledWith('favorite added'),
+    )
     expect(trackEvent).toHaveBeenCalledTimes(1)
   })
 
-  it('toggle на уже избранном id (удаление) НЕ вызывает trackEvent', () => {
+  it('toggle на уже избранном id (удаление) НЕ вызывает trackEvent', async () => {
+    favoritesSlot.set([1])
     const { result } = renderHook(() => useFavorites(), {
       wrapper: createStoreWrapper(),
     })
 
-    act(() => result.current.toggle(1))
-    vi.mocked(trackEvent).mockClear()
-
-    act(() => result.current.toggle(1))
+    await act(async () => result.current.toggle(1))
 
     expect(result.current.ids).toEqual([])
     expect(trackEvent).not.toHaveBeenCalled()
   })
 
-  it('toggle на отсутствующем id НЕ вызывает trackEvent, если запись в хранилище не удалась', () => {
-    const { result } = renderHook(() => useFavorites(), {
-      wrapper: createStoreWrapper(),
-    })
-    const spy = vi
-      .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(() => {
-        throw new DOMException('full', 'QuotaExceededError')
-      })
-
-    act(() => result.current.toggle(1))
-
-    spy.mockRestore()
-    expect(result.current.ids).toEqual([])
-    expect(trackEvent).not.toHaveBeenCalled()
-  })
-
-  it('add() НЕ вызывает trackEvent — трекинг живёт только в ветке добавления toggle()', () => {
-    const { result } = renderHook(() => useFavorites(), {
-      wrapper: createStoreWrapper(),
-    })
-
-    act(() => result.current.add(1))
-
-    expect(result.current.ids).toEqual([1])
-    expect(trackEvent).not.toHaveBeenCalled()
-  })
-
-  it('повторный add того же id не создаёт дубликат', () => {
-    const { result } = renderHook(() => useFavorites(), {
-      wrapper: createStoreWrapper(),
-    })
-
-    act(() => result.current.add(1))
-    act(() => result.current.add(1))
-
-    expect(result.current.ids).toEqual([1])
-  })
-
-  it('повторный toggle не задваивает добавление в рамках одного вызова состояния', () => {
+  it('два toggle подряд в одном act не затирают друг друга', () => {
     const { result } = renderHook(() => useFavorites(), {
       wrapper: createStoreWrapper(),
     })
 
     act(() => {
-      result.current.add(1)
-      result.current.add(1)
+      result.current.toggle(1)
+      result.current.toggle(2)
     })
 
-    expect(result.current.ids).toEqual([1])
+    expect(result.current.ids).toEqual([1, 2])
+    expect(favoritesSlot.get()).toEqual([1, 2])
   })
 
-  it('clear опустошает список', () => {
+  it('два экземпляра хука на одном сторе видят одно состояние', () => {
+    const store = makeStore()
+    const first = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(store),
+    })
+    const second = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(store),
+    })
+
+    act(() => first.result.current.toggle(5))
+
+    expect(second.result.current.ids).toEqual([5])
+  })
+})
+
+describe('useFavorites — отказ записи', () => {
+  it('toggle при недоступном хранилище откатывает стейт и НЕ вызывает trackEvent', async () => {
     const { result } = renderHook(() => useFavorites(), {
       wrapper: createStoreWrapper(),
     })
+    failWrites()
 
-    act(() => {
-      result.current.add(1)
-      result.current.add(2)
-    })
-    act(() => result.current.clear())
+    act(() => result.current.toggle(1))
 
-    expect(result.current.ids).toEqual([])
+    await waitFor(() => expect(result.current.ids).toEqual([]))
+    expect(favoritesSlot.get()).toEqual([])
+    expect(trackEvent).not.toHaveBeenCalled()
   })
 })
 

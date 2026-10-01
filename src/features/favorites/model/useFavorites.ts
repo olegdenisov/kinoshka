@@ -1,41 +1,27 @@
-import { trackEvent, useStorageSlot } from '@shared/lib'
+import { useSelector } from 'react-redux'
 
-import { favoritesSlot } from './favoritesStorage'
+import { useToggleFavoriteMutation } from './favoritesApi'
+import { selectFavoriteIds } from './favoritesSlice'
+import type { FavoritesRootState } from './favoritesSlice'
 
 export type UseFavoritesResult = {
   ids: number[]
   isFavorite: (id: number) => boolean
   toggle: (id: number) => void
-  add: (id: number) => void
-  remove: (id: number) => void
-  clear: () => void
 }
 
 export const useFavorites = (): UseFavoritesResult => {
-  const [ids, setIds] = useStorageSlot(favoritesSlot)
+  const ids = useSelector((state: FavoritesRootState) =>
+    selectFavoriteIds(state),
+  )
+  const [toggleFavorite] = useToggleFavoriteMutation()
 
   return {
     ids,
     isFavorite: id => ids.includes(id),
-    add: id => {
-      const current = favoritesSlot.get()
-      if (!current.includes(id)) {
-        setIds([...current, id])
-      }
-    },
-    remove: id =>
-      setIds(favoritesSlot.get().filter(existingId => existingId !== id)),
+    // Оптимистичное изменение, откат при отказе записи и аналитика — в onQueryStarted mutation.
     toggle: id => {
-      const current = favoritesSlot.get()
-      if (current.includes(id)) {
-        setIds(current.filter(existingId => existingId !== id))
-      } else {
-        // trackEvent только при успешной записи: setIds() не бросает при недоступном
-        // хранилище, а возвращает false (см. createStorageSlot.set) — иначе Plausible
-        // считал бы "favorite added" в сессиях, где избранное на самом деле не сохранилось.
-        if (setIds([...current, id])) trackEvent('favorite added')
-      }
+      void toggleFavorite(id)
     },
-    clear: () => setIds([]),
   }
 }
