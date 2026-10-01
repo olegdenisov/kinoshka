@@ -179,21 +179,6 @@
 
 /* ---- Мобильный BottomSheet-контент фильтров/сортировки (аналог удалённого SearchMobile.tsx) ---- */
 
-.filterSheetBody {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
-.fieldLabel {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-muted);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-
 .typeGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -213,30 +198,6 @@
 }
 
 .typeBtnActive {
-  background: var(--accent-warm-soft);
-  color: var(--accent-warm);
-  border-color: var(--accent-warm-border);
-}
-
-.ratingRow {
-  display: flex;
-  gap: 6px;
-}
-
-.ratingBtn {
-  flex: 1;
-  height: 40px;
-  border-radius: 6px;
-  background: var(--bg-chip);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.ratingBtnActive {
   background: var(--accent-warm-soft);
   color: var(--accent-warm);
   border-color: var(--accent-warm-border);

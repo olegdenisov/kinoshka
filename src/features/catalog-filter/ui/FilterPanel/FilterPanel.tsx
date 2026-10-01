@@ -78,6 +78,7 @@ export const FilterPanel = ({
             onFiltersChange({ ...filters, yearFrom, yearTo })
           }
           disabled={disabled}
+          compact={compact}
         />
       </FilterGroup>
 

@@ -1,7 +1,7 @@
 import {
   ActiveFilterChips,
-  GenreSelector,
-  YearRangeSlider,
+  FilterGroup,
+  FilterPanel,
   useFilterState,
   SORT_LABELS,
 } from '@features/catalog-filter'
@@ -171,15 +171,8 @@ export const Search = () => {
   const { isMobile } = useViewport()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
-  const {
-    filters,
-    setFilters,
-    sort,
-    setSort,
-    toggleGenre,
-    resetFilters,
-    activeChips,
-  } = useFilterState()
+  const { filters, setFilters, sort, setSort, resetFilters, activeChips } =
+    useFilterState()
   const [searchParams] = useSearchParams()
 
   const query = searchParams.get('q') ?? ''
@@ -238,7 +231,6 @@ export const Search = () => {
           <SearchSidebar
             filters={filters}
             onFiltersChange={setFilters}
-            onToggleGenre={toggleGenre}
             onReset={resetFilters}
             disabled={isSearchMode}
           />
@@ -298,71 +290,31 @@ export const Search = () => {
             onClose={() => setFiltersOpen(false)}
             title='Filters'
           >
-            <div className={s.filterSheetBody}>
-              <div>
-                <div className={s.fieldLabel}>Type</div>
-                <div className={s.typeGrid}>
-                  {[
-                    { key: 'movie', label: 'Movies' },
-                    { key: 'series', label: 'Series' },
-                    { key: 'anime', label: 'Anime' },
-                  ].map(t => (
-                    <button
-                      type='button'
-                      key={t.key}
-                      onClick={() => setFilters({ ...filters, type: t.key })}
-                      className={`${s.typeBtn} ${filters.type === t.key ? s.typeBtnActive : ''}`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
+            <FilterGroup title='Type' defaultOpen compact>
+              <div className={s.typeGrid}>
+                {[
+                  { key: 'movie', label: 'Movies' },
+                  { key: 'series', label: 'Series' },
+                  { key: 'anime', label: 'Anime' },
+                ].map(t => (
+                  <button
+                    type='button'
+                    key={t.key}
+                    onClick={() => setFilters({ ...filters, type: t.key })}
+                    className={`${s.typeBtn} ${filters.type === t.key ? s.typeBtnActive : ''}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
+            </FilterGroup>
 
-              <div>
-                <div className={s.fieldLabel}>Genre</div>
-                <GenreSelector
-                  selected={filters.genres}
-                  onToggle={toggleGenre}
-                  disabled={isSearchMode}
-                  compact
-                />
-              </div>
-
-              <div>
-                <div className={s.fieldLabel}>Year</div>
-                <YearRangeSlider
-                  yearFrom={filters.yearFrom}
-                  yearTo={filters.yearTo}
-                  onChange={(yearFrom, yearTo) =>
-                    setFilters({ ...filters, yearFrom, yearTo })
-                  }
-                  disabled={isSearchMode}
-                  compact
-                />
-              </div>
-
-              <div>
-                <div className={s.fieldLabel}>Minimum rating</div>
-                <div className={s.ratingRow}>
-                  {[5, 6, 7, 8, 9].map(r => (
-                    <button
-                      type='button'
-                      key={r}
-                      onClick={() =>
-                        setFilters({
-                          ...filters,
-                          rating: filters.rating === r ? null : r,
-                        })
-                      }
-                      className={`${s.ratingBtn} ${filters.rating === r ? s.ratingBtnActive : ''}`}
-                    >
-                      {r}+
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <FilterPanel
+              filters={filters}
+              onFiltersChange={setFilters}
+              disabled={isSearchMode}
+              compact
+            />
 
             <div className={s.sheetSpacer} />
             <div className={s.sheetFooter}>

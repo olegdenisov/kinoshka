@@ -18,7 +18,6 @@ describe('SearchSidebar', () => {
       <SearchSidebar
         filters={filters}
         onFiltersChange={vi.fn()}
-        onToggleGenre={vi.fn()}
         onReset={vi.fn()}
       />,
     )
@@ -44,7 +43,6 @@ describe('SearchSidebar', () => {
       <SearchSidebar
         filters={filters}
         onFiltersChange={onFiltersChange}
-        onToggleGenre={vi.fn()}
         onReset={vi.fn()}
       />,
     )
@@ -66,7 +64,6 @@ describe('SearchSidebar', () => {
       <SearchSidebar
         filters={baseFilters}
         onFiltersChange={vi.fn()}
-        onToggleGenre={vi.fn()}
         onReset={vi.fn()}
         disabled
       />,
@@ -74,5 +71,58 @@ describe('SearchSidebar', () => {
 
     expect(screen.getByRole('slider', { name: 'Year from' })).toBeDisabled()
     expect(screen.getByRole('slider', { name: 'Year to' })).toBeDisabled()
+  })
+
+  it('группа Type открыта, ниже — группы FilterPanel и кнопка Reset', () => {
+    render(
+      <SearchSidebar
+        filters={baseFilters}
+        onFiltersChange={vi.fn()}
+        onReset={vi.fn()}
+      />,
+    )
+
+    const typeGroup = screen.getByText('Type').closest('details')!
+    expect(typeGroup.open).toBe(true)
+    expect(screen.getByRole('button', { name: /^Movies/ })).toBeInTheDocument()
+
+    for (const title of ['Genre', 'Year', 'Rating']) {
+      expect(screen.getByText(title).closest('details')!.open).toBe(true)
+    }
+    for (const title of ['Country', 'Duration', 'Streaming', 'Collection']) {
+      expect(screen.getByText(title).closest('details')!.open).toBe(false)
+    }
+    expect(
+      screen.getByRole('button', { name: 'Reset filters' }),
+    ).toBeInTheDocument()
+  })
+
+  it('клик по типу вызывает onFiltersChange с новым type, остальные поля сохранены', () => {
+    const filters: FilterState = { ...baseFilters, rating: 7 }
+    const onFiltersChange = vi.fn()
+
+    render(
+      <SearchSidebar
+        filters={filters}
+        onFiltersChange={onFiltersChange}
+        onReset={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /^Series/ }))
+
+    expect(onFiltersChange).toHaveBeenCalledWith({ ...filters, type: 'series' })
+  })
+
+  it('кнопка рейтинга из FilterPanel не продублирована сайдбаром', () => {
+    render(
+      <SearchSidebar
+        filters={baseFilters}
+        onFiltersChange={vi.fn()}
+        onReset={vi.fn()}
+      />,
+    )
+
+    expect(screen.getAllByRole('button', { name: '7+' })).toHaveLength(1)
   })
 })

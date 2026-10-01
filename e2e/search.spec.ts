@@ -22,7 +22,7 @@ test('search: submitting a query from the hero navigates to /search with results
   await checkA11y(page)
 })
 
-test('filter: selecting a genre chip on /search updates the URL and re-renders results', async ({
+test('filter: selecting a genre chip and a duration preset on /search updates the URL and re-renders results', async ({
   page,
 }) => {
   await page.goto('/search')
@@ -35,16 +35,31 @@ test('filter: selecting a genre chip on /search updates the URL and re-renders r
 
   // Первый доступный чип жанра — не хардкодим название. `getByRole(..., { pressed })`
   // матчит все кнопки без явного `aria-pressed` как "не нажатые" (проверено
-  // эмпирически), поэтому так нельзя отличить чипы жанра от Type-радио/рейтинга.
-  // Единственные кнопки на странице, у которых атрибут `aria-pressed` реально
-  // присутствует в разметке — чипы GenreSelector (см. `aria-pressed={active}` в
-  // GenreSelector.tsx, тот же атрибут уже используется в GenreSelector.test.tsx) —
-  // поэтому скоупим напрямую по присутствию атрибута, не по CSS-классу.
+  // эмпирически), поэтому так нельзя отличить чипы от Type-радио/рейтинга.
+  // `aria-pressed` есть у всех чипов `ChipSelect` (жанры, страны, длительность,
+  // платформы, подборки), но дети свёрнутых групп не рендерятся, а Genre — первая
+  // раскрытая группа с чипами, поэтому первый такой элемент — чип жанра.
   const genreChip = page.locator('button[aria-pressed]').first()
   await expect(genreChip).toBeVisible()
   await genreChip.click()
 
   await expect(page).toHaveURL(/genres=/)
+  await expect(resultsOrEmptyState(page)).toBeVisible()
+
+  // Длительность — в свёрнутой группе общего FilterPanel. Ждём именно ответ каталога с
+  // `movieLength`: смена только URL без перезапроса (поле забыто в `areFiltersEqual`)
+  // иначе прошла бы незамеченной. +1 запрос к API — шаг здесь, а не отдельным тестом (квота).
+  await page.getByText('Duration', { exact: true }).click()
+  const durationResponse = page.waitForResponse(
+    r => r.url().includes('/v1.5/movie?') && r.url().includes('movieLength='),
+  )
+  await page.getByRole('button', { name: 'Under 90 min' }).click()
+
+  await expect(page).toHaveURL(/duration=short/)
+  await durationResponse
+  await expect(
+    page.getByRole('main').getByText('Under 90 min', { exact: true }),
+  ).toBeVisible()
   await expect(resultsOrEmptyState(page)).toBeVisible()
 
   await checkA11y(page)
