@@ -1,18 +1,25 @@
 import { PROFILE_NAME_MAX_LENGTH, useProfile } from '@features/profile'
 import { ThemeToggle } from '@features/theme'
-import { act, render, renderHook, screen, within } from '@testing-library/react'
+import { act, renderHook, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
+import {
+  createStoreWrapper,
+  makeStore,
+  renderWithStore,
+  type AppStore,
+} from '../../../../test/renderWithStore'
 import { Profile } from './Profile'
 
 const PROFILE_KEY = 'kinoshka:profile'
 
-const renderProfile = () =>
-  render(
+const renderProfile = (store?: AppStore) =>
+  renderWithStore(
     <MemoryRouter>
       <Profile />
     </MemoryRouter>,
+    { store },
   )
 
 // Большой аватар — первый aria-hidden внутри main (секция header идёт первой, иконки быстрых
@@ -355,8 +362,12 @@ describe('Profile', () => {
 
   it('после сброса имени через clearName инпут пустеет, Save не активна', async () => {
     localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
-    const { result } = renderHook(() => useProfile())
-    renderProfile()
+    // Хук и страница — на одном сторе, как в приложении.
+    const store = makeStore()
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: createStoreWrapper(store),
+    })
+    renderProfile(store)
     expect(screen.getByLabelText('Display name')).toHaveValue('Oleg')
 
     await act(async () => {
@@ -459,7 +470,7 @@ describe('Profile', () => {
 
   it('клик по ThemeToggle после выбора system заменяет его на явную тему (задокументированное поведение)', async () => {
     const user = userEvent.setup()
-    render(
+    renderWithStore(
       <MemoryRouter>
         <ThemeToggle />
         <Profile />

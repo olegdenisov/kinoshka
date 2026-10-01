@@ -1,6 +1,7 @@
 import type * as SharedLib from '@shared/lib'
 import { act, renderHook } from '@testing-library/react'
 
+import { createStoreWrapper } from '../../../test/renderWithStore'
 import { useFavorites } from './useFavorites'
 
 // Мокаем только trackEvent, остальные реальные экспорты @shared/lib (useStorageSlot и т.д.)
@@ -24,7 +25,9 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('useFavorites — успешные сценарии', () => {
   it('add добавляет id в ids и isFavorite начинает возвращать true', () => {
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.add(1))
 
@@ -33,7 +36,9 @@ describe('useFavorites — успешные сценарии', () => {
   })
 
   it('remove убирает id из ids', () => {
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.add(1))
     act(() => result.current.remove(1))
@@ -43,7 +48,9 @@ describe('useFavorites — успешные сценарии', () => {
   })
 
   it('toggle добавляет отсутствующий id и убирает присутствующий', () => {
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.toggle(1))
     expect(result.current.ids).toEqual([1])
@@ -53,7 +60,9 @@ describe('useFavorites — успешные сценарии', () => {
   })
 
   it('toggle на отсутствующем id (добавление) вызывает trackEvent("favorite added")', () => {
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.toggle(1))
 
@@ -62,7 +71,9 @@ describe('useFavorites — успешные сценарии', () => {
   })
 
   it('toggle на уже избранном id (удаление) НЕ вызывает trackEvent', () => {
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.toggle(1))
     vi.mocked(trackEvent).mockClear()
@@ -74,7 +85,9 @@ describe('useFavorites — успешные сценарии', () => {
   })
 
   it('toggle на отсутствующем id НЕ вызывает trackEvent, если запись в хранилище не удалась', () => {
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
     const spy = vi
       .spyOn(Storage.prototype, 'setItem')
       .mockImplementation(() => {
@@ -89,7 +102,9 @@ describe('useFavorites — успешные сценарии', () => {
   })
 
   it('add() НЕ вызывает trackEvent — трекинг живёт только в ветке добавления toggle()', () => {
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.add(1))
 
@@ -98,7 +113,9 @@ describe('useFavorites — успешные сценарии', () => {
   })
 
   it('повторный add того же id не создаёт дубликат', () => {
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.add(1))
     act(() => result.current.add(1))
@@ -107,7 +124,9 @@ describe('useFavorites — успешные сценарии', () => {
   })
 
   it('повторный toggle не задваивает добавление в рамках одного вызова состояния', () => {
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => {
       result.current.add(1)
@@ -118,7 +137,9 @@ describe('useFavorites — успешные сценарии', () => {
   })
 
   it('clear опустошает список', () => {
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => {
       result.current.add(1)
@@ -134,7 +155,9 @@ describe('useFavorites — edge cases', () => {
   it('невалидный JSON в localStorage — ids начинается с [] (fallback, не падает)', () => {
     localStorage.setItem('kinoshka:favorites', 'not-json')
 
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     expect(result.current.ids).toEqual([])
   })
@@ -142,13 +165,17 @@ describe('useFavorites — edge cases', () => {
   it('несовпадение zod-схемы в localStorage — ids начинается с [] (fallback)', () => {
     localStorage.setItem('kinoshka:favorites', JSON.stringify(['a', 'b']))
 
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     expect(result.current.ids).toEqual([])
   })
 
   it('cross-tab sync — StorageEvent с нужным key отражается в хуке', () => {
-    const { result } = renderHook(() => useFavorites())
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: createStoreWrapper(),
+    })
 
     // Пишем напрямую в localStorage, минуя favoritesSlot.set() (который сам эмитит
     // локальное 'change'-событие) — иначе ассерт проходит из-за локального эмиттера,

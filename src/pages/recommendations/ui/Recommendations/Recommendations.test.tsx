@@ -1,7 +1,8 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { Recommendations } from './Recommendations'
 
@@ -96,10 +97,10 @@ const setViewportWidth = (width: number) => {
 }
 
 const renderPage = async () => {
-  let result: ReturnType<typeof render> | undefined
+  let result: ReturnType<typeof renderWithStore> | undefined
 
   await act(async () => {
-    result = render(
+    result = renderWithStore(
       <MemoryRouter>
         <Recommendations />
       </MemoryRouter>,

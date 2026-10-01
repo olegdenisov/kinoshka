@@ -56,16 +56,16 @@
 
 **Раскладка по FSD**
 
-| Что | Где | Почему |
-| --- | --- | --- |
-| `baseApi` (`createApi` с пустыми endpoints, `fakeBaseQuery`, `tagTypes`) | `src/shared/api/baseApi.ts` | endpoints инжектят и `entities`, и `features`, и `pages` — общая точка только в `shared` |
-| `QueryError`, `toQueryError` | `src/shared/api/queryError.ts` | ошибка в сторе должна быть сериализуемой: `{ status?: number; message: string }` вместо экземпляра `ApiError` |
-| listener middleware, `persistSlice` | `src/shared/lib/store/` | инфраструктура без доменной логики |
-| slices | `src/features/<feature>/model/<feature>Slice.ts` | доменная логика остаётся в фиче; `app` только собирает редьюсеры |
-| endpoints фильмов/персон | `src/entities/{movie,person}/api/*Api.ts` через `baseApi.injectEndpoints` | |
-| `toggleFavorite` mutation | `src/features/favorites/model/favoritesApi.ts` | |
-| `getRecommendations` endpoint | `src/pages/recommendations/api/recommendationsApi.ts` | комбинирует `@features/favorites` + `@features/recommendations` + `@entities/movie` — легально только в page-слое |
-| `makeStore`, `store`, `<Provider>` | `src/app/store.ts`, `src/app/providers.tsx` | |
+| Что                                                                      | Где                                                                       | Почему                                                                                                            |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `baseApi` (`createApi` с пустыми endpoints, `fakeBaseQuery`, `tagTypes`) | `src/shared/api/baseApi.ts`                                               | endpoints инжектят и `entities`, и `features`, и `pages` — общая точка только в `shared`                          |
+| `QueryError`, `toQueryError`                                             | `src/shared/api/queryError.ts`                                            | ошибка в сторе должна быть сериализуемой: `{ status?: number; message: string }` вместо экземпляра `ApiError`     |
+| listener middleware, `persistSlice`                                      | `src/shared/lib/store/`                                                   | инфраструктура без доменной логики                                                                                |
+| slices                                                                   | `src/features/<feature>/model/<feature>Slice.ts`                          | доменная логика остаётся в фиче; `app` только собирает редьюсеры                                                  |
+| endpoints фильмов/персон                                                 | `src/entities/{movie,person}/api/*Api.ts` через `baseApi.injectEndpoints` |                                                                                                                   |
+| `toggleFavorite` mutation                                                | `src/features/favorites/model/favoritesApi.ts`                            |                                                                                                                   |
+| `getRecommendations` endpoint                                            | `src/pages/recommendations/api/recommendationsApi.ts`                     | комбинирует `@features/favorites` + `@features/recommendations` + `@entities/movie` — легально только в page-слое |
+| `makeStore`, `store`, `<Provider>`                                       | `src/app/store.ts`, `src/app/providers.tsx`                               |                                                                                                                   |
 
 **Ключевые решения**
 
@@ -133,9 +133,11 @@ export const store = makeStore()
 ## Implementation Steps
 
 ### Task 1: Store, Provider, baseApi и тестовые утилиты
+
 **Model:** opus — фундамент: публичный API стора и ошибки, на котором строятся все остальные задачи
 
 **Files:**
+
 - Modify: `package.json`, `pnpm-lock.yaml`
 - Create: `src/shared/api/baseApi.ts`, `src/shared/api/queryError.ts`
 - Modify: `src/shared/api/index.ts`
@@ -148,23 +150,26 @@ export const store = makeStore()
 - Modify: `src/app/providers.test.tsx`
 - Modify: тесты компонентов/хуков-потребителей `useFavorites`/`useTheme`/`useWatched`/`useWatchlist`/`useProfile` (страницы, виджеты, `MovieRail`, шапки)
 
-- [ ] `pnpm add @reduxjs/toolkit react-redux`
-- [ ] `queryError.ts`: тип `QueryError` и `toQueryError` (`ApiError` → `{ status, message }`, прочее → `{ message }`)
-- [ ] `baseApi.ts` по сигнатуре из Technical Details; экспорт из `@shared/api`
-- [ ] `listenerMiddleware.ts`: общий экземпляр `createListenerMiddleware()` + `startListening` (дженерик по стейту, без `RootState`); экспорт из `@shared/lib`
-- [ ] `app/store.ts`: `makeStore(preloadedState?)` (редьюсер `baseApi`, middleware `baseApi` + listener), singleton `store`, типы `RootState`/`AppDispatch`
-- [ ] `providers.tsx`: обернуть `RouterProvider` в `<Provider store={store}>` внутри `GlobalErrorBoundary`
-- [ ] `src/test/renderWithStore.tsx`: `renderWithStore(ui, { store?, ...renderOptions })` и `createStoreWrapper(store?)` для `renderHook`; по умолчанию — свежий `makeStore()`
-- [ ] один раз перевести тесты потребителей клиентских хуков на `renderWithStore`/`createStoreWrapper` (пока стор пустой — это no-op-обёртка), чтобы Tasks 3–6 не трогали одни и те же файлы повторно
-- [ ] тесты `toQueryError` (ApiError со статусом, обычный Error, не-Error)
-- [ ] тесты `makeStore`: два вызова дают независимые сторы; в стейте есть `api`
-- [ ] обновить `providers.test.tsx`
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `pnpm add @reduxjs/toolkit react-redux`
+- [x] `queryError.ts`: тип `QueryError` и `toQueryError` (`ApiError` → `{ status, message }`, прочее → `{ message }`)
+- [x] `baseApi.ts` по сигнатуре из Technical Details; экспорт из `@shared/api`
+- [x] `listenerMiddleware.ts`: общий экземпляр `createListenerMiddleware()` + `startListening` (дженерик по стейту, без `RootState`); экспорт из `@shared/lib`
+  - ➕ отклонение: вместо модульного синглтона — фабрика `createAppListenerMiddleware()`, экземпляр создаётся в каждом `makeStore()` (общий экземпляр копил бы listener'ы всех сторов из тестов — см. требование Task 2 про дублирование); `startListening` для Task 2 берётся из экземпляра стора, тип — `StartListening<State>`
+- [x] `app/store.ts`: `makeStore(preloadedState?)` (редьюсер `baseApi`, middleware `baseApi` + listener), singleton `store`, типы `RootState`/`AppDispatch`
+- [x] `providers.tsx`: обернуть `RouterProvider` в `<Provider store={store}>` внутри `GlobalErrorBoundary`
+- [x] `src/test/renderWithStore.tsx`: `renderWithStore(ui, { store?, ...renderOptions })` и `createStoreWrapper(store?)` для `renderHook`; по умолчанию — свежий `makeStore()`
+- [x] один раз перевести тесты потребителей клиентских хуков на `renderWithStore`/`createStoreWrapper` (пока стор пустой — это no-op-обёртка), чтобы Tasks 3–6 не трогали одни и те же файлы повторно
+- [x] тесты `toQueryError` (ApiError со статусом, обычный Error, не-Error)
+- [x] тесты `makeStore`: два вызова дают независимые сторы; в стейте есть `api`
+- [x] обновить `providers.test.tsx`
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 2: Инфраструктура persist на listener middleware
+
 **Model:** opus — порядок dispatch/rollback и защита от записи обратно: ошибка легко проходит собственные тесты
 
 **Files:**
+
 - Create: `src/shared/lib/store/persistSlice.ts`, `src/shared/lib/store/persistSlice.test.ts`
 - Modify: `src/shared/lib/store/index.ts`, `src/shared/lib/index.ts`
 - Modify: `src/app/store.ts`
@@ -183,9 +188,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 3: Theme slice
+
 **Model:** sonnet — сигнатура хука сохраняется, существующие тесты показывают паритет
 
 **Files:**
+
 - Create: `src/features/theme/model/themeSlice.ts`, `src/features/theme/model/themeSlice.test.ts`
 - Modify: `src/features/theme/model/useTheme.ts`, `src/features/theme/model/useTheme.test.tsx`
 - Modify: `src/features/theme/index.ts`
@@ -200,9 +207,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 4: Watched и Watchlist slices
+
 **Model:** sonnet — повторяет паттерн Task 3 на двух одинаковых id-списках
 
 **Files:**
+
 - Create: `src/features/watched/model/watchedSlice.ts`, `src/features/watched/model/watchedSlice.test.ts`
 - Create: `src/features/watchlist/model/watchlistSlice.ts`, `src/features/watchlist/model/watchlistSlice.test.ts`
 - Modify: `src/features/watched/model/useWatched.ts`, `src/features/watchlist/model/useWatchlist.ts` и их тесты
@@ -218,9 +227,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 5: Profile slice
+
 **Model:** sonnet — паттерн задан Task 2–3, `boolean`-контракт покрыт существующими тестами `/profile`
 
 **Files:**
+
 - Create: `src/features/profile/model/profileSlice.ts`, `src/features/profile/model/profileSlice.test.ts`
 - Modify: `src/features/profile/model/useProfile.ts` и его тест
 - Modify: `src/features/profile/index.ts`
@@ -236,9 +247,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 6: Favorites slice и mutation `toggleFavorite` с optimistic update
+
 **Model:** opus — порядок optimistic/rollback/analytics и единственный путь записи: ошибка проходит поверхностные тесты
 
 **Files:**
+
 - Create: `src/features/favorites/model/favoritesSlice.ts`, `src/features/favorites/model/favoritesSlice.test.ts`
 - Create: `src/features/favorites/model/favoritesApi.ts`, `src/features/favorites/model/favoritesApi.test.ts`
 - Modify: `src/features/favorites/model/useFavorites.ts` и его тест
@@ -259,9 +272,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 7: `QueryBoundary` в `@shared/ui`
+
 **Model:** sonnet — контракт компонента описан в плане, поведение проверяется тестами
 
 **Files:**
+
 - Create: `src/shared/ui/QueryBoundary/index.tsx`, `src/shared/ui/QueryBoundary/QueryBoundary.test.tsx`
 - Modify: `src/shared/ui/index.ts`
 
@@ -273,9 +288,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 8: Endpoints рейлов и страницы Home/Popular
+
 **Model:** sonnet — перенос трёх однотипных фетчеров по заданному шаблону
 
 **Files:**
+
 - Create: `src/entities/movie/api/movieApi.ts`, `src/entities/movie/api/movieApi.test.ts`
 - Modify: `src/entities/movie/hooks/{usePopularMovies,useNewMovies,useTopRatedMovies}.ts`, `src/entities/movie/hooks/index.ts`
 - Delete: `src/entities/movie/api/{getMovies,getPopularMovies}.ts` и их тесты (логика уезжает в `queryFn`)
@@ -290,9 +307,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 9: Endpoints детальных страниц (movie, person)
+
 **Model:** sonnet — перенос фетчеров, правила 404/images зафиксированы в `data-layer.md` и тестах
 
 **Files:**
+
 - Modify: `src/entities/movie/api/movieApi.ts`, `src/entities/movie/api/movieApi.test.ts`
 - Create: `src/entities/person/api/personApi.ts`, `src/entities/person/api/personApi.test.ts`
 - Modify: `src/entities/movie/hooks/useMovieDetail.ts`, `src/entities/person/hooks/usePersonDetail.ts`
@@ -311,9 +330,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 10: Endpoint `getMoviesByIds` и страницы списков
+
 **Model:** sonnet — логика `allSettled`/404 переносится как есть, шаблон `initiate` задан планом
 
 **Files:**
+
 - Modify: `src/entities/movie/api/movieApi.ts`, `src/entities/movie/api/movieApi.test.ts`
 - Modify: `src/features/{favorites,watched,watchlist}/model/use*Movies.ts` и их тесты
 - Modify: `src/pages/recommendations/model/useRecommendedMovies.ts` (мост до Task 12)
@@ -331,9 +352,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 11: Каталог и поиск — server-side pagination
+
 **Model:** opus — обход курсора через вложенные `initiate` и stale-while-fetching на `/search`: много решений, ошибки неочевидны
 
 **Files:**
+
 - Modify: `src/entities/movie/api/movieApi.ts`, `src/entities/movie/api/movieApi.test.ts`
 - Delete: `src/entities/movie/api/getSearchMovies.ts` и его тест (`getMoviesPage.ts` остаётся до Task 12 — им пользуются рекомендации)
 - Modify: `src/entities/movie/index.ts`
@@ -352,9 +375,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 12: Recommendations — endpoint с tag-based invalidation
+
 **Model:** opus — порядок optimistic-обновления, инвалидации и перезапроса: ошибка проходит собственные тесты
 
 **Files:**
+
 - Create: `src/pages/recommendations/api/recommendationsApi.ts`, `src/pages/recommendations/api/recommendationsApi.test.ts`
 - Modify: `src/pages/recommendations/model/useRecommendedMovies.ts`
 - Modify/Delete: `src/pages/recommendations/model/useRecommendedMovies{,.retry}.test.tsx`
@@ -374,9 +399,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 13: Справочники жанров и стран на RTK Query
+
 **Model:** opus — нужно совместить кеш RTK Query с 7-дневным `localStorage`-фолбэком и кулдауном: решения по деталям остаются за исполнителем
 
 **Files:**
+
 - Modify: `src/entities/movie/api/movieApi.ts`, `src/entities/movie/api/movieApi.test.ts`
 - Modify: `src/entities/movie/api/{createDictionaryCache,genreDictionaryCache,countryDictionaryCache,getGenreDictionary,getCountryDictionary}.ts` и их тесты
 - Modify: `src/entities/movie/hooks/{useGenreDictionary,useCountryDictionary}.ts` и их тесты
@@ -394,9 +421,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 14: Удаление старого data-layer
+
 **Model:** sonnet — удаление по списку, knip/typecheck/тесты ловят ошибки
 
 **Files:**
+
 - Delete: `src/shared/lib/cachedFetcher/**`, `src/shared/lib/sessionCache/**`
 - Delete: `src/shared/ui/AsyncBoundary/**` (если не осталось потребителей)
 - Delete: `src/shared/lib/storage/useStorageSlot.ts` (если не осталось потребителей)
@@ -412,9 +441,11 @@ export const store = makeStore()
 - [ ] `make test && make typecheck && make lint` — зелёные
 
 ### Task 15: Бюджеты бандла и замер разницы с `main`
+
 **Model:** sonnet — измерение и обновление чисел, `make size` показывает результат
 
 **Files:**
+
 - Modify: `package.json` (`size-limit`)
 - Create: `docs/concepts/rtk-bundle-diff.md` (сырые цифры для README)
 
@@ -426,6 +457,7 @@ export const store = makeStore()
 - [ ] `make size` — зелёный
 
 ### Task 16: Verify acceptance criteria
+
 **Model:** sonnet — сверка результата с планом и критериями Phase 3, исправление расхождений
 
 - [ ] все шесть пунктов roadmap 3.1 реализованы
@@ -437,9 +469,11 @@ export const store = makeStore()
 - [ ] `make e2e` — один прогон (квота 200 запросов/день); сценарии спеков не менялись
 
 ### Task 17: [Final] Документация
+
 **Model:** sonnet — документация описывает уже построенное поведение
 
 **Files:**
+
 - Modify: `README.md`
 - Modify: `.claude/rules/{data-layer,storage,build-budgets,search-catalog}.md`, `AGENTS.md`
 - Modify: `plans/roadmap.md`

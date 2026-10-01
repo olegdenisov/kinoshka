@@ -1,8 +1,9 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { useEffect } from 'react'
 import { MemoryRouter, useLocation } from 'react-router'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { Home } from './Home'
 
@@ -75,7 +76,7 @@ const popularListErrorResponse = () =>
 
 const renderHome = async () => {
   await act(async () => {
-    render(
+    renderWithStore(
       <MemoryRouter>
         <Home />
       </MemoryRouter>,
@@ -100,7 +101,7 @@ const renderHomeWithLocationProbe = async () => {
   lastPathname = '/'
   lastSearch = ''
   await act(async () => {
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/']}>
         <Home />
         <LocationProbe />

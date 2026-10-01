@@ -1,9 +1,10 @@
 import type { Movie } from '@entities/movie'
 import { AsyncBoundary } from '@shared/ui'
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import type { ComponentType } from 'react'
 
+import { renderWithStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import type { useRecommendedMovies as UseRecommendedMovies } from './useRecommendedMovies'
 
@@ -135,15 +136,15 @@ const Probe: ComponentType<{
   )
 }
 
-// React 19's use() suspends synchronously — testing-library's render() outside act()
+// React 19's use() suspends synchronously — testing-library's renderWithStore() outside act()
 // leaves the pending suspended work unflushed (см. useMovieCatalog.test.tsx за тем же
 // приёмом с await act(async ...)).
 const renderProbe = async (
   useRecommendedMovies: typeof UseRecommendedMovies,
 ) => {
-  let result: ReturnType<typeof render> | undefined
+  let result: ReturnType<typeof renderWithStore> | undefined
   await act(async () => {
-    result = render(
+    result = renderWithStore(
       <AsyncBoundary>
         <Probe useRecommendedMovies={useRecommendedMovies} />
       </AsyncBoundary>,

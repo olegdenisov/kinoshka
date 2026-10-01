@@ -1,7 +1,8 @@
 import { AsyncBoundary } from '@shared/ui'
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { renderWithStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import { useWatchedMovies } from './useWatchedMovies'
 import { watchedSlot } from './watchedStorage'
@@ -48,7 +49,7 @@ describe('useWatchedMovies', () => {
     mockMovie(602, { name: 'Watched Series', type: 'tv-series' })
 
     await act(async () => {
-      render(
+      renderWithStore(
         <AsyncBoundary>
           <Probe />
         </AsyncBoundary>,
@@ -72,7 +73,7 @@ describe('useWatchedMovies', () => {
     )
 
     await act(async () => {
-      render(
+      renderWithStore(
         <AsyncBoundary>
           <Probe />
         </AsyncBoundary>,
@@ -85,7 +86,7 @@ describe('useWatchedMovies', () => {
 
   it('пустые ids → пустой список', async () => {
     await act(async () => {
-      render(
+      renderWithStore(
         <AsyncBoundary>
           <Probe />
         </AsyncBoundary>,

@@ -1,13 +1,14 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { profileNameSlot } from '../../model/profileStorage'
 import { ProfileAvatar } from './ProfileAvatar'
 
 beforeEach(() => localStorage.clear())
 
 const renderAvatar = () =>
-  render(
+  renderWithStore(
     <MemoryRouter>
       <ProfileAvatar />
     </MemoryRouter>,
@@ -47,7 +48,7 @@ describe('ProfileAvatar', () => {
   })
 
   it('на /profile ссылка помечена aria-current="page", на других страницах — нет', () => {
-    const { unmount } = render(
+    const { unmount } = renderWithStore(
       <MemoryRouter initialEntries={['/profile']}>
         <ProfileAvatar />
       </MemoryRouter>,

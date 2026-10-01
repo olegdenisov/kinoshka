@@ -8,7 +8,8 @@ import { render, screen, within } from '@testing-library/react'
 // больше не импортируется из providers.tsx (переехал в sentry-bootstrap.ts, см.
 // sentry-bootstrap.test.ts/main.test.ts). reportWebVitals() удалён вместе с пайплайном Web
 // Vitals→Plausible (2.5.7, заменён Sentry Performance) — providers.tsx больше не вызывает и не
-// импортирует его.
+// импортирует его. Redux Provider (store из ./store) — настоящий: проверяем, что он стоит над
+// RouterProvider.
 vi.mock('./router', () => ({ router: {} }))
 vi.mock('@shared/lib', async importOriginal => {
   const actual = await importOriginal<typeof SharedLib>()
@@ -22,9 +23,16 @@ vi.mock('./GlobalErrorBoundary', () => ({
     <div data-testid='global-error-boundary'>{children}</div>
   ),
 }))
-vi.mock('react-router/dom', () => ({
-  RouterProvider: () => <div>router content</div>,
-}))
+// Фейковый RouterProvider читает стор через useStore — так тест видит, что Provider стоит выше
+// роутера (без него useStore бросает).
+vi.mock('react-router/dom', async () => {
+  const { useStore } = await import('react-redux')
+  const RouterProvider = () => {
+    const hasApiSlice = 'api' in (useStore().getState() as object)
+    return <div>router content{hasApiSlice ? ' with store' : ''}</div>
+  }
+  return { RouterProvider }
+})
 
 const { initAnalytics } = await import('@shared/lib')
 const { registerChunkPreloadRecovery } = await import('./chunkPreloadRecovery')
@@ -43,6 +51,12 @@ describe('Providers', () => {
     render(<Providers />)
 
     const boundary = screen.getByTestId('global-error-boundary')
-    expect(within(boundary).getByText('router content')).toBeInTheDocument()
+    expect(within(boundary).getByText(/router content/)).toBeInTheDocument()
+  })
+
+  it('отдаёт роутеру Redux-стор через Provider', () => {
+    render(<Providers />)
+
+    expect(screen.getByText('router content with store')).toBeInTheDocument()
   })
 })
