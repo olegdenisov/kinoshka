@@ -1,0 +1,36 @@
+.ratingList {
+  display: flex;
+  gap: 4px;
+}
+
+.ratingListCompact {
+  gap: 6px;
+}
+
+.ratingBtn {
+  flex: 1;
+  height: 32px;
+  border-radius: 4px;
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-faint);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.ratingBtnCompact {
+  height: 40px;
+  border-radius: 6px;
+  border-color: var(--border-subtle);
+  font-size: 13px;
+  letter-spacing: normal;
+}
+
+.ratingBtnActive {
+  background: var(--accent-warm-soft);
+  color: var(--accent-warm);
+  border-color: var(--accent-warm-border);
+}

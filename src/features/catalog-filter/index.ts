@@ -11,3 +11,5 @@ export {
   stripFilterAndSortParams,
   EMPTY_FILTERS,
 } from './lib/searchParams'
+export { FilterPanel } from './ui/FilterPanel'
+export { FilterGroup } from './ui/FilterGroup'
