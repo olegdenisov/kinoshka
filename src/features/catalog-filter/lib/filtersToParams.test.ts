@@ -1,6 +1,11 @@
 import type { FilterState } from '../model/useFilterState'
+import { LIST_OPTIONS, PLATFORM_OPTIONS } from './filterOptions'
 import { filtersToParams } from './filtersToParams'
-import { EMPTY_FILTERS } from './searchParams'
+import {
+  EMPTY_FILTERS,
+  filtersToSearchParams,
+  getFilterFromSearchParams,
+} from './searchParams'
 
 describe('filtersToParams', () => {
   it('пустой фильтр без sort → { limit: 12 }', () => {
@@ -153,4 +158,28 @@ describe('filtersToParams', () => {
     expect(params['watchability.items.name']).toBeUndefined()
     expect(params.lists).toBeUndefined()
   })
+})
+
+describe('опции платформ и подборок', () => {
+  it.each(PLATFORM_OPTIONS.map(o => o.value))(
+    'платформа %s: URL-раунд-трип и параметр API',
+    value => {
+      const filters = { ...EMPTY_FILTERS, platforms: [value] }
+      const restored = getFilterFromSearchParams(filtersToSearchParams(filters))
+      expect(restored.platforms).toEqual([value])
+      expect(filtersToParams(restored)['watchability.items.name']).toEqual([
+        value,
+      ])
+    },
+  )
+
+  it.each(LIST_OPTIONS.map(o => o.value))(
+    'подборка %s: URL-раунд-трип и параметр API',
+    value => {
+      const filters = { ...EMPTY_FILTERS, list: value }
+      const restored = getFilterFromSearchParams(filtersToSearchParams(filters))
+      expect(restored.list).toBe(value)
+      expect(filtersToParams(restored).lists).toEqual([value])
+    },
+  )
 })

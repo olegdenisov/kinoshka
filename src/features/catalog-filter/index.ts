@@ -10,4 +10,5 @@ export {
   EMPTY_FILTERS,
 } from './lib/searchParams'
 export { FilterPanel } from './ui/FilterPanel'
+// Type в контейнерах (сайдбар/шторка) рендерится своими контролами, но оборачивается в тот же FilterGroup.
 export { FilterGroup } from './ui/FilterGroup'

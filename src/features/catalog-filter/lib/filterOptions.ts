@@ -10,6 +10,9 @@ export type FilterOption<T extends string = string> = {
   label: string
 }
 
+/** Порог рейтинга (`N+`) для группы Rating. */
+export const RATING_VALUES = [5, 6, 7, 8, 9]
+
 export const DURATION_VALUES = ['short', 'medium', 'long'] as const
 
 export type Duration = (typeof DURATION_VALUES)[number]
