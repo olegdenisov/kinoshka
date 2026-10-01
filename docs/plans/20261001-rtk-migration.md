@@ -260,17 +260,17 @@ export const store = makeStore()
 - Modify: `src/app/store.ts`
 - Modify: тесты потребителей `useFavorites`
 
-- [ ] `favoritesSlice`: `{ ids }`, редьюсеры `toggled(id)`, `hydrated(ids)`, селекторы `selectIds`; экспорт `selectFavoriteIds` из barrel (нужен Task 12)
-- [ ] `favoritesApi` (`baseApi.injectEndpoints`): mutation `toggleFavorite(id)` — `queryFn` считает следующее значение от `favoritesSlot.get()`, пишет слот, при `false` возвращает `{ error }`; `invalidatesTags: (_r, error) => (error ? [] : ['Recommendations'])`
-- [ ] `onQueryStarted`: оптимистичный `dispatch(toggled(id))`; после `queryFulfilled` — `trackEvent('favorite added')` только при добавлении; в `catch` — откат повторным `toggled(id)`
-- [ ] favorites **не** регистрируется в `persistSlice` (единственный путь записи — mutation); `subscribeSlot` для синхронизации вкладок подключить; при `hydrated` из другой вкладки дополнительно диспатчить `baseApi.util.invalidateTags(['Recommendations'])`
-- [ ] `useFavorites`: `ids`/`isFavorite`/`toggle` на `useSelector` + `useToggleFavoriteMutation`; `add`/`remove`/`clear` удалить, если у них нет потребителей вне тестов (проверить grep'ом), иначе реализовать тем же способом
-- [ ] тесты slice
-- [ ] тесты mutation: успех (стейт, `localStorage`, `trackEvent`), отказ записи (откат стейта, `trackEvent` не вызван), удаление не шлёт событие
-- [ ] тест: два `toggle` разных id в одном тике — оба id в стейте и в `localStorage`
-- [ ] тесты инвалидации: при ошибке записи тег не инвалидируется; `storage`-событие из другой вкладки инвалидирует `Recommendations`
-- [ ] обновить тесты хука и потребителей
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `favoritesSlice`: `{ ids }`, редьюсеры `toggled(id)`, `hydrated(ids)`, селекторы `selectIds`; экспорт `selectFavoriteIds` из barrel (нужен Task 12)
+- [x] `favoritesApi` (`baseApi.injectEndpoints`): mutation `toggleFavorite(id)` — `queryFn` считает следующее значение от `favoritesSlot.get()`, пишет слот, при `false` возвращает `{ error }`; `invalidatesTags: (_r, error) => (error ? [] : ['Recommendations'])`
+- [x] `onQueryStarted`: оптимистичный `dispatch(toggled(id))`; после `queryFulfilled` — `trackEvent('favorite added')` только при добавлении; в `catch` — откат повторным `toggled(id)`
+- [x] favorites **не** регистрируется в `persistSlice` (единственный путь записи — mutation); `subscribeSlot` для синхронизации вкладок подключить; при `hydrated` из другой вкладки дополнительно диспатчить `baseApi.util.invalidateTags(['Recommendations'])`
+- [x] `useFavorites`: `ids`/`isFavorite`/`toggle` на `useSelector` + `useToggleFavoriteMutation`; `add`/`remove`/`clear` удалить, если у них нет потребителей вне тестов (проверить grep'ом), иначе реализовать тем же способом
+- [x] тесты slice
+- [x] тесты mutation: успех (стейт, `localStorage`, `trackEvent`), отказ записи (откат стейта, `trackEvent` не вызван), удаление не шлёт событие
+- [x] тест: два `toggle` разных id в одном тике — оба id в стейте и в `localStorage`
+- [x] тесты инвалидации: при ошибке записи тег не инвалидируется; `storage`-событие из другой вкладки инвалидирует `Recommendations`
+- [x] обновить тесты хука и потребителей
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 7: `QueryBoundary` в `@shared/ui`
 
