@@ -20,6 +20,9 @@ export {
   useGetCatalogQuery,
   useGetMoviesByIdsQuery,
 } from './api/movieApi'
+// Тестовая утилита для глобального afterEach (src/test/setup.ts): кулдаун справочников —
+// модульное состояние, свежий стор на тест его не сбрасывает.
+export { resetDictionaryCooldowns } from './api/createDictionaryCache'
 export { formatCurrency } from './lib/formatCurrency'
 export { formatDate } from './lib/formatDate'
 export * from './hooks'

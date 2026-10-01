@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { CountrySelector } from './CountrySelector'
 
@@ -25,7 +26,7 @@ const mockDictionary = (names: string[]) => {
 describe('CountrySelector', () => {
   it('до загрузки словаря показывает шорт-лист', async () => {
     mockDictionary(['США', 'Аргентина'])
-    render(<CountrySelector selected={[]} onToggle={() => {}} />)
+    renderWithStore(<CountrySelector selected={[]} onToggle={() => {}} />)
     expect(screen.getByRole('button', { name: 'USA' })).toBeInTheDocument()
     expect(screen.queryByText('Аргентина')).not.toBeInTheDocument()
     // Дожидаемся фоновой загрузки словаря, чтобы запрос не долетел в соседний тест.
@@ -35,7 +36,7 @@ describe('CountrySelector', () => {
   it('«Показать все» открывает полный список из словаря', async () => {
     mockDictionary(['США', 'Аргентина', 'Чили'])
     const user = userEvent.setup()
-    render(<CountrySelector selected={[]} onToggle={() => {}} />)
+    renderWithStore(<CountrySelector selected={[]} onToggle={() => {}} />)
 
     const toggle = await screen.findByRole('button', {
       name: /Показать все.*Country/,
@@ -51,7 +52,7 @@ describe('CountrySelector', () => {
     mockDictionary(['США'])
     const onToggle = vi.fn()
     const user = userEvent.setup()
-    render(<CountrySelector selected={[]} onToggle={onToggle} />)
+    renderWithStore(<CountrySelector selected={[]} onToggle={onToggle} />)
 
     await user.click(screen.getByRole('button', { name: 'USA' }))
     expect(onToggle).toHaveBeenCalledWith('США')

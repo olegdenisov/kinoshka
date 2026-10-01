@@ -413,15 +413,16 @@ export const store = makeStore()
 - Modify: `src/entities/movie/index.ts`, `src/test/setup.ts`
 - Modify: `src/features/catalog-filter/ui/GenreSelector/GenreSelector.tsx` и селектор стран, их тесты
 
-- [ ] endpoints `getGenreDictionary()`, `getCountryDictionary()`; сетевой запрос — только через RTK Query
-- [ ] `localStorage`-слот остаётся как персистентный фолбэк: успешный ответ пишется в слот (`onQueryStarted`), хук синхронно отдаёт `data ?? кеш слота ?? STATIC_FALLBACK_*`
-- [ ] запрос пропускается (`skip`), пока кеш слота свежий (7 дней)
-- [ ] сохранить инварианты: пустой ответ не затирает кеш и не зацикливает перезапрос; неудача не трогает существующий кеш; повтор после неудачи не чаще кулдауна 60 с
-- [ ] `createDictionaryCache` сократить до того, что осталось нужно (слот + свежесть + кулдаун), in-flight-дедупликацию и `generation` удалить — их даёт RTK Query; `reset*DictionaryState` в `setup.ts` убрать, если стало не нужно
-- [ ] селекторы жанров/стран рендерятся без блокировки, как сейчас
-- [ ] тесты: свежий кеш → нет запроса; протухший → фоновое обновление; пустой ответ; ошибка + кулдаун
-- [ ] обновить тесты хуков и селекторов
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] endpoints `getGenreDictionary()`, `getCountryDictionary()`; сетевой запрос — только через RTK Query
+- [x] `localStorage`-слот остаётся как персистентный фолбэк: успешный ответ пишется в слот (`onQueryStarted`), хук синхронно отдаёт `data ?? кеш слота ?? STATIC_FALLBACK_*`
+- [x] запрос пропускается (`skip`), пока кеш слота свежий (7 дней)
+- [x] сохранить инварианты: пустой ответ не затирает кеш и не зацикливает перезапрос; неудача не трогает существующий кеш; повтор после неудачи не чаще кулдауна 60 с
+- [x] `createDictionaryCache` сократить до того, что осталось нужно (слот + свежесть + кулдаун), in-flight-дедупликацию и `generation` удалить — их даёт RTK Query; `reset*DictionaryState` в `setup.ts` убрать, если стало не нужно
+- [x] селекторы жанров/стран рендерятся без блокировки, как сейчас
+- [x] тесты: свежий кеш → нет запроса; протухший → фоновое обновление; пустой ответ; ошибка + кулдаун
+- [x] обновить тесты хуков и селекторов
+- ➕ решение: инстансы `genreDictionaryCache`/`countryDictionaryCache` живут в `createDictionaryCache.ts`, файлы `genreDictionaryCache.ts`/`countryDictionaryCache.ts`/`getGenreDictionary.ts`/`getCountryDictionary.ts` и их тесты удалены (запрос — в `queryFn`, тесты — в `movieApi.test.ts`); кулдаун проверяется в `queryFn` (RTK Query перезапрашивает упавший запрос на каждой новой подписке); пустой ответ теперь не пишется в слот вовсе (раньше писался `items: []` со свежим `fetchedAt`), от зацикливания защищает закешированный в RTK Query ответ + кулдаун; кулдаун модульный, поэтому `resetDictionaryCooldowns` в `setup.ts` остался (заменил оба `reset*DictionaryState`)
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 14: Удаление старого data-layer
 

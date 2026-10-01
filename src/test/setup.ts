@@ -1,8 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import {
-  resetCountryDictionaryState,
-  resetGenreDictionaryState,
-} from '@entities/movie'
+import { resetDictionaryCooldowns } from '@entities/movie'
 import { resetAllCachedFetchers } from '@shared/lib'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
@@ -137,12 +134,11 @@ afterEach(() => server.resetHandlers())
 // as an earlier test would silently get a stale cached promise instead of exercising the
 // current test's MSW handler. See createCachedFetcher.ts's resetAllCachedFetchers docblock.
 afterEach(() => resetAllCachedFetchers())
-// Dictionary caches (genres, countries): localStorage slot + in-memory cooldown/in-flight state
-// are module-level too — same rationale as resetAllCachedFetchers above, plus localStorage.clear()
-// so a cached dictionary from one test doesn't leak into the next (see createDictionaryCache.ts).
+// Справочники (жанры, страны): localStorage-слот и кулдаун повторов модульные — свежий стор на
+// тест их не сбрасывает; без этого кеш или кулдаун одного теста глушил бы запрос следующего
+// (см. createDictionaryCache.ts).
 afterEach(() => {
   localStorage.clear()
-  resetGenreDictionaryState()
-  resetCountryDictionaryState()
+  resetDictionaryCooldowns()
 })
 afterAll(() => server.close())

@@ -7,6 +7,11 @@ import {
 } from '@shared/api'
 
 import type { Movie, MovieDetail, PopularMovie } from '../model/types'
+import {
+  countryDictionaryCache,
+  genreDictionaryCache,
+  type DictionaryCache,
+} from './createDictionaryCache'
 import { mapDocToMovie } from './mapDocToMovie'
 import { mapDtoToMovieDetail } from './mapDtoToMovieDetail'
 import { MAX_PAGES, PER_PAGE } from './paginationConfig'
@@ -44,8 +49,60 @@ export type MovieImage = {
   previewUrl?: string
 }
 
+// queryFn справочника: кулдаун проверяется здесь, а не в хуке — RTK Query сам перезапускает
+// упавший запрос на новой подписке, и только queryFn видит каждую такую попытку.
+const fetchDictionary = async (
+  type: 'genres' | 'countries',
+  cache: DictionaryCache,
+): Promise<{ data: string[] } | { error: QueryError }> => {
+  if (!cache.tryStartAttempt()) {
+    return { error: { message: 'Dictionary refresh is cooling down' } }
+  }
+
+  try {
+    const response = await apiClient.getV15DictionaryByType({ path: { type } })
+
+    if ('statusCode' in response.data) {
+      // нужно чтобы сузить тип
+      return {
+        error: {
+          status: response.data.statusCode,
+          message: response.data.message,
+        },
+      }
+    }
+
+    return { data: response.data.items.map(item => item.name) }
+  } catch (error) {
+    return { error: toQueryError(error) }
+  }
+}
+
+// Успешный ответ переживает перезагрузку через localStorage-слот; ошибка слот не трогает.
+const persistDictionary =
+  (cache: DictionaryCache) =>
+  async (
+    _arg: void,
+    { queryFulfilled }: { queryFulfilled: Promise<{ data: string[] }> },
+  ) => {
+    try {
+      const { data } = await queryFulfilled
+      cache.save(data)
+    } catch {
+      // ошибка уже лежит в стейте запроса; существующий кеш остаётся как есть
+    }
+  }
+
 export const movieApi = baseApi.injectEndpoints({
   endpoints: build => ({
+    getGenreDictionary: build.query<string[], void>({
+      queryFn: () => fetchDictionary('genres', genreDictionaryCache),
+      onQueryStarted: persistDictionary(genreDictionaryCache),
+    }),
+    getCountryDictionary: build.query<string[], void>({
+      queryFn: () => fetchDictionary('countries', countryDictionaryCache),
+      onQueryStarted: persistDictionary(countryDictionaryCache),
+    }),
     getMovieDetail: build.query<MovieDetail, number>({
       queryFn: async id => {
         try {
@@ -374,4 +431,6 @@ export const {
   useGetPopularMoviesQuery,
   useGetMovieDetailQuery,
   useGetMovieImagesQuery,
+  useGetGenreDictionaryQuery,
+  useGetCountryDictionaryQuery,
 } = movieApi
