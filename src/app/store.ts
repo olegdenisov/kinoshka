@@ -3,6 +3,16 @@ import {
   themeReducer,
   themeReducerPath,
 } from '@features/theme'
+import {
+  registerWatchedPersistence,
+  watchedReducer,
+  watchedReducerPath,
+} from '@features/watched'
+import {
+  registerWatchlistPersistence,
+  watchlistReducer,
+  watchlistReducerPath,
+} from '@features/watchlist'
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import { baseApi } from '@shared/api'
 import { createAppListenerMiddleware } from '@shared/lib'
@@ -11,6 +21,8 @@ import type { StartListening } from '@shared/lib'
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
   [themeReducerPath]: themeReducer,
+  [watchedReducerPath]: watchedReducer,
+  [watchlistReducerPath]: watchlistReducer,
 })
 
 export type RootState = ReturnType<typeof rootReducer>
@@ -29,6 +41,8 @@ const setupPersistence = (
 ): (() => void) => {
   const unsubscribers: Array<() => void> = [
     registerThemePersistence(store, startListening),
+    registerWatchedPersistence(store, startListening),
+    registerWatchlistPersistence(store, startListening),
   ]
 
   return () => {
