@@ -1,11 +1,12 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { createStoreWrapper } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import {
-  genreDictionarySlot,
-  GENRE_DICTIONARY_TTL_MS,
-} from '../api/genreDictionaryCache'
+  DICTIONARY_TTL_MS,
+  genreDictionaryCache,
+} from '../api/createDictionaryCache'
 import { STATIC_FALLBACK_GENRES } from '../model/genre'
 import { useGenreDictionary } from './useGenreDictionary'
 
@@ -47,6 +48,8 @@ const mockError = (status = 500) => {
   return calls
 }
 
+const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+
 let now = 1_000_000
 
 beforeEach(() => {
@@ -59,86 +62,78 @@ afterEach(() => {
 })
 
 describe('useGenreDictionary — пустой кэш', () => {
-  it('первый рендер сразу отдаёт статический фолбэк, без ожидания сети', async () => {
-    mockSuccess(['драма'])
-    const { result } = renderHook(() => useGenreDictionary())
+  it('первый рендер сразу отдаёт статический фолбэк, затем данные из API', async () => {
+    mockSuccess(['драма', 'боевик'])
+    const { result } = renderHook(() => useGenreDictionary(), {
+      wrapper: createStoreWrapper(),
+    })
 
     expect(result.current).toEqual(STATIC_FALLBACK_GENRES)
-
-    // Дожидаемся, чтобы фоновый фетч, запущенный этим тестом, полностью осел (in-flight
-    // промис settled, слот записан) до конца теста — иначе он может дописать в
-    // localStorage/module-state уже после того, как следующий тест начнёт выполняться
-    // (см. глобальный afterEach в src/test/setup.ts, который чистит и то, и другое, но
-    // только МЕЖДУ тестами).
-    await waitFor(() => {
-      expect(genreDictionarySlot.get().items).toEqual(['драма'])
-    })
-  })
-
-  it('после успешного фонового фетча перерисовывается с данными из API', async () => {
-    mockSuccess(['драма', 'боевик'])
-    const { result } = renderHook(() => useGenreDictionary())
 
     await waitFor(() => {
       expect(result.current).toEqual([{ name: 'драма' }, { name: 'боевик' }])
     })
+    expect(genreDictionaryCache.slot.get().items).toEqual(['драма', 'боевик'])
   })
 })
 
 describe('useGenreDictionary — свежий кэш', () => {
-  it('рендерится сразу из кэша, фонового запроса не происходит', async () => {
+  it('рендерится сразу из кэша, запроса не происходит', async () => {
     const calls = mockSuccess(['триллер'])
-    genreDictionarySlot.set({ items: ['триллер'], fetchedAt: now })
+    genreDictionaryCache.slot.set({ items: ['триллер'], fetchedAt: now })
 
-    const { result, rerender } = renderHook(() => useGenreDictionary())
+    const { result, rerender } = renderHook(() => useGenreDictionary(), {
+      wrapper: createStoreWrapper(),
+    })
 
     expect(result.current).toEqual([{ name: 'триллер' }])
     rerender()
-    rerender()
-
-    // даём эффектам шанс сработать, если бы они (ошибочно) сделали запрос
-    await new Promise(resolve => setTimeout(resolve, 0))
+    await flush()
     expect(calls.count).toBe(0)
   })
 })
 
 describe('useGenreDictionary — устаревший кэш', () => {
-  it('рендерится сразу из кэша и происходит ровно один фоновый запрос при повторных ре-рендерах', async () => {
+  it('рендерится сразу из кэша и обновляется в фоне ровно одним запросом', async () => {
     const calls = mockSuccess(['ужасы', 'фэнтези'])
-    genreDictionarySlot.set({
+    genreDictionaryCache.slot.set({
       items: ['старый жанр'],
-      fetchedAt: now - GENRE_DICTIONARY_TTL_MS - 1,
+      fetchedAt: now - DICTIONARY_TTL_MS - 1,
+    })
+    const wrapper = createStoreWrapper()
+
+    const { result, rerender } = renderHook(() => useGenreDictionary(), {
+      wrapper,
     })
 
-    const { result, rerender } = renderHook(() => useGenreDictionary())
-
     expect(result.current).toEqual([{ name: 'старый жанр' }])
-
-    rerender()
+    // Второй потребитель до ответа дедуплицируется RTK Query.
+    renderHook(() => useGenreDictionary(), { wrapper })
     rerender()
 
     await waitFor(() => {
       expect(result.current).toEqual([{ name: 'ужасы' }, { name: 'фэнтези' }])
     })
-
     expect(calls.count).toBe(1)
   })
 })
 
-describe('useGenreDictionary — неудачный фоновый фетч', () => {
-  it('не приводит к повторным запросам при последующих ре-рендерах в пределах cooldown', async () => {
+describe('useGenreDictionary — неудачный запрос', () => {
+  it('остаётся на фолбэке и не повторяет запрос при ремаунте в пределах кулдауна', async () => {
     const calls = mockError(500)
+    const wrapper = createStoreWrapper()
 
-    const { rerender } = renderHook(() => useGenreDictionary())
-
+    const first = renderHook(() => useGenreDictionary(), { wrapper })
     await waitFor(() => {
       expect(calls.count).toBe(1)
     })
+    expect(first.result.current).toEqual(STATIC_FALLBACK_GENRES)
+    first.unmount()
 
-    rerender()
-    rerender()
-
-    await new Promise(resolve => setTimeout(resolve, 0))
+    // RTK Query перезапускает упавший запрос на новой подписке — его глушит кулдаун.
+    const second = renderHook(() => useGenreDictionary(), { wrapper })
+    await flush()
     expect(calls.count).toBe(1)
+    expect(second.result.current).toEqual(STATIC_FALLBACK_GENRES)
   })
 })
