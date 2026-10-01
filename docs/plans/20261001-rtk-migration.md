@@ -199,13 +199,13 @@ export const store = makeStore()
 - Modify: `src/features/theme/index.ts`
 - Modify: `src/app/store.ts`
 
-- [ ] `themeSlice`: `initialState: () => ({ theme: themeSlot.get() })`, редьюсеры `themeSet`, `hydrated`, селектор `selectTheme`
-- [ ] экспорт редьюсера и регистрации persist из `@features/theme`; подключить в `app/store.ts` (`persistSlice` + `subscribeSlot`)
-- [ ] `useTheme`: `useSelector`/`useDispatch` вместо `useStorageSlot`; `matchMedia`-логика и `data-theme`-эффект без изменений; тип `UseThemeResult` тот же
-- [ ] ключ `kinoshka:theme` и формат значения не меняются — инлайн-скрипт `index.html` не трогаем
-- [ ] тесты slice (редьюсеры, начальное состояние из слота)
-- [ ] обновить `useTheme.test.tsx` и тесты потребителей под стор; добавить кейс «значение сохраняется в `localStorage`»
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `themeSlice`: `initialState: () => ({ theme: themeSlot.get() })`, редьюсеры `themeSet`, `hydrated`, селектор `selectTheme`
+- [x] экспорт редьюсера и регистрации persist из `@features/theme`; подключить в `app/store.ts` (`persistSlice` + `subscribeSlot`)
+- [x] `useTheme`: `useSelector`/`useDispatch` вместо `useStorageSlot`; `matchMedia`-логика и `data-theme`-эффект без изменений; тип `UseThemeResult` тот же
+- [x] ключ `kinoshka:theme` и формат значения не меняются — инлайн-скрипт `index.html` не трогаем
+- [x] тесты slice (редьюсеры, начальное состояние из слота)
+- [x] обновить `useTheme.test.tsx` и тесты потребителей под стор; добавить кейс «значение сохраняется в `localStorage`»
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 4: Watched и Watchlist slices
 
