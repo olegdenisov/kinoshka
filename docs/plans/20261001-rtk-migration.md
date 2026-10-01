@@ -364,16 +364,17 @@ export const store = makeStore()
 - Modify: `src/pages/search/model/{useMovieCatalog,useCatalogUpdateStatus}.ts` и их тесты
 - Modify: `src/pages/search/ui/**` и их тесты
 
-- [ ] endpoint `getCatalogCursorStep({ params, cursor })` — один запрос, `withCount` только при `cursor === undefined`
-- [ ] endpoint `getMoviesPage({ params, page })`: обход шагов 1..page через `initiate(..., { subscribe: false })`; `toTotalPages`, «курсор кончился раньше» → пустой хвост, `PER_PAGE`/`MAX_PAGES` — как сейчас
-- [ ] endpoint `getSearchMovies({ query, page })`
-- [ ] endpoint `getCatalog({ query, params, page })`: `queryFn` делегирует в `getSearchMovies` или `getMoviesPage` через `initiate(..., { subscribe: false })`
-- [ ] `useMovieCatalog`: один хук `useGetCatalogQuery`, единая форма `{ movies, mode, totalPages }` + статусы query; `mode` — от текущих аргументов; `invalidateMovieCatalog` удалить
-- [ ] `useCatalogUpdateStatus`: убрать зеркало `useState` + `useDeferredValue`, `isUpdating` = `isFetching && !isLoading`; если хук вырождается — удалить его и читать статус из `useMovieCatalog`
-- [ ] `/search`: `QueryBoundary`, старые результаты остаются на экране во время загрузки новых; инварианты URL-стейта из `.claude/rules/search-catalog.md` не меняются
-- [ ] тесты endpoints: страница N делает N запросов, страница N+1 после N — один (кеш шагов), `total` недоступен → `MAX_PAGES`, обрыв курсора; `getCatalog` выбирает ветку по `query`
-- [ ] обновить тесты `useMovieCatalog`, статуса обновления, страницы поиска (Retry, индикатор обновления, при переключении поиск ↔ каталог старая сетка остаётся на экране)
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] endpoint `getCatalogCursorStep({ params, cursor })` — один запрос, `withCount` только при `cursor === undefined`
+- [x] endpoint `getMoviesPage({ params, page })`: обход шагов 1..page через `initiate(..., { subscribe: false })`; `toTotalPages`, «курсор кончился раньше» → пустой хвост, `PER_PAGE`/`MAX_PAGES` — как сейчас
+- [x] endpoint `getSearchMovies({ query, page })`
+- [x] endpoint `getCatalog({ query, params, page })`: `queryFn` делегирует в `getSearchMovies` или `getMoviesPage` через `initiate(..., { subscribe: false })`
+- [x] `useMovieCatalog`: один хук `useGetCatalogQuery`, единая форма `{ movies, mode, totalPages }` + статусы query; `mode` — от текущих аргументов; `invalidateMovieCatalog` удалить
+- [x] `useCatalogUpdateStatus`: убрать зеркало `useState` + `useDeferredValue`, `isUpdating` = `isFetching && !isLoading`; если хук вырождается — удалить его и читать статус из `useMovieCatalog`
+  - ➕ решение: хук выродился и удалён вместе с тестом, `isUpdating` отдаёт `useMovieCatalog`; пункт про `areFiltersEqual` убран из `.claude/rules/search-catalog.md` (ключ кеша RTK Query сериализует аргументы, поимённое сравнение не нужно)
+- [x] `/search`: `QueryBoundary`, старые результаты остаются на экране во время загрузки новых; инварианты URL-стейта из `.claude/rules/search-catalog.md` не меняются
+- [x] тесты endpoints: страница N делает N запросов, страница N+1 после N — один (кеш шагов), `total` недоступен → `MAX_PAGES`, обрыв курсора; `getCatalog` выбирает ветку по `query`
+- [x] обновить тесты `useMovieCatalog`, статуса обновления, страницы поиска (Retry, индикатор обновления, при переключении поиск ↔ каталог старая сетка остаётся на экране)
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 12: Recommendations — endpoint с tag-based invalidation
 

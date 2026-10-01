@@ -10,8 +10,34 @@ import {
 import type { Movie, MovieDetail, PopularMovie } from '../model/types'
 import { mapDocToMovie } from './mapDocToMovie'
 import { mapDtoToMovieDetail } from './mapDtoToMovieDetail'
+import { MAX_PAGES, PER_PAGE } from './paginationConfig'
 
 export type MoviesParams = MovieControllerFindManyByQueryV15Data['query']
+export type CatalogParams = MoviesParams
+
+export type CatalogPageResult = {
+  movies: Movie[]
+  totalPages: number
+}
+
+// Аргумент getCatalog: непустой query → текстовый поиск (params игнорируются — API не
+// сочетает текст с фильтрами), пустой → каталог по params с эмуляцией numbered-page.
+type CatalogArgs = {
+  query: string
+  params?: CatalogParams
+  page: number
+}
+
+type CursorStepArgs = {
+  params: CatalogParams
+  cursor?: string
+}
+
+type CursorStepResult = {
+  movies: Movie[]
+  next: string | null
+  total: number | null
+}
 export type PopularMoviesParams = { slug: string; limit: number }
 
 export type MovieImage = {
@@ -70,6 +96,73 @@ export const movieApi = baseApi.injectEndpoints({
                 url: image.url,
                 previewUrl: image.previewUrl ?? undefined,
               })),
+          }
+        } catch (error) {
+          return { error: toQueryError(error) }
+        }
+      },
+    }),
+    // Один шаг курсора /v1.5/movie. Отдельный endpoint, чтобы шаги кешировались по
+    // (params, cursor): переход на страницу N+1 после N стоит одного запроса, а не N+1.
+    getCatalogCursorStep: build.query<CursorStepResult, CursorStepArgs>({
+      queryFn: async ({ params, cursor }) => {
+        try {
+          const response = await apiClient.getV15Movie({
+            query: {
+              ...params,
+              limit: PER_PAGE,
+              next: cursor,
+              // total нужен только с первого шага курсора (от шага к шагу он не меняется)
+              withCount: cursor === undefined,
+              notNullFields: ['poster.url', 'rating.kp', 'rating.imdb'],
+              selectFields: [
+                'id',
+                'name',
+                'year',
+                'rating',
+                'type',
+                'genres',
+                'movieLength',
+                'poster',
+              ],
+            },
+          })
+
+          if (!('docs' in response.data)) {
+            return { data: { movies: [], next: null, total: null } }
+          }
+
+          return {
+            data: {
+              movies: response.data.docs.map(mapDocToMovie),
+              next: response.data.next ?? null,
+              total: response.data.total ?? null,
+            },
+          }
+        } catch (error) {
+          return { error: toQueryError(error) }
+        }
+      },
+    }),
+    getSearchMovies: build.query<
+      CatalogPageResult,
+      { query: string; page: number }
+    >({
+      queryFn: async ({ query, page }) => {
+        try {
+          const response = await apiClient.getV15MovieSearch({
+            query: { query, page, limit: PER_PAGE },
+          })
+
+          if (!('docs' in response.data)) {
+            return { data: { movies: [], totalPages: 0 } }
+          }
+
+          return {
+            data: {
+              movies: response.data.docs.map(mapDocToMovie),
+              totalPages: Math.min(MAX_PAGES, response.data.pages),
+            },
           }
         } catch (error) {
           return { error: toQueryError(error) }
@@ -184,7 +277,100 @@ export const movieByIdsApi = baseApi.injectEndpoints({
   }),
 })
 
+const toTotalPages = (total: number | null): number => {
+  // total недоступен (withCount не отработал) — не режем пагинацию, отдаём потолок demo-тарифа
+  if (total === null) {
+    return MAX_PAGES
+  }
+
+  return Math.min(MAX_PAGES, Math.ceil(total / PER_PAGE))
+}
+
+// Отдельный injectEndpoints по той же причине, что movieByIdsApi: queryFn ссылается на
+// endpoints movieApi.
+export const moviePageApi = baseApi.injectEndpoints({
+  endpoints: build => ({
+    // API каталога курсорный, numbered-страницы эмулируются обходом next 1..page. Каждый шаг
+    // берётся через initiate — из кеша getCatalogCursorStep, если уже пройден.
+    getMoviesPage: build.query<
+      CatalogPageResult,
+      { params: CatalogParams; page: number }
+    >({
+      queryFn: async ({ params, page }, { dispatch }) => {
+        const fetchStep = (cursor?: string) =>
+          dispatch(
+            movieApi.endpoints.getCatalogCursorStep.initiate(
+              { params, cursor },
+              { subscribe: false },
+            ),
+          ).unwrap()
+
+        try {
+          let cursor: string | undefined
+          let total: number | null = null
+
+          for (let current = 1; ; current += 1) {
+            const step = await fetchStep(cursor)
+
+            if (current === 1) {
+              total = step.total
+            }
+
+            if (current >= page) {
+              return {
+                data: { movies: step.movies, totalPages: toTotalPages(total) },
+              }
+            }
+
+            if (!step.next) {
+              // курсор закончился раньше целевой страницы — пустой хвост
+              return { data: { movies: [], totalPages: toTotalPages(total) } }
+            }
+
+            cursor = step.next
+          }
+        } catch (error) {
+          // unwrap бросает error из queryFn шага — это уже QueryError
+          return { error: error as QueryError }
+        }
+      },
+    }),
+  }),
+})
+
+export const catalogApi = baseApi.injectEndpoints({
+  endpoints: build => ({
+    // Единый endpoint /search: один хук на оба режима, поэтому при переключении поиск ↔
+    // каталог data держит прежнюю сетку, а не проваливается в скелетон (как было бы с двумя
+    // хуками и skip). Сам ничего не запрашивает — делегирует в кеш нижних endpoints.
+    getCatalog: build.query<CatalogPageResult, CatalogArgs>({
+      queryFn: async ({ query, params, page }, { dispatch }) => {
+        try {
+          const data = query
+            ? await dispatch(
+                movieApi.endpoints.getSearchMovies.initiate(
+                  { query, page },
+                  { subscribe: false },
+                ),
+              ).unwrap()
+            : await dispatch(
+                moviePageApi.endpoints.getMoviesPage.initiate(
+                  { params, page },
+                  { subscribe: false },
+                ),
+              ).unwrap()
+
+          return { data }
+        } catch (error) {
+          return { error: error as QueryError }
+        }
+      },
+    }),
+  }),
+})
+
 export const { useGetMoviesByIdsQuery } = movieByIdsApi
+export const { useGetCatalogQuery } = catalogApi
 
 export const {
   useGetMoviesQuery,

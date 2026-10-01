@@ -4,7 +4,10 @@ import { http, HttpResponse } from 'msw'
 import { useEffect } from 'react'
 import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
 
-import { renderWithStore } from '../../../../test/renderWithStore'
+import {
+  renderWithStore,
+  type AppStore,
+} from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { Search } from './Search'
 
@@ -121,6 +124,23 @@ const mockCatalog = (
   )
 }
 
+// Данные приходят через RTK Query уже после монтирования — ждём, пока в сторе не останется
+// запросов в полёте (включая перезапрос после usePageSync, поправившего URL на монтировании).
+// configureStore по умолчанию включает autoBatchEnhancer: подписчики узнают об ответе
+// RTK Query только в следующем кадре (requestAnimationFrame) — ждём его внутри act.
+const settle = async (store: AppStore) => {
+  await waitFor(() =>
+    expect(
+      Object.values(store.getState().api.queries).some(
+        query => query?.status === 'pending',
+      ),
+    ).toBe(false),
+  )
+  await act(
+    () => new Promise<void>(resolve => requestAnimationFrame(() => resolve())),
+  )
+}
+
 const renderSearch = async (
   initialEntries: string[],
   extra?: React.ReactNode,
@@ -136,6 +156,7 @@ const renderSearch = async (
       </MemoryRouter>,
     )
   })
+  await settle(result!.store)
   return result!
 }
 
@@ -218,8 +239,8 @@ describe('Search (desktop-ветка) — режим catalog (без ?q, ест�
   })
 })
 
-describe('Search — ошибка фетчера (403/квота) достигает AsyncBoundary', () => {
-  it('реджект от search-эндпоинта рендерит ErrorState вместо краша страницы, сайдбар/заголовок остаются (падает только контент AsyncBoundary)', async () => {
+describe('Search — ошибка запроса (403/квота) достигает QueryBoundary', () => {
+  it('реджект от search-эндпоинта рендерит ErrorState вместо краша страницы, сайдбар/заголовок остаются (падает только контент QueryBoundary)', async () => {
     server.use(
       http.get(SEARCH_ENDPOINT, () =>
         HttpResponse.json(
@@ -245,7 +266,7 @@ describe('Search — ошибка фетчера (403/квота) достига
 })
 
 describe('Search — Retry реально уходит в сеть (roadmap 1.6)', () => {
-  it('search-режим: ошибка → клик Retry → новый MSW-запрос (не тот же rejected-промис), рендерятся данные', async () => {
+  it('search-режим: ошибка → клик Retry → новый MSW-запрос, рендерятся данные', async () => {
     let requests = 0
     server.use(
       http.get(SEARCH_ENDPOINT, () => {
@@ -422,7 +443,7 @@ describe('Search — индикатор загрузки', () => {
     expect(screen.getByText(/page 2 of 5/i)).toBeInTheDocument()
   })
 
-  it('displayPage держит подсветку Pagination во время isUpdating (не deferredPage)', async () => {
+  it('подсветка Pagination переключается сразу по клику, не дожидаясь ответа', async () => {
     mockSearch([searchDoc('Matrix Revolutions', 601)], { pages: 5, total: 50 })
 
     await renderSearch(['/search?q=display-page-highlight'])
@@ -482,6 +503,51 @@ describe('Search — индикатор загрузки', () => {
     expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
     const busyNodeAfter = document.querySelector('[aria-busy]')!
     expect(busyNodeAfter).toHaveAttribute('aria-busy', 'false')
+    expect(screen.queryByText('Updating…')).not.toBeInTheDocument()
+  })
+})
+
+describe('Search — переключение режима поиск ↔ каталог', () => {
+  it('пока грузится поиск, сетка каталога остаётся на экране с индикатором обновления', async () => {
+    mockCatalog([catalogDoc('Dune Part Two', 1001)])
+
+    await renderSearch(['/search'], <HeaderQuerySetter />)
+    expect(screen.getAllByText('Dune Part Two').length).toBeGreaterThan(0)
+
+    let resolvePending: (response: Response) => void = () => {}
+    const pending = new Promise<Response>(resolve => {
+      resolvePending = resolve
+    })
+    server.use(http.get(SEARCH_ENDPOINT, () => pending))
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'simulate header q write' }),
+      )
+    })
+
+    expect(screen.getByText('Results for “matrix”')).toBeInTheDocument()
+    expect(screen.getAllByText('Dune Part Two').length).toBeGreaterThan(0)
+    expect(document.querySelector('[aria-busy]')).toHaveAttribute(
+      'aria-busy',
+      'true',
+    )
+    expect(screen.getByText('Updating…')).toBeInTheDocument()
+
+    resolvePending(
+      HttpResponse.json({
+        docs: [searchDoc('Matrix Revolutions', 1002)],
+        total: 1,
+        page: 1,
+        pages: 1,
+        limit: 10,
+      }),
+    )
+
+    expect(
+      (await screen.findAllByText('Matrix Revolutions')).length,
+    ).toBeGreaterThan(0)
+    expect(screen.queryAllByText('Dune Part Two')).toHaveLength(0)
     expect(screen.queryByText('Updating…')).not.toBeInTheDocument()
   })
 })
@@ -697,8 +763,8 @@ describe('Search (mobile-ветка) — режимы search/catalog', () => {
   })
 })
 
-describe('Search (mobile-ветка) — ошибка фетчера достигает AsyncBoundary', () => {
-  it('реджект рендерит ErrorState, filter-bar триггеры остаются (падает только контент AsyncBoundary)', async () => {
+describe('Search (mobile-ветка) — ошибка запроса достигает QueryBoundary', () => {
+  it('реджект рендерит ErrorState, filter-bar триггеры остаются (падает только контент QueryBoundary)', async () => {
     setViewportWidth(MOBILE_WIDTH)
     server.use(
       http.get(CATALOG_ENDPOINT, () =>
@@ -847,7 +913,7 @@ describe('Search (mobile-ветка) — избранное в гриде рез
 
 // Новые фильтры (Duration и т.п.) живут в свёрнутых группах общего FilterPanel — и в сайдбаре,
 // и в шторке. Проверяем путь «клик в UI → URL → запрос каталога с movieLength», а не только
-// запись в URL: новое поле, забытое в areFiltersEqual, меняет URL, но не перезапрашивает каталог.
+// запись в URL: поле, не доходящее до filtersToParams, меняет URL, но не меняет запрос.
 describe('Search — фильтр длительности из UI доходит до запроса каталога', () => {
   const trackCatalogRequests = () => {
     const urls: URL[] = []
@@ -898,8 +964,6 @@ describe('Search — фильтр длительности из UI доходи�
     const urls = trackCatalogRequests()
     const user = userEvent.setup()
 
-    // Свой ?type: кэш каталога модульный, иначе ответы десктопного теста выше берутся из кэша
-    // и запрос не уходит.
     await renderSearch(['/search?type=series'])
     await user.click(screen.getByRole('button', { name: /Filters/ }))
 
