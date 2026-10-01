@@ -1,6 +1,10 @@
-import { invalidatePersonDetail, usePersonDetail } from '@entities/person'
-import { ApiError } from '@shared/api'
-import { AsyncBoundary, ErrorState, type ErrorFallbackParams } from '@shared/ui'
+import { usePersonDetail } from '@entities/person'
+import type { QueryError } from '@shared/api'
+import {
+  ErrorState,
+  QueryBoundary,
+  type QueryBoundaryErrorParams,
+} from '@shared/ui'
 import { useParams } from 'react-router'
 
 import { Person } from './ui/Person'
@@ -13,17 +17,9 @@ type PersonDetailContentProps = {
   id: number
 }
 
-const PersonDetailContent = ({ id }: PersonDetailContentProps) => {
-  const person = usePersonDetail(id)
-
-  // key={id} сбрасывает локальное состояние Person (развёрнутые группы
-  // фильмографии в Filmography) при переходе между разными персонами —
-  // тот же приём, что в MovieDetailContent для сброса активного таба.
-  return <Person key={id} person={person} />
-}
-
-const personErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
-  const isNotFound = error instanceof ApiError && error.status === 404
+const personErrorFallback = ({ error, reset }: QueryBoundaryErrorParams) => {
+  const queryError = error as QueryError | undefined
+  const isNotFound = queryError?.status === 404
 
   return (
     <ErrorState
@@ -31,10 +27,27 @@ const personErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
       description={
         isNotFound
           ? NOT_FOUND_DESCRIPTION
-          : error?.message || 'Please try again later'
+          : queryError?.message || 'Please try again later'
       }
       onRetry={reset}
     />
+  )
+}
+
+const PersonDetailContent = ({ id }: PersonDetailContentProps) => {
+  const query = usePersonDetail(id)
+
+  // key={id} сбрасывает локальное состояние Person (развёрнутые группы
+  // фильмографии в Filmography) при переходе между разными персонами —
+  // тот же приём, что в MovieDetailContent для сброса активного таба.
+  return (
+    <QueryBoundary
+      query={query}
+      fallback={<PersonDetailSkeleton />}
+      errorFallback={personErrorFallback}
+    >
+      {person => <Person key={id} person={person} />}
+    </QueryBoundary>
   )
 }
 
@@ -48,13 +61,5 @@ export const PersonPage = () => {
     )
   }
 
-  return (
-    <AsyncBoundary
-      errorFallback={personErrorFallback}
-      fallback={<PersonDetailSkeleton />}
-      onRetry={() => invalidatePersonDetail(numericId)}
-    >
-      <PersonDetailContent id={numericId} />
-    </AsyncBoundary>
-  )
+  return <PersonDetailContent id={numericId} />
 }

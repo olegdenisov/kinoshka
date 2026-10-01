@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw'
 import { makeStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import { hashHue } from '../lib/hashHue'
-import { movieApi } from './movieApi'
+import { fetchMovieDetail, movieApi } from './movieApi'
 
 const MOVIE_ENDPOINT = '*/v1.5/movie'
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
@@ -245,5 +245,144 @@ describe('getPopularMovies', () => {
       status: 404,
       message: 'Collection not found',
     })
+  })
+})
+
+const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
+  id,
+  name: 'Test Movie',
+  year: 2024,
+  type: 'movie',
+  rating: { kp: 8.1, imdb: 7.9 },
+  genres: [{ name: 'drama' }],
+  movieLength: 120,
+  poster: { previewUrl: 'https://example.com/poster.jpg' },
+  persons: [],
+  countries: [],
+  ...overrides,
+})
+
+const getDetail = (id: number) =>
+  makeStore().dispatch(movieApi.endpoints.getMovieDetail.initiate(id))
+
+describe('getMovieDetail', () => {
+  it('маппит ответ в MovieDetail', async () => {
+    server.use(
+      http.get('*/v1.5/movie/1', () =>
+        HttpResponse.json(movieDoc(1, { name: 'Orbit of Silence' })),
+      ),
+    )
+
+    const result = await getDetail(1)
+
+    expect(result.data).toMatchObject({ id: 1, title: 'Orbit of Silence' })
+  })
+
+  it('404 — QueryError со status', async () => {
+    server.use(
+      http.get('*/v1.5/movie/2', () =>
+        HttpResponse.json(
+          { statusCode: 404, message: 'Not found', error: 'Not Found' },
+          { status: 404 },
+        ),
+      ),
+    )
+
+    const result = await getDetail(2)
+
+    expect(result.error).toMatchObject({ status: 404 })
+  })
+
+  it('error-DTO в теле 200 — QueryError со status из тела', async () => {
+    server.use(
+      http.get('*/v1.5/movie/3', () =>
+        HttpResponse.json({ statusCode: 403, message: 'Quota', error: 'x' }),
+      ),
+    )
+
+    const result = await getDetail(3)
+
+    expect(result.error).toEqual({ status: 403, message: 'Quota' })
+  })
+
+  it('fetchMovieDetail (мост для getMoviesByIds) бросает ApiError со status', async () => {
+    server.use(
+      http.get('*/v1.5/movie/4', () =>
+        HttpResponse.json(
+          { statusCode: 404, message: 'Not found', error: 'Not Found' },
+          { status: 404 },
+        ),
+      ),
+    )
+
+    await expect(fetchMovieDetail(4)).rejects.toMatchObject({ status: 404 })
+  })
+})
+
+const image = (overrides: Record<string, unknown> = {}) => ({
+  movieId: 1,
+  type: 'frame',
+  url: 'https://example.com/frame.jpg',
+  previewUrl: 'https://example.com/frame-preview.jpg',
+  ...overrides,
+})
+
+const mockImages = (docs: Record<string, unknown>[]) => {
+  let request: Request | undefined
+  server.use(
+    http.get('*/v1.5/image', ({ request: req }) => {
+      request = req
+      return HttpResponse.json({
+        docs,
+        limit: 8,
+        next: null,
+        prev: null,
+        hasNext: false,
+        hasPrev: false,
+      })
+    }),
+  )
+  return () => request
+}
+
+const getImages = (id: number) =>
+  makeStore().dispatch(movieApi.endpoints.getMovieImages.initiate(id))
+
+describe('getMovieImages', () => {
+  it('уходит на /v1.5/image с movieId, type:[frame,screenshot], limit:8, selectFields', async () => {
+    const getRequest = mockImages([image()])
+
+    await getImages(1)
+
+    const url = new URL(getRequest()!.url)
+    expect(url.searchParams.getAll('movieId')).toEqual(['1'])
+    expect(url.searchParams.getAll('type')).toEqual(['frame', 'screenshot'])
+    expect(url.searchParams.get('limit')).toBe('8')
+    expect(url.searchParams.getAll('selectFields')).toEqual([
+      'url',
+      'previewUrl',
+    ])
+  })
+
+  it('docs маппятся в { url, previewUrl }, запись без url отфильтровывается', async () => {
+    mockImages([image({ url: undefined }), image({ previewUrl: undefined })])
+
+    const result = await getImages(1)
+
+    expect(result.data).toEqual([
+      { url: 'https://example.com/frame.jpg', previewUrl: undefined },
+    ])
+  })
+
+  it('403 — QueryError со status', async () => {
+    server.use(
+      http.get('*/v1.5/image', () =>
+        HttpResponse.json(errorBody(403), { status: 403 }),
+      ),
+    )
+
+    const result = await getImages(2)
+
+    expect(result.error).toMatchObject({ status: 403 })
   })
 })

@@ -321,14 +321,14 @@ export const store = makeStore()
 - Modify: `src/entities/movie/api/getMoviesByIds.ts` (временный мост до Task 12)
 - Modify: `src/entities/movie/index.ts` (тип `MovieImage` реэкспортируется из удаляемого `getMovieImages.ts`)
 
-- [ ] endpoints `getMovieDetail(id)`, `getMovieImages(id)`, `getPersonDetail(id)`
-- [ ] сохранить: ошибка картинок → `images: []`, страница рендерится; ошибка detail (включая 404) → состояние ошибки
-- [ ] 404-вью: проверка `error.status === 404` по `QueryError` вместо `instanceof ApiError`
-- [ ] `MoviePage`/`PersonPage`: `QueryBoundary`, Retry = `refetch`; `invalidateMovieDetail`/`invalidatePersonDetail` удалить
-- [ ] старый фетчер `getMoviesByIds` продолжает работать до Task 12 (им пользуются рекомендации): получает детали через `store`-независимую чистую функцию запроса, экспортированную из `movieApi.ts`; `isNotFound` — по-прежнему по `ApiError` внутри этого моста
-- [ ] тесты endpoints (успех, 404, сбой images)
-- [ ] обновить тесты хуков и страниц
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] endpoints `getMovieDetail(id)`, `getMovieImages(id)`, `getPersonDetail(id)`
+- [x] сохранить: ошибка картинок → `images: []`, страница рендерится; ошибка detail (включая 404) → состояние ошибки
+- [x] 404-вью: проверка `error.status === 404` по `QueryError` вместо `instanceof ApiError`
+- [x] `MoviePage`/`PersonPage`: `QueryBoundary`, Retry = `refetch`; `invalidateMovieDetail`/`invalidatePersonDetail` удалить
+- [x] старый фетчер `getMoviesByIds` продолжает работать до Task 12 (им пользуются рекомендации): получает детали через `store`-независимую чистую функцию запроса, экспортированную из `movieApi.ts`; `isNotFound` — по-прежнему по `ApiError` внутри этого моста
+- [x] тесты endpoints (успех, 404, сбой images)
+- [x] обновить тесты хуков и страниц
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 10: Endpoint `getMoviesByIds` и страницы списков
 

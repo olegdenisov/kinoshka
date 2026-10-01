@@ -1,7 +1,5 @@
-import { use } from 'react'
-
-import { getMovieDetail } from '../api/getMovieDetail'
-import { getMovieImages, type MovieImage } from '../api/getMovieImages'
+import { useGetMovieDetailQuery, useGetMovieImagesQuery } from '../api/movieApi'
+import type { MovieImage } from '../api/movieApi'
 import type { MovieDetail } from '../model/types'
 
 export type MovieDetailBundle = {
@@ -9,78 +7,28 @@ export type MovieDetailBundle = {
   images: MovieImage[]
 }
 
-const combineDetail = async (
-  detailPromise: Promise<MovieDetail>,
-  imagesPromise: Promise<MovieImage[]>,
-): Promise<MovieDetailBundle> => {
-  const [detailResult, imagesResult] = await Promise.allSettled([
-    detailPromise,
-    imagesPromise,
-  ])
+// Два запроса, один результат в форме query (для QueryBoundary). Ошибка картинок не роняет
+// страницу — images: []; ошибка detail (включая 404) — ошибка всего bundle. currentData, а не
+// data: при смене id RTK Query держит в data прошлый фильм, а на /movie/:id нужен скелетон.
+// data появляется только когда images отработали, чтобы вкладка Media не мигала пустой сеткой.
+export const useMovieDetail = (id: number) => {
+  const detail = useGetMovieDetailQuery(id)
+  const images = useGetMovieImagesQuery(id)
 
-  if (detailResult.status === 'rejected') {
-    throw detailResult.reason
-  }
+  const data: MovieDetailBundle | undefined =
+    detail.currentData && !images.isLoading && !images.isFetching
+      ? { detail: detail.currentData, images: images.currentData ?? [] }
+      : undefined
 
   return {
-    detail: detailResult.value,
-    images: imagesResult.status === 'fulfilled' ? imagesResult.value : [],
+    data,
+    isLoading: detail.isLoading || images.isLoading,
+    isFetching: detail.isFetching || images.isFetching,
+    isError: detail.isError,
+    error: detail.error,
+    refetch: () => {
+      detail.refetch()
+      if (images.isError) images.refetch()
+    },
   }
-}
-
-// `Promise.allSettled(...).then(...)` создаёт новый Promise-объект на каждый вызов, даже
-// если оба входных промиса — те самые стабильные ссылки из getMovieDetail/getMovieImages
-// (createCachedFetcher). use() требует стабильную ссылку, пока промис не разрешится, иначе
-// на каждый Suspense-ретрай — новый pending promise и бесконечный ре-саспенс (React не
-// сохраняет useMemo между суспендом до первого коммита и ретраем — обычный useMemo здесь
-// не спасает, это подтверждено разбором react-dom-client при пересмотре реализации).
-// Решение — Map<id, entry>, где запись хранит вместе с bundlePromise те самые внутренние
-// промисы, из которых он был собран (по прецеденту pageCache в getMoviesPage.ts). Стабильность
-// наследуется от createCachedFetcher: пока getMovieDetail(id)/getMovieImages(id) отдают те же
-// ссылки (их TTL/cooldown), bundlePromise тоже стабилен; как только внутренний кеш
-// инвалидируется и отдаёт новый промис — ссылки расходятся, запись пересобирается сама,
-// без ручного TTL/cooldown поверх уже закешированных фетчеров.
-type BundleCacheEntry = {
-  detailPromise: Promise<MovieDetail>
-  imagesPromise: Promise<MovieImage[]>
-  bundlePromise: Promise<MovieDetailBundle>
-}
-
-const bundleCache = new Map<number, BundleCacheEntry>()
-
-// Экспортируется отдельно от useMovieDetail (не хук — plain function) для теста
-// стабильности ссылки: см. useMovieDetail.test.tsx, "идентичность bundle-промиса".
-export const getMovieDetailBundle = (
-  id: number,
-): Promise<MovieDetailBundle> => {
-  const detailPromise = getMovieDetail(id)
-  const imagesPromise = getMovieImages(id)
-
-  const cached = bundleCache.get(id)
-
-  if (
-    cached &&
-    cached.detailPromise === detailPromise &&
-    cached.imagesPromise === imagesPromise
-  ) {
-    return cached.bundlePromise
-  }
-
-  const bundlePromise = combineDetail(detailPromise, imagesPromise)
-  bundleCache.set(id, { detailPromise, imagesPromise, bundlePromise })
-
-  return bundlePromise
-}
-
-export const useMovieDetail = (id: number): MovieDetailBundle =>
-  use(getMovieDetailBundle(id))
-
-/**
- * Companion-инвалидация для Retry: инвалидирует обе части bundle
- * (getMovieDetail/getMovieImages). bundleCache выше пересобирается сам,
- * как только внутренние промисы сменят ссылку — см. докблок BundleCacheEntry.
- */
-export const invalidateMovieDetail = (id: number): void => {
-  getMovieDetail.invalidate(id)
-  getMovieImages.invalidate(id)
 }
