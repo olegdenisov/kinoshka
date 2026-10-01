@@ -189,13 +189,13 @@
 - Modify: `src/features/catalog-filter/ui/GenreSelector/GenreSelector.tsx`
 - Delete: `src/features/catalog-filter/ui/GenreSelector/GenreSelector.module.css` (стили переезжают в `ChipSelect.module.css`)
 
-- [ ] создать `ChipSelect` с пропами из Technical Details: логика «`defaults` ∪ `selected`», «Показать все (N)», синтетический чип для выбранного значения вне `items` (с дедупликацией по лейблу), `aria-pressed`, варианты `compact`
-- [ ] кнопке «Показать все»/«Свернуть» дать `aria-label` из статического пропа `groupLabel` (напр. «Свернуть: Genre») — в открытой панели таких кнопок несколько, совпадающие accessible names запрещены baseline'ом
-- [ ] добавить режим `searchable`: в развёрнутом состоянии над чипами — `<input type='search'>` со статическим `aria-label`, фильтрация по подстроке без учёта регистра по значению и лейблу; выбранные чипы не скрываются фильтром
-- [ ] перевести `GenreSelector` на `ChipSelect` (тонкая обёртка: `useGenreDictionary`, `STATIC_FALLBACK_GENRES`, `getGenreLabel`), перенести стили чипов, цвета только через токены
-- [ ] тесты `ChipSelect`: шорт-лист по умолчанию; «Показать все»/«Свернуть»; без `defaults` показаны все и кнопки нет; синтетический чип; `disabled`; `compact`-класс; accessible name кнопки содержит `groupLabel`
-- [ ] тесты `ChipSelect` (`searchable`): фильтрация сужает список; выбранное остаётся видимым; пустой результат не ломает рендер
-- [ ] `GenreSelector.test.tsx` проходит (ожидания правятся только там, где изменился accessible name кнопки); `make test` — зелёные до задачи 5
+- [x] создать `ChipSelect` с пропами из Technical Details: логика «`defaults` ∪ `selected`», «Показать все (N)», синтетический чип для выбранного значения вне `items` (с дедупликацией по лейблу), `aria-pressed`, варианты `compact`
+- [x] кнопке «Показать все»/«Свернуть» дать `aria-label` из статического пропа `groupLabel` (напр. «Свернуть: Genre») — в открытой панели таких кнопок несколько, совпадающие accessible names запрещены baseline'ом
+- [x] добавить режим `searchable`: в развёрнутом состоянии над чипами — `<input type='search'>` со статическим `aria-label`, фильтрация по подстроке без учёта регистра по значению и лейблу; выбранные чипы не скрываются фильтром
+- [x] перевести `GenreSelector` на `ChipSelect` (тонкая обёртка: `useGenreDictionary`, `STATIC_FALLBACK_GENRES`, `getGenreLabel`), перенести стили чипов, цвета только через токены
+- [x] тесты `ChipSelect`: шорт-лист по умолчанию; «Показать все»/«Свернуть»; без `defaults` показаны все и кнопки нет; синтетический чип; `disabled`; `compact`-класс; accessible name кнопки содержит `groupLabel`
+- [x] тесты `ChipSelect` (`searchable`): фильтрация сужает список; выбранное остаётся видимым; пустой результат не ломает рендер
+- [x] `GenreSelector.test.tsx` проходит (ожидания правятся только там, где изменился accessible name кнопки); `make test` — зелёные до задачи 5
 
 ### Task 5: Аккордеон FilterGroup и селектор стран
 

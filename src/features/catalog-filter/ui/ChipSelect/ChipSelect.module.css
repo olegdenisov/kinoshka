@@ -66,3 +66,21 @@
 .toggleCompact {
   font-size: 12.5px;
 }
+
+.search {
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg-chip);
+  color: var(--text-primary);
+  border: 1px solid var(--border-faint);
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+
+.searchCompact {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+}
