@@ -6,7 +6,7 @@ import type { StartListening } from '@shared/lib'
 import { themeSlot } from './themeStorage'
 import type { Theme } from './themeStorage'
 
-export type ThemeState = { theme: Theme }
+type ThemeState = { theme: Theme }
 
 export type ThemeRootState = { theme: ThemeState }
 

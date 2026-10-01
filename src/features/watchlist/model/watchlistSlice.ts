@@ -5,7 +5,7 @@ import type { StartListening } from '@shared/lib'
 
 import { watchlistSlot } from './watchlistStorage'
 
-export type WatchlistState = { ids: number[] }
+type WatchlistState = { ids: number[] }
 
 export type WatchlistRootState = { watchlist: WatchlistState }
 

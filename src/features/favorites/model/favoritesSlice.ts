@@ -6,7 +6,7 @@ import type { StartListening } from '@shared/lib'
 
 import { favoritesSlot } from './favoritesStorage'
 
-export type FavoritesState = { ids: number[] }
+type FavoritesState = { ids: number[] }
 
 export type FavoritesRootState = { favorites: FavoritesState }
 

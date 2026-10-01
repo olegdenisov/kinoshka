@@ -5,4 +5,3 @@ export {
   watchlistReducerPath,
   registerWatchlistPersistence,
 } from './model/watchlistSlice'
-export type { WatchlistRootState } from './model/watchlistSlice'

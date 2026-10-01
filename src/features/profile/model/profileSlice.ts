@@ -5,7 +5,7 @@ import type { StartListening } from '@shared/lib'
 
 import { profileNameSlot } from './profileStorage'
 
-export type ProfileState = { name: string }
+type ProfileState = { name: string }
 
 export type ProfileRootState = { profile: ProfileState }
 
