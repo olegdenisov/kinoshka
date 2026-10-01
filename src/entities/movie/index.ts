@@ -10,17 +10,9 @@ export type {
 } from './model/types'
 export { STATIC_FALLBACK_GENRES } from './model/genre'
 export { STATIC_FALLBACK_COUNTRIES } from './model/country'
-export type { CatalogParams } from './api/movieApi'
-export type { MovieImage } from './api/movieApi'
-export {
-  movieByIdsApi,
-  moviePageApi,
-  useGetCatalogQuery,
-  useGetMoviesByIdsQuery,
-} from './api/movieApi'
-// Тестовая утилита для глобального afterEach (src/test/setup.ts): кулдаун справочников —
-// модульное состояние, свежий стор на тест его не сбрасывает.
-export { resetDictionaryCooldowns } from './api/createDictionaryCache'
+export type { CatalogParams, MovieImage } from './api/types'
+export { movieByIdsApi, useGetMoviesByIdsQuery } from './api/movieDetailApi'
+export { moviePageApi, useGetCatalogQuery } from './api/catalogApi'
 export { formatCurrency } from './lib/formatCurrency'
 export { formatDate } from './lib/formatDate'
 export * from './hooks'

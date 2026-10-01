@@ -1,6 +1,7 @@
 import { makeStore as makeAppStore } from '@app/store'
 import type { AppStore, RootState } from '@app/store'
-import { render, type RenderOptions } from '@testing-library/react'
+import { render } from '@testing-library/react'
+import type { RenderOptions } from '@testing-library/react'
 import type { PropsWithChildren, ReactElement } from 'react'
 import { Provider } from 'react-redux'
 import { afterEach } from 'vitest'

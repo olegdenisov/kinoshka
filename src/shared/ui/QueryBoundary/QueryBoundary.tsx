@@ -4,7 +4,8 @@ import { ErrorState } from '../ErrorState'
 import { Spinner } from '../Spinner'
 
 // Структурный тип результата RTK Query-хука: @shared/ui не импортирует RTK,
-// поэтому принимает только нужные поля.
+// поэтому принимает только нужные поля. Хук, собирающий такой результат вручную (из нескольких
+// запросов или с пересчётом data), объявляет его как возвращаемый тип.
 export type QueryBoundaryQuery<T> = {
   data?: T
   isLoading: boolean

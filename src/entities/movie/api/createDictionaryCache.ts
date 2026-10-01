@@ -4,7 +4,7 @@ import { z } from 'zod'
 /**
  * Персистентная часть справочника (`/v1.5/dictionary/{type}`): localStorage-слот с отметкой
  * последней успешной загрузки и кулдаун повторных попыток. Сам запрос, in-flight-дедупликацию и
- * in-memory кеш даёт RTK Query (endpoints в movieApi.ts) — здесь только то, чего у него нет:
+ * in-memory кеш даёт RTK Query (endpoints в dictionaryApi.ts) — здесь только то, чего у него нет:
  * переживающий перезагрузку кеш на 7 дней и защита от частых повторов после неудачи.
  */
 const dictionaryCacheSchema = z.object({
@@ -68,6 +68,8 @@ export const genreDictionaryCache = createDictionaryCache('kinoshka:genres')
 export const countryDictionaryCache =
   createDictionaryCache('kinoshka:countries')
 
+// Тестовая утилита для глобального afterEach (src/test/setup.ts, импорт относительным путём — мимо
+// публичного index.ts): кулдаун модульный, свежий стор на тест его не сбрасывает.
 export const resetDictionaryCooldowns = (): void => {
   genreDictionaryCache.resetCooldown()
   countryDictionaryCache.resetCooldown()

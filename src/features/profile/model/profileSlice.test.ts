@@ -53,3 +53,16 @@ describe('profileSlice — стор', () => {
     expect(selectName(store.getState())).toBe('')
   })
 })
+
+describe('profileSlice — другая вкладка', () => {
+  it('storage-событие по своему ключу попадает в стейт', () => {
+    const store = makeStore()
+
+    localStorage.setItem('kinoshka:profile', JSON.stringify('Ann'))
+    window.dispatchEvent(
+      new StorageEvent('storage', { key: 'kinoshka:profile' }),
+    )
+
+    expect(selectName(store.getState())).toBe('Ann')
+  })
+})

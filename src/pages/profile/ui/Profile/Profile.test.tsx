@@ -8,8 +8,8 @@ import {
   createStoreWrapper,
   makeStore,
   renderWithStore,
-  type AppStore,
 } from '../../../../test/renderWithStore'
+import type { AppStore } from '../../../../test/renderWithStore'
 import { Profile } from './Profile'
 
 const PROFILE_KEY = 'kinoshka:profile'

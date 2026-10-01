@@ -1,4 +1,4 @@
-import { apiClient, ApiError, baseApi, toQueryError } from '@shared/api'
+import { apiClient, baseApi, runQuery, unwrapErrorDto } from '@shared/api'
 
 import type { PersonDetail } from '../model/types'
 import { mapDtoToPersonDetail } from './mapDtoToPersonDetail'
@@ -6,20 +6,12 @@ import { mapDtoToPersonDetail } from './mapDtoToPersonDetail'
 export const personApi = baseApi.injectEndpoints({
   endpoints: build => ({
     getPersonDetail: build.query<PersonDetail, number>({
-      queryFn: async id => {
-        try {
+      // status error-DTO сохраняется в QueryError — по нему 404-вью
+      queryFn: id =>
+        runQuery(async () => {
           const response = await apiClient.getV15PersonById({ path: { id } })
-
-          if ('statusCode' in response.data) {
-            // нужно чтобы сузить тип; status сохраняем — по нему 404-вью
-            throw new ApiError(response.data.message, response.data.statusCode)
-          }
-
-          return { data: mapDtoToPersonDetail(response.data) }
-        } catch (error) {
-          return { error: toQueryError(error) }
-        }
-      },
+          return mapDtoToPersonDetail(unwrapErrorDto(response.data))
+        }),
     }),
   }),
 })

@@ -4,10 +4,8 @@ import { http, HttpResponse } from 'msw'
 import { useEffect } from 'react'
 import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
 
-import {
-  renderWithStore,
-  type AppStore,
-} from '../../../../test/renderWithStore'
+import { renderWithStore } from '../../../../test/renderWithStore'
+import type { AppStore } from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { Search } from './Search'
 

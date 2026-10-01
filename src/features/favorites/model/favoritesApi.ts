@@ -1,7 +1,7 @@
 import { baseApi } from '@shared/api'
 import { trackEvent } from '@shared/lib'
 
-import { favoritesToggled } from './favoritesSlice'
+import { favoritesRolledBack, favoritesToggled } from './favoritesSlice'
 import { favoritesSlot } from './favoritesStorage'
 
 type ToggleFavoriteResult = { added: boolean }
@@ -39,8 +39,10 @@ export const favoritesApi = baseApi.injectEndpoints({
           // сессиях, где избранное на самом деле не сохранилось.
           if (data.added) trackEvent('favorite added')
         } catch {
-          // Повторный toggled возвращает id в исходное положение.
-          dispatch(favoritesToggled(id))
+          // Откат — к слоту («серверу»), а не повторным toggled: к этому моменту стейт мог уже
+          // измениться (hydrated от параллельного toggle или другой вкладки), и обратный toggle
+          // вернул бы id, которого в слоте нет.
+          dispatch(favoritesRolledBack(favoritesSlot.get()))
         }
       },
     }),

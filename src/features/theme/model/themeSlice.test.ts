@@ -53,3 +53,14 @@ describe('themeSlice — стор', () => {
     vi.restoreAllMocks()
   })
 })
+
+describe('themeSlice — другая вкладка', () => {
+  it('storage-событие по своему ключу попадает в стейт', () => {
+    const store = makeStore()
+
+    localStorage.setItem('kinoshka:theme', JSON.stringify('light'))
+    window.dispatchEvent(new StorageEvent('storage', { key: 'kinoshka:theme' }))
+
+    expect(selectTheme(store.getState())).toBe('light')
+  })
+})

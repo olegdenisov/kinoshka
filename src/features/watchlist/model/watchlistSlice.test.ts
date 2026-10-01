@@ -55,3 +55,16 @@ describe('watchlistSlice — стор', () => {
     expect(selectWatchlistIds(store.getState())).toEqual([])
   })
 })
+
+describe('watchlistSlice — другая вкладка', () => {
+  it('storage-событие по своему ключу попадает в стейт', () => {
+    const store = makeStore()
+
+    localStorage.setItem('kinoshka:watchlist', JSON.stringify([4, 8]))
+    window.dispatchEvent(
+      new StorageEvent('storage', { key: 'kinoshka:watchlist' }),
+    )
+
+    expect(selectWatchlistIds(store.getState())).toEqual([4, 8])
+  })
+})

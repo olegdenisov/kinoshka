@@ -1,4 +1,4 @@
-import { useGetPopularMoviesQuery } from '../api/movieApi'
+import { useGetPopularMoviesQuery } from '../api/catalogApi'
 
 const POPULAR_PARAMS = { slug: 'popular', limit: 10 }
 

@@ -1,6 +1,20 @@
 import { baseApi } from '@shared/api'
 
-import { makeStore, store } from './store'
+import { makeStore as makeAppStore, store } from './store'
+
+// Подписки стора на слоты живут на window — снимаем их после каждого теста, singleton — после файла.
+const created: ReturnType<typeof makeAppStore>[] = []
+const makeStore = (...args: Parameters<typeof makeAppStore>) => {
+  const next = makeAppStore(...args)
+  created.push(next)
+  return next
+}
+
+afterEach(() => {
+  for (const instance of created.splice(0)) instance.teardown()
+})
+
+afterAll(() => store.teardown())
 
 // Тестовый endpoint без сети: нужен, чтобы положить запись в кеш RTK Query одного стора.
 const testApi = baseApi.injectEndpoints({

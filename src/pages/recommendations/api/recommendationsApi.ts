@@ -3,8 +3,7 @@ import type { Movie } from '@entities/movie'
 import { selectFavoriteIds } from '@features/favorites'
 import type { FavoritesRootState } from '@features/favorites'
 import { computeRecommendationQuery } from '@features/recommendations'
-import { baseApi } from '@shared/api'
-import type { QueryError } from '@shared/api'
+import { asQueryError, baseApi } from '@shared/api'
 
 // Endpoint в page-слое: композиция @features/favorites + @features/recommendations + @entities/movie
 // легальна только здесь (ни одна фича не может импортировать другую).
@@ -41,8 +40,7 @@ export const recommendationsApi = baseApi.injectEndpoints({
 
           return { data: movies }
         } catch (error) {
-          // unwrap бросает error из queryFn вложенного endpoint — это уже QueryError
-          return { error: error as QueryError }
+          return { error: asQueryError(error) }
         }
       },
       providesTags: ['Recommendations'],

@@ -1,4 +1,5 @@
-import { Card, type Movie } from '@entities/movie'
+import { Card } from '@entities/movie'
+import type { Movie } from '@entities/movie'
 import { useFavoriteMovies, useFavorites } from '@features/favorites'
 import { useWatchlist } from '@features/watchlist'
 import { EmptyState, QueryBoundary, Skeleton } from '@shared/ui'

@@ -1,8 +1,9 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
 import { createStoreWrapper, makeStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
+import { movieDetailApi } from '../api/movieDetailApi'
 import { useMovieDetail } from './useMovieDetail'
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
@@ -138,5 +139,61 @@ describe('useMovieDetail', () => {
     await waitFor(() =>
       expect(result.current.data?.detail.title).toBe('Second'),
     )
+  })
+
+  it('detail и картинки упали — refetch повторяет и картинки', async () => {
+    mockMovieError(7, 500)
+    mockImagesError(500)
+
+    const { result } = renderHook(() => useMovieDetail(7), {
+      wrapper: createStoreWrapper(),
+    })
+    await waitFor(() => expect(result.current.isError).toBe(true))
+
+    mockMovie(7, { name: 'Recovered' })
+    mockImages([{ url: 'https://example.com/frame.jpg' }])
+    act(() => {
+      result.current.refetch()
+    })
+
+    await waitFor(() => expect(result.current.data?.images).toHaveLength(1))
+    expect(result.current.data?.detail.title).toBe('Recovered')
+  })
+
+  it('detail упал, картинки ещё грузятся — уже isError', async () => {
+    mockMovieError(8, 404)
+    server.use(http.get('*/v1.5/image', () => new Promise<never>(() => {})))
+
+    const { result } = renderHook(() => useMovieDetail(8), {
+      wrapper: createStoreWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.error).toMatchObject({ status: 404 })
+    expect(result.current.data).toBeUndefined()
+  })
+
+  it('фоновый перезапрос картинок не прячет уже показанные data', async () => {
+    mockMovie(9)
+    mockImages([{ url: 'https://example.com/frame.jpg' }])
+    const store = makeStore()
+
+    const { result } = renderHook(() => useMovieDetail(9), {
+      wrapper: createStoreWrapper(store),
+    })
+    await waitFor(() => expect(result.current.data).toBeDefined())
+
+    // перезапрос висит — проверяем состояние «идёт фоновый fetch при готовых data»
+    server.use(http.get('*/v1.5/image', () => new Promise<never>(() => {})))
+    act(() => {
+      void store.dispatch(
+        movieDetailApi.endpoints.getMovieImages.initiate(9, {
+          forceRefetch: true,
+        }),
+      )
+    })
+
+    await waitFor(() => expect(result.current.isFetching).toBe(true))
+    expect(result.current.data?.images).toHaveLength(1)
   })
 })

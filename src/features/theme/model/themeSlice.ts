@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import { persistSlice, subscribeSlot } from '@shared/lib'
-import type { StartListening } from '@shared/lib'
+import { registerSlotPersistence } from '@shared/lib'
+import type { StartListening, SubscribableStore } from '@shared/lib'
 
 import { themeSlot } from './themeStorage'
 import type { Theme } from './themeStorage'
@@ -34,30 +34,16 @@ export const { selectTheme } = themeSlice.selectors
 export const themeReducer = themeSlice.reducer
 export const themeReducerPath = themeSlice.reducerPath
 
-type PersistenceStore = {
-  getState: () => ThemeRootState
-  dispatch: (action: { type: string }) => unknown
-}
-
 // Регистрирует запись в слот и приём изменений из других вкладок; возвращает общий unsubscribe.
 export const registerThemePersistence = (
-  store: PersistenceStore,
+  store: SubscribableStore<ThemeRootState>,
   startListening: StartListening<ThemeRootState>,
-) => {
-  const stopPersist = persistSlice<ThemeRootState, Theme>({
+) =>
+  registerSlotPersistence<ThemeRootState, Theme>({
+    store,
     startListening,
     slot: themeSlot,
     select: state => selectTheme(state),
     matcher: themeSet.match,
-    rollback: themeHydrated,
-  })
-  const stopSubscribe = subscribeSlot<ThemeRootState, Theme>(store, themeSlot, {
-    select: state => selectTheme(state),
     hydrated: themeHydrated,
   })
-
-  return () => {
-    stopPersist()
-    stopSubscribe()
-  }
-}

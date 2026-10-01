@@ -1,4 +1,4 @@
-import { useGetMoviesQuery } from '../api/movieApi'
+import { useGetMoviesQuery } from '../api/catalogApi'
 import type { MovieType } from '../model/types'
 
 export const useTopRatedMovies = (params?: { type: MovieType[] }) =>

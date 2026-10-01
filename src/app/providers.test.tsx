@@ -60,3 +60,9 @@ describe('Providers', () => {
     expect(screen.getByText('router content with store')).toBeInTheDocument()
   })
 })
+
+// Singleton-стор приложения подписывается на слоты при импорте — снимаем подписки после файла.
+afterAll(async () => {
+  const { store } = await import('./store')
+  store.teardown()
+})

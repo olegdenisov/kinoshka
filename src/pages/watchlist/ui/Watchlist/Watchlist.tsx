@@ -1,4 +1,5 @@
-import { Card, type Movie } from '@entities/movie'
+import { Card } from '@entities/movie'
+import type { Movie } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { useWatchlist, useWatchlistMovies } from '@features/watchlist'
 import { EmptyState, QueryBoundary, Skeleton } from '@shared/ui'
@@ -18,8 +19,9 @@ const WatchlistSkeletonGrid = () => (
 type WatchlistGridProps = { movies: Movie[] }
 
 const WatchlistGrid = ({ movies }: WatchlistGridProps) => {
-  // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои
-  // отдаёт endpoint getMoviesByIds как ошибку, её ловит QueryBoundary, поэтому текст — не про ошибку загрузки.
+  // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои отдаёт
+  // endpoint getMoviesByIds как ошибку, её ловит QueryBoundary, поэтому текст — не про
+  // ошибку загрузки.
   const { isFavorite, toggle } = useFavorites()
 
   if (movies.length === 0) {
