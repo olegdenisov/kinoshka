@@ -1,3 +1,8 @@
+import {
+  registerThemePersistence,
+  themeReducer,
+  themeReducerPath,
+} from '@features/theme'
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import { baseApi } from '@shared/api'
 import { createAppListenerMiddleware } from '@shared/lib'
@@ -5,6 +10,7 @@ import type { StartListening } from '@shared/lib'
 
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
+  [themeReducerPath]: themeReducer,
 })
 
 export type RootState = ReturnType<typeof rootReducer>
@@ -18,10 +24,12 @@ type PersistenceStore = {
 // стор) для каждой фичи с localStorage-стейтом. Возвращает teardown, снимающий подписки на слоты —
 // они висят на window/общем emitter'е и без отписки переживали бы свой стор.
 const setupPersistence = (
-  _store: PersistenceStore,
-  _startListening: StartListening<RootState>,
+  store: PersistenceStore,
+  startListening: StartListening<RootState>,
 ): (() => void) => {
-  const unsubscribers: Array<() => void> = []
+  const unsubscribers: Array<() => void> = [
+    registerThemePersistence(store, startListening),
+  ]
 
   return () => {
     for (const unsubscribe of unsubscribers) unsubscribe()
