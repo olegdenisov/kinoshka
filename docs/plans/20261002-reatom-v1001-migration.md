@@ -65,12 +65,14 @@
     `key`, `schema` (Standard Schema), `version`, `migration`, `subscribe` (по умолчанию `true`),
     `time`, `toSnapshot`, `fromSnapshot`.
   - ⚠️ `time` по умолчанию — `2 ** 31 - 1` мс (~24,8 дня): запись с истёкшим `to` удаляется при
-    чтении. `Infinity` не подходит — сериализуется в `null`.
+    чтении. `Infinity` не подходит — сериализуется в `null`. Handbook (`v1001.reatom.dev/handbook/persist`)
+    заявляет дефолт `Number.MAX_SAFE_INTEGER` («навсегда»), но код и `.d.ts` версии 1001.3.0
+    используют `MAX_SAFE_TIMEOUT` — документация и пакет расходятся, верить коду.
   - ⚠️ `schema` при невалидных данных **бросает** `TypeError` из чтения атома. Невалидный JSON и
     значение без конверта безопасно дают дефолт.
   - ⚠️ Сбой записи в `withLocalStorage` проглатывается внутри (`console.warn`), наружу не выходит;
-    при недоступном `localStorage` значение молча живёт в памяти. Есть
-    `reatomPersistWebStorage(name, storage)` — persist поверх любого объекта с интерфейсом `Storage`.
+    при недоступном `localStorage` значение молча живёт в памяти. Handbook это подтверждает:
+    «If storage.set() throws, atom still updates in memory», ошибка только в консоли.
   - `withCache({ staleTime (5 мин), length (**5 записей**), swr, paramsToKey, withPersist })`.
   - `urlAtom`: `.go(path, replace)`, `.set(fn, replace)`, `.catchLinks` (включён по умолчанию;
     пропускает `target=_blank`, чужой origin, `download`, клики с модификаторами), `.sync` /
@@ -118,7 +120,8 @@
 - Suspense — только для lazy-чанков страниц. Данные рендерятся по статусу (`ready`/`error`/`data`).
 - `effect` — только с явным временем жизни (loader роута, init-action, скоуп компонента), не на
   уровне модуля.
-- Persist — только через `withAppStorage` из `@shared/lib` (Task 2), не напрямую `withLocalStorage`.
+- Persist — нативный `withLocalStorage`, всегда с двумя опциями: `time: Number.MAX_SAFE_INTEGER` и
+  `schema` с `.catch(fallback)` (причины — решение 9).
 - FSD не меняется: модели живут в `model/` своего слайса, экспорт через `index.ts`; route-атомы —
   в `app`, нижние слои строят ссылки через `@shared/config` (см. ниже).
 - WHY-комментарии в коде — на русском; правила в `.claude/rules/*.md` и `AGENTS.md` — на английском.
@@ -147,7 +150,6 @@
 
 ```
 src/shared/config/paths.ts          билдеры путей: paths.movie(id), paths.search(params) …
-src/shared/lib/persist/             withAppStorage: guarded localStorage + репорт + бессрочный time
 src/shared/ui/AsyncState/           статусный рендер loading / error / empty / data
 src/entities/movie/model/           rails-ресурсы, fetchMovieDetail, словари
 src/entities/person/model/          fetchPersonDetail
@@ -186,11 +188,13 @@ src/app/routes.tsx                  layoutRoute + 10 page-роутов (params, 
    computed-чтением фильтров.
 8. **«Старые данные на экране при обновлении» — без `useDeferredValue`.** `withAsyncData` хранит
    предыдущее `data()`, `AsyncState` с `keepPrevious` его показывает; `isUpdating` — computed.
-9. **Persist — `withAppStorage` поверх `reatomPersistWebStorage('kinoshka', guardedStorage)`.**
-   Нативный `withLocalStorage` не годится по трём причинам из «Проверенных фактов»: глотает сбой
-   записи (нужен для репорта в Sentry и гейта analytics), стирает данные через 25 дней, роняет
-   чтение на невалидной схеме. Обёртка закрывает все три: свой try/catch с репортом и флагом
-   результата, `time` = 100 лет, схема с `.catch(fallback)`.
+9. **Persist — нативный `withLocalStorage`, без своей обёртки** (решение пользователя). Две его
+   ловушки закрываются нативными же опциями в каждой модели: `time: Number.MAX_SAFE_INTEGER`
+   (handbook называет это дефолтом, фактический дефолт пакета — ~25 дней) и `schema` с
+   `.catch(fallback)` (иначе невалидные данные роняют чтение атома). Третья не закрывается: сбой
+   записи наружу не выходит. **Принятые следствия относительно `main`:** сбои хранилища больше не
+   репортятся в Sentry (остаётся `console.warn` от Reatom); `favorite added` отправляется без
+   проверки, что запись сохранилась; `/profile` не показывает пользователю сбой записи.
 10. **Точечные подписки карточек не делаются.** Списки читают `favoriteIdSet()` и передают
     `isFavorite` в `Card` пропом, как сейчас; лишние рендеры карточек срезает React Compiler.
     Отдельный connected-виджет карточки — лишний слой ради демонстрации.
@@ -217,7 +221,11 @@ Task 14, чтобы не переписывать их дважды.
 ```ts
 // src/features/favorites/model/favorites.ts
 export const favoriteIds = atom<number[]>([], 'favorites.ids').extend(
-  withAppStorage({ key: 'kinoshka:favorites', schema: z.array(z.number()), fallback: [] }),
+  withLocalStorage({
+    key: 'kinoshka:favorites',
+    schema: z.array(z.number()).catch([]),
+    time: Number.MAX_SAFE_INTEGER,
+  }),
 )
 export const favoriteIdSet = computed(() => new Set(favoriteIds()), 'favorites.idSet')
 export const toggleFavorite = action((id: number) => { … }, 'favorites.toggle')
@@ -293,30 +301,25 @@ export const movieRoute = layoutRoute.reatomRoute({
 - [ ] временно поднять лимит `vendor` в `size-limit` (`package.json`) с комментарием «до Task 16»
 - [ ] `make test && make typecheck` — зелёные
 
-### Task 2: Persist-слой `withAppStorage` и модель favorites
+### Task 2: Модель favorites на `withLocalStorage`
 
-**Model:** opus — задаёт публичный паттерн модели и persist, который копируют Task 3, 4, 7
+**Model:** opus — задаёт паттерн модели и опций persist, который копируют Task 3, 4, 7
 
 **Files:**
 
-- Create: `src/shared/lib/persist/{index.ts,persist.ts,persist.test.ts}`, экспорт в `src/shared/lib/index.ts`
 - Create: `src/test/seedPersist.ts`
 - Create: `src/features/favorites/model/favorites.ts`, `src/features/favorites/model/favorites.test.ts`
 - Delete: `src/features/favorites/model/favoritesStorage.ts`, `src/features/favorites/model/useFavorites.ts` (+ их тесты)
 - Modify: `src/features/favorites/index.ts`
 - Modify: потребители `useFavorites()` — `src/widgets/movie-rail/ui/MovieRail/MovieRail.tsx`, `src/pages/movie/ui/RelatedMovies/RelatedMovies.tsx`, `src/pages/search/ui/SearchResultsGrid/SearchResultsGrid.tsx`, `src/pages/{favorites,popular,recommendations,watched,watchlist,profile}/ui/**`, `src/features/favorites/model/useFavoriteMovies.ts` (+ тесты)
-- Modify: `src/app/sentry.ts`
 
-- [ ] `persist.ts`: `guardedStorage` — обёртка над `localStorage` с try/catch на `getItem`/`setItem`/`removeItem`; `withAppStorage({ key, schema, fallback })` поверх `reatomPersistWebStorage('kinoshka', guardedStorage)`
-- [ ] `withAppStorage` всегда задаёт `time` = 100 лет в мс (константа с WHY-комментарием про 25-дневный дефолт) и оборачивает схему в `.catch(fallback)`
-- [ ] репорт сбоев: `setPersistErrorReporter(reporter)` — в отчёт идут только ключ и операция, **никогда значение**; дедупликация с cooldown 60s; сбой репортера не роняет хранилище. Подключить в `src/app/sentry.ts` рядом с существующим `setStorageErrorReporter` (старый удаляется в Task 7)
-- [ ] способ узнать «последняя запись ключа удалась» — синхронный флаг в `guardedStorage`. Сначала тестом выяснить, пишет ли persist синхронно внутри `atom.set()`; если запись отложена — гейтить через колбэк хранилища, а не флаг
-- [ ] создать `favorites.ts`: `favoriteIds` (ключ `kinoshka:favorites`), `favoriteIdSet`, actions `toggleFavorite` / `addFavorite` / `removeFavorite` / `clearFavorites`
-- [ ] `trackEvent('favorite added')` — только когда запись реально сохранилась
+- [ ] создать `favorites.ts`: `favoriteIds` с `withLocalStorage({ key: 'kinoshka:favorites', schema: z.array(z.number()).catch([]), time: Number.MAX_SAFE_INTEGER })`, `favoriteIdSet`, actions `toggleFavorite` / `addFavorite` / `removeFavorite` / `clearFavorites`
+- [ ] у `time` — WHY-комментарий: handbook называет `MAX_SAFE_INTEGER` дефолтом, фактический дефолт пакета — ~25 дней; у `.catch([])` — что без него невалидные данные роняют чтение атома
+- [ ] `trackEvent('favorite added')` — при добавлении, без проверки результата записи (сбой записи в нативном persist не наблюдаем — принятое следствие, решение 9)
 - [ ] перевести потребителей на `reatomComponent`: читают `favoriteIdSet()`, в `Card` передают `isFavorite` / `onToggleFavorite` пропсами как сейчас. `Card.tsx` не трогать
 - [ ] `src/test/seedPersist.ts`: `seedPersist(key, data)` — кладёт в `localStorage` валидный конверт; заменить им сырые `localStorage.setItem('kinoshka:favorites', …)` в тестах
-- [ ] тесты `persist`: запись через 30 дней по fake timers читается; `data` не по схеме → fallback без исключения; невалидный JSON → fallback; `setItem` бросает `QuotaExceededError` → значение в памяти, репорт один раз, флаг сбоя; `getItem` бросает `SecurityError` → fallback; обновление из другого таба
-- [ ] тесты модели в `context.start`: toggle/add/remove/clear, два toggle в одном тике, сбой записи → нет analytics-события
+- [ ] тесты persist-поведения модели: запись через 30 дней по fake timers читается; `data` не по схеме → `[]` без исключения; невалидный JSON → `[]`; `setItem` бросает `QuotaExceededError` → значение живёт в памяти, приложение не падает; `getItem` бросает `SecurityError` → `[]`; обновление из другого таба
+- [ ] тесты модели в `context.start`: toggle/add/remove/clear, два toggle в одном тике
 - [ ] обновить компонентные тесты потребителей на `renderWithReatom`
 - [ ] `make test && make typecheck` — зелёные
 
@@ -349,12 +352,12 @@ export const movieRoute = layoutRoute.reatomRoute({
 - Modify: `src/app/reatom-setup.ts`
 - Modify: `index.html`, `vercel.json`, `vercel-headers.test.ts`
 
-- [ ] `theme.ts`: атом темы `'light' | 'dark' | 'system'` (через `reatomEnum`, начальное значение — явно `'system'`, не первый вариант списка) + `withAppStorage`; `systemPrefersDark = reatomMediaQuery('(prefers-color-scheme: dark)')`; `resolvedTheme` (computed); применение `data-theme` на `<html>` — из init-action, вызываемого в `reatom-setup.ts`
+- [ ] `theme.ts`: атом темы `'light' | 'dark' | 'system'` (через `reatomEnum`, начальное значение — явно `'system'`, не первый вариант списка) + `withLocalStorage` с теми же двумя опциями, что в Task 2; `systemPrefersDark = reatomMediaQuery('(prefers-color-scheme: dark)')`; `resolvedTheme` (computed); применение `data-theme` на `<html>` — из init-action, вызываемого в `reatom-setup.ts`
 - [ ] `index.html`: inline-скрипт читает `JSON.parse(raw).data`, дефолт `'system'`; пересчитать sha256 в CSP (`vercel.json`) — `vercel-headers.test.ts` должен это подтвердить
-- [ ] `profile.ts`: имя пользователя — один `reatomField` с валидацией (без `reatomForm`) + `bindField` в UI; `/profile` по-прежнему показывает пользователю сбой записи
+- [ ] `profile.ts`: имя пользователя — один `reatomField` с валидацией (без `reatomForm`) + `bindField` в UI; показ сбоя записи на `/profile` убирается вместе с его тестом (решение 9)
 - [ ] защиту PII не трогать: `data-sentry-component` на `ProfileAvatar` и `PROFILE_ARIA_LABEL_PREFIX`
 - [ ] заменить сырые сиды `localStorage` этих ключей в тестах на `seedPersist`
-- [ ] тесты: theme (три значения, `system` следует за media query, persist, кросс-таб), profile (валидация, сбой записи виден в UI)
+- [ ] тесты: theme (три значения, `system` следует за media query, persist, кросс-таб), profile (валидация, persist)
 - [ ] обновить компонентные тесты темы и профиля
 - [ ] `make test && make typecheck && make lint` — зелёные
 
@@ -421,11 +424,11 @@ export const movieRoute = layoutRoute.reatomRoute({
 - Modify: `src/test/setup.ts`, `src/app/sentry.ts`
 
 - [ ] перед началом прочитать `.claude/rules/search-catalog.md` (раздел про жанры) и существующий `createDictionaryCache.ts` — инварианты и семантика TTL/cooldown оттуда обязательны
-- [ ] `genreDictionary`, `countryDictionary` на атомах с `withAppStorage`; срок жизни словаря хранить в данных (`fetchedAt`), а не через `time` persist — `withAppStorage` фиксирует `time` бессрочным
+- [ ] `genreDictionary`, `countryDictionary` на атомах с `withLocalStorage`; срок жизни словаря — нативная опция `time` (здесь TTL и есть нужное поведение), `schema` с `.catch(fallback)`
 - [ ] сохранить поведение: пока словарь не загружен или запрос упал — UI работает на статическом fallback, без skeleton и без ErrorState; фоновая перезагрузка не чаще раза в 60s
 - [ ] перевести потребителей на `reatomComponent`
 - [ ] `src/test/setup.ts`: убрать `resetGenreDictionaryState` / `resetCountryDictionaryState` (их заменяет `context.reset()`)
-- [ ] удалить `src/shared/lib/storage/` и `setStorageErrorReporter` из `sentry.ts`; `grep -rn "createStorageSlot\|useStorageSlot\|useSyncExternalStore" src` — пусто
+- [ ] удалить `src/shared/lib/storage/` и репортер ошибок хранилища (`setStorageErrorReporter`) из `sentry.ts` вместе с его тестами — замены нет (решение 9); `grep -rn "createStorageSlot\|useStorageSlot\|useSyncExternalStore" src` — пусто
 - [ ] тесты: чтение из persist без запроса, истёкший срок → запрос, ошибка → fallback, cooldown
 - [ ] `make test && make typecheck && make lint` — зелёные
 
@@ -622,7 +625,8 @@ export const movieRoute = layoutRoute.reatomRoute({
 
 - Modify: только файлы с найденными расхождениями
 
-- [ ] все четыре области из Overview мигрированы: `grep -rn "react-router\|createStorageSlot\|createCachedFetcher\|useSyncExternalStore\|useSearchParams\|withLocalStorage" src` — пусто
+- [ ] все четыре области из Overview мигрированы: `grep -rn "react-router\|createStorageSlot\|createCachedFetcher\|useSyncExternalStore\|useSearchParams" src` — пусто
+- [ ] каждый вызов `withLocalStorage(` в `src` задаёт `time` и `schema` с `.catch(...)`
 - [ ] `grep -rn "useMemo\|useCallback\|useDeferredValue" src` — пусто или каждое вхождение обосновано комментарием
 - [ ] все атомы/actions/computed именованы; нет `effect` на уровне модуля; каждый `await` в моделях обёрнут в `wrap`
 - [ ] правило по React Compiler из Task 1 соблюдено во всех `reatomComponent`
@@ -640,10 +644,10 @@ export const movieRoute = layoutRoute.reatomRoute({
 - Modify: `README.md`, `AGENTS.md`, `plans/roadmap.md`
 - Modify: `.claude/rules/{data-layer,storage,search-catalog,sentry,build-budgets,analytics,ui-patterns,user-lists}.md`
 
-- [ ] `README.md`: раздел «Reatom v1001 — разбор паттернов» (чекбокс «README ветки» из 3.3): client state, async-ресурсы, derived-атомы, роутинг; что стало проще/сложнее относительно `main`; три ловушки persist (25 дней, throw схемы, проглоченный сбой записи); таблица размеров из Task 16
+- [ ] `README.md`: раздел «Reatom v1001 — разбор паттернов» (чекбокс «README ветки» из 3.3): client state, async-ресурсы, derived-атомы, роутинг; что стало проще/сложнее относительно `main`; три ловушки нативного persist (25 дней вопреки handbook, throw схемы, ненаблюдаемый сбой записи) и что из-за третьей потеряно относительно `main`; таблица размеров из Task 16
 - [ ] `AGENTS.md` (англ.): Architecture (Reatom вместо React Router), Routing (`routes.tsx`, `paths`, not-found), Data summary, конвенции Reatom из этого плана; удалить устаревшие gotchas (`useDeferredValue` над `useSearchParams`, `createStorageSlot().set()` → boolean); добавить правило по React Compiler
 - [ ] `.claude/rules/*.md` (англ.) — **сначала поправить `paths:` во frontmatter**: они ссылаются на удалённые файлы (`useFilterState.ts`, `useFavorites.ts`, hooks и `*DictionaryCache.ts`, `cachedFetcher`, `sessionCache`, `AsyncBoundary`, `router.tsx`), без этого правила перестанут загружаться
-- [ ] содержание правил — только решения и причины, без пересказа кода: `storage.md` → persist через `withAppStorage` и почему не `withLocalStorage`; `data-layer.md` → убрать `createCachedFetcher`/`AsyncBoundary`/`invalidate*`, добавить «ошибка не кэшируется, retry явный», «один `fetchMovieDetail`», явный `length` у `withCache`; `search-catalog.md` → URL читается через `urlAtom`, почему не `withSearchParams`, убрать правило про `areFiltersEqual`; `sentry.md` → ручные span'ы вместо `wrapCreateBrowserRouter`; `build-budgets.md` → состав vendor
+- [ ] содержание правил — только решения и причины, без пересказа кода: `storage.md` → две обязательные опции `withLocalStorage` и почему, принятые потери (нет репорта в Sentry, нет гейта analytics); `data-layer.md` → убрать `createCachedFetcher`/`AsyncBoundary`/`invalidate*`, добавить «ошибка не кэшируется, retry явный», «один `fetchMovieDetail`», явный `length` у `withCache`; `search-catalog.md` → URL читается через `urlAtom`, почему не `withSearchParams`, убрать правило про `areFiltersEqual`; `sentry.md` → ручные span'ы вместо `wrapCreateBrowserRouter`; `build-budgets.md` → состав vendor
 - [ ] `plans/roadmap.md`: переписать пункт 3.3 под v1001 (пакеты, API, ссылки на `v1001.reatom.dev`) и отметить чекбоксы
 - [ ] перенести этот план в `docs/plans/completed/`
 
