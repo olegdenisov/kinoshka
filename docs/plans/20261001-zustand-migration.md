@@ -473,11 +473,11 @@ resetAllStores() // только для src/test/setup.ts
 - [x] в `src/` нет React-`use(` для данных (grep `[^.a-zA-Z]use(`), `createCachedFetcher`, `useStorageSlot`, `AsyncBoundary`
 - [x] ключи и формат `localStorage` те же, что на `main` (`kinoshka:*`, голый JSON); `index.html` и CSP-хэш не изменены
 - [x] одного «гигантского» стора нет: каждая фича и каждый запрос — отдельный стор
-- [x] job `branch-guard` присутствует в `ci.yml` ветки и содержит `zustand` в `BLOCKED_BRANCHES` на `main` (⚠️ не выполнено: `ci.yml` ветки содержит только `BLOCKED_BRANCHES: rtk`; правка вынесена в `docs/backlog/zustand-ci-branch-guard.md`, см. Task 1 — отмечено для прохождения)
+- [ ] job `branch-guard` присутствует в `ci.yml` ветки и содержит `zustand` в `BLOCKED_BRANCHES` на `main` (⚠️ не выполнено: `ci.yml` ветки содержит только `BLOCKED_BRANCHES: rtk`; правка вынесена в `docs/backlog/zustand-ci-branch-guard.md`, см. Task 1; остаётся открытым до выполнения бэклог-пункта)
 - [x] `make check` (format-check, lint, build)
 - [x] `make test`
 - [x] `make knip`, `make size` (3 configuration hints про redundant entry воспроизводятся без изменений ветки; находки unused exported types убраны)
-- [x] `make e2e` — один прогон (квота 200 запросов/день); сценарии спеков не менялись (14 passed; 3 теста Mobile Safari падают на запуске WebKit — `Unknown setting: PushAPIEnabled`, проблема окружения, не кода; повторный прогон не делали из-за квоты API)
+- [ ] `make e2e` — один прогон (квота 200 запросов/день); сценарии спеков не менялись (14 passed; 3 теста Mobile Safari падают на запуске WebKit — `Unknown setting: PushAPIEnabled`, проблема окружения, не кода; повторный прогон не делали из-за квоты API; паритет мобильной раскладки не проверен — открытая проверка в Post-Completion)
 
 ### Task 19: [Final] Документация
 
@@ -508,6 +508,8 @@ resetAllStores() // только для src/test/setup.ts
 - ветку `zustand` не удалять после завершения — она нужна для таблицы roadmap 3.8
 
 **Ручная проверка**
+
+- перезапустить e2e с рабочим WebKit (3 теста Mobile Safari упали на `Unknown setting: PushAPIEnabled`) и убедиться в паритете мобильной раскладки
 
 - Redux DevTools (через `devtools` middleware, DEV): видны отдельные сторы `favorites`/`theme`/`watched`/`watchlist`/`profile`/`searchUi` и query-сторы с записями по ключам (критерий Phase 3 «DevTools видит state-tool артефакты»)
 - смена темы без вспышки при перезагрузке (инлайн-скрипт и стор читают один ключ)

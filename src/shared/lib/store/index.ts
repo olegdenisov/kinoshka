@@ -7,3 +7,4 @@ export type {
   UseQueryOptions,
 } from './createQueryStore'
 export { registerStoreReset, resetAllStores } from './registry'
+export { withDevtools } from './withDevtools'

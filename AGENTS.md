@@ -62,6 +62,7 @@ React 19 + TypeScript 7 + Vite 8 (Rolldown) single-page app.
 - **TypeScript strictness:** `noUnusedLocals`, `noUnusedParameters`, `erasableSyntaxOnly` (no `enum`, `namespace`, parameter properties).
 - **TypeScript style:** `type`, not `interface` — enforced by oxlint `typescript/consistent-type-definitions`. Single exception: `interface Window` in `src/vite-env.d.ts` (global declaration merging only works through `interface`), marked with `oxlint-disable-next-line`.
 - **Fonts:** Instrument Serif (`--font-serif`), Instrument Sans (`--font-display`/`--font-body`), JetBrains Mono (`--font-mono`), loaded in `index.html` (async-load details → `csp.md`). Don't add new font imports.
+- **State is Zustand.** Client state: one small store per feature via `createPersistedStore` (`@shared/lib/store`, persists over `createStorageSlot`); server state: one `createQueryStore` per request. Stores are module-level singletons registered in `src/shared/lib/store/registry.ts` (`registerStoreReset`/`resetAllStores`).
 - **Path aliases** map to FSD layers (`vite.config.ts` + `tsconfig.app.json`): `@app`, `@pages`, `@widgets`, `@features`, `@entities`, `@shared`. Use them for all cross-layer imports.
 
 ## Project structure
@@ -164,3 +165,5 @@ Repo-wide gotchas worth knowing everywhere:
 ## Testing
 
 Vitest config is inline in `vite.config.ts` (`jsdom`, `globals: true`, `e2e/**` excluded via `configDefaults.exclude`). API calls are mocked with **MSW** (`src/test/setup.ts`, `onUnhandledRequest: 'error'`). **Zod** validates only the `localStorage`/`sessionStorage` boundary — API responses are trusted against the generated types. Pure logic is extracted from config files (`sentry.config.ts`, `bundle.config.ts`, `sentry-telemetry.config.ts`) specifically to be unit-tested — follow that precedent instead of testing `vite.config.ts` directly.
+
+Stores are singletons: `src/test/setup.ts` calls `resetAllStores()` after each test, so a new store must be created through the factories (they register their reset). Seed persisted state with `seedStorage` (`src/test/seedStorage.ts`), not raw `localStorage.setItem`.

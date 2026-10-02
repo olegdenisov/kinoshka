@@ -23,7 +23,9 @@ paths:
 - **Requests start from an effect, not during render.** `isFetching` is derived synchronously in the first render for a missing/stale key, otherwise `keepPreviousData` would show one frame of old data without the indicator.
 - **A fetcher must not resolve `undefined`:** `data === undefined` means "no data". Recommendations return `null` instead of using `skip`, which would leave `QueryBoundary` on its fallback forever.
 - **Errors are stored as-is** (`ApiError` with `status`) — the store isn't serializable by design; the `/movie/:id` 404 branch relies on it.
-- **`QueryBoundary`:** `isError` shows `ErrorState` with Retry = `refetch` even when stale data exists (same as `main`). It doesn't report to Sentry — data errors caught here never reach it (accepted gap).
+- Devtools middleware goes behind an `import.meta.env.DEV` branch, not `enabled:` — `enabled` doesn't tree-shake the middleware out of the prod bundle.
+- Dictionary stores skip an empty successful response only when the cache is already non-empty (keeps good data against a flaky empty reply, but a first empty answer is still stored).
+- **`QueryBoundary`:** `isError` shows `ErrorState` with Retry = `refetch` even when stale data exists (same as `main`), but not while a retry is in flight (`isError` is false during `isFetching`). It doesn't report to Sentry — data errors caught here never reach it (accepted gap).
 - Entries are never evicted (page lifetime): stale data shows immediately and refreshes in the background. DEV no longer persists the cache to `sessionStorage`.
 - **`ErrorState` must not depend on `react-router`:** `GlobalErrorBoundary` renders it outside `<RouterProvider>`, hence the neutral `secondaryAction` slot instead of a built-in home link.
 - **Error DTOs:** endpoints that return `statusCode`/`message` instead of data must check `'statusCode' in response.data` and throw `ApiError` before reading fields.

@@ -14,8 +14,8 @@ import { STATIC_FALLBACK_COUNTRIES } from '../model/country'
  * группе, — запрос словаря уходит при первом раскрытии, а не на каждом заходе на /search.
  */
 export const useCountryDictionary = (): string[] => {
-  const items = useCountryDictionaryStore(s => s.items)
-  const fetchedAt = useCountryDictionaryStore(s => s.fetchedAt)
+  const items = useCountryDictionaryStore(state => state.items)
+  const fetchedAt = useCountryDictionaryStore(state => state.fetchedAt)
 
   useEffect(() => {
     if (items.length === 0 || isCountryDictionaryStale(fetchedAt)) {

@@ -4,7 +4,7 @@ import { createQueryStore } from '@shared/lib'
 import type { MovieDetail } from '../model/types'
 import { mapDtoToMovieDetail } from './mapDtoToMovieDetail'
 
-export const fetchMovieDetail = async (id: number): Promise<MovieDetail> => {
+const fetchMovieDetail = async (id: number): Promise<MovieDetail> => {
   const response = await apiClient.getV15MovieById({ path: { id } })
 
   if ('statusCode' in response.data) {

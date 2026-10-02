@@ -6,6 +6,7 @@ export {
   createQueryStore,
   registerStoreReset,
   resetAllStores,
+  withDevtools,
 } from './store'
 export type {
   Commit,

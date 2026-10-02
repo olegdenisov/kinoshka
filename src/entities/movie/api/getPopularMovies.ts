@@ -4,7 +4,7 @@ import { createQueryStore } from '@shared/lib'
 import type { PopularMovie } from '../model/types'
 import { mapDocToMovie } from './mapDocToMovie'
 
-export type PopularRequestParams = {
+type PopularRequestParams = {
   slug: string
   limit: number
 }
@@ -13,7 +13,7 @@ export type PopularRequestParams = {
 // TTL остальных фетчеров (см. Technical Details плана 20260825-popular-this-week-rail.md).
 const POPULAR_TTL_MS = 24 * 60 * 60 * 1000
 
-export const fetchPopularMovies = async (
+const fetchPopularMovies = async (
   params: PopularRequestParams,
 ): Promise<PopularMovie[]> => {
   const response = await apiClient.getV15ListBySlug({
@@ -33,7 +33,7 @@ export const fetchPopularMovies = async (
   }))
 }
 
-export const popularMoviesQueryStore = createQueryStore({
+export const popularMoviesStore = createQueryStore({
   name: 'popularMovies',
   fetcher: fetchPopularMovies,
   ttlMs: POPULAR_TTL_MS,

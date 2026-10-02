@@ -12,7 +12,7 @@ type QueryLike<T> = {
   refetch: () => unknown
 }
 
-type QueryBoundaryErrorParams = {
+export type QueryBoundaryErrorParams = {
   error: unknown
   reset: () => void
 }

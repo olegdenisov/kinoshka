@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'zustand'
-import { devtools } from 'zustand/middleware'
 import { createStore, type StateCreator } from 'zustand/vanilla'
 
 import { registerStoreReset } from './registry'
+import { withDevtools } from './withDevtools'
 
 export type QueryResult<TData> = {
   data: TData | undefined
@@ -41,6 +41,8 @@ export type QueryStore<TParams, TData> = {
   useQuery: (params: TParams, options?: UseQueryOptions) => QueryResult<TData>
   // для композиции внутри других fetcher'ов: та же дедупликация и TTL
   fetch: (params: TParams) => Promise<TData>
+  // invalidate/reset — не для продакшен-кода: их зовут тесты (сброс кеша между шагами,
+  // проверка перезапроса протухшей записи), а реестр сторов сбрасывает через внутренний reset
   invalidate: (params?: TParams) => void
   reset: () => void
 }
@@ -73,11 +75,8 @@ export const createQueryStore = <TParams, TData>({
 }: QueryStoreOptions<TParams, TData>): QueryStore<TParams, TData> => {
   const initializer: StateCreator<QueryState<TData>> = () => ({ entries: {} })
 
-  // devtools только в DEV: в прод-сборке ветка вырезается вместе с middleware
   const store = createStore<QueryState<TData>>()(
-    import.meta.env.DEV
-      ? (devtools(initializer, { name }) as unknown as typeof initializer)
-      : initializer,
+    withDevtools(name, initializer),
   )
 
   // In-flight промисы — в замыкании, не в стейте: промис не нужен подписчикам, а стейт
@@ -234,7 +233,9 @@ export const createQueryStore = <TParams, TData>({
     }
 
     // Запуск — из эффекта, не во время рендера. shouldFetch в зависимостях: после invalidate
-    // ключ тот же, а запрос нужен; повторные вызовы ensure идемпотентны (in-flight/TTL/кулдаун)
+    // ключ тот же, а запрос нужен; повторные вызовы ensure идемпотентны (in-flight/TTL/кулдаун).
+    // params в зависимостях: объект с новой ссылкой на каждый рендер перезапускает эффект, но
+    // ensure ничего не делает повторно — это лишь холостой вызов, не лишний запрос
     useEffect(() => {
       if (shouldFetch) ensure(key, params)
     }, [shouldFetch, key, params])
@@ -253,7 +254,8 @@ export const createQueryStore = <TParams, TData>({
       data,
       isLoading: data === undefined && isFetching,
       isFetching,
-      isError: entry?.status === 'error',
+      // пока идёт повтор после ошибки, ошибку не показываем: иначе Retry не даёт обратной связи
+      isError: entry?.status === 'error' && !entry.isFetching,
       error: entry?.error,
       // двойной клик по Retry не даёт второго запроса: fetch() дедуплицирует in-flight
       refetch: () => {

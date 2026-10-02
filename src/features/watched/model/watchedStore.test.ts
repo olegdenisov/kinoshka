@@ -24,7 +24,6 @@ describe('useWatchedStore', () => {
 
   it('rehydrate подхватывает сохранённое значение', () => {
     seedStorage('kinoshka:watched', JSON.stringify([5, 6]))
-    void useWatchedStore.persist.rehydrate()
 
     expect(useWatchedStore.getState().ids).toEqual([5, 6])
   })
@@ -36,5 +35,6 @@ describe('useWatchedStore', () => {
 
     expect(() => useWatchedStore.getState().toggle(1)).not.toThrow()
     expect(useWatchedStore.getState().ids).toEqual([])
+    expect(localStorage.getItem('kinoshka:watched')).toBeNull()
   })
 })

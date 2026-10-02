@@ -2,7 +2,7 @@ import { ApiError } from '@shared/api'
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
-import { fetchMovieDetail, movieDetailStore } from './getMovieDetail'
+import { movieDetailStore } from './getMovieDetail'
 
 const doc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -42,7 +42,7 @@ describe('getMovieDetail — success', () => {
   it('запрос уходит на /v1.5/movie/:id, ответ маппится в MovieDetail', async () => {
     mockSuccess(101, { name: 'Orbit of Silence' })
 
-    const detail = await fetchMovieDetail(101)
+    const detail = await movieDetailStore.fetch(101)
 
     expect(detail.id).toBe(101)
     expect(detail.title).toBe('Orbit of Silence')

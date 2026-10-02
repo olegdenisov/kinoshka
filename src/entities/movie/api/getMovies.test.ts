@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
 import { hashHue } from '../lib/hashHue'
-import { fetchMovies, moviesQueryStore } from './getMovies'
+import { moviesStore } from './getMovies'
 
 // Механика кэша (дедупликация, TTL, кулдаун) покрыта в createQueryStore.test.ts.
 // Здесь — маппинг docs-элемента в Movie и поведение стора на реальных ответах.
@@ -50,21 +50,21 @@ const mockSuccess = (docs = [doc()]) => {
 describe('fetchMovies — маппинг полей', () => {
   it('полностью заполненный docs-элемент маппится в Movie', async () => {
     mockSuccess([doc()])
-    const movies = await fetchMovies({ type: ['movie'] })
+    const movies = await moviesStore.fetch({ type: ['movie'] })
 
     expect(movies).toEqual([expectedMovie])
   })
 
   it('year отсутствует — undefined, а не текущий год', async () => {
     mockSuccess([doc({ year: null })])
-    const [movie] = await fetchMovies({ type: ['movie'] })
+    const [movie] = await moviesStore.fetch({ type: ['movie'] })
 
     expect(movie.year).toBeUndefined()
   })
 
   it('rating.kp равен 0 — используется 0, а не rating.imdb', async () => {
     mockSuccess([doc({ rating: { kp: 0, imdb: 6.5 } })])
-    const [movie] = await fetchMovies({ type: ['movie'] })
+    const [movie] = await moviesStore.fetch({ type: ['movie'] })
 
     expect(movie.rating).toBe(0)
   })
@@ -85,7 +85,7 @@ describe('fetchMovies — регресс: sort уже прокидывается
         })
       }),
     )
-    await fetchMovies({ sortField: ['rating.kp'], sortType: ['-1'] })
+    await moviesStore.fetch({ sortField: ['rating.kp'], sortType: ['-1'] })
 
     const url = new URL(request!.url)
     expect(url.searchParams.getAll('sortField')).toEqual(['rating.kp'])
@@ -93,11 +93,11 @@ describe('fetchMovies — регресс: sort уже прокидывается
   })
 })
 
-describe('moviesQueryStore — fetch', () => {
+describe('moviesStore — fetch', () => {
   it('успех — отдаёт Movie[]', async () => {
     mockSuccess([doc()])
 
-    await expect(moviesQueryStore.fetch({ type: ['movie'] })).resolves.toEqual([
+    await expect(moviesStore.fetch({ type: ['movie'] })).resolves.toEqual([
       expectedMovie,
     ])
   })
@@ -105,9 +105,7 @@ describe('moviesQueryStore — fetch', () => {
   it('пустой docs — []', async () => {
     mockSuccess([])
 
-    await expect(moviesQueryStore.fetch({ type: ['movie'] })).resolves.toEqual(
-      [],
-    )
+    await expect(moviesStore.fetch({ type: ['movie'] })).resolves.toEqual([])
   })
 
   it('403 — отклоняется ApiError с сообщением о лимите', async () => {
@@ -120,7 +118,7 @@ describe('moviesQueryStore — fetch', () => {
       ),
     )
 
-    const error = await moviesQueryStore
+    const error = await moviesStore
       .fetch({ type: ['movie'] })
       .catch((e: unknown) => e)
 

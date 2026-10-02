@@ -75,4 +75,33 @@ describe('QueryBoundary', () => {
     expect(screen.getByText('again')).toBeInTheDocument()
     expect(screen.queryByText('data:old')).not.toBeInTheDocument()
   })
+
+  it('без fallback показывает Spinner, children не вызывается', () => {
+    const children = vi.fn(() => <div>child</div>)
+    render(
+      <QueryBoundary query={makeQuery({ isLoading: true })}>
+        {children}
+      </QueryBoundary>,
+    )
+    expect(children).not.toHaveBeenCalled()
+    expect(screen.queryByText('child')).not.toBeInTheDocument()
+    expect(document.body.firstElementChild?.childElementCount).toBeGreaterThan(
+      0,
+    )
+  })
+
+  it('children не получает undefined при пропущенном запросе', () => {
+    const children = vi.fn(() => <div>child</div>)
+    render(<QueryBoundary query={makeQuery()}>{children}</QueryBoundary>)
+    expect(children).not.toHaveBeenCalled()
+  })
+
+  it('isLoading и isError вместе — побеждает ошибка', () => {
+    renderBoundary(
+      makeQuery({ isLoading: true, isError: true, error: new Error('both') }),
+      { fallback: <div>loading</div> },
+    )
+    expect(screen.getByText('both')).toBeInTheDocument()
+    expect(screen.queryByText('loading')).not.toBeInTheDocument()
+  })
 })

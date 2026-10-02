@@ -1,4 +1,4 @@
-import { moviesQueryStore, type MoviesRequestParams } from '../api/getMovies'
+import { moviesStore, type MoviesRequestParams } from '../api/getMovies'
 import type { MovieType } from '../model/types'
 
 const buildTopRatedParams = (params?: {
@@ -11,4 +11,4 @@ const buildTopRatedParams = (params?: {
 })
 
 export const useTopRatedMovies = (params?: { type: MovieType[] }) =>
-  moviesQueryStore.useQuery(buildTopRatedParams(params))
+  moviesStore.useQuery(buildTopRatedParams(params))

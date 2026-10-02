@@ -16,8 +16,8 @@ import { STATIC_FALLBACK_GENRES } from '../model/genre'
  * через подписку, компонент перерисуется с полным списком из API.
  */
 export const useGenreDictionary = (): Genre[] => {
-  const items = useGenreDictionaryStore(s => s.items)
-  const fetchedAt = useGenreDictionaryStore(s => s.fetchedAt)
+  const items = useGenreDictionaryStore(state => state.items)
+  const fetchedAt = useGenreDictionaryStore(state => state.fetchedAt)
 
   useEffect(() => {
     if (items.length === 0 || isGenreDictionaryStale(fetchedAt)) {

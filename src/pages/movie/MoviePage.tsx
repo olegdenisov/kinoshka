@@ -1,6 +1,10 @@
 import { useMovieDetail } from '@entities/movie'
 import { ApiError } from '@shared/api'
-import { ErrorState, QueryBoundary } from '@shared/ui'
+import {
+  ErrorState,
+  QueryBoundary,
+  type QueryBoundaryErrorParams,
+} from '@shared/ui'
 import { useParams } from 'react-router'
 
 import { Movie } from './ui/Movie'
@@ -13,12 +17,7 @@ type MovieDetailContentProps = {
   id: number
 }
 
-type ErrorFallbackParams = {
-  error: unknown
-  reset: () => void
-}
-
-const movieErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
+const movieErrorFallback = ({ error, reset }: QueryBoundaryErrorParams) => {
   const isNotFound = error instanceof ApiError && error.status === 404
 
   return (

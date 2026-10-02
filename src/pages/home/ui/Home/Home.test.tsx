@@ -13,7 +13,7 @@ import { Home } from './Home'
 // делит) мокается падающим, чтобы у теста была ровно одна ErrorState-инстанция для клика.
 const MOVIE_ENDPOINT = '*/v1.5/movie'
 // PopularMoviesRail не делит эндпоинт/кэш с PersonalRails — он на отдельном курируемом списке
-// /v1.5/list/{slug} (usePopularMovies() → popularMoviesQueryStore).
+// /v1.5/list/{slug} (usePopularMovies() → popularMoviesStore).
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
 
 const doc = (overrides: Record<string, unknown> = {}) => ({

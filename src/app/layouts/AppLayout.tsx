@@ -311,7 +311,7 @@ export const AppLayout = () => {
         <Header variant={headerVariant} activeNav={headerActiveNav} />
       )}
 
-      {/* Suspense-боундари здесь — про загрузку JS-чанка страницы (route-based code
+      {/* Suspense здесь — только про загрузку JS-чанка страницы (route-based code
       splitting, роадмап 2.5.3), не про данные: каждая страница уже оборачивает свою
       async-секцию в собственный `<QueryBoundary>` (см. AGENTS.md, "Loading / Empty / Error
       везде"). Единая точка на всё дерево роутов — как и сам `<Outlet/>`.

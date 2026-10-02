@@ -14,15 +14,25 @@ describe('useThemeStore', () => {
 
   it('rehydrate подхватывает сохранённое значение', () => {
     seedStorage('kinoshka:theme', JSON.stringify('dark'))
-    void useThemeStore.persist.rehydrate()
 
     expect(useThemeStore.getState().theme).toBe('dark')
   })
 
   it('невалидное сохранённое значение → system', () => {
     seedStorage('kinoshka:theme', JSON.stringify('sepia'))
-    void useThemeStore.persist.rehydrate()
 
     expect(useThemeStore.getState().theme).toBe('system')
+  })
+
+  it('неудачная запись откатывает тему к сохранённой', () => {
+    useThemeStore.getState().setTheme('dark')
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('quota', 'QuotaExceededError')
+    })
+
+    expect(() => useThemeStore.getState().setTheme('light')).not.toThrow()
+    expect(useThemeStore.getState().theme).toBe('dark')
+    expect(localStorage.getItem('kinoshka:theme')).toBe(JSON.stringify('dark'))
+    vi.restoreAllMocks()
   })
 })

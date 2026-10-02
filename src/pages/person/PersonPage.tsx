@@ -1,6 +1,10 @@
 import { usePersonDetail } from '@entities/person'
 import { ApiError } from '@shared/api'
-import { ErrorState, QueryBoundary } from '@shared/ui'
+import {
+  ErrorState,
+  QueryBoundary,
+  type QueryBoundaryErrorParams,
+} from '@shared/ui'
 import { useParams } from 'react-router'
 
 import { Person } from './ui/Person'
@@ -13,12 +17,7 @@ type PersonDetailContentProps = {
   id: number
 }
 
-type ErrorFallbackParams = {
-  error: unknown
-  reset: () => void
-}
-
-const personErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
+const personErrorFallback = ({ error, reset }: QueryBoundaryErrorParams) => {
   const isNotFound = error instanceof ApiError && error.status === 404
 
   return (

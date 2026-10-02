@@ -5,10 +5,11 @@ import {
   type StoreApi,
   type UseBoundStore,
 } from 'zustand'
-import { devtools, persist, type PersistStorage } from 'zustand/middleware'
+import { persist, type PersistStorage } from 'zustand/middleware'
 
 import type { StorageSlot } from '../storage'
 import { registerStoreReset } from './registry'
+import { withDevtools } from './withDevtools'
 
 type PartialState<TState> =
   | Partial<TState>
@@ -110,12 +111,7 @@ export const createPersistedStore = <TState, TPersisted>({
         : merge(persisted as TPersisted, current),
   })
 
-  // devtools только в DEV: в прод-сборке ветка вырезается вместе с middleware
-  const useStore = import.meta.env.DEV
-    ? create<TState>()(
-        devtools(initializer, { name }) as unknown as typeof initializer,
-      )
-    : create<TState>()(initializer)
+  const useStore = create<TState>()(withDevtools(name, initializer))
 
   store = Object.assign(useStore, { commit })
 

@@ -9,9 +9,7 @@ import { mapDocToMovie } from './mapDocToMovie'
 
 export type MoviesRequestParams = MovieControllerFindManyByQueryV15Data['query']
 
-export const fetchMovies = async (
-  params: MoviesRequestParams,
-): Promise<Movie[]> => {
+const fetchMovies = async (params: MoviesRequestParams): Promise<Movie[]> => {
   const response = await apiClient.getV15Movie({
     query: {
       ...params,
@@ -37,7 +35,7 @@ export const fetchMovies = async (
   return response.data.docs.map(mapDocToMovie)
 }
 
-export const moviesQueryStore = createQueryStore({
+export const moviesStore = createQueryStore({
   name: 'movies',
   fetcher: fetchMovies,
 })

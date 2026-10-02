@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
 import { hashHue } from '../lib/hashHue'
-import { fetchPopularMovies, popularMoviesQueryStore } from './getPopularMovies'
+import { popularMoviesStore } from './getPopularMovies'
 
 const ENDPOINT = '*/v1.5/list/:slug'
 
@@ -59,7 +59,10 @@ describe('fetchPopularMovies — success', () => {
   it('мапит movies.docs в PopularMovie[] с position/positionDiff', async () => {
     mockSuccess([listItem()])
 
-    const result = await fetchPopularMovies({ slug: 'popular', limit: 10 })
+    const result = await popularMoviesStore.fetch({
+      slug: 'popular',
+      limit: 10,
+    })
 
     expect(result).toEqual([
       {
@@ -81,7 +84,10 @@ describe('fetchPopularMovies — success', () => {
   it('элемент без type/genres в исходном DTO — дефолты mapDocToMovie (type: "movie", genre: [])', async () => {
     mockSuccess([listItem({ movie: movieDoc() })])
 
-    const [movie] = await fetchPopularMovies({ slug: 'popular', limit: 10 })
+    const [movie] = await popularMoviesStore.fetch({
+      slug: 'popular',
+      limit: 10,
+    })
 
     expect(movie.type).toBe('movie')
     expect(movie.genre).toEqual([])
@@ -90,7 +96,7 @@ describe('fetchPopularMovies — success', () => {
   it('positionDiff отсутствует — остаётся undefined', async () => {
     mockSuccess([listItem({ positionDiff: undefined })])
 
-    const [movie] = await fetchPopularMovies({
+    const [movie] = await popularMoviesStore.fetch({
       slug: 'popular-nodiff',
       limit: 10,
     })
@@ -101,7 +107,7 @@ describe('fetchPopularMovies — success', () => {
   it('пустой movies.docs — возвращает []', async () => {
     mockSuccess([])
 
-    const result = await fetchPopularMovies({
+    const result = await popularMoviesStore.fetch({
       slug: 'popular-empty',
       limit: 10,
     })
@@ -129,7 +135,7 @@ describe('fetchPopularMovies — success', () => {
       }),
     )
 
-    await fetchPopularMovies({ slug: 'popular-limit-check', limit: 5 })
+    await popularMoviesStore.fetch({ slug: 'popular-limit-check', limit: 5 })
 
     expect(receivedLimit).toBe('5')
   })
@@ -143,10 +149,12 @@ describe('fetchPopularMovies — ошибки', () => {
       error: 'Not Found',
     })
 
-    const error = await fetchPopularMovies({
-      slug: 'popular-404',
-      limit: 10,
-    }).catch((e: unknown) => e)
+    const error = await popularMoviesStore
+      .fetch({
+        slug: 'popular-404',
+        limit: 10,
+      })
+      .catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(ApiError)
     expect((error as ApiError).status).toBe(404)
@@ -159,34 +167,36 @@ describe('fetchPopularMovies — ошибки', () => {
       error: 'Forbidden',
     })
 
-    const error = await fetchPopularMovies({
-      slug: 'popular-403',
-      limit: 10,
-    }).catch((e: unknown) => e)
+    const error = await popularMoviesStore
+      .fetch({
+        slug: 'popular-403',
+        limit: 10,
+      })
+      .catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(ApiError)
     expect((error as ApiError).status).toBe(403)
   })
 })
 
-describe('popularMoviesQueryStore', () => {
+describe('popularMoviesStore', () => {
   it('fetch — успех, 403 и пустой результат', async () => {
     const params = { slug: 'popular', limit: 10 }
 
     mockSuccess([listItem()])
-    await expect(popularMoviesQueryStore.fetch(params)).resolves.toHaveLength(1)
+    await expect(popularMoviesStore.fetch(params)).resolves.toHaveLength(1)
 
-    popularMoviesQueryStore.reset()
+    popularMoviesStore.reset()
     mockSuccess([])
-    await expect(popularMoviesQueryStore.fetch(params)).resolves.toEqual([])
+    await expect(popularMoviesStore.fetch(params)).resolves.toEqual([])
 
-    popularMoviesQueryStore.reset()
+    popularMoviesStore.reset()
     mockError(403, {
       statusCode: 403,
       message: 'Forbidden',
       error: 'Forbidden',
     })
-    const error = await popularMoviesQueryStore
+    const error = await popularMoviesStore
       .fetch(params)
       .catch((e: unknown) => e)
     expect((error as ApiError).status).toBe(403)

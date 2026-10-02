@@ -148,13 +148,13 @@ const SearchResults = ({
 export const Search = () => {
   const { isMobile } = useViewport()
   // Каждая шторка подписана только на свой флаг
-  const filtersOpen = useSearchUiStore(s => s.filtersOpen)
-  const sortOpen = useSearchUiStore(s => s.sortOpen)
-  const openFilters = useSearchUiStore(s => s.openFilters)
-  const closeFilters = useSearchUiStore(s => s.closeFilters)
-  const openSort = useSearchUiStore(s => s.openSort)
-  const closeSort = useSearchUiStore(s => s.closeSort)
-  const resetSearchUi = useSearchUiStore(s => s.reset)
+  const filtersOpen = useSearchUiStore(state => state.filtersOpen)
+  const sortOpen = useSearchUiStore(state => state.sortOpen)
+  const openFilters = useSearchUiStore(state => state.openFilters)
+  const closeFilters = useSearchUiStore(state => state.closeFilters)
+  const openSort = useSearchUiStore(state => state.openSort)
+  const closeSort = useSearchUiStore(state => state.closeSort)
+  const resetSearchUi = useSearchUiStore(state => state.reset)
   // Стор module-level: без сброса при уходе со страницы шторка осталась бы открытой при возврате
   useEffect(() => resetSearchUi, [resetSearchUi])
   const { filters, setFilters, sort, setSort, resetFilters, activeChips } =
@@ -177,7 +177,7 @@ export const Search = () => {
         <div className={`hide-scrollbar ${s.filterBar}`}>
           <button
             type='button'
-            onClick={() => openFilters()}
+            onClick={openFilters}
             disabled={isSearchMode}
             className={`${s.filterBtn} ${activeChips.length ? s.filterBtnActive : ''}`}
           >
@@ -190,7 +190,7 @@ export const Search = () => {
 
           <button
             type='button'
-            onClick={() => openSort()}
+            onClick={openSort}
             disabled={isSearchMode}
             className={s.sortBtn}
           >
@@ -257,7 +257,7 @@ export const Search = () => {
         <>
           <BottomSheet
             open={filtersOpen && !isSearchMode}
-            onClose={() => closeFilters()}
+            onClose={closeFilters}
             title='Filters'
           >
             {/* Без `count`: Type — одиночный выбор, значение есть всегда. */}
@@ -298,7 +298,7 @@ export const Search = () => {
               </button>
               <button
                 type='button'
-                onClick={() => closeFilters()}
+                onClick={closeFilters}
                 className={s.showResultsBtn}
               >
                 Show results
@@ -308,7 +308,7 @@ export const Search = () => {
 
           <BottomSheet
             open={sortOpen && !isSearchMode}
-            onClose={() => closeSort()}
+            onClose={closeSort}
             title='Sort by'
             heightVh={50}
           >

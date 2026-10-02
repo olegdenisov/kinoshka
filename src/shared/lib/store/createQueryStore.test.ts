@@ -304,6 +304,62 @@ describe('createQueryStore — useQuery', () => {
     expect(result.current.error).toBeInstanceOf(Error)
   })
 
+  it('параметры-объект с новой ссылкой на каждый рендер дают один запрос', async () => {
+    const calls: { id: number }[] = []
+    const store = createQueryStore({
+      name: nextName(),
+      fetcher: async (params: { id: number }) => {
+        calls.push(params)
+        return `data:${params.id}`
+      },
+    })
+
+    const { result, rerender } = renderHook(() => store.useQuery({ id: 1 }))
+    rerender()
+    rerender()
+    await waitFor(() => expect(result.current.data).toBe('data:1'))
+    rerender()
+    rerender()
+
+    expect(calls).toHaveLength(1)
+  })
+
+  it('параметры-объект с новой ссылкой в кулдауне ошибки не перезапрашивают', async () => {
+    const fetcher = vi.fn(async (_params: { id: number }): Promise<string> => {
+      throw new Error('boom')
+    })
+    const store = createQueryStore({ name: nextName(), fetcher })
+
+    const { result, rerender } = renderHook(() => store.useQuery({ id: 1 }))
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    rerender()
+    rerender()
+    await act(async () => {})
+
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('keepPreviousData + skip: пропущенный запрос чужих данных не отдаёт, снятие skip грузит', async () => {
+    const { fetcher, calls } = createFetcher()
+    const store = createQueryStore({ name: nextName(), fetcher })
+
+    const { result, rerender } = renderHook(
+      ({ id, skip }: { id: number; skip: boolean }) =>
+        store.useQuery(id, { skip, keepPreviousData: true }),
+      { initialProps: { id: 1, skip: false } },
+    )
+    await waitFor(() => expect(result.current.data).toBe('data:1'))
+
+    rerender({ id: 2, skip: true })
+    expect(result.current.isFetching).toBe(false)
+    await act(async () => {})
+    expect(calls).toEqual([1])
+
+    rerender({ id: 2, skip: false })
+    await waitFor(() => expect(result.current.data).toBe('data:2'))
+    expect(calls).toEqual([1, 2])
+  })
+
   it('подписка только на свой ключ: обновление другого ключа не перерисовывает', async () => {
     const { fetcher } = createFetcher()
     const store = createQueryStore({ name: nextName(), fetcher })
@@ -522,6 +578,48 @@ describe('createQueryStore — invalidate, reset, гонки', () => {
     await store.fetch(1)
 
     expect(calls).toEqual([1, 1, 1])
+  })
+
+  it('reset() во время запроса: ответ запроса записи не создаёт', async () => {
+    const d = deferred<string>()
+    const { fetcher, calls } = createFetcher(id =>
+      id === 1 && calls.length === 1 ? d.promise : Promise.resolve('fresh'),
+    )
+    const store = createQueryStore({ name: nextName(), fetcher })
+
+    const pending = store.fetch(1)
+    store.reset()
+    d.resolve('late')
+    await expect(pending).resolves.toBe('late')
+
+    // записи нет: следующий fetch идёт в сеть, а не в кеш позднего ответа
+    await expect(store.fetch(1)).resolves.toBe('fresh')
+    expect(calls).toEqual([1, 1])
+  })
+
+  it('isError сбрасывается на время повтора после ошибки', async () => {
+    const retry = deferred<string>()
+    let first = true
+    const { fetcher } = createFetcher(async () => {
+      if (first) {
+        first = false
+        throw new Error('boom')
+      }
+      return retry.promise
+    })
+    const store = createQueryStore({ name: nextName(), fetcher })
+
+    const { result } = renderHook(() => store.useQuery(1))
+    await waitFor(() => expect(result.current.isError).toBe(true))
+
+    act(() => result.current.refetch())
+    expect(result.current).toMatchObject({ isError: false, isFetching: true })
+
+    await act(async () => {
+      retry.resolve('ok')
+      await retry.promise
+    })
+    expect(result.current).toMatchObject({ data: 'ok', isError: false })
   })
 
   it('два экземпляра фабрики изолированы', async () => {
