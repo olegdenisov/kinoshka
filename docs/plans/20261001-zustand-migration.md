@@ -226,12 +226,12 @@ resetAllStores() // только для src/test/setup.ts
 - Create: `src/features/watched/model/watchedStore.ts`, `src/features/watchlist/model/watchlistStore.ts` + тесты рядом
 - Modify: `src/features/watched/model/useWatched.ts`, `src/features/watchlist/model/useWatchlist.ts`, их тесты
 
-- [ ] два независимых стора `{ ids, toggle }` на прежних слотах — ровно то, что отдают нынешние хуки (`add`/`remove`/`clear` у этих фич нет, не добавляем); общий код id-списка не выносим в абстракцию, пока это два файла (списки независимы — `user-lists.md`)
-- [ ] `toggle` читает `get().ids`, а не замыкание
-- [ ] хуки сохраняют текущие сигнатуры (`ids`, `isWatched`/`isInWatchlist`, `toggle`); `ids` и `toggle` — отдельными простыми селекторами
-- [ ] тесты сторов: toggle туда-обратно, два toggle в одном тике, неудачная запись не меняет `ids`
-- [ ] существующие тесты хуков проходят
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] два независимых стора `{ ids, toggle }` на прежних слотах — ровно то, что отдают нынешние хуки (`add`/`remove`/`clear` у этих фич нет, не добавляем); общий код id-списка не выносим в абстракцию, пока это два файла (списки независимы — `user-lists.md`)
+- [x] `toggle` читает `get().ids`, а не замыкание
+- [x] хуки сохраняют текущие сигнатуры (`ids`, `isWatched`/`isInWatchlist`, `toggle`); `ids` и `toggle` — отдельными простыми селекторами
+- [x] тесты сторов: toggle туда-обратно, два toggle в одном тике, неудачная запись не меняет `ids`
+- [x] существующие тесты хуков проходят
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 5: Стор избранного
 
