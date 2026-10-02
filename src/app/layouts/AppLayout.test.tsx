@@ -1,5 +1,5 @@
 import type * as SharedLib from '@shared/lib'
-import { AsyncBoundary } from '@shared/ui'
+import { ErrorBoundary, ErrorState } from '@shared/ui'
 import {
   act,
   fireEvent,
@@ -525,9 +525,16 @@ const createErrorRouter = (
             element: (
               <div>
                 <div>Favorites page shell</div>
-                <AsyncBoundary>
+                <ErrorBoundary
+                  fallback={({ error }) => (
+                    <ErrorState
+                      title='Something went wrong'
+                      description={error?.message ?? ''}
+                    />
+                  )}
+                >
                   <Bomb />
-                </AsyncBoundary>
+                </ErrorBoundary>
               </div>
             ),
           },
@@ -608,15 +615,15 @@ describe('AppLayout — per-route ErrorBoundary', () => {
     expect(errorInfo).toHaveProperty('componentStack')
   })
 
-  // Страничный AsyncBoundary ближе к ошибке — перехватывает её сам; per-route граница не
-  // срабатывает, и в Sentry такая ошибка не уходит (принятый gap: AsyncBoundary не прокидывает
-  // onError).
-  it('ошибку внутри страничного AsyncBoundary ловит он, а не per-route граница — captureRouteError не вызван', () => {
+  // Страничная граница (QueryBoundary использует тот же ErrorBoundary) ближе к ошибке —
+  // перехватывает её сама; per-route граница не срабатывает, и в Sentry такая ошибка не уходит
+  // (принятый gap: страничная граница не прокидывает onError).
+  it('ошибку внутри страничной ErrorBoundary ловит она, а не per-route граница — captureRouteError не вызван', () => {
     render(<RouterProvider router={createErrorRouter('/favorites')} />)
 
     expect(screen.getByText('Favorites page shell')).toBeInTheDocument()
     expect(screen.getByText('boom')).toBeInTheDocument()
-    // Фолбэк AsyncBoundary — без secondaryAction, ссылки на главную нет.
+    // Фолбэк страничной границы — без secondaryAction, ссылки на главную нет.
     expect(
       screen.queryByRole('link', { name: 'Back to home' }),
     ).not.toBeInTheDocument()

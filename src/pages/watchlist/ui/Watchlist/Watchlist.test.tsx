@@ -162,7 +162,7 @@ describe('Watchlist — полный отказ загрузки', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('5xx → error-фолбэк AsyncBoundary с Retry, а не EmptyState', async () => {
+  it('5xx → error-фолбэк QueryBoundary с Retry, а не EmptyState', async () => {
     setWatchlist([500, 501])
     mockMovieError(500, 500)
     mockMovieError(501, 500)

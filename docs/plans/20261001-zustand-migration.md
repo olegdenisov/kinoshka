@@ -441,13 +441,13 @@ resetAllStores() // только для src/test/setup.ts
 - Modify: `src/shared/lib/index.ts`, `src/shared/lib/storage/index.ts`, `src/shared/ui/index.ts`, `src/test/setup.ts`
 - Modify: комментарии с упоминанием удалённых механизмов в `src/app/GlobalErrorBoundary{,.test}.tsx`, `src/app/layouts/AppLayout{,.test}.tsx`, `src/shared/ui/ErrorBoundary/*.test.tsx`, `src/features/catalog-filter/ui/GenreSelector/GenreSelector.tsx`, `e2e/movie-detail.spec.ts`, `e2e/recommendations.spec.ts`
 
-- [ ] grep по `createCachedFetcher`, `createSessionCache`, `resetAllCachedFetchers`, `AsyncBoundary`, `useStorageSlot`, `invalidate[A-Z]`, `[^.a-zA-Z]use(` — потребителей не осталось (шаблон `use(` исключает `interceptors.response.use(` в `src/shared/api/client.ts` и `server.use(` в тестах)
-- [ ] `createStorageSlot` остаётся (backend для persist, `chunkPreloadRecovery`, `sentry`)
-- [ ] удалить модули и экспорты из barrel-файлов; `setup.ts`: убрать `resetAllCachedFetchers`
-- [ ] обновить комментарии в коде и e2e (только комментарии, сценарии не меняются)
-- [ ] тесты удалённых модулей удаляются вместе с ними; новых тестов задача не добавляет — проверка: весь набор зелёный
-- [ ] `make knip` — без новых находок
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] grep по `createCachedFetcher`, `createSessionCache`, `resetAllCachedFetchers`, `AsyncBoundary`, `useStorageSlot`, `invalidate[A-Z]`, `[^.a-zA-Z]use(` — потребителей не осталось (шаблон `use(` исключает `interceptors.response.use(` в `src/shared/api/client.ts` и `server.use(` в тестах)
+- [x] `createStorageSlot` остаётся (backend для persist, `chunkPreloadRecovery`, `sentry`)
+- [x] удалить модули и экспорты из barrel-файлов; `setup.ts`: убрать `resetAllCachedFetchers`
+- [x] обновить комментарии в коде и e2e (только комментарии, сценарии не меняются)
+- [x] тесты удалённых модулей удаляются вместе с ними; новых тестов задача не добавляет — проверка: весь набор зелёный
+- [x] `make knip` — без новых находок
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 17: Бюджеты бандла и замер разницы с `main` и `rtk`
 

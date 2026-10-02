@@ -5,7 +5,7 @@ import { ErrorBoundary } from './ErrorBoundary'
 
 // module-level флаг (не self-flipping внутри рендера) — React после ошибки в рендере
 // синхронно повторяет попытку рендера ещё раз ДО того, как решит считать её настоящей
-// ошибкой (см. AsyncBoundary.test.tsx, тот же паттерн); self-flipping флаг привёл бы к тому,
+// ошибкой (тот же паттерн, что в GlobalErrorBoundary.test.tsx); self-flipping флаг привёл бы к тому,
 // что этот внутренний повтор рендера уже не бросает, и boundary вообще не перехватывает
 // ошибку.
 let shouldThrow = true

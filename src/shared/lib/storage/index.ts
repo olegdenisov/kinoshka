@@ -4,4 +4,3 @@ export type {
   StorageErrorReporter,
   StorageSlot,
 } from './storage'
-export { useStorageSlot } from './useStorageSlot'

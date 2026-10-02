@@ -4,7 +4,7 @@ import { act, renderHook } from '@testing-library/react'
 import { seedStorage } from '../../../test/seedStorage'
 import { useFavorites } from './useFavorites'
 
-// Мокаем только trackEvent, остальные реальные экспорты @shared/lib (useStorageSlot и т.д.)
+// Мокаем только trackEvent, остальные реальные экспорты @shared/lib (createStorageSlot и т.д.)
 // сохраняем через vi.importActual — тот же паттерн, что useFilterState.test.tsx использует
 // (Task 7).
 vi.mock('@shared/lib', async importOriginal => {

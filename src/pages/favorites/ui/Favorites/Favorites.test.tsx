@@ -147,7 +147,7 @@ describe('Favorites — полный отказ загрузки (все id 404)
 })
 
 describe('Favorites — полный отказ загрузки (сетевая/5xx ошибка)', () => {
-  it('показывает error-фолбэк AsyncBoundary с Retry, а не EmptyState', async () => {
+  it('показывает error-фолбэк QueryBoundary с Retry, а не EmptyState', async () => {
     setFavorites([500, 501])
     mockMovieError(500, 500)
     mockMovieError(501, 500)
