@@ -837,6 +837,28 @@ describe('Search (mobile-ветка) — футер BottomSheet фильтров
   })
 })
 
+describe('Search (mobile-ветка) — шторки и уход со страницы', () => {
+  it('после размонтирования и повторного монтирования шторка фильтров закрыта', async () => {
+    setViewportWidth(MOBILE_WIDTH)
+    mockCatalog([catalogDoc('Oppenheimer', 307)])
+
+    const first = await renderSearch(['/search?genres=Drama'])
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    })
+    expect(
+      screen.getAllByRole('button', { name: 'Close' })[0].className,
+    ).toMatch(/backdropOpen/)
+
+    first.unmount()
+    await renderSearch(['/search?genres=Drama'])
+
+    expect(
+      screen.getAllByRole('button', { name: 'Close' })[0].className,
+    ).not.toMatch(/backdropOpen/)
+  })
+})
+
 describe('Search (mobile-ветка) — избранное в гриде результатов', () => {
   it('клик по сердечку карточки пишет id фильма в localStorage', async () => {
     setViewportWidth(MOBILE_WIDTH)
