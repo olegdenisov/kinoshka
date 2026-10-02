@@ -111,7 +111,7 @@ jobs:
         # always() — чтобы не пытаться постить комментарий и при отмене джобы
         # самим GitHub Actions (concurrency: cancel-in-progress).
         if: ${{ !cancelled() }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { run } = require('./.github/scripts/lighthouse-comment.cjs')
