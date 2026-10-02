@@ -328,13 +328,13 @@ resetAllStores() // только для src/test/setup.ts
 - Modify: `src/entities/movie/hooks/{useTopRatedMovies,useNewMovies,usePopularMovies}.ts` + тесты, `src/entities/movie/hooks/index.ts`, `src/entities/movie/index.ts`
 - Modify: `src/pages/home/ui/{PopularMoviesRail,TrandingSeriesRail,TopAnimeRails,PersonalRails}/*.tsx` (хуки рейлов вызываются здесь), `src/pages/home/ui/Home/Home.tsx`, `src/pages/popular/ui/Popular/Popular.tsx` + тесты
 
-- [ ] фетчеры `getMovies`/`getPopularMovies` становятся чистыми функциями запроса (маппинг DTO и проверка error-DTO — как есть) + экземпляр `createQueryStore` рядом; popular — `ttlMs` 24 ч
-- [ ] хуки возвращают `QueryResult`; экспорты `invalidate*` удаляются из хуков и barrel-файлов (Retry = `refetch`)
-- [ ] `QueryBoundary` принимает `query` пропом, поэтому хук и boundary переезжают внутрь каждого компонента-рейла; `Home.tsx` перестаёт оборачивать рейлы в `AsyncBoundary`. Скелетоны и `EmptyState` при пустом результате сохраняются
-- [ ] lazy-mount и `content-visibility` рейлов не ломаем (`performance.md`): запрос рейла стартует при монтировании рейла, как сейчас; `widgets/movie-rail` данных не читает и не меняется
-- [ ] тесты сторов через MSW: успех, 403 (сообщение о лимите), пустой результат
-- [ ] тесты страниц: скелетон → данные, ошибка → Retry перезапрашивает
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] фетчеры `getMovies`/`getPopularMovies` становятся чистыми функциями запроса (маппинг DTO и проверка error-DTO — как есть) + экземпляр `createQueryStore` рядом; popular — `ttlMs` 24 ч
+- [x] хуки возвращают `QueryResult`; экспорты `invalidate*` удаляются из хуков и barrel-файлов (Retry = `refetch`)
+- [x] `QueryBoundary` принимает `query` пропом, поэтому хук и boundary переезжают внутрь каждого компонента-рейла; `Home.tsx` перестаёт оборачивать рейлы в `AsyncBoundary`. Скелетоны и `EmptyState` при пустом результате сохраняются
+- [x] lazy-mount и `content-visibility` рейлов не ломаем (`performance.md`): запрос рейла стартует при монтировании рейла, как сейчас; `widgets/movie-rail` данных не читает и не меняется
+- [x] тесты сторов через MSW: успех, 403 (сообщение о лимите), пустой результат
+- [x] тесты страниц: скелетон → данные, ошибка → Retry перезапрашивает
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 11: Query-сторы детальных страниц (movie, person)
 

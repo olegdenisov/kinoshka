@@ -2,14 +2,16 @@ import {
   apiClient,
   type MovieControllerFindManyByQueryV15Data,
 } from '@shared/api'
-import { createCachedFetcher } from '@shared/lib'
+import { createQueryStore } from '@shared/lib'
 
 import type { Movie } from '../model/types'
 import { mapDocToMovie } from './mapDocToMovie'
 
-type RequestParams = MovieControllerFindManyByQueryV15Data['query']
+export type MoviesRequestParams = MovieControllerFindManyByQueryV15Data['query']
 
-const fetchMovies = async (params: RequestParams): Promise<Movie[]> => {
+export const fetchMovies = async (
+  params: MoviesRequestParams,
+): Promise<Movie[]> => {
   const response = await apiClient.getV15Movie({
     query: {
       ...params,
@@ -35,4 +37,7 @@ const fetchMovies = async (params: RequestParams): Promise<Movie[]> => {
   return response.data.docs.map(mapDocToMovie)
 }
 
-export const getMovies = createCachedFetcher('movies', fetchMovies)
+export const moviesQueryStore = createQueryStore({
+  name: 'movies',
+  fetcher: fetchMovies,
+})
