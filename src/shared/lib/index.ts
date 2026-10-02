@@ -1,13 +1,20 @@
 export { useViewport } from './viewport'
-export {
-  createStorageSlot,
-  setStorageErrorReporter,
-  useStorageSlot,
-} from './storage'
+export { createStorageSlot, setStorageErrorReporter } from './storage'
 export type { StorageErrorContext, StorageErrorReporter } from './storage'
-export { createSessionCache } from './sessionCache'
-export { createCachedFetcher, resetAllCachedFetchers } from './cachedFetcher'
-export type { CachedFetcher } from './cachedFetcher'
+export {
+  createPersistedStore,
+  createQueryStore,
+  registerStoreReset,
+  resetAllStores,
+  withDevtools,
+} from './store'
+export type {
+  Commit,
+  PersistedStore,
+  QueryResult,
+  QueryStore,
+  UseQueryOptions,
+} from './store'
 export { useDebouncedValue } from './debounce'
 export { useInView } from './inView'
 export { lazyNamed } from './lazyNamed'

@@ -1,13 +1,14 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { seedStorage } from '../../../test/seedStorage'
 import { server } from '../../../test/setup'
-import { countryDictionarySlot } from '../api/countryDictionaryCache'
+import { useCountryDictionaryStore } from '../api/countryDictionaryCache'
 import {
   BACKGROUND_RETRY_COOLDOWN_MS,
   DICTIONARY_TTL_MS,
 } from '../api/createDictionaryCache'
-import { genreDictionarySlot } from '../api/genreDictionaryCache'
+import { useGenreDictionaryStore } from '../api/genreDictionaryCache'
 import { STATIC_FALLBACK_COUNTRIES } from '../model/country'
 import { useCountryDictionary } from './useCountryDictionary'
 
@@ -56,21 +57,24 @@ describe('useCountryDictionary — пустой кэш', () => {
     })
   })
 
-  it('пишет в свой слот, жанровый не трогает', async () => {
+  it('пишет в свой стор, жанровый не трогает', async () => {
     mockSuccess(['США'])
     renderHook(() => useCountryDictionary())
 
     await waitFor(() => {
-      expect(countryDictionarySlot.get().items).toEqual(['США'])
+      expect(useCountryDictionaryStore.getState().items).toEqual(['США'])
     })
-    expect(genreDictionarySlot.get().items).toEqual([])
+    expect(useGenreDictionaryStore.getState().items).toEqual([])
   })
 })
 
 describe('useCountryDictionary — свежий кэш', () => {
   it('рендерится из кэша без фонового запроса', async () => {
     const calls = mockSuccess(['Аргентина'])
-    countryDictionarySlot.set({ items: ['Чили'], fetchedAt: now })
+    seedStorage(
+      'kinoshka:countries',
+      JSON.stringify({ items: ['Чили'], fetchedAt: now }),
+    )
 
     const { result } = renderHook(() => useCountryDictionary())
 
@@ -83,10 +87,13 @@ describe('useCountryDictionary — свежий кэш', () => {
 describe('useCountryDictionary — устаревший кэш', () => {
   it('сразу отдаёт кэш и обновляет его в фоне ровно одним запросом', async () => {
     const calls = mockSuccess(['США', 'Франция'])
-    countryDictionarySlot.set({
-      items: ['старая страна'],
-      fetchedAt: now - DICTIONARY_TTL_MS - 1,
-    })
+    seedStorage(
+      'kinoshka:countries',
+      JSON.stringify({
+        items: ['старая страна'],
+        fetchedAt: now - DICTIONARY_TTL_MS - 1,
+      }),
+    )
 
     const { result } = renderHook(() => useCountryDictionary())
 
@@ -144,7 +151,7 @@ describe('useCountryDictionary — пустой ответ', () => {
     const { result, unmount } = renderHook(() => useCountryDictionary())
 
     await waitFor(() => {
-      expect(countryDictionarySlot.get().fetchedAt).toBe(now)
+      expect(useCountryDictionaryStore.getState().fetchedAt).toBe(now)
     })
     unmount()
     renderHook(() => useCountryDictionary())

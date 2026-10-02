@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 
+import { seedStorage } from '../../../../test/seedStorage'
 import { MobileHeader } from './MobileHeader'
 
 beforeEach(() => localStorage.clear())
@@ -60,7 +61,7 @@ describe('MobileHeader', () => {
   })
 
   it('аватар — ссылка на /profile с инициалами сохранённого имени', () => {
-    localStorage.setItem('kinoshka:profile', JSON.stringify('Oleg Denisov'))
+    seedStorage('kinoshka:profile', JSON.stringify('Oleg Denisov'))
 
     render(
       <MemoryRouter>

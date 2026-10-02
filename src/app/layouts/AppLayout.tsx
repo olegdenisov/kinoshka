@@ -311,12 +311,12 @@ export const AppLayout = () => {
         <Header variant={headerVariant} activeNav={headerActiveNav} />
       )}
 
-      {/* Suspense-боундари здесь — про загрузку JS-чанка страницы (route-based code
+      {/* Suspense здесь — только про загрузку JS-чанка страницы (route-based code
       splitting, роадмап 2.5.3), не про данные: каждая страница уже оборачивает свою
-      async-секцию в собственный `<AsyncBoundary>` (см. AGENTS.md, "Loading / Empty / Error
+      async-секцию в собственный `<QueryBoundary>` (см. AGENTS.md, "Loading / Empty / Error
       везде"). Единая точка на всё дерево роутов — как и сам `<Outlet/>`.
       Per-route ErrorBoundary (роадмап 2.6) — снаружи Suspense (тот же порядок, что в
-      AsyncBoundary), чтобы ловить и сбой загрузки чанка, и runtime-ошибку страницы, не теряя
+      QueryBoundary), чтобы ловить и сбой загрузки чанка, и runtime-ошибку страницы, не теряя
       chrome вокруг. Перехватывает раньше GlobalErrorBoundary — поэтому сам репортит в Sentry
       через onError. `key={pathname}` сбрасывает границу при переходе на другой роут; принятое
       следствие — ремаунт Suspense+страницы и на смене параметра (`/movie/1 → /movie/2`), без

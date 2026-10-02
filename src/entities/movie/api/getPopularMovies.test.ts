@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
 import { hashHue } from '../lib/hashHue'
-import { getPopularMovies } from './getPopularMovies'
+import { popularMoviesStore } from './getPopularMovies'
 
 const ENDPOINT = '*/v1.5/list/:slug'
 
@@ -55,11 +55,14 @@ const mockError = (status: number, body: Record<string, unknown>) => {
   server.use(http.get(ENDPOINT, () => HttpResponse.json(body, { status })))
 }
 
-describe('getPopularMovies — success', () => {
+describe('fetchPopularMovies — success', () => {
   it('мапит movies.docs в PopularMovie[] с position/positionDiff', async () => {
     mockSuccess([listItem()])
 
-    const result = await getPopularMovies({ slug: 'popular', limit: 10 })
+    const result = await popularMoviesStore.fetch({
+      slug: 'popular',
+      limit: 10,
+    })
 
     expect(result).toEqual([
       {
@@ -81,7 +84,10 @@ describe('getPopularMovies — success', () => {
   it('элемент без type/genres в исходном DTO — дефолты mapDocToMovie (type: "movie", genre: [])', async () => {
     mockSuccess([listItem({ movie: movieDoc() })])
 
-    const [movie] = await getPopularMovies({ slug: 'popular', limit: 10 })
+    const [movie] = await popularMoviesStore.fetch({
+      slug: 'popular',
+      limit: 10,
+    })
 
     expect(movie.type).toBe('movie')
     expect(movie.genre).toEqual([])
@@ -90,7 +96,7 @@ describe('getPopularMovies — success', () => {
   it('positionDiff отсутствует — остаётся undefined', async () => {
     mockSuccess([listItem({ positionDiff: undefined })])
 
-    const [movie] = await getPopularMovies({
+    const [movie] = await popularMoviesStore.fetch({
       slug: 'popular-nodiff',
       limit: 10,
     })
@@ -101,7 +107,10 @@ describe('getPopularMovies — success', () => {
   it('пустой movies.docs — возвращает []', async () => {
     mockSuccess([])
 
-    const result = await getPopularMovies({ slug: 'popular-empty', limit: 10 })
+    const result = await popularMoviesStore.fetch({
+      slug: 'popular-empty',
+      limit: 10,
+    })
 
     expect(result).toEqual([])
   })
@@ -126,13 +135,13 @@ describe('getPopularMovies — success', () => {
       }),
     )
 
-    await getPopularMovies({ slug: 'popular-limit-check', limit: 5 })
+    await popularMoviesStore.fetch({ slug: 'popular-limit-check', limit: 5 })
 
     expect(receivedLimit).toBe('5')
   })
 })
 
-describe('getPopularMovies — ошибки', () => {
+describe('fetchPopularMovies — ошибки', () => {
   it('404 — бросает ApiError со status 404', async () => {
     mockError(404, {
       statusCode: 404,
@@ -140,10 +149,12 @@ describe('getPopularMovies — ошибки', () => {
       error: 'Not Found',
     })
 
-    const error = await getPopularMovies({
-      slug: 'popular-404',
-      limit: 10,
-    }).catch((e: unknown) => e)
+    const error = await popularMoviesStore
+      .fetch({
+        slug: 'popular-404',
+        limit: 10,
+      })
+      .catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(ApiError)
     expect((error as ApiError).status).toBe(404)
@@ -156,12 +167,38 @@ describe('getPopularMovies — ошибки', () => {
       error: 'Forbidden',
     })
 
-    const error = await getPopularMovies({
-      slug: 'popular-403',
-      limit: 10,
-    }).catch((e: unknown) => e)
+    const error = await popularMoviesStore
+      .fetch({
+        slug: 'popular-403',
+        limit: 10,
+      })
+      .catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(ApiError)
+    expect((error as ApiError).status).toBe(403)
+  })
+})
+
+describe('popularMoviesStore', () => {
+  it('fetch — успех, 403 и пустой результат', async () => {
+    const params = { slug: 'popular', limit: 10 }
+
+    mockSuccess([listItem()])
+    await expect(popularMoviesStore.fetch(params)).resolves.toHaveLength(1)
+
+    popularMoviesStore.reset()
+    mockSuccess([])
+    await expect(popularMoviesStore.fetch(params)).resolves.toEqual([])
+
+    popularMoviesStore.reset()
+    mockError(403, {
+      statusCode: 403,
+      message: 'Forbidden',
+      error: 'Forbidden',
+    })
+    const error = await popularMoviesStore
+      .fetch(params)
+      .catch((e: unknown) => e)
     expect((error as ApiError).status).toBe(403)
   })
 })

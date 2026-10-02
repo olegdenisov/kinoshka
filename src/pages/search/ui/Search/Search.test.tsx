@@ -224,8 +224,8 @@ describe('Search (desktop-ветка) — режим catalog (без ?q, ест�
   })
 })
 
-describe('Search — ошибка фетчера (403/квота) достигает AsyncBoundary', () => {
-  it('реджект от search-эндпоинта рендерит ErrorState вместо краша страницы, сайдбар/заголовок остаются (падает только контент AsyncBoundary)', async () => {
+describe('Search — ошибка фетчера (403/квота) достигает QueryBoundary', () => {
+  it('реджект от search-эндпоинта рендерит ErrorState вместо краша страницы, сайдбар/заголовок остаются (падает только контент QueryBoundary)', async () => {
     server.use(
       http.get(SEARCH_ENDPOINT, () =>
         HttpResponse.json(
@@ -428,7 +428,66 @@ describe('Search — индикатор загрузки', () => {
     expect(screen.getByText(/page 2 of 5/i)).toBeInTheDocument()
   })
 
-  it('displayPage держит подсветку Pagination во время isUpdating (не deferredPage)', async () => {
+  it('первый заход — скелетон без бейджа "Updating…"', async () => {
+    server.use(http.get(SEARCH_ENDPOINT, () => new Promise<Response>(() => {})))
+
+    await renderSearch(['/search?q=first-visit-skeleton'])
+
+    expect(document.querySelector('[class*="skeleton"]')).toBeInTheDocument()
+    expect(document.querySelector('[aria-busy]')).toHaveAttribute(
+      'aria-busy',
+      'false',
+    )
+    expect(screen.queryByText('Updating…')).not.toBeInTheDocument()
+  })
+
+  it('переключение режима catalog → search держит прежнюю сетку с бейджем, пока идёт поиск', async () => {
+    mockCatalog([catalogDoc('Dune Part Two', 211)])
+
+    await renderSearch(['/search?genres=Drama'], <HeaderQuerySetter />)
+    expect(screen.getAllByText('Dune Part Two').length).toBeGreaterThan(0)
+
+    let resolvePending: ((response: Response) => void) | undefined
+    server.use(
+      http.get(
+        SEARCH_ENDPOINT,
+        () =>
+          new Promise<Response>(resolve => {
+            resolvePending = resolve
+          }),
+      ),
+    )
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'simulate header q write' }),
+      )
+    })
+
+    expect(screen.getAllByText('Dune Part Two').length).toBeGreaterThan(0)
+    expect(screen.getByText('Updating…')).toBeInTheDocument()
+
+    await waitFor(() => expect(resolvePending).toBeDefined())
+    await act(async () => {
+      resolvePending!(
+        HttpResponse.json({
+          docs: [searchDoc('Matrix Revolutions', 212)],
+          total: 1,
+          page: 1,
+          pages: 1,
+          limit: 10,
+        }),
+      )
+    })
+
+    expect(
+      (await screen.findAllByText('Matrix Revolutions')).length,
+    ).toBeGreaterThan(0)
+    expect(screen.queryAllByText('Dune Part Two')).toHaveLength(0)
+    expect(screen.queryByText('Updating…')).not.toBeInTheDocument()
+  })
+
+  it('displayPage держит подсветку Pagination во время isUpdating (live page из URL)', async () => {
     mockSearch([searchDoc('Matrix Revolutions', 601)], { pages: 5, total: 50 })
 
     await renderSearch(['/search?q=display-page-highlight'])
@@ -703,8 +762,8 @@ describe('Search (mobile-ветка) — режимы search/catalog', () => {
   })
 })
 
-describe('Search (mobile-ветка) — ошибка фетчера достигает AsyncBoundary', () => {
-  it('реджект рендерит ErrorState, filter-bar триггеры остаются (падает только контент AsyncBoundary)', async () => {
+describe('Search (mobile-ветка) — ошибка фетчера достигает QueryBoundary', () => {
+  it('реджект рендерит ErrorState, filter-bar триггеры остаются (падает только контент QueryBoundary)', async () => {
     setViewportWidth(MOBILE_WIDTH)
     server.use(
       http.get(CATALOG_ENDPOINT, () =>
@@ -837,6 +896,28 @@ describe('Search (mobile-ветка) — футер BottomSheet фильтров
   })
 })
 
+describe('Search (mobile-ветка) — шторки и уход со страницы', () => {
+  it('после размонтирования и повторного монтирования шторка фильтров закрыта', async () => {
+    setViewportWidth(MOBILE_WIDTH)
+    mockCatalog([catalogDoc('Oppenheimer', 307)])
+
+    const first = await renderSearch(['/search?genres=Drama'])
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    })
+    expect(
+      screen.getAllByRole('button', { name: 'Close' })[0].className,
+    ).toMatch(/backdropOpen/)
+
+    first.unmount()
+    await renderSearch(['/search?genres=Drama'])
+
+    expect(
+      screen.getAllByRole('button', { name: 'Close' })[0].className,
+    ).not.toMatch(/backdropOpen/)
+  })
+})
+
 describe('Search (mobile-ветка) — избранное в гриде результатов', () => {
   it('клик по сердечку карточки пишет id фильма в localStorage', async () => {
     setViewportWidth(MOBILE_WIDTH)
@@ -853,7 +934,7 @@ describe('Search (mobile-ветка) — избранное в гриде рез
 
 // Новые фильтры (Duration и т.п.) живут в свёрнутых группах общего FilterPanel — и в сайдбаре,
 // и в шторке. Проверяем путь «клик в UI → URL → запрос каталога с movieLength», а не только
-// запись в URL: новое поле, забытое в areFiltersEqual, меняет URL, но не перезапрашивает каталог.
+// запись в URL: новое поле FilterState, не попавшее в filtersToParams, меняет URL, но не запрос.
 describe('Search — фильтр длительности из UI доходит до запроса каталога', () => {
   const trackCatalogRequests = () => {
     const urls: URL[] = []

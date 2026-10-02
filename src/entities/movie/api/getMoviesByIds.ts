@@ -1,14 +1,16 @@
 import { ApiError } from '@shared/api'
-import { createCachedFetcher } from '@shared/lib'
+import { createQueryStore } from '@shared/lib'
 
 import type { Movie } from '../model/types'
-import { getMovieDetail } from './getMovieDetail'
+import { movieDetailStore } from './getMovieDetail'
 
 const isNotFound = (reason: unknown) =>
   reason instanceof ApiError && reason.status === 404
 
 const fetchMoviesByIds = async (ids: number[]): Promise<Movie[]> => {
-  const results = await Promise.allSettled(ids.map(id => getMovieDetail(id)))
+  const results = await Promise.allSettled(
+    ids.map(id => movieDetailStore.fetch(id)),
+  )
 
   const movies = results
     .filter(result => result.status === 'fulfilled')
@@ -16,7 +18,7 @@ const fetchMoviesByIds = async (ids: number[]): Promise<Movie[]> => {
 
   // Все id 404 → фильмы удалены, показываем пустой грид без Retry (нечего повторять).
   // Хотя бы одна ошибка не 404 (сеть, 5xx, quota) → это восстановимо, пробрасываем,
-  // чтобы AsyncBoundary показал реальный error-фолбэк с рабочим Retry, а не тихо
+  // чтобы boundary показал реальный error-фолбэк с рабочим Retry, а не тихо
   // подменял его на статичный EmptyState с текстом "Try again later" без кнопки.
   const hasRecoverableFailure = results.some(
     result => result.status === 'rejected' && !isNotFound(result.reason),
@@ -29,7 +31,9 @@ const fetchMoviesByIds = async (ids: number[]): Promise<Movie[]> => {
   return movies
 }
 
-export const getMoviesByIds = createCachedFetcher<number[], Movie[]>(
-  'movies-by-ids',
-  fetchMoviesByIds,
-)
+// Ключ — массив id (JSON.stringify по умолчанию). Detail каждого id берётся через
+// movieDetailStore.fetch — общий кеш с детальной страницей, второй запрос за тем же фильмом не уходит
+export const moviesByIdsStore = createQueryStore<number[], Movie[]>({
+  name: 'moviesByIds',
+  fetcher: fetchMoviesByIds,
+})

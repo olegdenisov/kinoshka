@@ -1,7 +1,7 @@
-import { Card, getMoviesByIds } from '@entities/movie'
+import { Card } from '@entities/movie'
 import { useFavoriteMovies, useFavorites } from '@features/favorites'
 import { useWatchlist } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { EmptyState, QueryBoundary, Skeleton } from '@shared/ui'
 
 import s from './Favorites.module.css'
 
@@ -16,35 +16,41 @@ const FavoritesSkeletonGrid = () => (
 )
 
 const FavoritesGrid = () => {
-  const movies = useFavoriteMovies()
+  const query = useFavoriteMovies()
   const { isFavorite, toggle } = useFavorites()
   const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
-  if (movies.length === 0) {
-    return (
-      <div className={s.stateWrap}>
-        <EmptyState
-          title="Couldn't load your favorites"
-          description='Something went wrong loading your favorited movies. Try again later.'
-        />
-      </div>
-    )
-  }
-
   return (
-    <div className={s.grid}>
-      {movies.map(movie => (
-        <Card
-          key={movie.id}
-          movie={movie}
-          variant='grid'
-          isFavorite={isFavorite(movie.id)}
-          onToggleFavorite={toggle}
-          inWatchlist={isInWatchlist(movie.id)}
-          onToggleWatchlist={toggleWatchlist}
-        />
-      ))}
-    </div>
+    <QueryBoundary query={query} fallback={<FavoritesSkeletonGrid />}>
+      {movies => {
+        if (movies.length === 0) {
+          return (
+            <div className={s.stateWrap}>
+              <EmptyState
+                title="Couldn't load your favorites"
+                description='Something went wrong loading your favorited movies. Try again later.'
+              />
+            </div>
+          )
+        }
+
+        return (
+          <div className={s.grid}>
+            {movies.map(movie => (
+              <Card
+                key={movie.id}
+                movie={movie}
+                variant='grid'
+                isFavorite={isFavorite(movie.id)}
+                onToggleFavorite={toggle}
+                inWatchlist={isInWatchlist(movie.id)}
+                onToggleWatchlist={toggleWatchlist}
+              />
+            ))}
+          </div>
+        )
+      }}
+    </QueryBoundary>
   )
 }
 
@@ -68,12 +74,7 @@ export const Favorites = () => {
             />
           </div>
         ) : (
-          <AsyncBoundary
-            fallback={<FavoritesSkeletonGrid />}
-            onRetry={() => getMoviesByIds.invalidate(ids)}
-          >
-            <FavoritesGrid />
-          </AsyncBoundary>
+          <FavoritesGrid />
         )}
       </main>
     </div>

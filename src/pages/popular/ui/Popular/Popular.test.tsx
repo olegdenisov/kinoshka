@@ -6,8 +6,8 @@ import { server } from '../../../../test/setup'
 import { Popular } from './Popular'
 
 // Реальные MSW-хендлеры на /v1.5/list/:slug (не мок модуля) — тот же подход, что и
-// HomeDesktop.test.tsx для PopularMoviesRail: usePopularMovies()/invalidatePopularMovies() делят
-// один и тот же реальный createCachedFetcher-кэш, так что клик Retry по-настоящему инвалидирует
+// HomeDesktop.test.tsx для PopularMoviesRail: usePopularMovies() и Retry (refetch) делят
+// один и тот же query-стор, так что клик Retry по-настоящему перезапрашивает
 // и бьёт в сеть заново, а не просто перерисовывает закэшированный rejected-промис.
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
 
@@ -167,7 +167,7 @@ describe('Popular — пустой список', () => {
 })
 
 describe('Popular — полный отказ загрузки', () => {
-  it('показывает error-фолбэк AsyncBoundary с Retry, а Retry реально бьёт в сеть заново', async () => {
+  it('показывает error-фолбэк QueryBoundary с Retry, а Retry реально бьёт в сеть заново', async () => {
     let requests = 0
     server.use(
       http.get(LIST_ENDPOINT, () => {

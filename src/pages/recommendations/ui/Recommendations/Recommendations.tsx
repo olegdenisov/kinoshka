@@ -1,12 +1,9 @@
 import { Card } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { useWatchlist } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { EmptyState, QueryBoundary, Skeleton } from '@shared/ui'
 
-import {
-  invalidateRecommendations,
-  useRecommendedMovies,
-} from '../../model/useRecommendedMovies'
+import { useRecommendedMovies } from '../../model/useRecommendedMovies'
 
 import s from './Recommendations.module.css'
 
@@ -22,48 +19,54 @@ const RecommendationsSkeletonGrid = () => (
 
 // Без isFavorite/onToggleFavorite — намеренно (см. Technical Details плана
 // docs/plans/20260825-recommendations-rule-based.md): передача toggle сюда меняла бы
-// `ids` в useFavorites() при каждом клике по сердечку → новый кэш-ключ getMoviesByIds(ids)
-// → весь грид уходит в Suspense заново → новый computeRecommendationQuery → новый запрос
-// getMoviesPage — полный skeleton-flash и пересчёт подборки на каждый клик.
-// Watchlist сюда подключён спокойно: подборка от него не зависит, кэш-ключ не меняется.
+// `ids` в useFavorites() при каждом клике по сердечку → новый ключ стора рекомендаций →
+// весь грид уходит в скелетон заново → новый запрос подборки — полный skeleton-flash
+// и пересчёт на каждый клик.
+// Watchlist сюда подключён спокойно: подборка от него не зависит, ключ не меняется.
 const RecommendationsGrid = () => {
-  const movies = useRecommendedMovies()
+  const query = useRecommendedMovies()
   const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
-  if (movies === null) {
-    return (
-      <div className={s.stateWrap}>
-        <EmptyState
-          title="Couldn't load your favorites"
-          description='Something went wrong loading your favorited movies. Try again later.'
-        />
-      </div>
-    )
-  }
-
-  if (movies.length === 0) {
-    return (
-      <div className={s.stateWrap}>
-        <EmptyState
-          title='Nothing to recommend yet'
-          description='Add a few more favorites to help us find matches'
-        />
-      </div>
-    )
-  }
-
   return (
-    <div className={s.grid}>
-      {movies.map(movie => (
-        <Card
-          key={movie.id}
-          movie={movie}
-          variant='grid'
-          inWatchlist={isInWatchlist(movie.id)}
-          onToggleWatchlist={toggleWatchlist}
-        />
-      ))}
-    </div>
+    <QueryBoundary query={query} fallback={<RecommendationsSkeletonGrid />}>
+      {movies => {
+        if (movies === null) {
+          return (
+            <div className={s.stateWrap}>
+              <EmptyState
+                title="Couldn't load your favorites"
+                description='Something went wrong loading your favorited movies. Try again later.'
+              />
+            </div>
+          )
+        }
+
+        if (movies.length === 0) {
+          return (
+            <div className={s.stateWrap}>
+              <EmptyState
+                title='Nothing to recommend yet'
+                description='Add a few more favorites to help us find matches'
+              />
+            </div>
+          )
+        }
+
+        return (
+          <div className={s.grid}>
+            {movies.map(movie => (
+              <Card
+                key={movie.id}
+                movie={movie}
+                variant='grid'
+                inWatchlist={isInWatchlist(movie.id)}
+                onToggleWatchlist={toggleWatchlist}
+              />
+            ))}
+          </div>
+        )
+      }}
+    </QueryBoundary>
   )
 }
 
@@ -87,12 +90,7 @@ export const Recommendations = () => {
             />
           </div>
         ) : (
-          <AsyncBoundary
-            fallback={<RecommendationsSkeletonGrid />}
-            onRetry={() => invalidateRecommendations(ids)}
-          >
-            <RecommendationsGrid />
-          </AsyncBoundary>
+          <RecommendationsGrid />
         )}
       </main>
     </div>

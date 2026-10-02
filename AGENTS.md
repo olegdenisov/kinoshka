@@ -10,7 +10,7 @@ This file holds only repo-wide conventions. Area-specific decisions and gotchas 
 
 | Doc                 | Topic                                                                     |
 | ------------------- | ------------------------------------------------------------------------- |
-| `data-layer.md`     | fetch caching, `AsyncBoundary`/Retry, endpoint quirks, id-list fetching   |
+| `data-layer.md`     | query stores, `QueryBoundary`/Retry, endpoint quirks, id-list fetching    |
 | `search-catalog.md` | `/search` URL state, text-vs-filter modes, genres                         |
 | `storage.md`        | `createStorageSlot` semantics and failure handling                        |
 | `user-lists.md`     | Watched/Watchlist: independence, relation to Favorites                    |
@@ -62,6 +62,7 @@ React 19 + TypeScript 7 + Vite 8 (Rolldown) single-page app.
 - **TypeScript strictness:** `noUnusedLocals`, `noUnusedParameters`, `erasableSyntaxOnly` (no `enum`, `namespace`, parameter properties).
 - **TypeScript style:** `type`, not `interface` — enforced by oxlint `typescript/consistent-type-definitions`. Single exception: `interface Window` in `src/vite-env.d.ts` (global declaration merging only works through `interface`), marked with `oxlint-disable-next-line`.
 - **Fonts:** Instrument Serif (`--font-serif`), Instrument Sans (`--font-display`/`--font-body`), JetBrains Mono (`--font-mono`), loaded in `index.html` (async-load details → `csp.md`). Don't add new font imports.
+- **State is Zustand.** Client state: one small store per feature via `createPersistedStore` (`@shared/lib/store`, persists over `createStorageSlot`); server state: one `createQueryStore` per request. Stores are module-level singletons registered in `src/shared/lib/store/registry.ts` (`registerStoreReset`/`resetAllStores`).
 - **Path aliases** map to FSD layers (`vite.config.ts` + `tsconfig.app.json`): `@app`, `@pages`, `@widgets`, `@features`, `@entities`, `@shared`. Use them for all cross-layer imports.
 
 ## Project structure
@@ -155,13 +156,14 @@ Formatters over API numbers/dates (`formatCurrency()`/`formatDate()`, `@entities
 
 ## Data (summary)
 
-Async data is read with Suspense `use()` inside `AsyncBoundary`; client state lives in `localStorage` via `createStorageSlot`. Details → `data-layer.md`, `storage.md`. Check for an existing live-data hook before reaching for mock data.
+Async data is read with `useQuery` hooks of `createQueryStore` query stores inside `QueryBoundary`; client state lives in Zustand stores persisted to `localStorage` via `createPersistedStore` over `createStorageSlot`. Details → `data-layer.md`, `storage.md`. Check for an existing live-data hook before reaching for mock data.
 
 Repo-wide gotchas worth knowing everywhere:
 
-- **`useDeferredValue` over `useSearchParams()`-derived values is a silent no-op** — `setSearchParams` runs inside `startTransition`, so the deferred and live values change in the same commit. Mirror the value into `useState` from a `useEffect` first (see `useCatalogUpdateStatus.ts`).
-- **`createStorageSlot().set()` returns `boolean`** (`false` on quota/private-mode failure) instead of throwing — gate side effects (analytics, "saved" UI) on it.
+- **`createStorageSlot().set()` returns `boolean`** (`false` on quota/private-mode failure) instead of throwing; persisted stores expose it as the `commit()` result — gate side effects (analytics, "saved" UI) on it.
 
 ## Testing
 
 Vitest config is inline in `vite.config.ts` (`jsdom`, `globals: true`, `e2e/**` excluded via `configDefaults.exclude`). API calls are mocked with **MSW** (`src/test/setup.ts`, `onUnhandledRequest: 'error'`). **Zod** validates only the `localStorage`/`sessionStorage` boundary — API responses are trusted against the generated types. Pure logic is extracted from config files (`sentry.config.ts`, `bundle.config.ts`, `sentry-telemetry.config.ts`) specifically to be unit-tested — follow that precedent instead of testing `vite.config.ts` directly.
+
+Stores are singletons: `src/test/setup.ts` calls `resetAllStores()` after each test, so a new store must be created through the factories (they register their reset). Seed persisted state with `seedStorage` (`src/test/seedStorage.ts`), not raw `localStorage.setItem`.

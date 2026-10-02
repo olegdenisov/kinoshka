@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 
+import { seedStorage } from '../../../test/seedStorage'
 import { useWatchlist } from './useWatchlist'
 import { watchlistSlot } from './watchlistStorage'
 
@@ -68,7 +69,7 @@ describe('useWatchlist', () => {
   })
 
   it('невалидное значение в storage → []', () => {
-    localStorage.setItem('kinoshka:watchlist', JSON.stringify(['a', 'b']))
+    seedStorage('kinoshka:watchlist', JSON.stringify(['a', 'b']))
 
     const { result } = renderHook(() => useWatchlist())
 
