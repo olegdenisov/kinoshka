@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
+import { seedStorage } from '../../../../test/seedStorage'
 import { server } from '../../../../test/setup'
 import { Recommendations } from './Recommendations'
 
@@ -14,7 +15,7 @@ const MOVIE_ENDPOINT = (id: number) => `*/v1.5/movie/${id}`
 const CATALOG_ENDPOINT = '*/v1.5/movie'
 
 const setFavorites = (ids: number[]) =>
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids))
+  seedStorage(FAVORITES_KEY, JSON.stringify(ids))
 
 const favoriteDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,

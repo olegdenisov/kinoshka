@@ -8,6 +8,12 @@ export type { StorageErrorContext, StorageErrorReporter } from './storage'
 export { createSessionCache } from './sessionCache'
 export { createCachedFetcher, resetAllCachedFetchers } from './cachedFetcher'
 export type { CachedFetcher } from './cachedFetcher'
+export {
+  createPersistedStore,
+  registerStoreReset,
+  resetAllStores,
+} from './store'
+export type { Commit, PersistedStore } from './store'
 export { useDebouncedValue } from './debounce'
 export { useInView } from './inView'
 export { lazyNamed } from './lazyNamed'

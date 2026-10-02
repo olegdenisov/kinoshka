@@ -1,6 +1,7 @@
 import type * as SharedLib from '@shared/lib'
 import { act, renderHook } from '@testing-library/react'
 
+import { seedStorage } from '../../../test/seedStorage'
 import { useFavorites } from './useFavorites'
 
 // Мокаем только trackEvent, остальные реальные экспорты @shared/lib (useStorageSlot и т.д.)
@@ -132,7 +133,7 @@ describe('useFavorites — успешные сценарии', () => {
 
 describe('useFavorites — edge cases', () => {
   it('невалидный JSON в localStorage — ids начинается с [] (fallback, не падает)', () => {
-    localStorage.setItem('kinoshka:favorites', 'not-json')
+    seedStorage('kinoshka:favorites', 'not-json')
 
     const { result } = renderHook(() => useFavorites())
 
@@ -140,7 +141,7 @@ describe('useFavorites — edge cases', () => {
   })
 
   it('несовпадение zod-схемы в localStorage — ids начинается с [] (fallback)', () => {
-    localStorage.setItem('kinoshka:favorites', JSON.stringify(['a', 'b']))
+    seedStorage('kinoshka:favorites', JSON.stringify(['a', 'b']))
 
     const { result } = renderHook(() => useFavorites())
 

@@ -3,7 +3,7 @@ import {
   resetCountryDictionaryState,
   resetGenreDictionaryState,
 } from '@entities/movie'
-import { resetAllCachedFetchers } from '@shared/lib'
+import { resetAllCachedFetchers, resetAllStores } from '@shared/lib'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
@@ -144,5 +144,8 @@ afterEach(() => {
   localStorage.clear()
   resetGenreDictionaryState()
   resetCountryDictionaryState()
+  // Сторы Zustand — module-level синглтоны: после очистки localStorage каждый
+  // перечитывает хранилище (см. src/shared/lib/store/registry.ts)
+  resetAllStores()
 })
 afterAll(() => server.close())

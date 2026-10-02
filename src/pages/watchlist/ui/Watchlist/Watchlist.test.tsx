@@ -3,12 +3,13 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
+import { seedStorage } from '../../../../test/seedStorage'
 import { server } from '../../../../test/setup'
 import { Watchlist } from './Watchlist'
 
 const WATCHLIST_KEY = 'kinoshka:watchlist'
 const setWatchlist = (ids: number[]) =>
-  localStorage.setItem(WATCHLIST_KEY, JSON.stringify(ids))
+  seedStorage(WATCHLIST_KEY, JSON.stringify(ids))
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -114,7 +115,7 @@ describe('Watchlist — непустой список', () => {
 
 describe('Watchlist — независимость от Watched', () => {
   it('тайтл, одновременно лежащий в watched и watchlist, отображается на странице', async () => {
-    localStorage.setItem('kinoshka:watched', JSON.stringify([1]))
+    seedStorage('kinoshka:watched', JSON.stringify([1]))
     setWatchlist([1])
     mockMovie(1, { name: 'Both Lists' })
 

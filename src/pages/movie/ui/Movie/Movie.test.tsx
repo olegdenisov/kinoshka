@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
+import { seedStorage } from '../../../../test/seedStorage'
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
 import { Movie } from './Movie'
 
@@ -125,7 +126,7 @@ describe('Movie — Watched', () => {
   })
 
   it('предустановленный id в storage → нажата с первого рендера', () => {
-    localStorage.setItem('kinoshka:watched', JSON.stringify([MOVIE.id]))
+    seedStorage('kinoshka:watched', JSON.stringify([MOVIE.id]))
     renderMovie()
 
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
@@ -233,7 +234,7 @@ describe('Movie — Watchlist', () => {
   })
 
   it('просмотренный тайтл можно добавить в watchlist', async () => {
-    localStorage.setItem('kinoshka:watched', JSON.stringify([MOVIE.id]))
+    seedStorage('kinoshka:watched', JSON.stringify([MOVIE.id]))
     const user = userEvent.setup()
     renderMovie()
 

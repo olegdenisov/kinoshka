@@ -3,12 +3,13 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
+import { seedStorage } from '../../../../test/seedStorage'
 import { server } from '../../../../test/setup'
 import { Watched } from './Watched'
 
 const WATCHED_KEY = 'kinoshka:watched'
 const setWatched = (ids: number[]) =>
-  localStorage.setItem(WATCHED_KEY, JSON.stringify(ids))
+  seedStorage(WATCHED_KEY, JSON.stringify(ids))
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,

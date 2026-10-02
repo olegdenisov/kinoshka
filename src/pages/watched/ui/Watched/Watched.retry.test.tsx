@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { vi } from 'vitest'
 
+import { seedStorage } from '../../../../test/seedStorage'
 import { Watched } from './Watched'
 
 // Мокаем весь `getMoviesByIds` (а не MSW-эндпоинт) для точного контроля тайминга —
@@ -77,7 +78,7 @@ beforeEach(() => {
 
 describe('Watched — Retry реально переинвалидирует кэш и повторяет запрос', () => {
   it('клик Retry вызывает invalidate и повторно запрашивает данные', async () => {
-    localStorage.setItem(WATCHED_KEY, JSON.stringify([1]))
+    seedStorage(WATCHED_KEY, JSON.stringify([1]))
 
     await act(async () => {
       render(

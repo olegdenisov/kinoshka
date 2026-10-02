@@ -66,14 +66,14 @@
 
 **Раскладка по FSD**
 
-| Что                                                     | Где                                                                  | Почему                                                                                                     |
-| ------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `createPersistedStore`, `createQueryStore`, реестр сторов | `src/shared/lib/store/`                                              | инфраструктура без доменных типов: дженерики по форме стейта/параметров/данных                             |
-| `QueryBoundary`                                         | `src/shared/ui/QueryBoundary/`                                       | принимает результат запроса структурным типом, не импортирует ни zustand, ни сущности                      |
-| сторы клиентского стейта                                | `src/features/<feature>/model/<feature>Store.ts`                     | доменная логика остаётся в фиче                                                                            |
-| query-сторы фильмов/персон                              | `src/entities/{movie,person}/api/*`                                  | экземпляр стора создаётся в слайсе-владельце; `shared` доменных данных не хранит                           |
-| query-стор рекомендаций                                 | `src/pages/recommendations/model/`                                   | комбинирует `@features/favorites` + `@features/recommendations` + `@entities/movie` — легально только в page-слое |
-| `useSearchUiStore`                                      | `src/pages/search/model/`                                            | стейт одной страницы, наружу не экспортируется                                                             |
+| Что                                                       | Где                                              | Почему                                                                                                            |
+| --------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `createPersistedStore`, `createQueryStore`, реестр сторов | `src/shared/lib/store/`                          | инфраструктура без доменных типов: дженерики по форме стейта/параметров/данных                                    |
+| `QueryBoundary`                                           | `src/shared/ui/QueryBoundary/`                   | принимает результат запроса структурным типом, не импортирует ни zustand, ни сущности                             |
+| сторы клиентского стейта                                  | `src/features/<feature>/model/<feature>Store.ts` | доменная логика остаётся в фиче                                                                                   |
+| query-сторы фильмов/персон                                | `src/entities/{movie,person}/api/*`              | экземпляр стора создаётся в слайсе-владельце; `shared` доменных данных не хранит                                  |
+| query-стор рекомендаций                                   | `src/pages/recommendations/model/`               | комбинирует `@features/favorites` + `@features/recommendations` + `@entities/movie` — легально только в page-слое |
+| `useSearchUiStore`                                        | `src/pages/search/model/`                        | стейт одной страницы, наружу не экспортируется                                                                    |
 
 Провайдер не нужен: сторы Zustand — module-level, `src/app/providers.tsx` не меняется (пункт для сравнения с `rtk`).
 
@@ -108,11 +108,11 @@
 ```ts
 // src/shared/lib/store/createPersistedStore.ts
 createPersistedStore<TState, TPersisted>({
-  name,        // имя для devtools
-  slot,        // StorageSlot<TPersisted> — существующий createStorageSlot
-  select,      // (state) => TPersisted — что пишем (partialize)
-  merge,       // (persisted, state) => TState — как кладём прочитанное в стейт
-  creator,     // (set, get) => TState
+  name, // имя для devtools
+  slot, // StorageSlot<TPersisted> — существующий createStorageSlot
+  select, // (state) => TPersisted — что пишем (partialize)
+  merge, // (persisted, state) => TState — как кладём прочитанное в стейт
+  creator, // (set, get) => TState
 })
 // → UseBoundStore с .persist; дополнительно commit-хелпер: применить апдейт и вернуть boolean
 //   (false → стор уже возвращён к содержимому хранилища)
@@ -120,8 +120,8 @@ createPersistedStore<TState, TPersisted>({
 // src/shared/lib/store/createQueryStore.ts
 type QueryResult<TData> = {
   data: TData | undefined
-  isLoading: boolean   // нет данных и идёт первый запрос
-  isFetching: boolean  // идёт любой запрос, включая фоновый
+  isLoading: boolean // нет данных и идёт первый запрос
+  isFetching: boolean // идёт любой запрос, включая фоновый
   isError: boolean
   error: unknown
   refetch: () => void
@@ -129,8 +129,8 @@ type QueryResult<TData> = {
 
 createQueryStore<TParams, TData>({
   name,
-  fetcher,                       // (params) => Promise<TData>
-  getKey = JSON.stringify,       // стабильная сериализация параметров
+  fetcher, // (params) => Promise<TData>
+  getKey = JSON.stringify, // стабильная сериализация параметров
   ttlMs = 5 * 60_000,
   errorCooldownMs = 20_000,
 })
@@ -142,8 +142,8 @@ createQueryStore<TParams, TData>({
 //   }
 
 // src/shared/lib/store/registry.ts
-registerStoreReset(fn)   // вызывают обе фабрики
-resetAllStores()         // только для src/test/setup.ts
+registerStoreReset(fn) // вызывают обе фабрики
+resetAllStores() // только для src/test/setup.ts
 ```
 
 - Семантика `fetch()` и кулдауна: `useQuery` при закешированной ошибке моложе 20 с запрос не запускает; `fetch()` и `refetch()` запускают всегда, кроме случаев «есть свежие данные» и «запрос уже в полёте».
@@ -164,20 +164,7 @@ resetAllStores()         // только для src/test/setup.ts
 
 ### Task 1: Ветка `zustand`, запрет слияния в `main`, CI на PR в ветку
 
-**Model:** sonnet — правка CI описана точно, но сломанный guard не уронит ни одну проверку: нужна аккуратная сверка
-
-**Files:**
-
-- Modify (в `main`, отдельным PR из `ci/block-zustand-merge`): `.github/workflows/ci.yml`
-- Modify (в ветке `zustand`): `.github/workflows/ci.yml`, `.github/workflows/codeql.yml`
-
-- [ ] создать ветку `zustand` от `main`, закоммитить в неё этот план, запушить в `origin` — отметки `[x]` дальше коммитятся сюда
-- [ ] в ветке `zustand`: `on.pull_request.branches: [main, zustand]` в `ci.yml` и `codeql.yml` — как сделано в `rtk` (`git show rtk:.github/workflows/ci.yml`), чтобы PR в `zustand` проходили CI
-- [ ] в ветке `zustand` job `branch-guard` не удалять и не менять: workflow для `pull_request` берётся из merge-ref, guard приезжает из `main`
-- [ ] параллельно, в ветке `ci/block-zustand-merge` от `main`: в job `branch-guard` заменить `BLOCKED_BRANCHES: rtk` на `BLOCKED_BRANCHES: rtk zustand`, обновить комментарий над job'ом (обе ветки); PR в `main`. Файл плана в эту ветку не попадает — иначе он уедет в `main`
-- [ ] ⚠️ слияние guard-PR в защищённый `main` делает человек; Task 2+ его не ждут, ждёт только следующий пункт
-- [ ] проверка guard'а (после слияния guard-PR): открыть draft-PR `zustand → main`, убедиться, что `branch-guard` красный и merge заблокирован, PR закрыть без слияния. Квоту API это не тратит: e2e и Lighthouse запускаются только по лейблу
-- [ ] тестов кода нет (меняется только CI-конфиг); `make lint && make format-check` — зелёные
+⚠️ Вынесена в бэклог: `docs/backlog/zustand-ci-branch-guard.md` (правка CI и push заблокированы классификатором при автозапуске; Task 2–19 от неё не зависят). Ветка `zustand` создана локально, план в ней закоммичен, в `origin` не запушена.
 
 ### Task 2: Zustand и инфраструктура persist (`createPersistedStore`)
 
@@ -192,18 +179,27 @@ resetAllStores()         // только для src/test/setup.ts
 - Modify: `src/shared/lib/index.ts`, `src/test/setup.ts`
 - Modify: все тестовые файлы с прямым `localStorage.setItem(` для ключей `kinoshka:*` (список — `grep -rln "localStorage.setItem" src`, на момент планирования 22 файла: тесты `Header`, `MobileHeader`, `MovieRail`, `Movie`, `Profile`, страниц списков и рекомендаций, хуков фич и др.)
 
-- [ ] `pnpm add zustand`
-- [ ] `registry.ts`: `registerStoreReset` / `resetAllStores`; `setup.ts` вызывает `resetAllStores()` в `afterEach` после `localStorage.clear()`
-- [ ] `seedStorage(key, value)`: `localStorage.setItem` + `window.dispatchEvent(new StorageEvent('storage', { key }))` — сид доходит до уже созданного стора тем же путём, что запись из другой вкладки. Перевести на него все прямые сиды в тестах одним проходом; пока сторов нет, хелпер безвреден (тесты остаются зелёными на `useStorageSlot`)
-- [ ] адаптер `PersistStorage` поверх `StorageSlot`: `getItem` отдаёт `slot.get()` в форме, которую ждёт `persist`, `setItem` пишет через `slot.set()` только значение, запоминает результат и держит флаг собственной записи, `removeItem` — `slot.remove()`
-- [ ] `createPersistedStore`: `persist` + (в DEV) `devtools`, синхронная гидрация, регистрация в реестре; `merge` — обязательный параметр (дефолтный spread-merge `persist` для `number[]` и строки даст мусор)
-- [ ] откат при `slot.set() === false`: стор возвращается к содержимому хранилища через `persist.rehydrate()`; если `rehydrate()` пишет значение обратно в storage — откат через `setState` в обход обёртки `persist`
-- [ ] commit-хелпер, возвращающий `boolean` успеха записи
-- [ ] подписка `slot.subscribe` → обновление стора из хранилища; собственные уведомления пропускаются по флагу адаптера
-- [ ] сверить по исходникам установленной версии `zustand` (не полагаться на память): синхронный `getItem` даёт гидрацию до возврата из `create`; какую форму и `version` ждёт `persist` от `getItem` (несовпадение `version` без `migrate` отбрасывает стейт); пишет ли `rehydrate()` обратно в storage; порядок композиции `devtools`/`persist`. Расхождения записать в план с ⚠️
-- [ ] проверить по `sentry.md`: стор читает слот один раз при импорте, до `initSentry()` и `setStorageErrorReporter` — сбой чтения может не дойти до Sentry. Если это регресс относительно `main`, зафиксировать в «Сознательно теряем» или перечитывать слот после подключения репортера
-- [ ] тесты: начальное значение из `localStorage`; запись в прежнем формате (голый JSON, без envelope); невалидный JSON/несовпадение схемы → fallback; неудачная запись → итоговый стейт прежний, `boolean === false`, повторной записи нет; `storage`-событие из другой вкладки обновляет стор; запись массива в своей вкладке даёт подписчикам ровно одно уведомление; `resetAllStores` перечитывает хранилище; `seedStorage` обновляет уже созданный стор; в тестовом окружении `devtools` не сыплет предупреждениями
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `pnpm add zustand`
+- [x] `registry.ts`: `registerStoreReset` / `resetAllStores`; `setup.ts` вызывает `resetAllStores()` в `afterEach` после `localStorage.clear()`
+- [x] `seedStorage(key, value)`: `localStorage.setItem` + `window.dispatchEvent(new StorageEvent('storage', { key }))` — сид доходит до уже созданного стора тем же путём, что запись из другой вкладки. Перевести на него все прямые сиды в тестах одним проходом; пока сторов нет, хелпер безвреден (тесты остаются зелёными на `useStorageSlot`)
+- [x] адаптер `PersistStorage` поверх `StorageSlot`: `getItem` отдаёт `slot.get()` в форме, которую ждёт `persist`, `setItem` пишет через `slot.set()` только значение, запоминает результат и держит флаг собственной записи, `removeItem` — `slot.remove()`
+- [x] `createPersistedStore`: `persist` + (в DEV) `devtools`, синхронная гидрация, регистрация в реестре; `merge` — обязательный параметр (дефолтный spread-merge `persist` для `number[]` и строки даст мусор)
+- [x] откат при `slot.set() === false`: стор возвращается к содержимому хранилища через `persist.rehydrate()`; если `rehydrate()` пишет значение обратно в storage — откат через `setState` в обход обёртки `persist`
+- [x] commit-хелпер, возвращающий `boolean` успеха записи
+- [x] подписка `slot.subscribe` → обновление стора из хранилища; собственные уведомления пропускаются по флагу адаптера
+- [x] сверить по исходникам установленной версии `zustand` (не полагаться на память): синхронный `getItem` даёт гидрацию до возврата из `create`; какую форму и `version` ждёт `persist` от `getItem` (несовпадение `version` без `migrate` отбрасывает стейт); пишет ли `rehydrate()` обратно в storage; порядок композиции `devtools`/`persist`. Расхождения записать в план с ⚠️
+- [x] проверить по `sentry.md`: стор читает слот один раз при импорте, до `initSentry()` и `setStorageErrorReporter` — сбой чтения может не дойти до Sentry. Если это регресс относительно `main`, зафиксировать в «Сознательно теряем» или перечитывать слот после подключения репортера
+- [x] тесты: начальное значение из `localStorage`; запись в прежнем формате (голый JSON, без envelope); невалидный JSON/несовпадение схемы → fallback; неудачная запись → итоговый стейт прежний, `boolean === false`, повторной записи нет; `storage`-событие из другой вкладки обновляет стор; запись массива в своей вкладке даёт подписчикам ровно одно уведомление; `resetAllStores` перечитывает хранилище; `seedStorage` обновляет уже созданный стор; в тестовом окружении `devtools` не сыплет предупреждениями
+- [x] `make test && make typecheck && make lint` — зелёные
+
+Сверка с исходниками `zustand` 5.0.15 (результат пункта выше):
+
+- синхронный `getItem` → гидрация до возврата из `create` (`toThenable` выполняет цепочку синхронно) — подтверждено
+- `persist` ждёт от `getItem` `{ state, version? }`; числовая `version`, не равная `options.version` (по умолчанию `0`), без `migrate` → `console.error` и прочитанное отбрасывается (`merge` получает `undefined`). Адаптер отдаёт `version: 0`
+- ⚠️ `rehydrate()` кладёт прочитанное исходным `set`, минуя обёртку `persist`, — обратно в хранилище **не пишет** (кроме случая с `migrate`). Откат через `setState` в обход обёртки не понадобился
+- порядок композиции — `devtools(persist(...))`; без расширения Redux DevTools `devtools` возвращает инициализатор без изменений и без предупреждений
+- `persist` возвращает из своего `set` результат `storage.setItem`, но commit-хелпер опирается на флаг адаптера — не зависит от типизации этого возврата
+- Sentry: регресса нет — `sentry-bootstrap` первый импорт `main.tsx`, сторы фич создаются при импорте их модулей уже после `initSentry()`; к тому же репорт сбоя `get()` отложен на микротаску
 
 ### Task 3: Стор темы
 
