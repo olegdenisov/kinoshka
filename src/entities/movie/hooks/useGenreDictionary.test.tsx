@@ -1,10 +1,11 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { seedStorage } from '../../../test/seedStorage'
 import { server } from '../../../test/setup'
 import {
-  genreDictionarySlot,
   GENRE_DICTIONARY_TTL_MS,
+  useGenreDictionaryStore,
 } from '../api/genreDictionaryCache'
 import { STATIC_FALLBACK_GENRES } from '../model/genre'
 import { useGenreDictionary } from './useGenreDictionary'
@@ -66,12 +67,12 @@ describe('useGenreDictionary — пустой кэш', () => {
     expect(result.current).toEqual(STATIC_FALLBACK_GENRES)
 
     // Дожидаемся, чтобы фоновый фетч, запущенный этим тестом, полностью осел (in-flight
-    // промис settled, слот записан) до конца теста — иначе он может дописать в
+    // промис settled, стор записан) до конца теста — иначе он может дописать в
     // localStorage/module-state уже после того, как следующий тест начнёт выполняться
     // (см. глобальный afterEach в src/test/setup.ts, который чистит и то, и другое, но
     // только МЕЖДУ тестами).
     await waitFor(() => {
-      expect(genreDictionarySlot.get().items).toEqual(['драма'])
+      expect(useGenreDictionaryStore.getState().items).toEqual(['драма'])
     })
   })
 
@@ -88,7 +89,10 @@ describe('useGenreDictionary — пустой кэш', () => {
 describe('useGenreDictionary — свежий кэш', () => {
   it('рендерится сразу из кэша, фонового запроса не происходит', async () => {
     const calls = mockSuccess(['триллер'])
-    genreDictionarySlot.set({ items: ['триллер'], fetchedAt: now })
+    seedStorage(
+      'kinoshka:genres',
+      JSON.stringify({ items: ['триллер'], fetchedAt: now }),
+    )
 
     const { result, rerender } = renderHook(() => useGenreDictionary())
 
@@ -105,10 +109,13 @@ describe('useGenreDictionary — свежий кэш', () => {
 describe('useGenreDictionary — устаревший кэш', () => {
   it('рендерится сразу из кэша и происходит ровно один фоновый запрос при повторных ре-рендерах', async () => {
     const calls = mockSuccess(['ужасы', 'фэнтези'])
-    genreDictionarySlot.set({
-      items: ['старый жанр'],
-      fetchedAt: now - GENRE_DICTIONARY_TTL_MS - 1,
-    })
+    seedStorage(
+      'kinoshka:genres',
+      JSON.stringify({
+        items: ['старый жанр'],
+        fetchedAt: now - GENRE_DICTIONARY_TTL_MS - 1,
+      }),
+    )
 
     const { result, rerender } = renderHook(() => useGenreDictionary())
 

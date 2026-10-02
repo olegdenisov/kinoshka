@@ -17,8 +17,6 @@ export {
   DICTIONARY_TTL_MS as GENRE_DICTIONARY_TTL_MS,
 } from './createDictionaryCache'
 
-export const genreDictionarySlot = genreDictionaryCache.slot
+export const useGenreDictionaryStore = genreDictionaryCache.useStore
 export const isGenreDictionaryStale = genreDictionaryCache.isStale
 export const refreshGenreDictionary = genreDictionaryCache.refresh
-export const invalidateGenreDictionary = genreDictionaryCache.invalidate
-export const resetGenreDictionaryState = genreDictionaryCache.resetState

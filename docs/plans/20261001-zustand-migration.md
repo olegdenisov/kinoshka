@@ -422,13 +422,13 @@ resetAllStores() // только для src/test/setup.ts
 - Modify: `src/entities/movie/hooks/{useGenreDictionary,useCountryDictionary}.ts` + тесты
 - Modify: `src/test/setup.ts`
 
-- [ ] `createDictionaryCache` строит стор на `createPersistedStore` поверх прежнего слота (`{ items, fetchedAt }`, прежние ключи — уже сохранённые справочники пользователей читаются)
-- [ ] хуки остаются синхронными: кеш отдаётся сразу, протухание лишь запускает фоновое обновление
-- [ ] кулдаун 60 с, in-flight дедупликация и защита от пустого ответа сохраняются; кулдаун не персистится
-- [ ] `resetGenreDictionaryState`/`resetCountryDictionaryState` в `setup.ts` заменяются общим `resetAllStores()`: in-memory кулдаун, in-flight и счётчик поколений сбрасываются через собственный `registerStoreReset`
-- [ ] `invalidateGenreDictionary` (потребителей вне тестов нет) удалить вместе с тестами на него
-- [ ] тесты: чтение сохранённого кеша, фоновое обновление по TTL, кулдаун после ошибки, пустой ответ не затирает кеш, параллельные потребители дают один запрос
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `createDictionaryCache` строит стор на `createPersistedStore` поверх прежнего слота (`{ items, fetchedAt }`, прежние ключи — уже сохранённые справочники пользователей читаются)
+- [x] хуки остаются синхронными: кеш отдаётся сразу, протухание лишь запускает фоновое обновление
+- [x] кулдаун 60 с, in-flight дедупликация и защита от пустого ответа сохраняются; кулдаун не персистится
+- [x] `resetGenreDictionaryState`/`resetCountryDictionaryState` в `setup.ts` заменяются общим `resetAllStores()`: in-memory кулдаун, in-flight и счётчик поколений сбрасываются через собственный `registerStoreReset`
+- [x] `invalidateGenreDictionary` (потребителей вне тестов нет) удалить вместе с тестами на него
+- [x] тесты: чтение сохранённого кеша, фоновое обновление по TTL, кулдаун после ошибки, пустой ответ не затирает кеш, параллельные потребители дают один запрос
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 16: Удаление старого data-layer
 

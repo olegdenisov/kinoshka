@@ -4,11 +4,16 @@ import { server } from '../../../test/setup'
 import {
   BACKGROUND_RETRY_COOLDOWN_MS,
   GENRE_DICTIONARY_TTL_MS,
-  genreDictionarySlot,
-  invalidateGenreDictionary,
   isGenreDictionaryStale,
   refreshGenreDictionary,
+  useGenreDictionaryStore,
 } from './genreDictionaryCache'
+
+const cached = () => {
+  const { items, fetchedAt } = useGenreDictionaryStore.getState()
+
+  return { items, fetchedAt }
+}
 
 const ENDPOINT = '*/v1.5/dictionary/genres'
 
@@ -88,12 +93,12 @@ describe('refreshGenreDictionary — in-flight дедупликация', () => 
 })
 
 describe('refreshGenreDictionary — успех', () => {
-  it('пишет items и fetchedAt в слот', async () => {
+  it('пишет items и fetchedAt в стор', async () => {
     mockSuccess(['драма', 'боевик'])
 
     await refreshGenreDictionary()
 
-    expect(genreDictionarySlot.get()).toEqual({
+    expect(cached()).toEqual({
       items: ['драма', 'боевик'],
       fetchedAt: now,
     })
@@ -104,13 +109,13 @@ describe('refreshGenreDictionary — ошибка и cooldown', () => {
   it('неудачная попытка не трогает существующий кэш', async () => {
     mockSuccess(['драма'])
     await refreshGenreDictionary()
-    const before = genreDictionarySlot.get()
+    const before = cached()
 
     now += BACKGROUND_RETRY_COOLDOWN_MS + 1
     mockError(500)
     await refreshGenreDictionary()
 
-    expect(genreDictionarySlot.get()).toEqual(before)
+    expect(cached()).toEqual(before)
   })
 
   it('в пределах cooldown после ошибки — повторный вызов не делает сетевой запрос', async () => {
@@ -139,7 +144,7 @@ describe('refreshGenreDictionary — успешный ответ с пустым
     const calls = mockSuccess([])
 
     await refreshGenreDictionary()
-    expect(genreDictionarySlot.get()).toEqual({ items: [], fetchedAt: now })
+    expect(cached()).toEqual({ items: [], fetchedAt: now })
 
     // items.length === 0 сразу после успешного (но пустого) ответа — без фикса lastAttemptAt
     // на этом шаге второй вызов внутри того же тика/окна прошёл бы кулдаун-проверку заново
@@ -147,28 +152,5 @@ describe('refreshGenreDictionary — успешный ответ с пустым
     await refreshGenreDictionary()
 
     expect(calls.count).toBe(1)
-  })
-})
-
-describe('invalidateGenreDictionary', () => {
-  it('чистит слот — get() снова отдаёт fallback', async () => {
-    mockSuccess(['драма'])
-    await refreshGenreDictionary()
-    expect(genreDictionarySlot.get().items).toEqual(['драма'])
-
-    invalidateGenreDictionary()
-
-    expect(genreDictionarySlot.get()).toEqual({ items: [], fetchedAt: 0 })
-  })
-
-  it('сбрасывает cooldown — refresh сразу после invalidate делает сетевой запрос, а не no-op', async () => {
-    const calls = mockError(500)
-    await refreshGenreDictionary()
-    expect(calls.count).toBe(1)
-
-    invalidateGenreDictionary()
-    await refreshGenreDictionary()
-
-    expect(calls.count).toBe(2)
   })
 })
