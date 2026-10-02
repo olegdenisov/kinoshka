@@ -1,673 +1,702 @@
-# Миграция на Reatom v1001 (полный стек): state, async, routing
+# Миграция на Reatom v1001: state, async, URL и роутинг
 
 ## Overview
 
-Ветка `reatom` — сравнительная ветка фазы 3 роадмапа (`plans/roadmap.md`, пункт 3.3). Пункт 3.3
-написан под Reatom v3 (`@reatom/framework`, `@reatom/npm-react`, `reatomAsync`/`reatomResource`);
-этот план реализует его на **Reatom v1001** (`@reatom/core@^1001.3.0` + `@reatom/react@^1001.0.1`)
-и в максимальной глубине — «полный Reatom-стек»:
+Ветка `reatom` — сравнительная ветка фазы 3 роадмапа (`plans/roadmap.md`, пункт 3.3). Пункт написан
+под Reatom v3; план реализует его на **Reatom v1001** (`@reatom/core@1001.3.0`,
+`@reatom/react@1001.0.1`) в объёме «полный стек»:
 
-- **client state** — `createStorageSlot` + `useSyncExternalStore` → атомы с persist;
-- **server state** — `createCachedFetcher` + `use()` + Suspense-`AsyncBoundary` →
-  `computed(async) + withAsyncData`, `action + withAsync + withCache`, loaders роутов;
-- **URL state** — `useSearchParams` → `urlAtom`;
-- **routing** — React Router → `reatomRoute` (layout-роут, loaders, `render`).
+- **client state** — `createStorageSlot` + `useSyncExternalStore` → атомы с нативным persist;
+- **server state** — `createCachedFetcher` + `use()` + Suspense → `computed(async) + withAsyncData`
+  поверх кэшируемых `action + withAsync + withCache`, loaders роутов;
+- **URL state** — `useSearchParams` → `computed` поверх `urlAtom` и actions с одной записью в URL;
+- **routing** — React Router → `reatomRoute` (layout-роут, `render`/`outlet()`, loaders).
 
 Соответствие чекбоксам 3.3 (v3 → v1001):
 
-| 3.3 (v3)                                       | v1001                                                                        |
-| ---------------------------------------------- | ---------------------------------------------------------------------------- |
-| `pnpm add @reatom/framework @reatom/npm-react` | `pnpm add @reatom/core @reatom/react`                                        |
-| Atoms на каждое поле, actions для мутаций      | `atom` / `reatomEnum` + именованные `action`; чтение `a()`, запись `a.set()` |
-| `reatomAsync` / `reatomResource`               | `action().extend(withAsync())` / `computed(async).extend(withAsyncData())`   |
-| Memoized derived atoms                         | `computed`: `favoriteIdSet`, `activeChips`, `recommendationQuery`, `resolvedTheme`, `isUpdating` |
-| README ветки                                   | раздел в `README.md` — Task 18                                               |
+| 3.3 (v3)                                       | v1001 в этом плане                                                                                                         |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm add @reatom/framework @reatom/npm-react` | `pnpm add @reatom/core @reatom/react`, dev: `@reatom/vite`                                                                 |
+| Atoms на каждое поле, actions для мутаций      | `atom` / `reatomSet` / `reatomEnum` для client state; поля URL-состояния — `computed` от `urlAtom`, мутации — actions      |
+| `reatomAsync` / `reatomResource`               | `action().extend(withAsync())` / `computed(async).extend(withAsyncData())`                                                 |
+| Memoized derived atoms                         | `computed`: `resolvedTheme`, `profileInitials`, `filters`, `activeChips`, `catalogParams`, `recommendationQuery`, `genres` |
+| README ветки                                   | раздел в `README.md` — Task 20                                                                                             |
 
-Ветка **никогда не мержится в `main`** (CI-блок `32694a8`), поэтому совместимость формата
-`localStorage` с `main` не требуется.
+Ветка не мержится в `main` (CI-блок), поэтому совместимость формата `localStorage` с `main` не
+требуется: старые «сырые» значения читаются как отсутствующие и дают дефолт.
 
 ## Context (from discovery)
 
-- **Client state (5 слотов):** `src/features/{favorites,watched,watchlist,theme,profile}/model/*Storage.ts`
-  + хуки `use*.ts` поверх `src/shared/lib/storage/{storage,useStorageSlot}.ts`. Репортер ошибок
-  хранилища подключён в `src/app/sentry.ts` (`setStorageErrorReporter`). Тот же `createStorageSlot`
-  используют словари: `src/entities/movie/api/createDictionaryCache.ts`,
-  `src/entities/movie/hooks/{useGenreDictionary,useCountryDictionary}.ts`.
-- **Потребители `useFavorites()`:** `MovieRail`, `RelatedMovies`, `SearchResultsGrid`, страницы
-  `Favorites`, `Popular`, `Recommendations`, `Watched`, `Watchlist`, `Profile`. `Card`
-  (`@entities/movie`) получает `isFavorite` / `onToggleFavorite` пропсами — entities не может
-  импортировать features.
-- **Server state:** `src/shared/lib/cachedFetcher/`, `src/shared/lib/sessionCache/`, fetcher'ы
-  `src/entities/movie/api/get*.ts`, `src/entities/person/api/getPersonDetail.ts`, хуки
-  `src/entities/{movie,person}/hooks/*`, `use*Movies.ts` в `features/{favorites,watched,watchlist}`,
-  `src/pages/recommendations/model/useRecommendedMovies.ts`, `src/shared/ui/AsyncBoundary/`.
-  `getMoviesByIds` уже ходит через `getMovieDetail` — сетка избранного и `/movie/:id` делят один
-  кэш по id.
-- **Rails главной (4 ресурса):** `PersonalRails` → top rated, `TopAnimeRails` → top rated
-  `type: ['anime']`, `TrandingSeriesRail` → new `type: ['tv-series']`, `PopularMoviesRail` → popular.
-  `MovieRail` принимает готовые `items`.
-- **URL state:** `src/features/catalog-filter/model/useFilterState.ts`,
+**Код проекта**
+
+- Client state (5 слотов): `src/features/{favorites,watched,watchlist,theme,profile}/model/*` поверх
+  `src/shared/lib/storage/`. Тот же слот используют словари: `src/entities/movie/api/createDictionaryCache.ts`.
+- Server state: `src/shared/lib/{cachedFetcher,sessionCache}/`, `src/entities/movie/api/get*.ts`,
+  `src/entities/person/api/getPersonDetail.ts`, хуки `src/entities/{movie,person}/hooks/*`,
+  `src/features/*/model/use*Movies.ts`, `src/pages/recommendations/model/useRecommendedMovies.ts`,
+  `src/shared/ui/AsyncBoundary/`.
+- URL state: `src/features/catalog-filter/model/useFilterState.ts`,
   `src/pages/search/model/{useMovieCatalog,usePageSync,useCatalogUpdateStatus,useSearchAnalytics}.ts`,
-  `src/pages/search/ui/Search/Search.tsx`, `src/widgets/header/ui/Header/Header.tsx`,
-  `src/pages/home/ui/HeroSection/HeroSection.tsx`.
-- **Routing:** `src/app/router.tsx`, `src/app/providers.tsx`, `src/app/layouts/AppLayout.tsx`,
-  `src/app/sentry.ts` (`reactRouterBrowserTracingIntegration`), `src/app/sentry-bootstrap.ts`,
-  `src/main.tsx`; `react-router` импортируется в 21 прод-файле (52 с тестами; в тестах 169
-  `MemoryRouter` + 7 `createMemoryRouter` в 31 файле).
-- **Сопутствующее:** inline-скрипт темы в `index.html` (читает `kinoshka:theme` напрямую, дефолт
-  `'system'`; его sha256 зашит в CSP — `vercel.json`, `vercel-headers.test.ts`); 22 тестовых файла
-  сидят `localStorage.setItem` в сыром формате; `src/test/setup.ts` импортирует
-  `resetGenreDictionaryState` / `resetCountryDictionaryState` / `resetAllCachedFetchers`;
-  `size-limit` в `package.json`, `bundle.config.ts`, `knip.jsonc`. e2e-спеки `localStorage`
-  напрямую не читают и не пишут.
-- **Проверенные факты об API** (по `.d.ts` и `index.js` пакетов):
-  - Persist пишет **конверт** `PersistRecord` `{ data, id, timestamp, version, to }`. Опции:
-    `key`, `schema` (Standard Schema), `version`, `migration`, `subscribe` (по умолчанию `true`),
-    `time`, `toSnapshot`, `fromSnapshot`.
-  - ⚠️ `time` по умолчанию — `2 ** 31 - 1` мс (~24,8 дня): запись с истёкшим `to` удаляется при
-    чтении. `Infinity` не подходит — сериализуется в `null`. Handbook (`v1001.reatom.dev/handbook/persist`)
-    заявляет дефолт `Number.MAX_SAFE_INTEGER` («навсегда»), но код и `.d.ts` версии 1001.3.0
-    используют `MAX_SAFE_TIMEOUT` — документация и пакет расходятся, верить коду.
-  - ⚠️ `schema` при невалидных данных **бросает** `TypeError` из чтения атома. Невалидный JSON и
-    значение без конверта безопасно дают дефолт.
-  - ⚠️ Сбой записи в `withLocalStorage` проглатывается внутри (`console.warn`), наружу не выходит;
-    при недоступном `localStorage` значение молча живёт в памяти. Handbook это подтверждает:
-    «If storage.set() throws, atom still updates in memory», ошибка только в консоли.
-  - `withCache({ staleTime (5 мин), length (**5 записей**), swr, paramsToKey, withPersist })`.
-  - `urlAtom`: `.go(path, replace)`, `.set(fn, replace)`, `.catchLinks` (включён по умолчанию;
-    пропускает `target=_blank`, чужой origin, `download`, клики с модификаторами), `.sync` /
-    `.syncFromSource` (интеграция с внешним роутером; эхо от `syncFromSource` обратно в `sync` не
-    уходит), `.routes`.
-  - `reatomRoute({ path, params, search, loader, render, layout })`; `route.render()`,
-    `route.outlet()` (массив), `route.loader.{data,ready,error,retry,status}`.
-  - ⚠️ `is404` при layout-роуте без пути всегда `false` — такой роут матчит любой URL.
-  - `withAsyncData({ status: true })`; `isFirstPending` — поле `status()`. Async-computed без
-    зависимостей не пересчитывается сам. `retry` у action-ресурса требует `cacheParams: true`.
-  - `memo` допустим в рендере `reatomComponent`, но использует только первый переданный колбэк.
-  - `@reatom/react`: `reatomComponent`, `reatomFactoryComponent`, `useAtom`, `useAction`, `useWrap`,
-    `bindField`, `reatomContext`. Тесты: `context.start()`, `context.reset()`, `createMemStorage`, `mock`.
+  `src/widgets/header/ui/Header/Header.tsx`, `src/pages/home/ui/HeroSection/HeroSection.tsx`.
+- Routing: `src/app/{router,providers}.tsx`, `src/app/layouts/AppLayout.tsx`, `src/app/sentry.ts`,
+  `src/main.tsx`; `react-router` импортируют 22 прод-файла и 32 тестовых файла (из 122). Используются
+  `Link`, `NavLink`, `useNavigate`, `useMatch`, `useLocation`, `useParams`, `useSearchParams`,
+  `ScrollRestoration`.
+- Сопутствующее: inline-скрипт темы в `index.html` читает `kinoshka:theme` напрямую, его sha256 зашит
+  в CSP (`csp.md`); 22 тестовых файла сидят `localStorage.setItem` в сыром формате; e2e-спеки
+  `localStorage` напрямую не трогают; `size-limit` (13 записей) и `codeSplitting`-группы в
+  `vite.config.ts`.
+
+**Проверенные факты о Reatom** (по исходникам `reatom/reatom@56c86f2`, опубликованному `dist` и
+экспериментам на `dist` в node + jsdom; ⚠️ — ловушки и расхождения с документацией)
+
+- ⚠️ **React Compiler.** Тело `reatomComponent(() => …)` компилятор не трогает; обычный компонент с
+  прямым вызовом `someAtom()` компилируется в «вычислить один раз и закэшировать» — значение
+  устаревает навсегда; `useAtom` корректен.
+- ⚠️ **Persist TTL.** В `1001.3.0` дефолт `time` — `MAX_SAFE_TIMEOUT` (~24,8 дня), запись с истёкшим
+  `to` удаляется при чтении. Handbook и `main` репозитория говорят `Number.MAX_SAFE_INTEGER`.
+  `Infinity` нельзя — сериализуется в `null`.
+- ⚠️ **Persist `schema`** при невалидных данных бросает `TypeError` из чтения атома. Невалидный JSON
+  и значение без конверта `PersistRecord` дают дефолт. `fromSnapshot` вызывается с одним аргументом.
+- **Сбой записи** внутри `reatomPersist` проглатывается, атом обновляется в памяти; запись в
+  хранилище синхронна внутри `.set()`.
+- `withLocalStorage` при недоступном `localStorage` сам переходит на хранение в памяти; кросс-таб
+  синхронизация — через событие `storage`, пока атом подключён.
+- ⚠️ **`withCache` на `computed` не экономит запрос**: тело выполняется до поиска в кэше, запрос
+  уходит и лишь потом отменяется. На `action` попадание в кэш вызов пропускает, параллельные вызовы
+  делят один запрос. Отклонённый результат не кэшируется; `withAsync` должен стоять раньше
+  `withCache`; `withPersist` навязывает ключ `cacheAtom.name` и свой `fromSnapshot`.
+- ⚠️ **`withSearchParams` не годится для мутаций нескольких параметров**: при записи нескольких
+  атомов в одном тике в URL попадает только первый; реактивный сброс через `withComputed` меняет
+  атом, но не URL; неподписанный атом в URL не пишет. Один `urlAtom.set(fn, true)` с несколькими
+  ключами даёт один `replaceState`.
+- ⚠️ **`withComputed(() => source())`** перезаписывает прямую запись; рабочая форма —
+  `withComputed(state => { ifChanged(source, v => { state = v }); return state })`.
+- **Роутинг**: loader — `computed(async)` с `withAsyncData({ status: true })`; `render` — не
+  React-компонент; `<a href>` перехватывается `urlAtom` (кроме `target=_blank`, чужого origin,
+  `rel=external|nofollow`, `download`, не-левых кликов и кликов с модификаторами);
+  `loader.data()` не очищается при уходе с роута; `RouteChild` расширяется через `declare module`.
+- ⚠️ **Клик по ссылке идёт мимо `urlAtom.sync`**: обработчик сам делает `history.pushState({}, …)`.
+  Программная навигация пишет в `history` через `setTimeout(0)`.
+- ⚠️ **`is404`** при pathless layout-роуте всегда `false`.
+- ⚠️ **`context.reset()`** изолирует состояние, но не снимает слушатели `popstate` и клика,
+  поставленные `urlAtom.init`; их снимает `urlAtom.init.abort()`.
+- **Нет из коробки**: восстановления скролла, интеграции с Sentry. Для HMR роутов есть `@reatom/vite`.
+- **Suspense** в справочнике — только для одноразовой глобальной инициализации.
+- `@reatom/core/test` в npm-пакете не экспортируется.
 
 ## Development Approach
 
-- **testing approach**: Regular (код, затем тесты); существующие тесты — страховочная сетка.
-  Поведенческие тесты (RTL, e2e) должны остаться зелёными с правкой только обвязки. Тесты
-  реализации удаляемых модулей удаляются вместе с модулем и заменяются тестами моделей.
-- завершать каждую задачу полностью, прежде чем начинать следующую; маленькие сфокусированные изменения
-- **CRITICAL: каждая задача обязана включать новые/обновлённые тесты** для своего кода
-- **CRITICAL: `make test` и `make typecheck` зелёные перед переходом к следующей задаче**
+- **testing approach**: Regular (сначала код, затем тесты в той же задаче)
+- завершать каждую задачу полностью, прежде чем переходить к следующей
+- небольшие сфокусированные изменения
+- **CRITICAL: каждая задача обязана включать новые/обновлённые тесты** для изменённого кода:
+  unit-тесты моделей (atoms/actions/computed), успешные и ошибочные сценарии
+- **CRITICAL: все тесты зелёные перед следующей задачей** (`make test`, `make typecheck`, `make lint`)
 - **CRITICAL: обновлять этот файл при изменении объёма работ**
-- React Router и Reatom сосуществуют до Task 12 через временный мост (Task 8) — поэтому сборка и
-  тесты зелёные после каждой задачи, а не только в конце
-- `make size` в CI будет красным между Task 1 и Task 16 (в `vendor` одновременно лежат обе
-  библиотеки) — в Task 1 лимит `vendor` временно поднимается, окончательные лимиты — в Task 16
-- коммит на каждую задачу, conventional commits, scope = FSD-слой
-
-### Конвенции Reatom для этой ветки (обязательны во всех задачах)
-
-- Все атомы / actions / computed **именованы**, имена цепочкой через точку: `'favorites.ids'`,
-  `'favorites.toggle'`. Фабрики — с префиксом `reatom*`.
-- Чтение — вызов без аргументов, запись — `.set(...)`. Не заводить «identity»-actions, которые
-  только прокидывают значение в `atom.set`.
-- Идемпотентное чтение данных — `computed(async () => …).extend(withAsyncData())`; команды и
-  запросы с параметрами — `action(async …).extend(withAsync(), withCache())`. Никаких `effect` +
-  ручной fetch на mount.
-- `await wrap(promise)` на каждой async-границе; не чейнить после `wrap`; внешние колбэки —
-  `wrap(fn)` или `onEvent`. Внутри хуков Reatom (`withCallHook` и т.п.) колбэки **не** оборачивать.
-- Компоненты, читающие атомы, — `reatomComponent(fn, 'Name')`; обработчики событий — `wrap(...)`.
-  Объявление — `const Foo = reatomComponent<FooProps>(({ p }) => …, 'Foo')`, типы пропов — `type`.
-- `memo` в рендере — только когда замыкание не зависит от меняющихся пропов; иначе `key={id}` на
-  компоненте.
-- Suspense — только для lazy-чанков страниц. Данные рендерятся по статусу (`ready`/`error`/`data`).
-- `effect` — только с явным временем жизни (loader роута, init-action, скоуп компонента), не на
-  уровне модуля.
-- Persist — нативный `withLocalStorage`, всегда с двумя опциями: `time: Number.MAX_SAFE_INTEGER` и
-  `schema` с `.catch(fallback)` (причины — решение 9).
-- FSD не меняется: модели живут в `model/` своего слайса, экспорт через `index.ts`; route-атомы —
-  в `app`, нижние слои строят ссылки через `@shared/config` (см. ниже).
-- WHY-комментарии в коде — на русском; правила в `.claude/rules/*.md` и `AGENTS.md` — на английском.
+- комментарии в коде — на русском, только WHY
 
 ## Testing Strategy
 
-- **unit**: обязательны в каждой задаче. Модели тестируются без React — в `context.start(() => …)`
-  с MSW; компоненты — через `renderWithReatom`.
-- **Обвязка тестов меняется в три шага.** Task 1–7: `renderWithReatom(ui)` даёт только фрейм
-  Reatom, существующие `MemoryRouter` в тестах остаются. Task 8: появляется опция `url` — внутри
-  memory-router + мост. Task 11: все тесты переведены на `url`. Task 12: внутренняя реализация
-  `url` меняется на чистый `urlAtom`, сами тесты не трогаются.
-- **e2e (Playwright, живой API, квота 200 запросов/сутки)**: спеки не переписываются. Из-за квоты
-  e2e запускается **два раза за план**: Task 13 и Task 17.
-- **`make size` / `make knip`**: бюджеты пересчитываются один раз в Task 16.
+- **unit**: модели тестируются без React в дефолтном контексте. Атомы, чьё поведение зависит от
+  подключения (persist, URL), в тестах подписаны. Сеть — MSW.
+- **изоляция** (`afterEach`): `cleanup()` → `urlAtom.init.abort()` → `context.reset()` → сброс
+  модульного состояния вне атомов.
+- **компонентные**: Testing Library; URL задаётся и читается хелпером `renderWithRouter` (Task 11).
+- **URL-состояние**: проверяется сам URL, а не только значение атома.
+- **e2e (Playwright)**: спеки правятся только там, где меняется наблюдаемое поведение. Полный
+  прогон — один раз в Task 19 (квота API 200 запросов/сутки).
 
 ## Progress Tracking
 
 - отмечать выполненное `[x]` сразу
 - новые задачи — с префиксом ➕, блокеры — с ⚠️
-- при отклонении от плана — править план
+- при отклонении от плана обновлять план
 
 ## Solution Overview
 
-### Слои и размещение
+**1. Привязка к React — `reatomComponent`.** Компонент, читающий атомы, объявляется как
+`export const Foo = reatomComponent(({ … }: FooProps) => …, 'Foo')`; обработчики — `wrap(...)`.
+Хук-фасады (`useFavorites`, `useTheme`, …) удаляются. `useAtom`/`useAction` — только там, где
+компонент обязан остаться обычным. Прямой вызов атома в обычном компоненте запрещён.
 
-```
-src/shared/config/paths.ts          билдеры путей: paths.movie(id), paths.search(params) …
-src/shared/ui/AsyncState/           статусный рендер loading / error / empty / data
-src/entities/movie/model/           rails-ресурсы, fetchMovieDetail, словари
-src/entities/person/model/          fetchPersonDetail
-src/features/*/model/               атомы client state + actions
-src/features/catalog-filter/model/  фильтры как computed над URL + actions записи
-src/pages/search/model/             catalog-ресурс, синхронизация страницы, аналитика
-src/pages/recommendations/model/    query → ресурс
-src/app/routes.tsx                  layoutRoute + 10 page-роутов (params, loader, render)
-```
+**2. Persist — штатный `withLocalStorage`.** Атом расширяется
+`withLocalStorage(persistOptions(...))`; хелпер `persistOptions` задаёт три вещи, которые нельзя
+оставлять дефолтными: ключ, `time` «навсегда» и валидацию Zod `safeParse` в `fromSnapshot` (а не
+опцию `schema`). Конверт, кэш, кросс-таб синхронизация и переход на память — штатные.
+Осознанный отказ от поведения `main`: сигнала о неудавшейся записи больше нет. Сбой `setItem`
+проглатывается внутри Reatom (`console.warn`), атом обновляется в памяти. Поэтому событие
+`favorite added` больше не зависит от успеха записи, `/profile` не показывает сообщение «не удалось
+сохранить», а отчёт о сбое хранилища в Sentry (`setStorageErrorReporter`) удаляется.
 
-### Ключевые решения
+**3. Данные — по статусу, без Suspense; кэш только на action-запросах.** Запрос к API —
+`action + withAsync + withQueryCache`. Читающий ресурс — `computed(async) + withAsyncData({ status: true })`
+без кэша, вызывает action через `await wrap(fetchX(params))`. Компонент читает `status()` и рисует
+состояние через презентационный `AsyncContent`. Suspense остаётся только для ленивых чанков страниц.
+Данные, зависящие от параметра пути, — в loader роута; остальное — в `computed` слайса-владельца.
+Принятое изменение поведения: 20-секундного кэша ошибок больше нет. Ресурс без зависимостей после
+ошибки не перезапрашивается до `retry()`; loader при повторном заходе на упавший роут шлёт один
+новый запрос.
 
-1. **Route-атомы живут в `app`, нижние слои их не импортируют.** `loader` и `render` задаются
-   только при создании роута, а им нужны entities и страницы. Нижним слоям хватает трёх вещей:
-   ссылки — `<a href={paths.movie(id)}>` (`urlAtom.catchLinks` делает клик SPA-навигацией);
-   императивная навигация — `urlAtom.go(paths.search(...))`; чтение query — `urlAtom()`.
-   Единственность шаблонов путей гарантирует тест в `app`.
-2. **Данные страницы с параметром — loader роута, передаётся странице пропом**
-   (`render: self => <MoviePage detail={self.loader} />`). Loader вызывает кэшируемый action из
-   entities.
-3. **Данные без параметров — глобальные `computed + withAsyncData` в `entities`.** Четыре rail-ресурса
-   главной и `/popular`. Результат живёт всю SPA-сессию; повтор — только `.retry()`.
-4. **Кэш запросов с параметрами — `withCache` на action, с явным `length`.** Дефолтные 5 записей
-   хуже нынешнего неограниченного кэша: деталь фильма — 100, персона — 50, страницы каталога и
-   поиска — 50. `staleTime` — дефолтные 5 минут (как `CACHE_TTL_MS` сейчас). В DEV кэш переживает
-   reload через `withPersist: withSessionStorage` — замена `createSessionCache`.
-5. **Один кэшируемый `fetchMovieDetail` на всё приложение.** Его используют и id-списки (Task 6),
-   и loader `/movie/:id` (Task 14) — как сейчас `getMoviesByIds` и страница делят
-   `getMovieDetail`. Иначе переход из избранного на страницу фильма начал бы стоить запрос.
-6. **Кэш ошибок (20s cooldown) удаляется.** Он существовал из-за нестабильного промиса в `use()`.
-   В статусной модели ошибка лежит в `.error()` до явного `.retry()`.
-7. **`/search`: URL — единственный источник правды, читается единообразно.** `filters`, `query`,
-   `page`, `sort` — `computed` над `urlAtom()` (существующие чистые парсеры и Zod сохраняются);
-   запись — actions поверх `urlAtom.set(fn, true)`. `withSearchParams` не используется: его
-   двусторонняя синхронизация дописывает дефолты в URL (`?page=1`, `?q=`) и конфликтует с
-   computed-чтением фильтров.
-8. **«Старые данные на экране при обновлении» — без `useDeferredValue`.** `withAsyncData` хранит
-   предыдущее `data()`, `AsyncState` с `keepPrevious` его показывает; `isUpdating` — computed.
-9. **Persist — нативный `withLocalStorage`, без своей обёртки** (решение пользователя). Две его
-   ловушки закрываются нативными же опциями в каждой модели: `time: Number.MAX_SAFE_INTEGER`
-   (handbook называет это дефолтом, фактический дефолт пакета — ~25 дней) и `schema` с
-   `.catch(fallback)` (иначе невалидные данные роняют чтение атома). Третья не закрывается: сбой
-   записи наружу не выходит. **Принятые следствия относительно `main`:** сбои хранилища больше не
-   репортятся в Sentry (остаётся `console.warn` от Reatom); `favorite added` отправляется без
-   проверки, что запись сохранилась; `/profile` не показывает пользователю сбой записи.
-10. **Точечные подписки карточек не делаются.** Списки читают `favoriteIdSet()` и передают
-    `isFavorite` в `Card` пропом, как сейчас; лишние рендеры карточек срезает React Compiler.
-    Отдельный connected-виджет карточки — лишний слой ради демонстрации.
-11. **React Compiler остаётся включённым**; способ совместить его с чтением атомов в рендере
-    фиксируется spike'ом в Task 1.
-12. **Chrome-конфиг `AppLayout` остаётся таблицей по `pathname`** (из `urlAtom`), а не выводится из
-    route-атомов — иначе `AppLayout` ↔ `routes.tsx` дают циклический импорт.
-13. **«Не найдено» — свой computed, не `is404`:** ни один page-роут не совпал точно.
-14. **Sentry-трейсинг роутов — вручную:** `browserTracingIntegration({ instrumentNavigation: false,
-    instrumentPageLoad: false })` + `startBrowserTracingPageLoadSpan` /
-    `startBrowserTracingNavigationSpan` с именем-шаблоном (`/movie/:id`) и `source: 'route'`.
+**4. URL-состояние `/search` — чтение через `computed`, запись одним вызовом.** Состояние
+выводится из `urlAtom()` существующими чистыми функциями `lib/searchParams.ts`. Каждая мутация —
+один `urlAtom.set(url => next, true)` в action `updateSearchUrl(mutator)`; сброс страницы и зачистка
+фильтров происходят в том же вызове, не реактивно. `withSearchParams` не используется (см. Context).
 
-### Порядок работ
+**5. Роуты — один файл `src/app/routes.tsx`.** Pathless layout-роут рендерит `AppLayout` с
+`outlet()`, страницы — дочерние роуты с `render`, возвращающим ленивую страницу. Файл лежит в `app`,
+потому что `render` импортирует страницы, а loaders — сущности. Нижние слои ссылаются через
+строители путей `@shared/config` и обычные `<a href>`; программная навигация — `urlAtom.go(...)`.
+Новое поведение: неизвестный путь показывает страницу `NotFound` (сейчас catch-all роута нет).
 
-Сначала то, что не зависит от роутера (client state → async-ресурсы → словари), затем временный
-мост `urlAtom ↔ React Router`, под ним переводится URL-state и тесты, и только потом роутер
-меняется одним шагом. Страницы `/movie/:id` и `/person/:id` остаются на старом fetch-слое до
-Task 14, чтобы не переписывать их дважды.
+**6. Порядок — послойно без моста.** client state → async без зависимости от URL → подготовка
+(хелпер тестов, строители путей, модели URL) → замена роутера одним шагом → скролл, loaders, Sentry,
+бюджеты.
 
 ## Technical Details
 
-**Client state:**
+**Persist (`src/shared/lib/persist/`)**
 
 ```ts
-// src/features/favorites/model/favorites.ts
-export const favoriteIds = atom<number[]>([], 'favorites.ids').extend(
-  withLocalStorage({
-    key: 'kinoshka:favorites',
-    schema: z.array(z.number()).catch([]),
-    time: Number.MAX_SAFE_INTEGER,
+// Number.MAX_SAFE_INTEGER, а не дефолт: в 1001.3.0 дефолт — ~24,8 дня.
+export const PERSIST_FOREVER_MS = Number.MAX_SAFE_INTEGER
+
+export const favoriteIds = reatomSet<number>([], 'favorites.ids').extend(
+  withLocalStorage(
+    persistOptions(
+      'kinoshka:favorites',
+      z.array(z.number()),
+      new Set(),
+      ids => new Set(ids),
+    ),
+  ),
+)
+```
+
+- `persistOptions(key, schema, fallback, fromValid?)` → `{ key, time: PERSIST_FOREVER_MS, fromSnapshot }`;
+  невалидный снапшот даёт `fallback`.
+
+**Модели client state**
+
+| Слайс     | Модель                                                                                                                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| favorites | `favoriteIds` (`reatomSet`), `toggleFavorite` (action: toggle + `trackEvent` при добавлении)                                                                                                |
+| watched   | `watchedIds` (`reatomSet`) — без обёрток, компоненты зовут `watchedIds.toggle(id)`                                                                                                          |
+| watchlist | `watchlistIds` (`reatomSet`) — аналогично                                                                                                                                                   |
+| theme     | `theme` (`reatomEnum`, initState `'system'`), `prefersDark` (`reatomMediaQuery`), `resolvedTheme` (computed), `toggleTheme`, `initThemeSync` (action, создаёт `effect` записи `data-theme`) |
+| profile   | `profileName` (atom), `profileInitials` (computed), `setProfileName` (action: нормализация + запись); очистка — `profileName.set('')`                                                       |
+
+`effect` темы создаётся в action инициализации: модульный `effect` не переживает `context.reset()`.
+
+**Async**
+
+```ts
+// @shared/lib — единая политика кэша под квоту API; только для action
+export const withQueryCache = (options = {}) =>
+  withCache({ swr: false, staleTime: QUERY_STALE_MS, withPersist: devSessionPersist, ...options })
+
+// @entities/movie — запрос с кэшем
+export const fetchMovies = action(async (params: MoviesParams) => { … }, 'movie.fetchList').extend(
+  withAsync(),
+  withQueryCache({ length: 20, ignoreAbort: true }),
+)
+
+// ресурс без кэша поверх кэшируемого запроса
+export const topRatedMovies = computed(
+  async () => await wrap(fetchMovies(TOP_RATED_PARAMS)),
+  'movie.topRated',
+).extend(withAsyncData({ initState: [], status: true }))
+```
+
+- `devSessionPersist` — `withSessionStorage` только при `import.meta.env.MODE === 'development'`.
+- `reatomMoviesByIds(ids, name)` (`@entities/movie`) — фабрика `computed + withAsyncData` поверх
+  `fetchMovieDetail`; частичные отказы и 404 обрабатываются как сейчас.
+- `AsyncContent` (`@shared/ui`) — без импорта Reatom: пропсы `pending`, `error`, `onRetry`,
+  `fallback`, `errorFallback`, `children`.
+- Скелетон списков — по `status().isFirstPending`; обновление поверх старых данных —
+  `isPending && !isFirstPending`. Скелетон детальных страниц — по `!ready()`.
+- `RouteLoader<Payload>` — алиас в `@shared/lib` поверх экспортируемого типа ядра; им типизируется
+  проп `loader` у страниц.
+
+**URL-состояние `/search` (`src/features/catalog-filter/model/searchState.ts`)**
+
+```ts
+const searchParams = computed(
+  () =>
+    urlAtom().pathname === paths.search()
+      ? urlAtom().searchParams
+      : EMPTY_PARAMS,
+  'catalogFilter.searchParams',
+)
+export const filters = computed(
+  () => getFilterFromSearchParams(searchParams()),
+  'catalogFilter.filters',
+)
+
+const updateSearchUrl = action(
+  (mutator: (params: URLSearchParams) => URLSearchParams) => {
+    urlAtom.set(
+      url => withSearch(url, mutator(new URLSearchParams(url.search))),
+      true,
+    )
+  },
+  'catalogFilter.updateUrl',
+)
+
+// Черновик инпута: следует за URL, но принимает прямую запись.
+export const searchDraft = atom('', 'catalogFilter.draft').extend(
+  withComputed(state => {
+    ifChanged(searchQuery, query => {
+      state = query
+    })
+    return state
   }),
 )
-export const favoriteIdSet = computed(() => new Set(favoriteIds()), 'favorites.idSet')
-export const toggleFavorite = action((id: number) => { … }, 'favorites.toggle')
 ```
 
-Read-modify-write внутри action читает атом напрямую — гонки двух записей в одном тике, из-за
-которой хуки читали `slot.get()`, больше нет.
+- Чтение: `searchQuery`, `sort`, `page` (ограничение 1–10), `filters`, `activeChips`, `catalogParams`.
+- Запись (каждая — один вызов `updateSearchUrl`): `setFilters`, `toggleGenre`, `resetFilters`,
+  `setSort` — со сбросом страницы в 1; `goToPage`; `submitSearchQuery(raw)` — trim, порог
+  `QUERY_MIN_LENGTH`, при входе в текстовый режим убирает фильтры и сортировку;
+  `normalizeSearchUrl` — зачистка фильтров при deep-link в текстовый режим.
+- `commitSearchDraft` — `action(async)` с `await wrap(sleep(QUERY_DEBOUNCE_MS))` и `withAbort()`.
+- С другой страницы переход в поиск — один `urlAtom.go(paths.search({ q }))`.
+- `catalog` (`pages/search/model`) — `computed(async) + withAsyncData({ status: true })` поверх
+  `fetchSearchMovies` / `loadMoviesPage`. К его подключению (`withConnectHook`) привязаны
+  `normalizeSearchUrl` и отслеживание `search submitted`.
 
-**Async-ресурс и статусный рендер:**
+**Роуты (`src/app/routes.tsx`)**
 
 ```tsx
-<AsyncState
-  resource={topRatedMovies}          // AsyncDataExt со status: true
-  skeleton={<MovieRailSkeleton />}
-  isEmpty={movies => movies.length === 0}
-  empty={<EmptyState … />}
-  keepPrevious                        // при повторном запросе показывать прошлые данные
->
-  {movies => <MovieRail items={movies} />}
-</AsyncState>
+export const layoutRoute = reatomRoute(
+  {
+    layout: true,
+    render({ outlet }): RouteChild {
+      return <AppLayout>{outlet()[0] ?? <NotFound />}</AppLayout>
+    },
+  },
+  'routes.layout',
+)
+
+export const movieRoute = layoutRoute.reatomRoute(
+  {
+    path: 'movie/:id',
+    loader: ({ id }) => loadMovieDetailBundle(id),
+    render: (self): RouteChild => page(<MoviePage loader={self.loader} />),
+  },
+  'routes.movie',
+)
 ```
 
-Без `keepPrevious` скелетон показывается при любом pending (нужно для `/movie/1 → /movie/2`);
-с ним — только при `status().isFirstPending` (нужно для `/search`).
+- `page(node)` оборачивает ленивую страницу в `<Suspense fallback={<Spinner />}>`.
+- Невалидный `:id` не снимает матч роута: loader бросает `ApiError` со статусом 404.
+- `RouteChild` расширяется в отдельном модуле `src/app/reatom.d.ts` (с `import type`, иначе
+  объявление затенит типы пакета); это второе исключение из правила `type`, не `interface`.
+- `@shared/config/paths.ts` — строители путей; тест в `app` сверяет их с `route.path()`.
 
-**Роуты:**
+Замены API React Router:
 
-```tsx
-// src/app/routes.tsx
-export const layoutRoute = reatomRoute({ layout: true, render: self => <AppLayout>{self.outlet()}</AppLayout> })
-export const movieRoute = layoutRoute.reatomRoute({
-  path: 'movie/:id',
-  params: z.object({ id: z.string().regex(/^\d+$/).transform(Number) }),
-  loader: async ({ id }) => await wrap(fetchMovieDetail(id)),
-  render: self => <MoviePage detail={self.loader} />,
-})
-```
-
-Корень приложения — `reatomComponent(() => layoutRoute.render(), 'App')` внутри `GlobalErrorBoundary`.
-
-**Persist-формат:** значение в `localStorage` — конверт `{ data, … }`. Inline-скрипт темы в
-`index.html` читает `JSON.parse(raw).data`; его sha256 в CSP пересчитывается.
+| Было                      | Стало                                                         |
+| ------------------------- | ------------------------------------------------------------- |
+| `<Link to>`               | `<a href={paths.…}>`                                          |
+| `<NavLink>`               | `<a>` + класс активности по `route.match()` / `route.exact()` |
+| `navigate(path)`          | `urlAtom.go(path)`                                            |
+| `navigate(-1)`            | `history.back()`                                              |
+| `useMatch`, `useLocation` | `route.match()`, `urlAtom()` в `reatomComponent`              |
+| `useParams`               | параметр из loader / проп из `render`                         |
+| `useSearchParams`         | модель `searchState`                                          |
+| `<ScrollRestoration />`   | модель Task 15                                                |
 
 ## What Goes Where
 
-- **Implementation Steps** — всё, что делается в этом репозитории: код, тесты, правила, README.
-- **Post-Completion** — ручная проверка в браузере, Sentry, замеры для сводной таблицы 3.8.
+- **Implementation Steps** — изменения кода, тестов и документации в этом репозитории.
+- **Post-Completion** — ручные проверки и внешние действия.
 
 ## Implementation Steps
 
-### Task 1: Установка Reatom, тестовая обвязка, spike по React Compiler
+### Task 1: Установка Reatom, bootstrap и тестовая изоляция
 
-**Model:** opus — оставляет открытым решение по Compiler, на котором стоят все следующие задачи
+**Model:** opus — задаёт тестовую обвязку и конвенцию компонентов, на которые опираются все задачи
 
 **Files:**
 
-- Modify: `package.json`, `pnpm-lock.yaml`
+- Modify: `package.json`, `vite.config.ts`, `src/main.tsx`, `src/test/setup.ts`
 - Create: `src/app/reatom-setup.ts`
-- Modify: `src/main.tsx`
-- Modify: `src/test/setup.ts`
-- Create: `src/test/renderWithReatom.tsx`
-- Create: `src/test/reatom-compiler.test.tsx`
-- Modify: `vite.config.ts` (только если spike потребует исключения в конфиге компилятора)
-- Modify: `docs/plans/20261002-reatom-v1001-migration.md` (запись результата spike)
+- Create: `src/test/persist.ts`
+- Create: `src/test/reatom.test.tsx`
 
-- [ ] `pnpm add @reatom/core@^1001.3.0 @reatom/react@^1001.0.1`
-- [ ] создать `src/app/reatom-setup.ts`: `connectLogger()` только при `import.meta.env.DEV`; импортировать в `src/main.tsx` сразу после `./app/sentry-bootstrap` (он остаётся первым импортом)
-- [ ] `src/test/setup.ts`: `context.reset()` в `afterEach`; убедиться тестом, что состояние persist-атома не протекает между тестами
-- [ ] создать `src/test/renderWithReatom.tsx`: `renderWithReatom(ui)` — `context.start()` + `reatomContext.Provider`, возвращает результат RTL и `frame`. Роутером не управляет: тесты Task 2–7 оставляют свои `MemoryRouter`
-- [ ] **spike Compiler**: тест с `reatomComponent`, читающим `atom()` в рендере, собранный через тот же babel-пресет, что и прод (`reactCompilerPreset`): обновляется ли значение на экране после `atom.set()`. Проверить и на `make build-only`
-- [ ] по результату зафиксировать **одно** правило в разделе «Результат spike»: (а) ничего не нужно; (б) директива `'use no memo'` в теле каждого `reatomComponent`; (в) исключение в конфиге компилятора. При (б)/(в) — добавить проверку, которая падает при нарушении (lint-правило или тест)
-- [ ] оставить в `reatom-compiler.test.tsx` регрессионный тест на выбранное правило
-- [ ] временно поднять лимит `vendor` в `size-limit` (`package.json`) с комментарием «до Task 16»
-- [ ] `make test && make typecheck` — зелёные
+- [ ] `pnpm add @reatom/core@1001.3.0 @reatom/react@1001.0.1`, `pnpm add -D @reatom/vite`
+- [ ] подключить `reatom()` из `@reatom/vite` в `vite.config.ts`; если плагин несовместим с Vite 8/Rolldown — убрать зависимость и зафиксировать здесь ручной HMR-сниппет из handbook
+- [ ] создать `src/app/reatom-setup.ts` (`connectLogger()` только при `MODE === 'development'`) и импортировать его в `src/main.tsx` сразу после `./app/sentry-bootstrap`
+- [ ] в `src/test/setup.ts`: `afterEach` в порядке `cleanup()` → `urlAtom.init.abort()` → `context.reset()`; `sessionStorage.clear()`; URL возвращается на `/`
+- [ ] создать `src/test/persist.ts` с `seedPersisted(key, data)` — пишет `PersistRecord` в `localStorage`
+- [ ] тест: состояние атома не протекает между тестами
+- [ ] тест: клик по `<a>` в двух тестах подряд даёт по одному `pushState` (слушатели `urlAtom` не копятся)
+- [ ] тест: `reatomComponent` перерисовывается при изменении атома в сборке с React Compiler и в `StrictMode`
+- [ ] тест: обработчик через `wrap(...)` обновляет атом; размонтирование не оставляет подписок
+- [ ] тест: запрос через `apiClient` с сигналом из `abortVar` под MSW проходит и отменяется; если jsdom-`AbortSignal` несовместим с клиентом — зафиксировать здесь, что сигнал в клиент не передаётся
+- [ ] запустить `make test`, `make typecheck`, `make lint` — зелёные перед Task 2
 
-### Task 2: Модель favorites на `withLocalStorage`
+### Task 2: Хелпер `persistOptions`
 
-**Model:** opus — задаёт паттерн модели и опций persist, который копируют Task 3, 4, 7
+**Model:** sonnet — хелпер задан планом, поведение persist фиксируется тестами
 
 **Files:**
 
-- Create: `src/test/seedPersist.ts`
+- Create: `src/shared/lib/persist/{index.ts,persistOptions.ts,persistOptions.test.ts}`
+- Modify: `src/shared/lib/index.ts`
+
+- [ ] `persistOptions.ts`: `PERSIST_FOREVER_MS` и `persistOptions(key, schema, fallback, fromValid?)`
+- [ ] экспортировать из `@shared/lib`
+- [ ] тесты (атом с `withLocalStorage(persistOptions(...))`): значение переживает пересоздание контекста; невалидный JSON, значение без конверта и снапшот, не прошедший схему, дают дефолт без исключения
+- [ ] тесты: запись не истекает (проверка поля `to` в `localStorage`)
+- [ ] тесты: `setItem` бросает → чтение и запись атома не бросают, значение обновлено в памяти
+- [ ] тесты: `new StorageEvent('storage', { storageArea: localStorage, … })` обновляет подключённый атом
+- [ ] запустить тесты — зелёные перед Task 3
+
+### Task 3: Модель favorites
+
+**Model:** sonnet — модель и API заданы планом, тесты покажут ошибку
+
+**Files:**
+
 - Create: `src/features/favorites/model/favorites.ts`, `src/features/favorites/model/favorites.test.ts`
-- Delete: `src/features/favorites/model/favoritesStorage.ts`, `src/features/favorites/model/useFavorites.ts` (+ их тесты)
 - Modify: `src/features/favorites/index.ts`
-- Modify: потребители `useFavorites()` — `src/widgets/movie-rail/ui/MovieRail/MovieRail.tsx`, `src/pages/movie/ui/RelatedMovies/RelatedMovies.tsx`, `src/pages/search/ui/SearchResultsGrid/SearchResultsGrid.tsx`, `src/pages/{favorites,popular,recommendations,watched,watchlist,profile}/ui/**`, `src/features/favorites/model/useFavoriteMovies.ts` (+ тесты)
+- Delete: `src/features/favorites/model/{favoritesStorage,useFavorites}.ts` и их тесты
+- Modify: потребители `useFavorites()` — `src/widgets/movie-rail/ui/MovieRail/MovieRail.tsx`, `src/pages/movie/ui/RelatedMovies/RelatedMovies.tsx`, `src/pages/search/ui/SearchResultsGrid/SearchResultsGrid.tsx`, страницы `favorites`, `popular`, `recommendations`, `watched`, `watchlist`, `profile`
 
-- [ ] создать `favorites.ts`: `favoriteIds` с `withLocalStorage({ key: 'kinoshka:favorites', schema: z.array(z.number()).catch([]), time: Number.MAX_SAFE_INTEGER })`, `favoriteIdSet`, actions `toggleFavorite` / `addFavorite` / `removeFavorite` / `clearFavorites`
-- [ ] у `time` — WHY-комментарий: handbook называет `MAX_SAFE_INTEGER` дефолтом, фактический дефолт пакета — ~25 дней; у `.catch([])` — что без него невалидные данные роняют чтение атома
-- [ ] `trackEvent('favorite added')` — при добавлении, без проверки результата записи (сбой записи в нативном persist не наблюдаем — принятое следствие, решение 9)
-- [ ] перевести потребителей на `reatomComponent`: читают `favoriteIdSet()`, в `Card` передают `isFavorite` / `onToggleFavorite` пропсами как сейчас. `Card.tsx` не трогать
-- [ ] `src/test/seedPersist.ts`: `seedPersist(key, data)` — кладёт в `localStorage` валидный конверт; заменить им сырые `localStorage.setItem('kinoshka:favorites', …)` в тестах
-- [ ] тесты persist-поведения модели: запись через 30 дней по fake timers читается; `data` не по схеме → `[]` без исключения; невалидный JSON → `[]`; `setItem` бросает `QuotaExceededError` → значение живёт в памяти, приложение не падает; `getItem` бросает `SecurityError` → `[]`; обновление из другого таба
-- [ ] тесты модели в `context.start`: toggle/add/remove/clear, два toggle в одном тике
-- [ ] обновить компонентные тесты потребителей на `renderWithReatom`
-- [ ] `make test && make typecheck` — зелёные
+- [ ] создать `favoriteIds` (`reatomSet` + `withLocalStorage`) и `toggleFavorite` (событие `favorite added` только при добавлении)
+- [ ] перевести потребителей на `reatomComponent` и прямое чтение модели; `Card` продолжает получать `isFavorite`/`onToggleFavorite` пропсами
+- [ ] `useFavoriteMovies` временно читает `favoriteIds` через `useAtom` (заменяется в Task 9)
+- [ ] тесты модели: toggle/add/delete/clear, порядок вставки сохраняется, событие аналитики уходит при добавлении и не уходит при удалении
+- [ ] обновить тесты потребителей: сидирование через `seedPersisted`
+- [ ] запустить тесты — зелёные перед Task 4
 
-### Task 3: Модели watched и watchlist
+### Task 4: Модели watched и watchlist
 
-**Model:** sonnet — повторяет паттерн Task 2, тесты ловят расхождения
+**Model:** sonnet — повтор паттерна Task 3
 
 **Files:**
 
-- Create: `src/features/watched/model/watched.ts`, `src/features/watchlist/model/watchlist.ts` (+ `.test.ts`)
-- Delete: `src/features/watched/model/{watchedStorage,useWatched}.ts`, `src/features/watchlist/model/{watchlistStorage,useWatchlist}.ts` (+ тесты)
-- Modify: `src/features/watched/index.ts`, `src/features/watchlist/index.ts`, потребители (`grep -rn "useWatched()\|useWatchlist()" src`)
+- Create: `src/features/watched/model/watched.ts`, `src/features/watchlist/model/watchlist.ts` и тесты
+- Modify: `src/features/{watched,watchlist}/index.ts`, потребители `useWatched()` / `useWatchlist()`
+- Delete: `src/features/{watched,watchlist}/model/{*Storage,useWatched,useWatchlist}.ts` и их тесты
 
-- [ ] создать обе модели по образцу `favorites.ts` — **три независимых файла, без общей фабрики**: `.claude/rules/user-lists.md` требует дублирования структуры вместо общей абстракции
-- [ ] перевести потребителей на `reatomComponent`
-- [ ] заменить сырые сиды `localStorage` этих ключей в тестах на `seedPersist`
-- [ ] тесты моделей (success + сбой хранилища + независимость списков друг от друга и от favorites)
-- [ ] обновить компонентные тесты
-- [ ] `make test && make typecheck` — зелёные
+- [ ] создать `watchedIds` и `watchlistIds` (`reatomSet` + `withLocalStorage`), без action-обёрток
+- [ ] перевести потребителей на `reatomComponent`; независимость списков друг от друга и от favorites сохраняется (`user-lists.md`)
+- [ ] `useWatchedMovies` / `useWatchlistMovies` временно читают атомы через `useAtom` (до Task 9)
+- [ ] тесты моделей: toggle, персист, независимость трёх списков
+- [ ] обновить тесты потребителей на `seedPersisted`
+- [ ] запустить тесты — зелёные перед Task 5
 
-### Task 4: Модели theme и profile
+### Task 5: Модель theme и inline-скрипт
 
-**Model:** sonnet — спецификация ясна; CSP-хэш и FOUC покрыты тестом и e2e
-
-**Files:**
-
-- Create: `src/features/theme/model/theme.ts`, `src/features/profile/model/profile.ts` (+ `.test.ts`)
-- Delete: `src/features/theme/model/{themeStorage,useTheme}.ts`, `src/features/profile/model/{profileStorage,useProfile}.ts` (+ тесты)
-- Modify: `src/features/theme/index.ts`, `src/features/profile/index.ts`, потребители
-- Modify: `src/app/reatom-setup.ts`
-- Modify: `index.html`, `vercel.json`, `vercel-headers.test.ts`
-
-- [ ] `theme.ts`: атом темы `'light' | 'dark' | 'system'` (через `reatomEnum`, начальное значение — явно `'system'`, не первый вариант списка) + `withLocalStorage` с теми же двумя опциями, что в Task 2; `systemPrefersDark = reatomMediaQuery('(prefers-color-scheme: dark)')`; `resolvedTheme` (computed); применение `data-theme` на `<html>` — из init-action, вызываемого в `reatom-setup.ts`
-- [ ] `index.html`: inline-скрипт читает `JSON.parse(raw).data`, дефолт `'system'`; пересчитать sha256 в CSP (`vercel.json`) — `vercel-headers.test.ts` должен это подтвердить
-- [ ] `profile.ts`: имя пользователя — один `reatomField` с валидацией (без `reatomForm`) + `bindField` в UI; показ сбоя записи на `/profile` убирается вместе с его тестом (решение 9)
-- [ ] защиту PII не трогать: `data-sentry-component` на `ProfileAvatar` и `PROFILE_ARIA_LABEL_PREFIX`
-- [ ] заменить сырые сиды `localStorage` этих ключей в тестах на `seedPersist`
-- [ ] тесты: theme (три значения, `system` следует за media query, persist, кросс-таб), profile (валидация, persist)
-- [ ] обновить компонентные тесты темы и профиля
-- [ ] `make test && make typecheck && make lint` — зелёные
-
-### Task 5: Статусный `AsyncState` и ресурсы без параметров (home rails, popular)
-
-**Model:** opus — определяет интерфейс `AsyncState` и паттерн ресурса, на которых строятся Task 6, 9, 14
+**Model:** sonnet — модель задана планом; CSP-хэш проверяет существующий тест
 
 **Files:**
 
-- Create: `src/shared/ui/AsyncState/index.tsx`, `src/shared/ui/AsyncState/AsyncState.test.tsx`
-- Modify: `src/shared/ui/index.ts`
-- Create: `src/entities/movie/model/rails.ts` (+ `.test.ts`)
-- Modify: `src/entities/movie/api/getMovies.ts`, `src/entities/movie/api/getPopularMovies.ts` (+ тесты)
-- Delete: `src/entities/movie/hooks/{useTopRatedMovies,useNewMovies,usePopularMovies}.ts` (+ тесты)
-- Modify: `src/entities/movie/hooks/index.ts`, `src/entities/movie/index.ts`
-- Modify: `src/pages/home/ui/{PersonalRails,TopAnimeRails,TrandingSeriesRail,PopularMoviesRail}/*.tsx`, `src/pages/popular/**`
+- Create: `src/features/theme/model/theme.ts`, `src/features/theme/model/theme.test.ts`
+- Modify: `src/features/theme/index.ts`, `src/features/theme/ui/ThemeToggle/ThemeToggle.tsx`, `src/app/reatom-setup.ts`
+- Modify: `index.html`, `vercel.json`, тест заголовков
+- Delete: `src/features/theme/model/{themeStorage,useTheme}.ts` и их тесты
 
-- [ ] `AsyncState` — `reatomComponent`: пропы `resource`, `skeleton`, `isEmpty?`, `empty?`, `errorFallback?`, `keepPrevious?`, `children(data)`. Читает `resource.status()`
-- [ ] семантика `keepPrevious`: `false` (по умолчанию) — скелетон при любом pending; `true` — скелетон только при `isFirstPending`, дальше прошлые данные
-- [ ] ошибка → `ErrorState` с `onRetry={wrap(resource.retry)}`; кнопка Retry неактивна, пока идёт запрос (замена `isRetryingRef`)
-- [ ] `AsyncState` не зависит от роутера; старый `AsyncBoundary` остаётся до Task 14
-- [ ] `getMovies.ts`, `getPopularMovies.ts`: убрать `createCachedFetcher`, оставить чистые функции «параметры → Promise»; проверка error-DTO (`'statusCode' in response.data` → `ApiError`) сохраняется
-- [ ] `rails.ts`: четыре ресурса — `topRatedMovies`, `topRatedAnime` (`type: ['anime']`), `newSeries` (`type: ['tv-series']`), `popularMovies` — `computed(async).extend(withAsyncData({ initState: [], status: true }))`
-- [ ] перевести четыре rail-обёртки главной и `Popular` на `reatomComponent` + `AsyncState`; `MovieRail` по-прежнему принимает `items`; lazy-mount и `content-visibility` (`.claude/rules/performance.md`) не менять
-- [ ] тесты `AsyncState`: pending → skeleton, данные, пустой результат, ошибка → retry делает новый запрос, `keepPrevious` в обоих значениях
-- [ ] тесты `rails.ts` через MSW: success, 403 (квота) → `error()`, `retry()` после ошибки, unmount до ответа → повторный mount получает данные
-- [ ] обновить тесты страниц home/popular
-- [ ] `make test && make typecheck` — зелёные
+- [ ] создать `theme`, `prefersDark`, `resolvedTheme`, `toggleTheme`, `initThemeSync`; `resolveTheme` из `lib/` переиспользуется
+- [ ] вызвать `initThemeSync()` в `src/app/reatom-setup.ts`
+- [ ] `ThemeToggle` → `reatomComponent`
+- [ ] inline-скрипт в `index.html`: читать `data` из конверта `PersistRecord`, при любом сбое — прежний fallback на системную тему
+- [ ] пересчитать sha256 скрипта в CSP (`vercel.json`) по инструкции `csp.md`
+- [ ] тесты: `resolvedTheme` для трёх значений × системной темы; смена media query; `data-theme` обновляется после `initThemeSync`; персист и кросс-таб
+- [ ] тест inline-скрипта на конверте и на мусоре в хранилище
+- [ ] запустить тесты — зелёные перед Task 6
 
-### Task 6: Кэшируемая деталь фильма, id-списки и рекомендации
+### Task 6: Модель profile
 
-**Model:** sonnet — паттерн задан в Task 5, поведение покрыто существующими тестами
+**Model:** sonnet — модель задана планом, нормализация уже покрыта тестами
 
 **Files:**
 
-- Create: `src/entities/movie/model/movieDetail.ts` (+ `.test.ts`)
-- Modify: `src/entities/movie/api/getMoviesByIds.ts`, `src/entities/movie/index.ts`
-- Create: `src/features/favorites/model/favoriteMovies.ts`, `src/features/watched/model/watchedMovies.ts`, `src/features/watchlist/model/watchlistMovies.ts`
-- Delete: `src/features/favorites/model/useFavoriteMovies.ts`, `src/features/watched/model/useWatchedMovies.ts`, `src/features/watchlist/model/useWatchlistMovies.ts` (+ тесты)
-- Create: `src/pages/recommendations/model/recommendedMovies.ts`
-- Delete: `src/pages/recommendations/model/useRecommendedMovies.ts` (+ тест)
-- Modify: страницы `src/pages/{favorites,watched,watchlist,recommendations}/`
+- Create: `src/features/profile/model/profile.ts`, `src/features/profile/model/profile.test.ts`
+- Modify: `src/features/profile/index.ts`, `src/features/profile/ui/ProfileAvatar/ProfileAvatar.tsx`, `src/pages/profile/ui/Profile/Profile.tsx`
+- Delete: `src/features/profile/model/{profileStorage,useProfile}.ts` и их тесты
 
-- [ ] `movieDetail.ts`: `fetchMovieDetail` — `action(async (id: number) => …).extend(withAsync(), withCache({ length: 100 }))`, в DEV `withPersist: withSessionStorage`. Только деталь, без картинок. Старый `getMovieDetail` на `createCachedFetcher` остаётся для `/movie/:id` до Task 14
-- [ ] `fetchMoviesByIds(ids)` — `Promise.allSettled` поверх `fetchMovieDetail` (404'нутый id молча выпадает, как сейчас)
-- [ ] `favoriteMovies` / `watchedMovies` / `watchlistMovies` — `computed(async () => fetchMoviesByIds(ids()))` + `withAsyncData({ initState: [], status: true })`
-- [ ] `recommendedMovies.ts`: `recommendationQuery = computed(() => computeRecommendationQuery(favoriteMovies.data()))` (чистая функция не меняется) → ресурс. Модульная переменная «последний query для retry» удаляется — `.retry()` пересчитывает computed сам
-- [ ] правило про карточки `/recommendations` сохраняется: без favorite-кнопки, с watchlist-кнопкой
-- [ ] перевести четыре страницы на `AsyncState` с `keepPrevious` (удаление одного фильма не мигает скелетоном)
-- [ ] тесты: кэш по id (второй вызов без запроса; 6+ разных id не вытесняют друг друга), частичный отказ, пустой список → empty state, пересчёт рекомендаций при изменении favorites
-- [ ] `make test && make typecheck` — зелёные
+- [ ] создать `profileName`, `profileInitials`, `setProfileName`; `normalizeProfileName`, `PROFILE_NAME_MAX_LENGTH` и схема переезжают в `profile.ts`
+- [ ] `Profile.tsx`: убрать ветку «не удалось сохранить» и её тесты; очистка имени — `profileName.set('')`
+- [ ] `ProfileAvatar` и `Profile` → `reatomComponent`; правило про пользовательский текст в `aria-label` (`sentry.md`) не нарушать
+- [ ] тесты: нормализация при записи, значение мимо UI (длинное, невидимое, с пробелами) даёт `''`, инициалы пересчитываются
+- [ ] запустить тесты — зелёные перед Task 7
 
-### Task 7: Словари жанров и стран, удаление `createStorageSlot`
+### Task 7: Async-фундамент — политика кэша, `AsyncContent`, запросы фильма по id
 
-**Model:** opus — механику TTL и фоновой перезагрузки нужно спроектировать заново на persist-атомах
+**Model:** opus — контракт слоя данных и поведение под квотой API, на него опираются Task 8–16
 
 **Files:**
 
-- Create: `src/entities/movie/model/dictionaries.ts` (+ `.test.ts`)
-- Delete: `src/entities/movie/api/{createDictionaryCache,genreDictionaryCache,countryDictionaryCache}.ts`, `src/entities/movie/hooks/{useGenreDictionary,useCountryDictionary}.ts` (+ тесты)
-- Delete: `src/shared/lib/storage/` целиком
-- Modify: `src/entities/movie/api/{getGenreDictionary,getCountryDictionary}.ts`, `src/entities/movie/index.ts`, `src/shared/lib/index.ts`
-- Modify: `src/features/catalog-filter/ui/GenreSelector/GenreSelector.tsx` и остальные потребители словарей
-- Modify: `src/test/setup.ts`, `src/app/sentry.ts`
+- Create: `src/shared/lib/query/{index.ts,withQueryCache.ts,withQueryCache.test.ts}`
+- Create: `src/shared/ui/AsyncContent/{index.tsx,AsyncContent.test.tsx}`
+- Create: `src/entities/movie/model/{movieDetail.ts,moviesByIds.ts}` и тесты
+- Modify: `src/shared/lib/index.ts`, `src/shared/ui/index.ts`, `src/entities/movie/index.ts`
 
-- [ ] перед началом прочитать `.claude/rules/search-catalog.md` (раздел про жанры) и существующий `createDictionaryCache.ts` — инварианты и семантика TTL/cooldown оттуда обязательны
-- [ ] `genreDictionary`, `countryDictionary` на атомах с `withLocalStorage`; срок жизни словаря — нативная опция `time` (здесь TTL и есть нужное поведение), `schema` с `.catch(fallback)`
-- [ ] сохранить поведение: пока словарь не загружен или запрос упал — UI работает на статическом fallback, без skeleton и без ErrorState; фоновая перезагрузка не чаще раза в 60s
-- [ ] перевести потребителей на `reatomComponent`
-- [ ] `src/test/setup.ts`: убрать `resetGenreDictionaryState` / `resetCountryDictionaryState` (их заменяет `context.reset()`)
-- [ ] удалить `src/shared/lib/storage/` и репортер ошибок хранилища (`setStorageErrorReporter`) из `sentry.ts` вместе с его тестами — замены нет (решение 9); `grep -rn "createStorageSlot\|useStorageSlot\|useSyncExternalStore" src` — пусто
-- [ ] тесты: чтение из persist без запроса, истёкший срок → запрос, ошибка → fallback, cooldown
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [ ] `withQueryCache`, `devSessionPersist` и тип `RouteLoader<Payload>` в `@shared/lib`
+- [ ] `AsyncContent` в `@shared/ui` (защита retry от двойного клика переносится из `AsyncBoundary`)
+- [ ] `fetchMovieDetail`, `fetchMovieImages` — `action + withAsync + withQueryCache({ length: 100, ignoreAbort: true })`
+- [ ] `loadMovieDetailBundle(id)` — деталь обязательна, картинки допускают отказ (как `combineDetail`)
+- [ ] `reatomMoviesByIds(ids, name)` — логика частичных отказов и 404 из `getMoviesByIds`
+- [ ] тесты: повторный вызов action с тем же id не шлёт запрос; параллельные вызовы делят один запрос; запись сверх `length` вытесняется; отклонённый результат не кэшируется
+- [ ] тесты: `computed`-ресурс без зависимостей после ошибки не перезапрашивается при отписке и новой подписке, только по `retry()`
+- [ ] тесты `AsyncContent`: pending, ошибка с retry, контент, пользовательский `errorFallback`
+- [ ] запустить тесты — зелёные перед Task 8
 
-### Task 8: Временный мост `urlAtom` ↔ React Router, билдеры путей, обвязка тестов
+### Task 8: Ресурсы главной и `/popular`
 
-**Model:** opus — двунаправленная синхронизация, ошибка порядка даёт откат URL или потерю записи истории
-
-**Files:**
-
-- Create: `src/shared/config/paths.ts` (+ `.test.ts`), экспорт в `src/shared/config/index.ts`
-- Create: `src/app/urlBridge.ts` (+ `.test.ts`)
-- Modify: `src/app/router.tsx`
-- Modify: `src/test/renderWithReatom.tsx`
-
-- [ ] `paths.ts`: `home()`, `movie(id)`, `person(id)`, `search(params?)`, `favorites()`, `watched()`, `watchlist()`, `popular()`, `recommendations()`, `profile()`; `search()` принимает готовый `URLSearchParams` — собрать его сам через `filtersToSearchParams` он не может, та функция живёт в `@features/catalog-filter` (импорт вверх по слоям)
-- [ ] `urlBridge.ts`: `connectUrlBridge(router)` — принимает любой инстанс роутера. Роутер → атом: `router.subscribe` → `urlAtom.syncFromSource(...)`, URL собирать из `router.state.location`, **не** из `window.location` (иначе мост не работает с memory-router в тестах)
-- [ ] синхронизировать только при `state.navigation.state === 'idle'` и изменившемся `location` — промежуточные состояния навигации несут старый URL и откатили бы `urlAtom`
-- [ ] атом → роутер: `urlAtom.sync.set((url, replace) => router.navigate(url.pathname + url.search + url.hash, { replace }))`; `urlAtom.catchLinks.set(false)` — пока ссылками управляет React Router
-- [ ] подключить мост в `router.tsx` сразу после создания роутера; пометить файл комментарием «временно, удаляется в Task 12»
-- [ ] `renderWithReatom(ui, { url })`: при переданном `url` поднимает `createMemoryRouter` с `ui` как единственным роутом `*` + `RouterProvider` + `connectUrlBridge`; начальный URL попадает в `urlAtom` до первого рендера. Без `url` — поведение Task 1
-- [ ] тесты моста на `createMemoryRouter`: навигация роутера обновляет `urlAtom`; `urlAtom.go` / `urlAtom.set(fn, true)` двигает роутер с правильным push/replace; back/forward; нет двойных записей истории; `urlAtom.set` во время pending-навигации не откатывается
-- [ ] тесты `paths.ts` и `renderWithReatom({ url })`
-- [ ] `make test && make typecheck` — зелёные
-
-### Task 9: `/search` — фильтры, каталог, синхронизация страницы
-
-**Model:** opus — ошибка порядка синхронизации проходит свои проверки, поведение общее для `Header` и `AppLayout`
+**Model:** sonnet — паттерн задан Task 7
 
 **Files:**
 
-- Create: `src/features/catalog-filter/model/filters.ts` (+ `.test.ts`)
-- Delete: `src/features/catalog-filter/model/useFilterState.ts` (+ тест)
-- Modify: `src/features/catalog-filter/index.ts`, UI слайса `src/features/catalog-filter/ui/**`
-- Modify: `src/entities/movie/api/{getMoviesPage,getSearchMovies}.ts`
-- Create: `src/pages/search/model/catalog.ts` (+ `.test.ts`)
-- Delete: `src/pages/search/model/{useMovieCatalog,usePageSync,useCatalogUpdateStatus}.ts` (+ тесты)
-- Modify: `src/pages/search/model/useSearchAnalytics.ts`, `src/pages/search/ui/**`
-- Modify: `src/widgets/search-sidebar/**`
+- Create: `src/entities/movie/model/{rails.ts,rails.test.ts}`
+- Modify: `src/entities/movie/index.ts`, `src/pages/home/ui/{PersonalRails,TopAnimeRails,TrandingSeriesRail,PopularMoviesRail}/*.tsx`, `src/pages/popular/ui/Popular/Popular.tsx`
+- Delete: `src/entities/movie/hooks/{useTopRatedMovies,useNewMovies,usePopularMovies}.ts`, `src/entities/movie/api/{getMovies,getPopularMovies}.ts` и их тесты
 
-- [ ] перед началом прочитать `.claude/rules/search-catalog.md` целиком
-- [ ] `filters.ts`: `filters = computed(() => getFilterFromSearchParams(new URLSearchParams(urlAtom().search)))`; `activeChips` (computed); actions `setFilters` / `resetFilters` / `removeChip` — пишут через `urlAtom.set(fn, true)` + `filtersToSearchParams`. Чистые `lib/`-функции и Zod-схема не меняются
-- [ ] `catalog.ts`: `query`, `page`, `sort` — тоже `computed` над `urlAtom()`, запись — actions через `urlAtom.set(fn, true)`; дефолты в URL не пишутся (нет `?page=1`, `?q=`); `page` clamp'ится к `MAX_PAGE` на чтении и на записи
-- [ ] `getMoviesPage` / `getSearchMovies` → cached actions (`withAsync` + `withCache({ length: 50 })`, в DEV `withPersist: withSessionStorage`); курсорная эмуляция нумерованных страниц в `getMoviesPage` остаётся как есть
-- [ ] `catalog = computed(async …).extend(withAsyncData({ status: true }))`: есть `q` → search-эндпоинт, нет → каталог с фильтрами; `isUpdating` — computed
-- [ ] правила синхронизации — в одном месте: вход в текстовый режим атомарно снимает фильтры и сортировку из URL **одной** записью; смена `q`/фильтров/сортировки сбрасывает `page` в 1
-- [ ] deep-link / refresh сразу с `q` + фильтрами — обрабатывать `effect` со скоупом страницы: `withChangeHook` на инициализацию не срабатывает
-- [ ] `Search` и дочерние — `reatomComponent`, результаты через `AsyncState` с `keepPrevious`; пагинация подсвечивает страницу мгновенно (читает `page`, не данные); вилка `useViewport()` в `Search.tsx` остаётся
-- [ ] аналитика поиска — со скоупом страницы; события и условия те же
-- [ ] тесты моделей: два режима, снятие фильтров одной записью истории, deep-link с `q` + фильтрами, сброс страницы, clamp, отсутствие дефолтов в URL, `isUpdating`, back/forward восстанавливает фильтры
-- [ ] обновить тесты `Search`, сайдбара, чипов на `renderWithReatom({ url })`
-- [ ] `make test && make typecheck` — зелёные
+- [ ] запросы `fetchMovies`, `fetchPopularMovies` — `action + withAsync + withQueryCache`; у `fetchPopularMovies` `staleTime` 24 часа
+- [ ] ресурсы `topRatedMovies`, `topRatedAnime`, `newSeries`, `popularMovies` — `computed(async) + withAsyncData({ initState: [], status: true })` поверх запросов
+- [ ] рейлы и `Popular` → `reatomComponent` + `AsyncContent`; retry — `resource.retry`; пустой результат — прежний `EmptyState`
+- [ ] тесты моделей: параметры запроса, маппинг, ошибка 403 → `error()`; два ресурса с одинаковыми параметрами делят запрос
+- [ ] обновить тесты страниц: скелетон, контент, ошибка с retry
+- [ ] запустить тесты — зелёные перед Task 9
 
-### Task 10: Поисковый ввод в `Header` и `HeroSection`
+### Task 9: Списки по id, страницы каталога и рекомендации
 
-**Model:** sonnet — небольшой объём, поведение покрыто тестами
+**Model:** opus — кэш обхода курсоров: ошибка в ключах кэша тратит квоту и проходит собственные тесты
 
 **Files:**
 
-- Create: `src/widgets/header/model/searchInput.ts` (+ `.test.ts`)
-- Modify: `src/widgets/header/ui/Header/Header.tsx`, `src/widgets/header/index.ts`
-- Modify: `src/pages/home/ui/HeroSection/HeroSection.tsx`
-- Delete: `src/shared/lib/debounce/` — если после задачи не осталось потребителей
+- Modify: `src/features/{favorites,watched,watchlist}/model/*.ts`, их `index.ts`
+- Create: `src/entities/movie/model/{catalogPage.ts,catalogPage.test.ts}`
+- Create: `src/pages/recommendations/model/{recommendations.ts,recommendations.test.ts}`
+- Modify: `src/entities/movie/index.ts`, `src/pages/{favorites,watched,watchlist,recommendations}/ui/**`
+- Delete: `src/features/*/model/use*Movies.ts`, `src/pages/recommendations/model/useRecommendedMovies.ts`, `src/entities/movie/api/getMoviesByIds.ts` и их тесты
 
-- [ ] `searchInput.ts`: атом черновика ввода + action записи в URL с debounce через `withAbort()` + `await wrap(sleep(QUERY_DEBOUNCE_MS))`; `trim`, `QUERY_MIN_LENGTH`, очистка (×) — как сейчас; на странице не `/search` ввод ведёт на `paths.search(...)`
-- [ ] черновик синхронизируется из URL при внешней смене `q` (back/forward, клик по чипу)
-- [ ] `HeroSection`: сабмит → `urlAtom.go(paths.search(...))`, тот же `QUERY_MIN_LENGTH`
-- [ ] текст запроса по-прежнему не попадает в `aria-label`/`title`/`name` (`.claude/rules/sentry.md`)
-- [ ] вилку `useViewport()` в `AppLayout` не трогать; обновить её WHY-комментарий (эффект записи `?q` больше не живёт в компоненте)
-- [ ] тесты модели: debounce (последний ввод побеждает), короткий запрос не пишется, очистка, синхронизация из URL
-- [ ] обновить тесты `Header`, `HeroSection` на `renderWithReatom({ url })`
-- [ ] `make test && make typecheck` — зелёные
+- [ ] добавить `favoriteMovies`, `watchedMovies`, `watchlistMovies` через `reatomMoviesByIds`
+- [ ] `catalogPage.ts`: `fetchCursorStep` — `action + withAsync + withQueryCache({ length: 50, ignoreAbort: true })`; `loadMoviesPage(params, page)` — обычная async-функция обхода курсоров с `wrap` на каждом шаге (логика `walkToPage`)
+- [ ] старый `getMoviesPage` остаётся для `useMovieCatalog` до Task 14
+- [ ] `recommendationQuery` (`computed` поверх `favoriteMovies.data()` и `computeRecommendationQuery`) и `recommendedMovies` (`computed(async) + withAsyncData`, `null` при пустом запросе)
+- [ ] страницы → `reatomComponent` + `AsyncContent`; пустые состояния без изменений
+- [ ] тесты: переключение избранного на `/favorites` не шлёт запросов за уже загруженными фильмами; 404 одного id не роняет список
+- [ ] тесты `catalogPage`: страница N после страницы N−1 шлёт один запрос; повтор той же страницы — ни одного; обрыв курсора даёт пустую страницу
+- [ ] тесты: `recommendationQuery` пересчитывается только при изменении избранного; пустое избранное → empty-state
+- [ ] запустить тесты — зелёные перед Task 10
 
-### Task 11: Перевод всех тестов на `renderWithReatom({ url })`
+### Task 10: Словари жанров и стран, удаление `createStorageSlot`
 
-**Model:** sonnet — механическая замена обёртки, сбой виден сразу
-
-**Files:**
-
-- Modify: все тестовые файлы с `MemoryRouter` / `createMemoryRouter` (`grep -rln "MemoryRouter\|createMemoryRouter" src`), кроме `src/app/router.test.tsx` и `src/app/urlBridge.test.ts`
-
-- [ ] заменить `<MemoryRouter initialEntries={[x]}>` на `renderWithReatom(ui, { url: x })`; прод-код не менять
-- [ ] тесты, проверявшие навигацию через роутер (`createMemoryRouter` + проверка `location`), проверяют `urlAtom()` 
-- [ ] `grep -rn "MemoryRouter" src` — остаётся только в `renderWithReatom.tsx`, `router.test.tsx`, `urlBridge.test.ts`
-- [ ] `make test && make typecheck` — зелёные, число тестов не уменьшилось
-
-### Task 12: Замена React Router на `reatomRoute`
-
-**Model:** opus — меняет поведение, общее для всех слоёв (навигация, layout), и удаляет мост
+**Model:** sonnet — схема кэша и persist расписана планом, удаление проверяется сборкой и knip
 
 **Files:**
 
-- Create: `src/app/routes.tsx`, `src/app/routes.test.tsx`
-- Delete: `src/app/router.tsx`, `src/app/router.test.tsx`, `src/app/urlBridge.ts` (+ тест)
-- Modify: `src/app/providers.tsx`, `src/app/providers.test.tsx`, `src/app/layouts/AppLayout.tsx` (+ тест), `src/app/sentry.ts`, `src/app/sentry-bootstrap.ts`, `src/main.tsx`
-- Modify: оставшиеся импортёры `react-router` — `src/entities/movie/ui/Card/Card.tsx`, `src/features/profile/ui/ProfileAvatar/ProfileAvatar.tsx`, `src/pages/movie/{MoviePage.tsx,ui/MovieHero,ui/tabs/CastTab,ui/tabs/OverviewTab}`, `src/pages/person/{PersonPage.tsx,ui/Filmography/CreditGroup}`, `src/pages/profile/ui/Profile/Profile.tsx`, `src/widgets/mobile-chrome/ui/{BottomNav,MobileHeader}`, `src/widgets/movie-rail/ui/MovieRail/MovieRail.tsx`, `src/widgets/header/ui/Header/Header.tsx`
-- Modify: `src/test/renderWithReatom.tsx`, `package.json`
+- Create: `src/entities/movie/model/{dictionaries.ts,dictionaries.test.ts}`
+- Modify: `src/entities/movie/index.ts`, `src/features/catalog-filter/ui/{GenreSelector,CountrySelector}/*.tsx`, `src/test/setup.ts`, `src/app/sentry.ts`, `src/app/sentry.test.ts`
+- Delete: `src/entities/movie/api/{createDictionaryCache,genreDictionaryCache,countryDictionaryCache}.ts`, `src/entities/movie/hooks/{useGenreDictionary,useCountryDictionary}.ts`, `src/shared/lib/storage/` и их тесты
 
-- [ ] `routes.tsx`: `layoutRoute` (`layout: true`) + 10 page-роутов; страницы по-прежнему через `lazyNamed`; для `/movie/:id` и `/person/:id` — `params` с Zod (`\d+` → number)
-- [ ] элементы `self.outlet()` рендерить с `key`
-- [ ] на этом шаге detail-страницы получают `id` пропом (`render: self => <MoviePage id={self().id} />`) и остаются на старом fetch-слое — loaders в Task 14
-- [ ] `isNotFound = computed(() => pageRoutes.every(route => !route.exact()))` — не `is404`; при `isNotFound()` layout показывает `ErrorState` «Page not found» со ссылкой на главную. Покрывает и неизвестный путь, и `/movie/abc`
-- [ ] `providers.tsx`: `<GlobalErrorBoundary><App /></GlobalErrorBoundary>`, где `App = reatomComponent(() => layoutRoute.render(), 'App')`
-- [ ] `AppLayout`: принимает `children` вместо `<Outlet/>`; `ROUTE_CHROME` остаётся таблицей по `pathname` из `urlAtom`, `/movie/:id` и `/person/:id` матчатся по шаблону пути без импорта `routes.tsx`; `activeNav` на `/search` — из `?type`; `key` per-route `ErrorBoundary` — `pathname`; `<Suspense>` для чанков остаётся; кнопка «назад» — `history.back()`
-- [ ] `trackPageview()` — на смену `pathname` (не `search`), читая `urlAtom`
-- [ ] `<ScrollRestoration />` удаляется; замена — в Task 13
-- [ ] все `<Link to>` → `<a href={paths.…}>`; `useNavigate` → `urlAtom.go`; `useParams`/`useLocation`/`useMatch` — убрать. Стретч-ссылка `Card` и правило «карточка не рендерит ссылку без текста» (`.claude/rules/ui-patterns.md`) сохраняются
-- [ ] `urlAtom.catchLinks` включён (дефолт); мост и `catchLinks.set(false)` удалены
-- [ ] `sentry.ts`: `reactRouterBrowserTracingIntegration` → `browserTracingIntegration()` (имена транзакций временно сырые — правится в Task 15); убрать `wrapCreateBrowserRouter`; обновить WHY-комментарии в `main.tsx`/`sentry-bootstrap.ts` (bootstrap остаётся первым импортом — `Sentry.init` должен опередить первую навигацию)
-- [ ] `renderWithReatom({ url })`: внутри — `history.replaceState` + `urlAtom`, без memory-router; тесты компонентов не меняются
-- [ ] `routes.test.tsx`: каждый URL рендерит свою страницу внутри layout; `route.path(params) === paths.x(params)` для всех 10 роутов (для роутов с Zod-схемой id передаётся **строкой**); невалидный id и неизвестный путь → not found; сбой lazy-чанка → per-route fallback с retry
-- [ ] тесты `AppLayout`: chrome по роутам, сброс границы при смене `pathname`, pageview не срабатывает на смену query
-- [ ] `pnpm remove react-router`; `grep -rn "react-router" src` — пусто
-- [ ] `make check && make test` — зелёные
+- [ ] запросы `fetchGenreNames`, `fetchCountryNames` — `action + withAsync + withCache({ swr: false, staleTime: 7 дней, withPersist })`
+- [ ] `withPersist: options => withLocalStorage({ ...options, key: 'kinoshka:genres', fromSnapshot })`, где `fromSnapshot` проверяет снапшот Zod-схемой и при невалидном возвращает текущее состояние, иначе делегирует `options.fromSnapshot`; для стран — `kinoshka:countries`
+- [ ] ресурсы `genreDictionary`, `countryDictionary` — `computed(async) + withAsyncData({ initState: [] })`; `genres`, `countries` — `computed` с подстановкой `STATIC_FALLBACK_*` при пустых данных и при ошибке
+- [ ] селекторы → `reatomComponent`
+- [ ] убрать из `src/test/setup.ts` `resetGenreDictionaryState` / `resetCountryDictionaryState`
+- [ ] удалить `src/shared/lib/storage/` и экспорты из `@shared/lib`; удалить из `src/app/sentry.ts` репортер сбоев хранилища (`setStorageErrorReporter`) и его тесты
+- [ ] тесты: fallback до загрузки и при ошибке; словарь из хранилища не шлёт запрос после пересоздания контекста; запись старше 7 дней перезапрашивается; мусор в хранилище не роняет чтение
+- [ ] запустить тесты и `make knip` — зелёные перед Task 11
 
-### Task 13: Восстановление скролла и первый e2e-прогон
+### Task 11: Хелпер `renderWithRouter` и перевод тестов на него
 
-**Model:** sonnet — узкая спецификация, e2e ловит регрессии навигации
+**Model:** sonnet — механический рефакторинг 32 файлов, ошибки ловят сами тесты
 
 **Files:**
 
-- Create: `src/app/scrollRestoration.ts` (+ `.test.ts`)
-- Modify: `src/app/reatom-setup.ts`
+- Create: `src/test/router.tsx`
+- Modify: 32 тестовых файла с `MemoryRouter` / `createMemoryRouter`
 
-- [ ] `scrollRestoration.ts`: `history.scrollRestoration = 'manual'`; новая запись истории → `scrollTo(0, 0)`; back/forward → восстановить сохранённую позицию по ключу записи; смена только query на `/search` (replace) скролл не трогает
-- [ ] клик по ссылке на текущий URL: `catchLinks` пушит дубль записи истории — проверить тестом и, если подтверждается, гасить (перехватчик, который игнорирует навигацию на тот же URL)
-- [ ] подключить из init-action в `reatom-setup.ts`
-- [ ] тесты: push → top, back → сохранённая позиция, replace query → без изменений, ссылка на текущий URL не плодит записи
-- [ ] `make test && make typecheck` — зелёные
-- [ ] `make build-only && make e2e` (первый из двух e2e-прогонов плана; спеки не менять — расхождение означает регрессию поведения)
+- [ ] создать `renderWithRouter(ui, { url })` — пока обёртка над `MemoryRouter`; возвращает `getUrl()` (pathname + search)
+- [ ] перевести все тесты с `MemoryRouter` на хелпер; проверки URL — через `getUrl()` внутри `waitFor`, а не `useLocation`-пробники
+- [ ] тесты с `createMemoryRouter` и собственной конфигурацией роутов (`router.test.tsx`, тесты `AppLayout`) пометить комментарием — переписываются в Task 14
+- [ ] запустить тесты — зелёные перед Task 12
 
-### Task 14: Loaders для `/movie/:id` и `/person/:id`, удаление старого fetch-слоя
+### Task 12: Строители путей `paths`
 
-**Model:** sonnet — паттерны заданы в Task 5, 6 и 12, поведение покрыто тестами страниц
+**Model:** sonnet — механическая замена литералов путей, ещё на React Router
 
 **Files:**
 
-- Create: `src/entities/movie/model/movieImages.ts`, `src/entities/person/model/personDetail.ts` (+ `.test.ts`)
-- Modify: `src/entities/movie/api/{getMovieDetail,getMovieImages}.ts`, `src/entities/person/api/getPersonDetail.ts`
-- Delete: `src/entities/movie/hooks/` и `src/entities/person/hooks/` целиком (+ тесты)
-- Delete: `src/shared/lib/cachedFetcher/`, `src/shared/lib/sessionCache/`, `src/shared/ui/AsyncBoundary/`
-- Modify: `src/shared/lib/index.ts`, `src/shared/ui/index.ts`, `src/entities/{movie,person}/index.ts`, `src/test/setup.ts`
-- Modify: `src/app/routes.tsx`, `src/pages/movie/**`, `src/pages/person/**`
+- Create: `src/shared/config/{paths.ts,paths.test.ts}`
+- Modify: `src/shared/config/index.ts`, прод-файлы с литералами путей в `to=` / `navigate(...)`
 
-- [ ] перед началом прочитать `.claude/rules/data-layer.md` (раздел `/movie/:id`, `/person/:id`)
-- [ ] `fetchMovieImages(id)` — отдельный cached action (`length: 100`); `fetchPersonDetail(id)` — cached action (`length: 50`). Деталь фильма — уже существующий `fetchMovieDetail` из Task 6, второй кэш не заводить
-- [ ] loader `/movie/:id`: `Promise.allSettled([fetchMovieDetail(id), fetchMovieImages(id)])`; отказ картинок → `images: []`, отказ детали (включая 404) → reject
-- [ ] `routes.tsx`: `loader` для двух роутов; страницы получают `detail={self.loader}` вместо `id`
-- [ ] `MoviePage`/`PersonPage` — `AsyncState` **без** `keepPrevious` (смена `/movie/1 → /movie/2` показывает skeleton, не прошлый фильм) с `errorFallback`, различающим 404 (`ApiError.status`) и прочие ошибки
-- [ ] `RelatedMovies` (lazy-mount через `IntersectionObserver`) — свой ресурс, запрос только после появления в viewport
-- [ ] удалить `cachedFetcher`, `sessionCache`, `AsyncBoundary`, `resetAllCachedFetchers` из `src/test/setup.ts`; `grep -rnE "createCachedFetcher|AsyncBoundary|[^.]\buse\(" src` — в прод-коде пусто
-- [ ] тесты: success, 404, отказ картинок, кэш (возврат на тот же id без запроса; переход из избранного на страницу фильма без запроса детали), уход со страницы до ответа
-- [ ] обновить `MoviePage.test.tsx`, тесты `PersonPage`
-- [ ] `make test && make typecheck` — зелёные
+- [ ] `paths.ts`: строители для всех десяти роутов; `paths.search(params?)` принимает `Record<string, string>` или `URLSearchParams` — сериализацию фильтров (`filtersToSearchParams`) делает вызывающий слой, `shared` о фильтрах не знает
+- [ ] перевести все `to=` и `navigate(...)` на `paths.*`
+- [ ] тесты строителей: кодирование id, пустые и непустые параметры поиска
+- [ ] запустить тесты — зелёные перед Task 13
 
-### Task 15: Sentry-трейсинг роутов
+### Task 13: Модели URL-состояния `/search`
 
-**Model:** opus — имена транзакций не проверяются существующими тестами, ошибка тихо ломает группировку в Sentry
+**Model:** opus — семантика записи в URL и сбросов; ошибки здесь тонкие и проходят простые проверки
 
 **Files:**
 
-- Create: `src/app/sentryRouting.ts` (+ `.test.ts`)
-- Modify: `src/app/sentry.ts`, `src/app/sentry.test.ts`, `src/app/routes.tsx`
+- Create: `src/features/catalog-filter/model/{searchState.ts,searchState.test.ts}`
+- Create: `src/entities/movie/model/{searchMovies.ts,searchMovies.test.ts}`
+- Create: `src/pages/search/model/{catalog.ts,catalog.test.ts}`
+- Modify: `src/features/catalog-filter/index.ts`, `src/features/catalog-filter/lib/searchParams.ts`, `src/entities/movie/index.ts`
 
-- [ ] чистая функция `getTransactionName(routes, url)` → шаблон совпавшего page-роута (`/movie/:id`), для not-found — `'/*'`
-- [ ] `sentry.ts`: `browserTracingIntegration({ instrumentPageLoad: false, instrumentNavigation: false })`
-- [ ] `sentryRouting.ts`: `startBrowserTracingPageLoadSpan` при старте и `startBrowserTracingNavigationSpan` на смену `pathname`, оба с `name` = шаблон и `sentry.source = 'route'`; смена только query нового span не создаёт
-- [ ] подключение — после `Sentry.init`, no-op когда Sentry выключен (не PROD или нет DSN)
-- [ ] PII-скрабберы (`beforeBreadcrumb`/`beforeSendSpan`) и `captureRouteError` не менять
-- [ ] тесты: `getTransactionName` для всех 10 роутов + not-found; с моком клиента Sentry — pageload-span один, navigation-span на смену пути, нет span на смену query
-- [ ] `make test && make typecheck` — зелёные
+- [ ] `searchState.ts`: чтение и запись по Technical Details; `resetPageToOne` переезжает из `usePageSync.ts` в `lib/searchParams.ts`; `QUERY_MIN_LENGTH` и `QUERY_DEBOUNCE_MS` переезжают сюда из `@widgets/header`
+- [ ] событие `filter changed` — в actions фильтров, как сейчас
+- [ ] `searchMovies.ts`: `fetchSearchMovies` — `action + withAsync + withQueryCache()`
+- [ ] `catalog.ts`: `catalog`; к его подключению привязаны `normalizeSearchUrl` и отслеживание `search submitted` (`sleep(800)` + `withAbort`, без повторов для того же запроса)
+- [ ] модели пока не подключены к UI; в тестах атомы подписаны, URL выставляется через `urlAtom`
+- [ ] тесты (проверяется URL): deep-link `/search?q=…&page=3&genres=…` — страница сохраняется, фильтры и сортировка вычищены
+- [ ] тесты: `setFilters` / `toggleGenre` / `resetFilters` / `setSort` сбрасывают `page`; `submitSearchQuery` из режима фильтров оставляет в URL только `q`; каждая мутация — один `replaceState`
+- [ ] тесты: мусор в параметрах даёт дефолты; вне `/search` состояние пустое; запрос короче порога не пишется в `?q`
+- [ ] тесты: `searchDraft` принимает ввод и следует за URL при back/forward; быстрый ввод даёт одну запись после debounce
+- [ ] тесты `catalog`: режим поиска против режима каталога; возврат на уже загруженную страницу не шлёт запрос; старые данные остаются во время обновления
+- [ ] запустить тесты — зелёные перед Task 14
 
-### Task 16: Бюджеты бандла, code splitting, knip
+### Task 14: Замена React Router на `reatomRoute`
 
-**Model:** sonnet — механическая процедура из `.claude/rules/build-budgets.md`, результат проверяют `make size`/`make knip`
-
-**Files:**
-
-- Modify: `bundle.config.ts` (+ тест), `package.json` (`size-limit`), `knip.jsonc`
-- Modify: `docs/plans/20261002-reatom-v1001-migration.md` (таблица размеров)
-
-- [ ] перед началом прочитать `.claude/rules/build-budgets.md`
-- [ ] `bundle.config.ts`: `@reatom/*` — в `vendor`; `shared` по-прежнему перед page-группами; после сборки проверить, что entry и page-чанки импортируют только `rolldown-runtime`/`vendor`/`shared`
-- [ ] пересчитать все лимиты `size-limit` (включая временно поднятый `vendor`): измеренный gzip + 15%, `entry` — со сборкой с `VITE_SENTRY_DSN`
-- [ ] записать в этот план таблицу «было (main) → стало (reatom)» по каждому чанку — вход для сводной таблицы 3.8
-- [ ] `make knip`: убрать ставшие лишними записи `ignore`, новые не добавлять — чинить в источнике
-- [ ] обновить тест `bundle.config`
-- [ ] `make build-only && make size && make knip` — зелёные
-
-### Task 17: Проверка критериев приёмки
-
-**Model:** sonnet — сверяет результат с планом, чинит расхождения
+**Model:** opus — меняет поведение, общее для всех страниц и виджетов; должно остаться согласованным
 
 **Files:**
 
-- Modify: только файлы с найденными расхождениями
+- Create: `src/app/routes.tsx`, `src/app/routes.test.tsx`, `src/app/reatom.d.ts`, `src/app/ui/NotFound/index.tsx`
+- Modify: `src/app/providers.tsx`, `src/app/layouts/AppLayout.tsx`, `src/app/sentry.ts`, `src/app/sentry.test.ts`, `src/test/router.tsx`
+- Modify: остальные прод-файлы с импортом `react-router` (список — `grep -rl react-router src`), включая `BottomNav`, `MobileHeader`, `Card`, `ProfileAvatar`
+- Modify: `src/pages/search/ui/**`, `src/widgets/header/ui/Header/Header.tsx`, `src/pages/home/ui/HeroSection/HeroSection.tsx`
+- Delete: `src/app/router.tsx`, `src/features/catalog-filter/model/useFilterState.ts`, `src/pages/search/model/{useMovieCatalog,usePageSync,useCatalogUpdateStatus,useSearchAnalytics}.ts`, `src/entities/movie/api/{getMoviesPage,getSearchMovies}.ts` и их тесты
+- Modify: `package.json` (удалить `react-router`)
 
-- [ ] все четыре области из Overview мигрированы: `grep -rn "react-router\|createStorageSlot\|createCachedFetcher\|useSyncExternalStore\|useSearchParams" src` — пусто
-- [ ] каждый вызов `withLocalStorage(` в `src` задаёт `time` и `schema` с `.catch(...)`
-- [ ] `grep -rn "useMemo\|useCallback\|useDeferredValue" src` — пусто или каждое вхождение обосновано комментарием
-- [ ] все атомы/actions/computed именованы; нет `effect` на уровне модуля; каждый `await` в моделях обёрнут в `wrap`
-- [ ] правило по React Compiler из Task 1 соблюдено во всех `reatomComponent`
-- [ ] граничные случаи: недоступный `localStorage`, 403 по квоте, 404 фильма, невалидный id в URL, неизвестный путь, back/forward на `/search`, второй таб меняет избранное
-- [ ] `make check && make test && make size && make knip`
-- [ ] `make build-only && make e2e` (второй и последний e2e-прогон; учитывать квоту 200 запросов/сутки)
-- [ ] покрытие (`make coverage`) не ниже, чем на `main`
+- [ ] `routes.tsx`: `layoutRoute` и дочерние роуты с `render`; страницы остаются ленивыми через `lazyNamed`; `RouteChild` — в `src/app/reatom.d.ts` с `oxlint-disable-next-line`
+- [ ] `AppLayout` → `reatomComponent` с `children`: chrome выбирается по `route.exact()` / `route.match()`, `activeNav` для `/search` — из `filters().type`; `key` у `ErrorBoundary` — `urlAtom().pathname`; `trackPageview` по смене `pathname`
+- [ ] `providers.tsx` рендерит `layoutRoute.render()` внутри `GlobalErrorBoundary`
+- [ ] применить таблицу замен API React Router из Technical Details во всех прод-файлах
+- [ ] `/movie/:id` и `/person/:id`: id приходит пропом из `render` (данные пока через прежние хуки и `AsyncBoundary` — до Task 16)
+- [ ] `Search`, `ActiveFilterChips`, `FilterPanel`, `SearchResultsGrid` → модели Task 13; скелетон по `isFirstPending`, бейдж «Updating…» при обновлении поверх старых данных
+- [ ] `Header` → `searchDraft` / `commitSearchDraft`; `HeroSection` → один `urlAtom.go(paths.search({ q }))`
+- [ ] `sentry.ts`: заменить `reactRouterBrowserTracingIntegration` на `browserTracingIntegration()` без хуков роутера (имена по шаблону роута — Task 17)
+- [ ] `renderWithRouter`: выставляет URL через `history.replaceState`, рендерит без провайдера роутера; `getUrl()` читает `urlAtom()`
+- [ ] `routes.test.tsx`: каждый путь рендерит свою страницу; неизвестный путь → `NotFound`; `paths.*` совпадают с `route.path()`; клик по `<a>` меняет страницу без перезагрузки; `history.back()` возвращает предыдущую
+- [ ] переписать помеченные в Task 11 тесты (`router.test.tsx`, тесты `AppLayout`) под новые роуты
+- [ ] удалить `react-router` из зависимостей; `grep -r react-router src` пуст
+- [ ] ⚠️ до Task 15 скролл при навигации не сбрасывается — известный разрыв между задачами
+- [ ] запустить `make test`, `make typecheck`, `make lint` — зелёные перед Task 15
 
-### Task 18: [Final] Документация
+### Task 15: Восстановление скролла
 
-**Model:** sonnet — описывает уже построенное поведение
+**Model:** opus — порядок событий истории и момента отрисовки; ошибка не ловится простыми проверками
 
 **Files:**
 
-- Modify: `README.md`, `AGENTS.md`, `plans/roadmap.md`
-- Modify: `.claude/rules/{data-layer,storage,search-catalog,sentry,build-budgets,analytics,ui-patterns,user-lists}.md`
+- Create: `src/app/model/{scrollRestoration.ts,scrollRestoration.test.ts}`
+- Modify: `src/app/reatom-setup.ts`, `src/test/setup.ts`
 
-- [ ] `README.md`: раздел «Reatom v1001 — разбор паттернов» (чекбокс «README ветки» из 3.3): client state, async-ресурсы, derived-атомы, роутинг; что стало проще/сложнее относительно `main`; три ловушки нативного persist (25 дней вопреки handbook, throw схемы, ненаблюдаемый сбой записи) и что из-за третьей потеряно относительно `main`; таблица размеров из Task 16
-- [ ] `AGENTS.md` (англ.): Architecture (Reatom вместо React Router), Routing (`routes.tsx`, `paths`, not-found), Data summary, конвенции Reatom из этого плана; удалить устаревшие gotchas (`useDeferredValue` над `useSearchParams`, `createStorageSlot().set()` → boolean); добавить правило по React Compiler
-- [ ] `.claude/rules/*.md` (англ.) — **сначала поправить `paths:` во frontmatter**: они ссылаются на удалённые файлы (`useFilterState.ts`, `useFavorites.ts`, hooks и `*DictionaryCache.ts`, `cachedFetcher`, `sessionCache`, `AsyncBoundary`, `router.tsx`), без этого правила перестанут загружаться
-- [ ] содержание правил — только решения и причины, без пересказа кода: `storage.md` → две обязательные опции `withLocalStorage` и почему, принятые потери (нет репорта в Sentry, нет гейта analytics); `data-layer.md` → убрать `createCachedFetcher`/`AsyncBoundary`/`invalidate*`, добавить «ошибка не кэшируется, retry явный», «один `fetchMovieDetail`», явный `length` у `withCache`; `search-catalog.md` → URL читается через `urlAtom`, почему не `withSearchParams`, убрать правило про `areFiltersEqual`; `sentry.md` → ручные span'ы вместо `wrapCreateBrowserRouter`; `build-budgets.md` → состав vendor
-- [ ] `plans/roadmap.md`: переписать пункт 3.3 под v1001 (пакеты, API, ссылки на `v1001.reatom.dev`) и отметить чекбоксы
+- [ ] `urlAtom.sync` не заменять: модель слушает `urlAtom`; перед сменой сохраняет позицию под `history.state?.key`; после навигации (после `setTimeout(0)`) проставляет ключ новой записи через `history.replaceState({ ...history.state, key }, '')`
+- [ ] позиции — в `sessionStorage`; новая запись истории со сменой `pathname` → скролл в начало; `popstate` → восстановление позиции по ключу из `history.state` после готовности данных роута
+- [ ] смена только query-параметров (`replace` на `/search`) скролл не трогает; `history.scrollRestoration = 'manual'`
+- [ ] запуск модели — action инициализации в `src/app/reatom-setup.ts`; модульное состояние сбрасывается в `afterEach`
+- [ ] тесты: переход кликом по `<a>` сбрасывает скролл; переход через `urlAtom.go` — тоже; back восстанавливает; смена `?q` не скроллит
+- [ ] запустить тесты — зелёные перед Task 16
+
+### Task 16: Loaders для `/movie/:id` и `/person/:id`, удаление старого слоя запросов
+
+**Model:** sonnet — паттерн loader и `AsyncContent` задан; удаление проверяется сборкой и knip
+
+**Files:**
+
+- Modify: `src/app/routes.tsx`, `src/pages/movie/MoviePage.tsx`, `src/pages/person/PersonPage.tsx`, `src/pages/movie/ui/**`
+- Create: `src/entities/person/model/{personDetail.ts,personDetail.test.ts}`
+- Modify: `src/entities/{movie,person}/index.ts`, `src/shared/lib/index.ts`, `src/shared/ui/index.ts`, `src/test/setup.ts`
+- Delete: `src/entities/movie/hooks/`, `src/entities/person/hooks/`, оставшиеся `src/entities/*/api/get*.ts`, `src/shared/lib/{cachedFetcher,sessionCache}/`, `src/shared/ui/AsyncBoundary/` и их тесты
+
+- [ ] `movieRoute`: loader вызывает `loadMovieDetailBundle`; невалидный id → `ApiError` со статусом 404
+- [ ] `personRoute`: loader поверх `fetchPersonDetail` (`action + withAsync + withQueryCache({ length: 50, ignoreAbort: true })`)
+- [ ] `MoviePage` / `PersonPage` → `reatomComponent`, проп `loader: RouteLoader<…>`; скелетон при `!ready()`, различение 404 и прочих ошибок, retry — `loader.retry`
+- [ ] удалить `createCachedFetcher`, `sessionCache`, `AsyncBoundary`, `resetAllCachedFetchers` из `setup.ts`
+- [ ] тесты: `/movie/1 → /movie/2` показывает скелетон, а не фильм 1; `/movie/abc` и 404 API → «Movie not found»; отказ картинок не ломает страницу
+- [ ] тесты: возврат на уже открытый фильм не шлёт запрос; повторный заход на упавший роут шлёт ровно один запрос
+- [ ] запустить тесты и `make knip` — зелёные перед Task 17
+
+### Task 17: Sentry-трейсинг роутов
+
+**Model:** sonnet — правило именования задано, проверяется unit-тестом с моком Sentry
+
+**Files:**
+
+- Modify: `src/app/sentry.ts`, `src/app/sentry-bootstrap.ts`, `src/main.tsx`, их тесты
+- Create: `src/app/model/{routeTracing.ts,routeTracing.test.ts}`
+
+- [ ] выключить авто-спаны pageload/navigation у `browserTracingIntegration`
+- [ ] `routeTracing.ts`: pageload-спан при старте и navigation-спан при смене точного роута; имя — `pattern` роута (`/movie/:id`), источник `route`; неизвестный путь — отдельное фиксированное имя
+- [ ] обновить WHY-комментарии про порядок импортов в `main.tsx` / `sentry-bootstrap.ts`: требование «до создания роутера» заменяется на «до `reatom-setup`»
+- [ ] тесты: `/movie/1` и `/movie/2` дают одно имя транзакции; смена query-параметров спан не создаёт
+- [ ] существующие тесты PII-скраббинга и `captureRouteError` остаются зелёными
+- [ ] запустить тесты — зелёные перед Task 18
+
+### Task 18: Бюджеты бандла, code splitting, knip
+
+**Model:** sonnet — измерить и зафиксировать, проверки автоматические
+
+**Files:**
+
+- Modify: `package.json` (`size-limit`), `vite.config.ts`, `knip.jsonc`, `bundle.config.ts` при необходимости
+
+- [ ] `make build-only` и `make analyze`: убедиться, что страницы остались отдельными чанками, а `routes.tsx` не втянул их в entry
+- [ ] выставить бюджеты `size-limit` по факту с прежним запасом; записать дельты `vendor`/`shared`/`entry` относительно `main` в раздел Progress Tracking этого файла
+- [ ] `make knip` — чисто; убрать устаревшие исключения
+- [ ] `make check` и `make size` — зелёные перед Task 19
+
+### Task 19: Проверка критериев приёмки
+
+**Model:** sonnet — сверка результата с планом и устранение расхождений
+
+**Files:**
+
+- Modify: `e2e/*.spec.ts` — только при изменившемся наблюдаемом поведении
+
+- [ ] все пункты таблицы соответствия 3.3 реализованы
+- [ ] `grep -rE "react-router|createStorageSlot|createCachedFetcher|useSyncExternalStore" src` — пусто
+- [ ] ни один обычный (не `reatomComponent`) компонент не вызывает атом напрямую — проверить поиском по импортам моделей
+- [ ] ни на одном `computed` нет `withCache` / `withQueryCache`
+- [ ] `useViewport()` по-прежнему имеет ровно двух потребителей
+- [ ] `make check`, `make test`, `make knip`, `make size` — зелёные
+- [ ] `make build-only && make e2e` — один прогон
+- [ ] покрытие (`make coverage`) не ниже текущего уровня ветки
+
+### Task 20: [Final] Документация
+
+**Model:** sonnet — документация описывает уже построенное поведение
+
+**Files:**
+
+- Modify: `README.md`, `AGENTS.md`, `.claude/rules/*.md`, `plans/roadmap.md`
+- Move: этот план → `docs/plans/completed/`
+
+- [ ] `README.md`: раздел ветки — паттерны Reatom v1001, плюсы и минусы, дельта бандла из Task 18
+- [ ] `AGENTS.md` (на английском): убрать gotcha про `createStorageSlot().set()`; стек, раздел Routing, API-слой, Data summary, Testing; второе исключение `interface` (`src/app/reatom.d.ts`); убрать упоминания удалённых хуков и `createStorageSlot`
+- [ ] `.claude/rules/*.md` (на английском, только неочевидное): `storage.md` — TTL persist в 1001.3.0, почему не `schema`, отказ от сигнала о сбое записи; `sentry.md` — убрать раздел про репортер хранилища; `data-layer.md` — кэш только на action, отказ от кэша ошибок; `search-catalog.md` — одна запись в URL на мутацию, почему не `withSearchParams`; `ui-patterns.md` — ловушка React Compiler; `sentry.md` — ручные спаны; `e2e.md`/тесты — порядок изоляции; обновить `paths:` под новые файлы
+- [ ] `plans/roadmap.md`: отметить чекбоксы 3.3 и дописать, что реализация — на v1001
 - [ ] перенести этот план в `docs/plans/completed/`
-
-## Результат spike (заполняется в Task 1)
-
-- React Compiler + `reatomComponent`: _не определено_
 
 ## Post-Completion
 
-Требуют ручных действий или внешних систем — выполняет человек, не `/planning:exec`.
+**Ручная проверка**
 
-**Ручная проверка:**
+- DevTools-консоль в dev: логи `connectLogger` показывают атомы и actions с осмысленными именами
+  (критерий Phase 3 «DevTools видит state-tool артефакты»).
+- Две вкладки: избранное, тема и профиль синхронизируются.
+- Приватный режим браузера / заблокированные данные сайта: приложение работает, состояние живёт в
+  памяти до перезагрузки.
+- Навигация назад/вперёд между `/`, `/movie/:id`, `/search`: позиция скролла восстанавливается.
+- Network в dev: перезагрузка страницы и возврат на уже открытую страницу каталога не шлют запросов.
+- HMR при правке `src/app/routes.tsx` не оставляет устаревший outlet.
 
-- [ ] пройти все 10 роутов на desktop и mobile-ширине: навигация, back/forward, восстановление скролла, обновление страницы на deep-link (`/movie/:id`, `/search?q=…&page=3`)
-- [ ] тема без FOUC при reload во всех трёх режимах; favorites/watched/watchlist синхронизируются между двумя табами
-- [ ] DevTools-консоль в dev: лог Reatom (`connectLogger`) читаем, имена атомов осмысленны
+**Внешнее**
 
-**Внешние системы:**
-
-- [ ] Sentry: на preview-деплое транзакции группируются как `/movie/:id`, а не по конкретным id; Web Vitals продолжают приходить
-- [ ] CSP: preview отдаёт новый хэш inline-скрипта, в отчётах нет нарушений `script-src`
-- [ ] Lighthouse: прогон по лейблу `run-lighthouse` на PR ветки — сравнить с `main`
-- [ ] сводная таблица 3.8 в README на `main`: bundle size и DX-заметки из README этой ветки
+- После выхода версии `@reatom/core` с дефолтом `time = Number.MAX_SAFE_INTEGER` — обновить
+  зависимость и убрать пояснение у `PERSIST_FOREVER_MS`.
+- Найденные ловушки (`withCache` на `computed`, запись нескольких `withSearchParams`, дефолт
+  `time` в persist) — кандидаты на issue в `reatom/reatom`.
+- Сводная таблица сравнения state-библиотек (роадмап 3.8) заполняется на `main` отдельно.
+- Lighthouse по лейблу `run-lighthouse` на PR ветки — сравнить Performance с `main`.
