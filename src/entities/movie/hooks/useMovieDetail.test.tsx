@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
-import { getMoviesByIds } from '../api/getMoviesByIds'
+import { moviesByIdsStore } from '../api/getMoviesByIds'
 import { useMovieDetail } from './useMovieDetail'
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
@@ -133,7 +133,7 @@ describe('useMovieDetail — смена id', () => {
   })
 })
 
-describe('useMovieDetail — общий кеш detail с getMoviesByIds', () => {
+describe('useMovieDetail — общий кеш detail с moviesByIdsStore', () => {
   it('detail, загруженный страницей фильма, не запрашивается повторно списком', async () => {
     let requests = 0
     server.use(
@@ -147,7 +147,7 @@ describe('useMovieDetail — общий кеш detail с getMoviesByIds', () => 
     const { result } = renderHook(() => useMovieDetail(20))
     await waitFor(() => expect(result.current.data).toBeDefined())
 
-    const movies = await getMoviesByIds([20])
+    const movies = await moviesByIdsStore.fetch([20])
 
     expect(movies.map(movie => movie.id)).toEqual([20])
     expect(requests).toBe(1)

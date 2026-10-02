@@ -404,13 +404,13 @@ resetAllStores() // только для src/test/setup.ts
 - Modify: `src/pages/recommendations/ui/Recommendations/Recommendations.tsx` + тест
 - Modify: `src/entities/movie/api/{getMoviesByIds,getMoviesPage}.ts`, `src/entities/movie/index.ts` (снять мосты Task 12–13)
 
-- [ ] `recommendationsStore` с ключом `ids`: `fetcher` = `moviesByIdsStore.fetch(ids)` → `computeRecommendationQuery` → `null` (пустое избранное/нет правила, без сетевого запроса) либо `catalogPageStore.fetch({ params, page: 1 })` → `Movie[]`
-- [ ] `useRecommendedMovies`: `ids` из `useFavorites` → `recommendationsStore.useQuery(ids)`; возвращает один `QueryResult<Movie[] | null>`. Пока идёт загрузка — скелетон, а не empty-state
-- [ ] module-level переменная последнего запроса и `invalidateRecommendations` удаляются — Retry = `refetch` (перезапрос упавшего вложенного шага обеспечивает семантика `fetch()` из Task 8)
-- [ ] исключение `favoriteIds` из выдачи и отсутствие favorite-toggle на карточках сохраняются
-- [ ] снять мосты: удалить старые кеширующие экспорты `getMoviesByIds`, `getMoviesPage`, `invalidateMoviesPage` и их записи в barrel
-- [ ] тесты: пустое избранное → `null` без запроса; изменение избранного → новый запрос; ошибка загрузки избранного и ошибка каталога → `ErrorState`, Retry перезапрашивает упавший шаг; `null` vs `[]`
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `recommendationsStore` с ключом `ids`: `fetcher` = `moviesByIdsStore.fetch(ids)` → `computeRecommendationQuery` → `null` (пустое избранное/нет правила, без сетевого запроса) либо `catalogPageStore.fetch({ params, page: 1 })` → `Movie[]`
+- [x] `useRecommendedMovies`: `ids` из `useFavorites` → `recommendationsStore.useQuery(ids)`; возвращает один `QueryResult<Movie[] | null>`. Пока идёт загрузка — скелетон, а не empty-state
+- [x] module-level переменная последнего запроса и `invalidateRecommendations` удаляются — Retry = `refetch` (перезапрос упавшего вложенного шага обеспечивает семантика `fetch()` из Task 8)
+- [x] исключение `favoriteIds` из выдачи и отсутствие favorite-toggle на карточках сохраняются
+- [x] снять мосты: удалить старые кеширующие экспорты `getMoviesByIds`, `getMoviesPage`, `invalidateMoviesPage` и их записи в barrel
+- [x] тесты: пустое избранное → `null` без запроса; изменение избранного → новый запрос; ошибка загрузки избранного и ошибка каталога → `ErrorState`, Retry перезапрашивает упавший шаг; `null` vs `[]`
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 15: Справочники жанров и стран на сторе с persist
 

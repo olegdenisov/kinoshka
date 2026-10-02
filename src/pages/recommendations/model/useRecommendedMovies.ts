@@ -1,62 +1,21 @@
-import {
-  getMoviesByIds,
-  getMoviesPage,
-  invalidateMoviesPage,
-} from '@entities/movie'
-import type { CatalogParams, Movie } from '@entities/movie'
+import type { Movie } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
-import { computeRecommendationQuery } from '@features/recommendations'
-import { use } from 'react'
+import type { QueryResult } from '@shared/lib'
+
+import { recommendationsStore } from './recommendationsStore'
 
 /**
- * Page-slice facade (Task 2 плана `docs/plans/20260825-recommendations-rule-based.md`):
- * композиция `useFavoriteMovies()` (`@features/favorites`, Suspense) + `computeRecommendationQuery()`
- * (`@features/recommendations`) + `getMoviesPage()` (`@entities/movie`) — тот же паттерн, что
- * `useMovieCatalog` в `pages/search/model/` (см. AGENTS.md, "Page-slice model/ facade"): ни
- * один из `@features/*` не может импортировать другой `@features/*` напрямую, а page-слой
- * легально импортирует оба вниз.
+ * Page-slice facade: `useFavorites()` (`@features/favorites`) + query-стор рекомендаций,
+ * внутри которого `moviesByIdsStore` (`@entities/movie`) + `computeRecommendationQuery()`
+ * (`@features/recommendations`) + `catalogPageStore` — ни один `@features/*` не может
+ * импортировать другой напрямую, а page-слой легально импортирует оба вниз (см. AGENTS.md,
+ * "Page-slice model/ facade").
  *
- * Возвращает `null`, если `computeRecommendationQuery` вернул `null` (пустое избранное после
- * `getMoviesByIds` — часть id могла 404-нуться), и `Movie[]` (возможно пустой) иначе — см.
- * Solution Overview в плане про различие `null` vs `[]` для UI.
+ * `data === null`: избранное пусто либо не дало правила (например, все id 404-нулись);
+ * `Movie[]` (возможно пустой) — каталог ответил. Различие `null` vs `[]` нужно UI.
  */
-export const useRecommendedMovies = (): Movie[] | null => {
+export const useRecommendedMovies = (): QueryResult<Movie[] | null> => {
   const { ids } = useFavorites()
-  // Временный мост до Task 14: рекомендации ещё на Suspense, поэтому читают избранное через
-  // старый кеширующий getMoviesByIds, а не через QueryResult-хук useFavoriteMovies
-  const favorites = use(getMoviesByIds(ids))
-  const query = computeRecommendationQuery(favorites)
-  lastQuery = query
 
-  if (!query) {
-    return null
-  }
-
-  const { movies } = use(getMoviesPage(query, 1))
-
-  return movies
-}
-
-// Module-level запоминание последнего вычисленного query — вход правила (favorites) сам
-// приходит из Suspense и недоступен синхронно снаружи AsyncBoundary в месте вызова onRetry
-// (в отличие от useMovieCatalog, где filters/sort/page синхронно доступны вызывающей стороне).
-// Мутация во время рендера — тот же приём, что уже используют pageCache/createCachedFetcher
-// (module-level Map, обновляемый внутри функции, вызываемой из use() во время рендера);
-// идемпотентно, повторная запись тем же значением при StrictMode-double-invoke безвредна.
-let lastQuery: NonNullable<CatalogParams> | null = null
-
-/**
- * Companion-инвалидатор для Retry (тот же паттерн, что `invalidateMovieCatalog`/
- * `invalidateMovieDetail`/`invalidatePopularMovies` — см. AGENTS.md): чистит кэш
- * favorites-фетча (`getMoviesByIds`) и кэш каталожного шага по ПОСЛЕДНЕМУ вычисленному
- * query (`invalidateMoviesPage`) — иначе Retry бил бы только по кэшу favorites, а
- * `getMoviesPage(query, 1)` продолжал бы отдавать закэшированный rejected-промис ещё до
- * истечения `ERROR_CACHE_TTL_MS` (20с), даже после успешного обновления избранного.
- */
-export const invalidateRecommendations = (ids: number[]): void => {
-  getMoviesByIds.invalidate(ids)
-
-  if (lastQuery) {
-    invalidateMoviesPage(lastQuery, 1)
-  }
+  return recommendationsStore.useQuery(ids)
 }

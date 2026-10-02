@@ -1,5 +1,5 @@
 import { ApiError } from '@shared/api'
-import { createCachedFetcher, createQueryStore } from '@shared/lib'
+import { createQueryStore } from '@shared/lib'
 
 import type { Movie } from '../model/types'
 import { movieDetailStore } from './getMovieDetail'
@@ -30,11 +30,6 @@ const fetchMoviesByIds = async (ids: number[]): Promise<Movie[]> => {
 
   return movies
 }
-
-export const getMoviesByIds = createCachedFetcher<number[], Movie[]>(
-  'movies-by-ids',
-  fetchMoviesByIds,
-)
 
 // Ключ — массив id (JSON.stringify по умолчанию). Detail каждого id берётся через
 // movieDetailStore.fetch — общий кеш с детальной страницей, второй запрос за тем же фильмом не уходит

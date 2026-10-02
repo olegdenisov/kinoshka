@@ -6,8 +6,7 @@ import { catalogPageStore, type CatalogParams } from './getMoviesPage'
 
 // Механика кеша (дедупликация, TTL, кулдаун) — в createQueryStore.test.ts. Здесь — специфика
 // catalogPageStore: обход next 1..N через стор шагов курсора, totalPages из withCount-total.
-// Сторы сбрасывает resetAllStores в src/test/setup.ts; мост getMoviesPage держит свой
-// module-level pageCache, поэтому его тесты берут свежий модуль.
+// Сторы сбрасывает resetAllStores в src/test/setup.ts.
 
 const ENDPOINT = '*/v1.5/movie'
 
@@ -37,15 +36,6 @@ const movieNamed = (name: string) => ({
 
 const fetchPage = (page: number, params: CatalogParams = {}) =>
   catalogPageStore.fetch({ params, page })
-
-const importBridge = async () => {
-  vi.resetModules()
-  const mod = await import('./getMoviesPage')
-  return {
-    getMoviesPage: mod.getMoviesPage,
-    invalidate: mod.invalidateMoviesPage,
-  }
-}
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -330,36 +320,5 @@ describe('catalogPageStore — totalPages = min(10, ceil(total/12)) из withCou
   it('total отсутствует в ответе (неожиданно) — totalPages = потолок demo-тарифа', async () => {
     mockLastPage('Test Movie')
     expect((await fetchPage(1)).totalPages).toBe(10)
-  })
-})
-
-// Мост до Task 14 (рекомендации ещё на use())
-describe('getMoviesPage / invalidateMoviesPage (мост)', () => {
-  it('один и тот же Promise-объект на повторный вызов — стабильность для use()', async () => {
-    mockChain()
-    const { getMoviesPage } = await importBridge()
-
-    const first = getMoviesPage({}, 3)
-    const second = getMoviesPage({}, 3)
-
-    expect(first).toBe(second)
-    await first
-  })
-
-  it('rejected → invalidate → повторный вызов реально идёт в сеть', async () => {
-    const forbidden = mockForbidden()
-    const { getMoviesPage, invalidate } = await importBridge()
-
-    await expect(getMoviesPage({}, 1)).rejects.toThrow()
-    // без invalidate мост 20 с отдаёт тот же rejected-промис
-    await expect(getMoviesPage({}, 1)).rejects.toThrow()
-    expect(forbidden.requests).toBe(1)
-
-    invalidate({}, 1)
-    const recovered = mockLastPage('Recovered', 5)
-
-    const result = await getMoviesPage({}, 1)
-    expect(recovered.requests).toBe(1)
-    expect(result.movies).toEqual([movieNamed('Recovered')])
   })
 })

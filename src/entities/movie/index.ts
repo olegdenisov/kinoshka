@@ -12,15 +12,11 @@ export type {
 export type { Genre } from './model/genre'
 export { STATIC_FALLBACK_GENRES } from './model/genre'
 export { STATIC_FALLBACK_COUNTRIES } from './model/country'
-export {
-  catalogPageStore,
-  getMoviesPage,
-  invalidateMoviesPage,
-} from './api/getMoviesPage'
+export { catalogPageStore } from './api/getMoviesPage'
 export type { CatalogParams, CatalogPageResult } from './api/getMoviesPage'
 export { fetchSearchMovies } from './api/getSearchMovies'
 export type { SearchMoviesResult } from './api/getSearchMovies'
-export { getMoviesByIds } from './api/getMoviesByIds'
+export { moviesByIdsStore } from './api/getMoviesByIds'
 export type { MovieImage } from './api/getMovieImages'
 export { formatCurrency } from './lib/formatCurrency'
 export { formatDate } from './lib/formatDate'

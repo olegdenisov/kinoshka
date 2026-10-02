@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
-import { getMoviesByIds, moviesByIdsStore } from './getMoviesByIds'
+import { moviesByIdsStore } from './getMoviesByIds'
 
 const doc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -37,13 +37,13 @@ const mockError = (
   )
 }
 
-describe('getMoviesByIds — успешные сценарии', () => {
+describe('moviesByIdsStore — успешные сценарии', () => {
   it('несколько id — результат Movie[] в порядке входного массива', async () => {
     mockSuccess(201, { name: 'First' })
     mockSuccess(202, { name: 'Second' })
     mockSuccess(203, { name: 'Third' })
 
-    const movies = await getMoviesByIds([203, 201, 202])
+    const movies = await moviesByIdsStore.fetch([203, 201, 202])
 
     expect(movies.map(movie => movie.id)).toEqual([203, 201, 202])
     expect(movies.map(movie => movie.title)).toEqual([
@@ -54,13 +54,13 @@ describe('getMoviesByIds — успешные сценарии', () => {
   })
 
   it('пустой ids — [] без сетевого запроса', async () => {
-    const movies = await getMoviesByIds([])
+    const movies = await moviesByIdsStore.fetch([])
 
     expect(movies).toEqual([])
   })
 })
 
-describe('getMoviesByIds — edge cases', () => {
+describe('moviesByIdsStore — edge cases', () => {
   it('один id отвечает 404 — молча выпадает из результата, остальные присутствуют', async () => {
     mockSuccess(301, { name: 'Survives' })
     mockError(302, 404, {
@@ -70,19 +70,9 @@ describe('getMoviesByIds — edge cases', () => {
     })
     mockSuccess(303, { name: 'Also survives' })
 
-    const movies = await getMoviesByIds([301, 302, 303])
+    const movies = await moviesByIdsStore.fetch([301, 302, 303])
 
     expect(movies.map(movie => movie.id)).toEqual([301, 303])
-  })
-
-  it('повторный вызов с тем же массивом id переиспользует закэшированный промис', async () => {
-    mockSuccess(401, { name: 'Cached' })
-
-    const first = getMoviesByIds([401])
-    const second = getMoviesByIds([401])
-
-    expect(first).toBe(second)
-    await first
   })
 
   it('все id отвечают 404 — резолвится в [], без реджекта', async () => {
@@ -97,7 +87,7 @@ describe('getMoviesByIds — edge cases', () => {
       error: 'Not Found',
     })
 
-    const movies = await getMoviesByIds([501, 502])
+    const movies = await moviesByIdsStore.fetch([501, 502])
 
     expect(movies).toEqual([])
   })
@@ -114,7 +104,7 @@ describe('getMoviesByIds — edge cases', () => {
       error: 'Internal Server Error',
     })
 
-    await expect(getMoviesByIds([601, 602])).rejects.toThrow()
+    await expect(moviesByIdsStore.fetch([601, 602])).rejects.toThrow()
   })
 })
 
