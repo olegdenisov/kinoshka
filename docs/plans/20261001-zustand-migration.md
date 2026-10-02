@@ -275,13 +275,13 @@ resetAllStores() // только для src/test/setup.ts
 - Create: `src/pages/search/model/searchUiStore.ts`, `src/pages/search/model/searchUiStore.test.ts`
 - Modify: `src/pages/search/ui/Search/Search.tsx`, `src/pages/search/ui/Search/Search.test.tsx`
 
-- [ ] стор без `persist`: `{ filtersOpen, sortOpen, openFilters, closeFilters, openSort, closeSort, reset }`; регистрация в реестре сброса
-- [ ] `Search.tsx`: `useState` для `filtersOpen`/`sortOpen` заменить селекторами стора; каждый `BottomSheet` подписан только на свой флаг
-- [ ] сброс при размонтировании страницы (`reset` в cleanup эффекта) — стор module-level, иначе шторка «вспомнит» открытость после возврата на `/search`
-- [ ] `useFilterState` и URL-параметры не трогаем; WHY-комментарий у стора: фильтры живут в URL (ссылки, back/forward), в сторе — только то, чего в URL нет
-- [ ] тесты стора: открыть/закрыть, независимость флагов, `reset`
-- [ ] тест страницы: после размонтирования и повторного монтирования шторки закрыты
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] стор без `persist`: `{ filtersOpen, sortOpen, openFilters, closeFilters, openSort, closeSort, reset }`; регистрация в реестре сброса
+- [x] `Search.tsx`: `useState` для `filtersOpen`/`sortOpen` заменить селекторами стора; каждый `BottomSheet` подписан только на свой флаг
+- [x] сброс при размонтировании страницы (`reset` в cleanup эффекта) — стор module-level, иначе шторка «вспомнит» открытость после возврата на `/search`
+- [x] `useFilterState` и URL-параметры не трогаем; WHY-комментарий у стора: фильтры живут в URL (ссылки, back/forward), в сторе — только то, чего в URL нет
+- [x] тесты стора: открыть/закрыть, независимость флагов, `reset`
+- [x] тест страницы: после размонтирования и повторного монтирования шторки закрыты
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 8: Фабрика `createQueryStore`
 
