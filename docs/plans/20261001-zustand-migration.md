@@ -458,12 +458,12 @@ resetAllStores() // только для src/test/setup.ts
 - Modify: `package.json` (`size-limit`)
 - Create: `docs/concepts/zustand-bundle-diff.md`
 
-- [ ] `VITE_SENTRY_DSN=https://k@o1.ingest.sentry.io/1 make build-only && make size` на ветке (без DSN чанк `entry` получается меньше реального — `build-budgets.md`); записать gzip-размеры всех чанков
-- [ ] цифры `main` — той же командой в отдельном worktree; цифры `rtk` — из `git show rtk:docs/concepts/rtk-bundle-diff.md`
-- [ ] обновить лимиты `entry`/`vendor`/`shared`/`page-*`: измеренный gzip + 15% (`.claude/rules/build-budgets.md`)
-- [ ] проверить, что `zustand` попал в `vendor`, а `devtools` middleware отсутствует в прод-сборке
-- [ ] таблица diff по чанкам `main` / `rtk` / `zustand` в `docs/concepts/zustand-bundle-diff.md`
-- [ ] тестов кода нет; `make size` — зелёный
+- [x] `VITE_SENTRY_DSN=https://k@o1.ingest.sentry.io/1 make build-only && make size` на ветке (без DSN чанк `entry` получается меньше реального — `build-budgets.md`); записать gzip-размеры всех чанков
+- [x] цифры `main` — той же командой в отдельном worktree; цифры `rtk` — из `git show rtk:docs/concepts/rtk-bundle-diff.md`
+- [x] обновить лимиты `entry`/`vendor`/`shared`/`page-*`: измеренный gzip + 15% (`.claude/rules/build-budgets.md`) (лимиты не менялись: все чанки укладываются, запас не меньше 7%, как в `rtk`)
+- [x] проверить, что `zustand` попал в `vendor`, а `devtools` middleware отсутствует в прод-сборке
+- [x] таблица diff по чанкам `main` / `rtk` / `zustand` в `docs/concepts/zustand-bundle-diff.md`
+- [x] тестов кода нет; `make size` — зелёный
 
 ### Task 18: Verify acceptance criteria
 
