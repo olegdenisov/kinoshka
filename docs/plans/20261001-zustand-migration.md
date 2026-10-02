@@ -242,13 +242,13 @@ resetAllStores() // только для src/test/setup.ts
 - Create: `src/features/favorites/model/favoritesStore.ts`, `src/features/favorites/model/favoritesStore.test.ts`
 - Modify: `src/features/favorites/model/useFavorites.ts`, `src/features/favorites/model/useFavorites.test.ts`
 
-- [ ] `useFavoritesStore` `{ ids, toggle, add, remove, clear }` на `favoritesSlot` (ключ `kinoshka:favorites`)
-- [ ] `trackEvent('favorite added')` — только при добавлении и только когда запись удалась (commit-хелпер вернул `true`); WHY-комментарий переносится
-- [ ] `useFavorites` сохраняет `UseFavoritesResult`; `isFavorite` выводится из `ids`; экшены берутся одним селектором с `useShallow` (объектный слайс — пункт roadmap 3.2)
-- [ ] стор из `src/features/favorites/index.ts` не экспортируется — Task 14 получает `ids` через `useFavorites`
-- [ ] тесты стора: toggle туда-обратно, событие аналитики при успехе, отсутствие события при неудачной записи, cross-tab обновление
-- [ ] существующие `useFavorites.test.ts` проходят
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `useFavoritesStore` `{ ids, toggle, add, remove, clear }` на `favoritesSlot` (ключ `kinoshka:favorites`)
+- [x] `trackEvent('favorite added')` — только при добавлении и только когда запись удалась (commit-хелпер вернул `true`); WHY-комментарий переносится
+- [x] `useFavorites` сохраняет `UseFavoritesResult`; `isFavorite` выводится из `ids`; экшены берутся одним селектором с `useShallow` (объектный слайс — пункт roadmap 3.2)
+- [x] стор из `src/features/favorites/index.ts` не экспортируется — Task 14 получает `ids` через `useFavorites`
+- [x] тесты стора: toggle туда-обратно, событие аналитики при успехе, отсутствие события при неудачной записи, cross-tab обновление
+- [x] существующие `useFavorites.test.ts` проходят
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 6: Стор профиля
 
