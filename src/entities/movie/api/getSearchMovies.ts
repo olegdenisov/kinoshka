@@ -1,11 +1,10 @@
 import { apiClient } from '@shared/api'
-import { createCachedFetcher } from '@shared/lib'
 
 import type { Movie } from '../model/types'
 import { mapDocToMovie } from './mapDocToMovie'
 import { PER_PAGE, MAX_PAGES } from './paginationConfig'
 
-type RequestParams = {
+type SearchMoviesParams = {
   query: string
   page?: number
 }
@@ -15,8 +14,10 @@ export type SearchMoviesResult = {
   totalPages: number
 }
 
-const fetchSearchMovies = async (
-  params: RequestParams,
+// Чистая функция без своего стора: единственный потребитель — стор каталога страницы /search,
+// собственный стор здесь дал бы двойной кеш одного и того же ответа
+export const fetchSearchMovies = async (
+  params: SearchMoviesParams,
 ): Promise<SearchMoviesResult> => {
   const response = await apiClient.getV15MovieSearch({
     query: {
@@ -34,5 +35,3 @@ const fetchSearchMovies = async (
     totalPages: Math.min(MAX_PAGES, response.data.pages),
   }
 }
-
-export const getSearchMovies = createCachedFetcher('search', fetchSearchMovies)

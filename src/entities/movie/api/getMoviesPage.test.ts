@@ -2,10 +2,12 @@ import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
 import { hashHue } from '../lib/hashHue'
+import { catalogPageStore, type CatalogParams } from './getMoviesPage'
 
-// Механика кэша (дедупликация, TTL, cooldown, sessionStorage) шагов-курсоров покрыта
-// в createCachedFetcher.test.ts. Здесь — специфика getMoviesPage: обход next 1..N,
-// page-level промис-мемо, вычисление totalPages из withCount-total.
+// Механика кеша (дедупликация, TTL, кулдаун) — в createQueryStore.test.ts. Здесь — специфика
+// catalogPageStore: обход next 1..N через стор шагов курсора, totalPages из withCount-total.
+// Сторы сбрасывает resetAllStores в src/test/setup.ts; мост getMoviesPage держит свой
+// module-level pageCache, поэтому его тесты берут свежий модуль.
 
 const ENDPOINT = '*/v1.5/movie'
 
@@ -33,15 +35,10 @@ const movieNamed = (name: string) => ({
   hue: hashHue(1),
 })
 
-// Свежий модуль на каждый тест — сбрасывает in-memory кэш шагов и page-level кэш,
-// чтобы одинаковые (params, page)/(params, cursor) не залипали между тестами.
-const importGetMoviesPage = async () => {
-  vi.resetModules()
-  const mod = await import('./getMoviesPage')
-  return mod.getMoviesPage
-}
+const fetchPage = (page: number, params: CatalogParams = {}) =>
+  catalogPageStore.fetch({ params, page })
 
-const importGetMoviesPageWithInvalidate = async () => {
+const importBridge = async () => {
   vi.resetModules()
   const mod = await import('./getMoviesPage')
   return {
@@ -50,14 +47,8 @@ const importGetMoviesPageWithInvalidate = async () => {
   }
 }
 
-beforeEach(() => {
-  vi.stubEnv('DEV', true)
-  sessionStorage.clear()
-})
-
 afterEach(() => {
   vi.restoreAllMocks()
-  vi.unstubAllEnvs()
 })
 
 // Цепочка курсоров: старт (без next) → c2 → c3 → c4 (конец списка).
@@ -70,6 +61,12 @@ const CHAIN = [
   { cursor: 'c2', name: 'Page2', next: 'c3' as string | null },
   { cursor: 'c3', name: 'Page3', next: 'c4' as string | null },
 ]
+
+const forbiddenResponse = () =>
+  HttpResponse.json(
+    { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+    { status: 403 },
+  )
 
 const mockChain = (total = 25) => {
   const counts = { requests: 0 }
@@ -98,7 +95,36 @@ const mockChain = (total = 25) => {
   return counts
 }
 
-describe('getMoviesPage — page=1 (без курсора)', () => {
+const mockLastPage = (name: string, total?: number) => {
+  const counts = { requests: 0 }
+  server.use(
+    http.get(ENDPOINT, () => {
+      counts.requests += 1
+      return HttpResponse.json({
+        docs: [doc({ name })],
+        limit: 12,
+        next: null,
+        hasNext: false,
+        hasPrev: false,
+        ...(total !== undefined ? { total } : {}),
+      })
+    }),
+  )
+  return counts
+}
+
+const mockForbidden = () => {
+  const counts = { requests: 0 }
+  server.use(
+    http.get(ENDPOINT, () => {
+      counts.requests += 1
+      return forbiddenResponse()
+    }),
+  )
+  return counts
+}
+
+describe('catalogPageStore — page=1 (без курсора)', () => {
   it('запрос уходит без next, с withCount:true', async () => {
     let request: Request | undefined
     server.use(
@@ -114,9 +140,8 @@ describe('getMoviesPage — page=1 (без курсора)', () => {
         })
       }),
     )
-    const getMoviesPage = await importGetMoviesPage()
 
-    const result = await getMoviesPage({}, 1)
+    const result = await fetchPage(1)
 
     const url = new URL(request!.url)
     expect(url.searchParams.has('next')).toBe(false)
@@ -126,216 +151,193 @@ describe('getMoviesPage — page=1 (без курсора)', () => {
   })
 })
 
-describe('getMoviesPage — обход next 1..N до целевой страницы', () => {
-  it('page=3 — 3 запроса (по одному на курсор-шаг), результат — доки третьего шага', async () => {
+describe('catalogPageStore — обход next 1..N до целевой страницы', () => {
+  it('page=3 — 3 запроса (по одному на шаг курсора), результат — доки третьего шага', async () => {
     const counts = mockChain()
-    const getMoviesPage = await importGetMoviesPage()
 
-    const result = await getMoviesPage({}, 3)
+    const result = await fetchPage(3)
 
     expect(counts.requests).toBe(3)
     expect(result.movies).toEqual([movieNamed('Page3')])
   })
 
-  it('промежуточные шаги-курсоры кешируются фабрикой — другая страница не дублирует уже пройденные шаги', async () => {
-    const counts = mockChain()
-    const getMoviesPage = await importGetMoviesPage()
-
-    await getMoviesPage({}, 3)
-    expect(counts.requests).toBe(3)
-
-    const page2 = await getMoviesPage({}, 2)
-
-    // шаги 1 и 2 уже в кэше фабрики — новых запросов не было
-    expect(counts.requests).toBe(3)
-    expect(page2.movies).toEqual([movieNamed('Page2')])
-  })
-})
-
-describe('getMoviesPage — отсутствие next → пустой хвост', () => {
-  it('курсор заканчивается раньше целевой страницы — movies: [], totalPages всё равно из total', async () => {
-    let requests = 0
+  it('withCount только на первом шаге', async () => {
+    const withCount: (string | null)[] = []
     server.use(
-      http.get(ENDPOINT, () => {
-        requests += 1
+      http.get(ENDPOINT, ({ request }) => {
+        const url = new URL(request.url)
+        withCount.push(url.searchParams.get('withCount'))
+        const cursor = url.searchParams.get('next')
+        const step = CHAIN.find(s => (s.cursor ?? null) === cursor)!
         return HttpResponse.json({
-          docs: [doc({ name: 'Page1' })],
+          docs: [doc({ name: step.name })],
           limit: 12,
-          next: null,
-          hasNext: false,
+          next: step.next,
+          hasNext: true,
           hasPrev: false,
-          total: 5,
+          total: 25,
         })
       }),
     )
-    const getMoviesPage = await importGetMoviesPage()
 
-    const result = await getMoviesPage({}, 3)
+    await fetchPage(2)
+
+    expect(withCount).toEqual(['true', 'false'])
+  })
+
+  it('другая страница тех же params переиспользует закешированные шаги курсора', async () => {
+    const counts = mockChain()
+
+    await fetchPage(2)
+    expect(counts.requests).toBe(2)
+
+    // шаги 1 и 2 — из стора шагов, в сеть уходит только шаг 3
+    const page3 = await fetchPage(3)
+    expect(counts.requests).toBe(3)
+    expect(page3.movies).toEqual([movieNamed('Page3')])
+
+    // page=2 — свежая запись стора страницы, без запросов
+    await fetchPage(2)
+    expect(counts.requests).toBe(3)
+  })
+
+  it('другие params — отдельные шаги курсора', async () => {
+    const counts = mockChain()
+
+    await fetchPage(1)
+    await fetchPage(1, { 'genres.name': ['drama'] })
+
+    expect(counts.requests).toBe(2)
+  })
+
+  it('параллельные запросы одной страницы дают один обход', async () => {
+    const counts = mockChain()
+
+    const [first, second] = await Promise.all([fetchPage(3), fetchPage(3)])
+
+    expect(counts.requests).toBe(3)
+    expect(first).toBe(second)
+  })
+})
+
+describe('catalogPageStore — последняя страница и пустая выдача', () => {
+  it('курсор заканчивается раньше целевой страницы — movies: [], totalPages всё равно из total', async () => {
+    const counts = mockLastPage('Page1', 5)
+
+    const result = await fetchPage(3)
 
     expect(result.movies).toEqual([])
     expect(result.totalPages).toBe(1)
     // цепочка оборвалась на первом шаге — дальше не ходим
-    expect(requests).toBe(1)
+    expect(counts.requests).toBe(1)
   })
-})
 
-describe('getMoviesPage — ошибки', () => {
-  it('403 — промис реджектится (пробрасывается наверх, без перехвата)', async () => {
+  it('последняя страница (next: null на целевом шаге) — доки этого шага', async () => {
+    mockLastPage('Last', 12)
+
+    const result = await fetchPage(1)
+
+    expect(result.movies).toEqual([movieNamed('Last')])
+    expect(result.totalPages).toBe(1)
+  })
+
+  it('total = 0 — totalPages 0', async () => {
     server.use(
       http.get(ENDPOINT, () =>
-        HttpResponse.json(
-          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
-          { status: 403 },
-        ),
+        HttpResponse.json({
+          docs: [],
+          limit: 12,
+          next: null,
+          hasNext: false,
+          hasPrev: false,
+          total: 0,
+        }),
       ),
     )
-    const getMoviesPage = await importGetMoviesPage()
 
-    await expect(getMoviesPage({}, 1)).rejects.toThrow()
+    expect(await fetchPage(1)).toEqual({ movies: [], totalPages: 0 })
+  })
+})
+
+describe('catalogPageStore — ошибки', () => {
+  it('403 — промис реджектится', async () => {
+    mockForbidden()
+
+    await expect(fetchPage(1)).rejects.toThrow()
   })
 
-  it('page-level кеш не залипает на rejected promise навсегда — после истечения нижнего error-cooldown повторный вызов реально идёт в сеть и восстанавливается', async () => {
-    const ERROR_CACHE_TTL_MS = 20 * 1000
-    let now = 1_000_000
-    vi.spyOn(Date, 'now').mockImplementation(() => now)
+  it('после 403 повторный fetch сразу идёт в сеть (шаг с ошибкой не реплеится) и восстанавливается', async () => {
+    const forbidden = mockForbidden()
 
-    let requests = 0
+    await expect(fetchPage(1)).rejects.toThrow()
+    expect(forbidden.requests).toBe(1)
+
+    const recovered = mockLastPage('Recovered', 5)
+
+    const result = await fetchPage(1)
+    expect(result.movies).toEqual([movieNamed('Recovered')])
+    expect(recovered.requests).toBe(1)
+  })
+
+  it('падение промежуточного шага: retry перезапрашивает только упавший шаг', async () => {
+    const counts = { requests: 0 }
+    let failStep2 = true
     server.use(
-      http.get(ENDPOINT, () => {
-        requests += 1
-        return HttpResponse.json(
-          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
-          { status: 403 },
-        )
-      }),
-    )
-    const getMoviesPage = await importGetMoviesPage()
-
-    await expect(getMoviesPage({}, 1)).rejects.toThrow()
-    expect(requests).toBe(1)
-
-    // Нижний слой (cachedCursorStep) ещё в своём 20s error-cooldown — второй вызов не
-    // обязан бить сеть заново прямо сейчас, но критично, что pageCache сам по себе больше
-    // не держит мёртвой хваткой один и тот же rejected promise навсегда (баг до фикса —
-    // см. следующий шаг после истечения cooldown).
-    await expect(getMoviesPage({}, 1)).rejects.toThrow()
-
-    server.use(
-      http.get(ENDPOINT, () => {
-        requests += 1
+      http.get(ENDPOINT, ({ request }) => {
+        counts.requests += 1
+        const cursor = new URL(request.url).searchParams.get('next')
+        if (cursor === 'c2' && failStep2) return forbiddenResponse()
+        const step = CHAIN.find(s => (s.cursor ?? null) === cursor)!
         return HttpResponse.json({
-          docs: [doc({ name: 'Recovered' })],
+          docs: [doc({ name: step.name })],
           limit: 12,
-          next: null,
-          hasNext: false,
+          next: step.next,
+          hasNext: true,
           hasPrev: false,
-          total: 5,
+          total: 25,
         })
       }),
     )
 
-    now += ERROR_CACHE_TTL_MS + 1
+    await expect(fetchPage(2)).rejects.toThrow()
+    expect(counts.requests).toBe(2)
 
-    // Без фикса (pageCache без TTL/eviction) это по-прежнему вернуло бы исходный
-    // rejected promise и тест бы упал здесь.
-    const result = await getMoviesPage({}, 1)
-    expect(result.movies).toEqual([movieNamed('Recovered')])
-    expect(requests).toBe(2)
+    failStep2 = false
+    const result = await fetchPage(2)
+
+    // шаг 1 — из кеша, шаг 2 — заново
+    expect(counts.requests).toBe(3)
+    expect(result.movies).toEqual([movieNamed('Page2')])
   })
 })
 
-describe('invalidateMoviesPage', () => {
-  it('после rejected getMoviesPage → invalidate → повторный вызов с теми же параметрами реально идёт в сеть (не повторяет тот же rejected-промис)', async () => {
-    let requests = 0
-    server.use(
-      http.get(ENDPOINT, () => {
-        requests += 1
-        return HttpResponse.json(
-          { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
-          { status: 403 },
-        )
-      }),
-    )
-    const { getMoviesPage, invalidate } =
-      await importGetMoviesPageWithInvalidate()
-
-    await expect(getMoviesPage({}, 1)).rejects.toThrow()
-    expect(requests).toBe(1)
-
-    // Без invalidate — второй вызов в пределах ERROR_CACHE_TTL_MS отдал бы тот же
-    // rejected promise без нового запроса (см. тест выше на нижнем cooldown).
-    invalidate({}, 1)
-
-    server.use(
-      http.get(ENDPOINT, () => {
-        requests += 1
-        return HttpResponse.json({
-          docs: [doc({ name: 'Recovered' })],
-          limit: 12,
-          next: null,
-          hasNext: false,
-          hasPrev: false,
-          total: 5,
-        })
-      }),
-    )
-
-    const result = await getMoviesPage({}, 1)
-
-    expect(requests).toBe(2)
-    expect(result.movies).toEqual([movieNamed('Recovered')])
+describe('catalogPageStore — totalPages = min(10, ceil(total/12)) из withCount-total', () => {
+  it('total=115 → totalPages=10 (уже на потолке)', async () => {
+    mockLastPage('Test Movie', 115)
+    expect((await fetchPage(1)).totalPages).toBe(10)
   })
 
-  it('не задевает независимую запись pageCache для другой страницы (те же params)', async () => {
-    const counts = mockChain()
-    const { getMoviesPage, invalidate } =
-      await importGetMoviesPageWithInvalidate()
-
-    await getMoviesPage({}, 2)
-    expect(counts.requests).toBe(2)
-
-    // page=1, те же params — изолирует ось "страница"
-    invalidate({}, 1)
-
-    // page=2 для тех же params по-прежнему в кеше — повторный вызов без новых запросов
-    const page2Again = await getMoviesPage({}, 2)
-    expect(counts.requests).toBe(2)
-    expect(page2Again.movies).toEqual([movieNamed('Page2')])
+  it('total=125 → totalPages клампится к demo-потолку 10', async () => {
+    mockLastPage('Test Movie', 125)
+    expect((await fetchPage(1)).totalPages).toBe(10)
   })
 
-  it('не задевает независимую запись pageCache для других params (та же страница)', async () => {
-    const counts = mockChain()
-    const { getMoviesPage, invalidate } =
-      await importGetMoviesPageWithInvalidate()
+  it('total=15 → totalPages=2', async () => {
+    mockLastPage('Test Movie', 15)
+    expect((await fetchPage(1)).totalPages).toBe(2)
+  })
 
-    await getMoviesPage({}, 2)
-    expect(counts.requests).toBe(2)
-
-    // та же page=2, другие params — изолирует ось "параметры"
-    invalidate({ 'genres.name': ['drama'] }, 2)
-
-    // page=2 для исходных params по-прежнему в кеше — повторный вызов без новых запросов
-    const page2Again = await getMoviesPage({}, 2)
-    expect(counts.requests).toBe(2)
-    expect(page2Again.movies).toEqual([movieNamed('Page2')])
+  it('total отсутствует в ответе (неожиданно) — totalPages = потолок demo-тарифа', async () => {
+    mockLastPage('Test Movie')
+    expect((await fetchPage(1)).totalPages).toBe(10)
   })
 })
 
-describe('getMoviesPage — page-level промис-мемо', () => {
-  it('повторный getMoviesPage(params, 3) — без новых запросов (из кеша)', async () => {
-    const counts = mockChain()
-    const getMoviesPage = await importGetMoviesPage()
-
-    await getMoviesPage({}, 3)
-    expect(counts.requests).toBe(3)
-
-    await getMoviesPage({}, 3)
-    expect(counts.requests).toBe(3)
-  })
-
-  it('идентичность page-level промиса — второй вызов возвращает тот же Promise-объект', async () => {
+// Мост до Task 14 (рекомендации ещё на use())
+describe('getMoviesPage / invalidateMoviesPage (мост)', () => {
+  it('один и тот же Promise-объект на повторный вызов — стабильность для use()', async () => {
     mockChain()
-    const getMoviesPage = await importGetMoviesPage()
+    const { getMoviesPage } = await importBridge()
 
     const first = getMoviesPage({}, 3)
     const second = getMoviesPage({}, 3)
@@ -343,48 +345,21 @@ describe('getMoviesPage — page-level промис-мемо', () => {
     expect(first).toBe(second)
     await first
   })
-})
 
-describe('getMoviesPage — totalPages = min(10, ceil(total/12)) из withCount-total', () => {
-  const mockTotal = (total?: number) =>
-    server.use(
-      http.get(ENDPOINT, () =>
-        HttpResponse.json({
-          docs: [doc()],
-          limit: 12,
-          next: null,
-          hasNext: false,
-          hasPrev: false,
-          ...(total !== undefined ? { total } : {}),
-        }),
-      ),
-    )
+  it('rejected → invalidate → повторный вызов реально идёт в сеть', async () => {
+    const forbidden = mockForbidden()
+    const { getMoviesPage, invalidate } = await importBridge()
 
-  it('total=115 → totalPages=10 (уже на потолке)', async () => {
-    mockTotal(115)
-    const getMoviesPage = await importGetMoviesPage()
+    await expect(getMoviesPage({}, 1)).rejects.toThrow()
+    // без invalidate мост 20 с отдаёт тот же rejected-промис
+    await expect(getMoviesPage({}, 1)).rejects.toThrow()
+    expect(forbidden.requests).toBe(1)
 
-    expect((await getMoviesPage({}, 1)).totalPages).toBe(10)
-  })
+    invalidate({}, 1)
+    const recovered = mockLastPage('Recovered', 5)
 
-  it('total=125 → totalPages клампится к demo-потолку 10', async () => {
-    mockTotal(125)
-    const getMoviesPage = await importGetMoviesPage()
-
-    expect((await getMoviesPage({}, 1)).totalPages).toBe(10)
-  })
-
-  it('total=15 → totalPages=2', async () => {
-    mockTotal(15)
-    const getMoviesPage = await importGetMoviesPage()
-
-    expect((await getMoviesPage({}, 1)).totalPages).toBe(2)
-  })
-
-  it('total отсутствует в ответе (неожиданно) — totalPages = потолок demo-тарифа', async () => {
-    mockTotal(undefined)
-    const getMoviesPage = await importGetMoviesPage()
-
-    expect((await getMoviesPage({}, 1)).totalPages).toBe(10)
+    const result = await getMoviesPage({}, 1)
+    expect(recovered.requests).toBe(1)
+    expect(result.movies).toEqual([movieNamed('Recovered')])
   })
 })

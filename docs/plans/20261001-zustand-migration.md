@@ -384,14 +384,14 @@ resetAllStores() // только для src/test/setup.ts
 - Modify: `src/pages/search/model/{useMovieCatalog,useCatalogUpdateStatus}.ts` + тесты
 - Modify: `src/pages/search/ui/Search/Search.tsx` + тест, `src/entities/movie/index.ts`
 
-- [ ] сторы шага курсора и страницы каталога (`catalogPageStore`) по схеме из Technical Details; текстовый поиск — чистая `fetchSearchMovies` без стора; `toTotalPages`, `MAX_PAGE`, «курсор кончился раньше» — без изменений в поведении
-- [ ] старые экспорты `getMoviesPage`/`invalidateMoviesPage` остаются рядом с новым стором до Task 14 — на них ещё стоят рекомендации
-- [ ] единый стор каталога в `src/pages/search/model/`: `fetcher` выбирает ветку `fetchSearchMovies` / `catalogPageStore.fetch`; `useMovieCatalog` — один `useQuery` с `keepPreviousData`
-- [ ] `useCatalogUpdateStatus`: убрать зеркало `useState` + `useDeferredValue`, `isUpdating` = `isFetching && !isLoading`; если хук вырождается в одну строку — удалить его вместе с тестом и связанным правилом в `search-catalog.md` (правка правила — в Task 19). Пагинация по-прежнему подсвечивает клик мгновенно (live-значение `page` из URL)
-- [ ] `usePageSync`, `useFilterState`, `useSearchAnalytics` не трогаем
-- [ ] первый заход — скелетон; смена страницы/фильтра/режима — прежняя сетка с бейджем «Updating…»; ошибка — `ErrorState` с Retry
-- [ ] тесты: обход курсора переиспользует закешированные шаги (счётчик сетевых запросов), последняя страница и `total = 0`, переключение режима держит прежние данные, 403
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] сторы шага курсора и страницы каталога (`catalogPageStore`) по схеме из Technical Details; текстовый поиск — чистая `fetchSearchMovies` без стора; `toTotalPages`, `MAX_PAGE`, «курсор кончился раньше» — без изменений в поведении
+- [x] старые экспорты `getMoviesPage`/`invalidateMoviesPage` остаются рядом с новым стором до Task 14 — на них ещё стоят рекомендации
+- [x] единый стор каталога в `src/pages/search/model/`: `fetcher` выбирает ветку `fetchSearchMovies` / `catalogPageStore.fetch`; `useMovieCatalog` — один `useQuery` с `keepPreviousData`
+- [x] `useCatalogUpdateStatus`: убрать зеркало `useState` + `useDeferredValue`, `isUpdating` = `isFetching && !isLoading`; если хук вырождается в одну строку — удалить его вместе с тестом и связанным правилом в `search-catalog.md` (правка правила — в Task 19) — выродился, удалён; `isUpdating` считается в `Search.tsx`. Пагинация по-прежнему подсвечивает клик мгновенно (live-значение `page` из URL)
+- [x] `usePageSync`, `useFilterState`, `useSearchAnalytics` не трогаем
+- [x] первый заход — скелетон; смена страницы/фильтра/режима — прежняя сетка с бейджем «Updating…»; ошибка — `ErrorState` с Retry
+- [x] тесты: обход курсора переиспользует закешированные шаги (счётчик сетевых запросов), последняя страница и `total = 0`, переключение режима держит прежние данные, 403
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 14: Рекомендации
 
