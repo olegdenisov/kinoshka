@@ -1,7 +1,8 @@
-import { Card, getMoviesByIds } from '@entities/movie'
+import { Card } from '@entities/movie'
+import type { Movie } from '@entities/movie'
 import { useFavoriteMovies, useFavorites } from '@features/favorites'
 import { useWatchlist } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { EmptyState, QueryBoundary, Skeleton } from '@shared/ui'
 
 import s from './Favorites.module.css'
 
@@ -15,8 +16,9 @@ const FavoritesSkeletonGrid = () => (
   </div>
 )
 
-const FavoritesGrid = () => {
-  const movies = useFavoriteMovies()
+type FavoritesGridProps = { movies: Movie[] }
+
+const FavoritesGrid = ({ movies }: FavoritesGridProps) => {
   const { isFavorite, toggle } = useFavorites()
   const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
@@ -55,6 +57,7 @@ const FavoritesGrid = () => {
 // Favorites больше не вызывает useViewport и не решает, какой chrome показать.
 export const Favorites = () => {
   const { ids } = useFavorites()
+  const query = useFavoriteMovies()
 
   return (
     <div className={s.page}>
@@ -68,12 +71,9 @@ export const Favorites = () => {
             />
           </div>
         ) : (
-          <AsyncBoundary
-            fallback={<FavoritesSkeletonGrid />}
-            onRetry={() => getMoviesByIds.invalidate(ids)}
-          >
-            <FavoritesGrid />
-          </AsyncBoundary>
+          <QueryBoundary query={query} fallback={<FavoritesSkeletonGrid />}>
+            {movies => <FavoritesGrid movies={movies} />}
+          </QueryBoundary>
         )}
       </main>
     </div>

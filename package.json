@@ -17,10 +17,12 @@
     "commit": "cz"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.13.0",
     "@sentry/react": "^10.71.0",
     "@siberiacancode/fetches": "^1.14.3",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "react-redux": "^9.3.0",
     "react-router": "^8.3.0",
     "zod": "^4.4.3"
   },
@@ -86,7 +88,7 @@
       "name": "vendor",
       "path": "dist/assets/vendor-*.js",
       "gzip": true,
-      "limit": "184.7 KB"
+      "limit": "223.5 KB"
     },
     {
       "name": "shared",
@@ -134,7 +136,7 @@
       "name": "page-recommendations",
       "path": "dist/assets/page-recommendations-*.js",
       "gzip": true,
-      "limit": "1.35 KB"
+      "limit": "1.7 KB"
     },
     {
       "name": "page-search",

@@ -8,5 +8,8 @@ export { EmptyState } from './EmptyState'
 export { ErrorState } from './ErrorState'
 export { ErrorBoundary } from './ErrorBoundary'
 export type { ErrorBoundaryFallbackParams } from './ErrorBoundary'
-export { AsyncBoundary } from './AsyncBoundary'
-export type { ErrorFallbackParams } from './AsyncBoundary'
+export { QueryBoundary } from './QueryBoundary'
+export type {
+  QueryBoundaryErrorParams,
+  QueryBoundaryQuery,
+} from './QueryBoundary'

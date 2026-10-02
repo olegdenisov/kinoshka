@@ -50,7 +50,7 @@ export const setStorageErrorReporter = (
 // ключ отправленным до конца жизни SPA-сессии, и более поздний, уже другой по сути отказ того же
 // ключа/операции (SecurityError после блокировки данных сайта пользователем) молча проглатывался
 // бы без единого сигнала в Sentry. REPORT_COOLDOWN_MS — тот же принцип и тот же порядок величины,
-// что и cooldown фоновой перезагрузки словаря жанров (60s, см. useGenreDictionary), не отдельное
+// что и кулдаун повторной загрузки справочников (60s, см. createDictionaryCache), не отдельное
 // изобретение.
 const REPORT_COOLDOWN_MS = 60_000
 const lastReportedAt = new Map<string, number>()

@@ -1,8 +1,9 @@
-import { useStorageSlot } from '@shared/lib'
 import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 
 import { resolveTheme } from '../lib/resolveTheme'
-import { themeSlot } from './themeStorage'
+import { selectTheme, themeSet } from './themeSlice'
+import type { ThemeRootState } from './themeSlice'
 import type { Theme } from './themeStorage'
 
 const DARK_QUERY = '(prefers-color-scheme: dark)'
@@ -15,7 +16,11 @@ export type UseThemeResult = {
 }
 
 export const useTheme = (): UseThemeResult => {
-  const [theme, setTheme] = useStorageSlot(themeSlot)
+  const theme = useSelector((state: ThemeRootState) => selectTheme(state))
+  const dispatch = useDispatch()
+  const setTheme = (next: Theme) => {
+    dispatch(themeSet(next))
+  }
   const [prefersDark, setPrefersDark] = useState(
     () => window.matchMedia(DARK_QUERY).matches,
   )

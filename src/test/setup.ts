@@ -1,12 +1,11 @@
 import '@testing-library/jest-dom/vitest'
-import {
-  resetCountryDictionaryState,
-  resetGenreDictionaryState,
-} from '@entities/movie'
-import { resetAllCachedFetchers } from '@shared/lib'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+
+// Относительный путь, мимо публичного index.ts @entities/movie: тестовая утилита в public API
+// сущности не нужна.
+import { resetDictionaryCooldowns } from '../entities/movie/api/createDictionaryCache'
 
 // window.matchMedia — jsdom вообще не реализует этот API (docs/plans/20260819-theme-toggle.md,
 // Task 4). useTheme() безусловно вызывает `window.matchMedia('(prefers-color-scheme: dark)')`,
@@ -132,17 +131,11 @@ export const server = setupServer(
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => server.resetHandlers())
-// createCachedFetcher's in-memory cache is module-level (survives across tests within the
-// same file and across files) — without this, tests hitting the same {query, page, ...} key
-// as an earlier test would silently get a stale cached promise instead of exercising the
-// current test's MSW handler. See createCachedFetcher.ts's resetAllCachedFetchers docblock.
-afterEach(() => resetAllCachedFetchers())
-// Dictionary caches (genres, countries): localStorage slot + in-memory cooldown/in-flight state
-// are module-level too — same rationale as resetAllCachedFetchers above, plus localStorage.clear()
-// so a cached dictionary from one test doesn't leak into the next (see createDictionaryCache.ts).
+// Справочники (жанры, страны): localStorage-слот и кулдаун повторов модульные — свежий стор на
+// тест их не сбрасывает; без этого кеш или кулдаун одного теста глушил бы запрос следующего
+// (см. createDictionaryCache.ts).
 afterEach(() => {
   localStorage.clear()
-  resetGenreDictionaryState()
-  resetCountryDictionaryState()
+  resetDictionaryCooldowns()
 })
 afterAll(() => server.close())

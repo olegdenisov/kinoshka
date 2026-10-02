@@ -1,7 +1,8 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router'
 
+import { renderWithStore } from '../../test/renderWithStore'
 import { server } from '../../test/setup'
 import { PersonPage } from './PersonPage'
 
@@ -24,10 +25,10 @@ const mockPerson = (id: number, overrides: Record<string, unknown> = {}) => {
 }
 
 const renderPersonPage = async (initialEntry: string) => {
-  let result: ReturnType<typeof render> | undefined
+  let result: ReturnType<typeof renderWithStore> | undefined
 
   await act(async () => {
-    result = render(
+    result = renderWithStore(
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route path='/person/:id' element={<PersonPage />} />
@@ -38,10 +39,6 @@ const renderPersonPage = async (initialEntry: string) => {
 
   return result!
 }
-
-beforeEach(() => {
-  sessionStorage.clear()
-})
 
 describe('PersonPage — невалидный id', () => {
   it('/person/abc — рендерит not-found без сетевого запроса', async () => {
@@ -74,7 +71,7 @@ describe('PersonPage — /person/1, пока запрос не завершён'
     // "запрос ушёл, ответа нет".
     server.use(http.get('*/v1.5/person/1', () => new Promise(() => {})))
 
-    const { container } = render(
+    const { container } = renderWithStore(
       <MemoryRouter initialEntries={['/person/1']}>
         <Routes>
           <Route path='/person/:id' element={<PersonPage />} />
@@ -93,7 +90,7 @@ describe('PersonPage — /person/1 happy path', () => {
 
     const result = await renderPersonPage('/person/1')
 
-    expect(screen.getByText('Anna Actress')).toBeInTheDocument()
+    expect(await screen.findByText('Anna Actress')).toBeInTheDocument()
     expect(
       result.container.querySelector('[class*="skeleton"]'),
     ).not.toBeInTheDocument()
@@ -101,7 +98,7 @@ describe('PersonPage — /person/1 happy path', () => {
 })
 
 describe('PersonPage — /person/666 не найден (404)', () => {
-  it('рендерит ErrorState с not-found текстом и рабочей кнопкой retry (реальный повторный запрос без ожидания cooldown)', async () => {
+  it('рендерит ErrorState с not-found текстом и рабочей кнопкой retry', async () => {
     let requestCount = 0
     server.use(
       http.get('*/v1.5/person/666', () => {
@@ -129,8 +126,7 @@ describe('PersonPage — /person/666 не найден (404)', () => {
       name: 'Попробовать снова',
     })
 
-    // invalidatePersonDetail инвалидирует кэш-запись до reset(), поэтому клик
-    // реально уходит в сеть сразу, без ожидания ERROR_CACHE_TTL_MS (20с) cooldown.
+    // Retry = refetch: клик сразу уходит в сеть.
     await act(async () => {
       fireEvent.click(retryButton)
     })
@@ -141,7 +137,7 @@ describe('PersonPage — /person/666 не найден (404)', () => {
 })
 
 describe('PersonPage — /person/888 общая ошибка (500) → Retry', () => {
-  it('клик Retry делает реальный повторный запрос без ожидания 20с, рендерит данные', async () => {
+  it('клик Retry делает повторный запрос и рендерит данные', async () => {
     let requestCount = 0
     server.use(
       http.get('*/v1.5/person/888', () => {
@@ -170,9 +166,6 @@ describe('PersonPage — /person/888 общая ошибка (500) → Retry', (
       fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
     })
 
-    // Без реальной инвалидации кэша этот клик отдал бы тот же rejected-промис
-    // из ERROR_CACHE_TTL_MS cooldown (20с), и ErrorState остался бы на месте —
-    // сеть бы не была тронута (requestCount остался бы 1).
     expect(requestCount).toBe(2)
     expect(await screen.findByText('Recovered Person')).toBeInTheDocument()
   })

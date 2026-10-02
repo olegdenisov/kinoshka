@@ -1,3 +1,4 @@
+import type { Movie } from '@entities/movie'
 import {
   ActiveFilterChips,
   FilterGroup,
@@ -5,11 +6,10 @@ import {
   useFilterState,
   SORT_LABELS,
 } from '@features/catalog-filter'
-import type { FilterState } from '@features/catalog-filter'
 import { useViewport } from '@shared/lib'
 import {
-  AsyncBoundary,
   EmptyState,
+  QueryBoundary,
   Spinner,
   FilterIcon,
   ChevronDownIcon,
@@ -20,11 +20,7 @@ import { SearchSidebar } from '@widgets/search-sidebar'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 
-import { useCatalogUpdateStatus } from '../../model/useCatalogUpdateStatus'
-import {
-  invalidateMovieCatalog,
-  useMovieCatalog,
-} from '../../model/useMovieCatalog'
+import { useMovieCatalog } from '../../model/useMovieCatalog'
 import { usePageSync } from '../../model/usePageSync'
 import { useSearchAnalytics } from '../../model/useSearchAnalytics'
 import { Pagination } from '../Pagination'
@@ -38,62 +34,39 @@ import {
 import s from './Search.module.css'
 
 type SearchResultsProps = {
-  query: string
-  filters: FilterState
-  sort: string
+  movies: Movie[]
+  totalPages: number
+  emptyDescription: string
   page: number
-  displayPage: number
   onPageChange: (p: number) => void
 }
 
 /**
- * Отдельный компонент под `use()` внутри `useMovieCatalog` — Suspense должен ловить именно этот
- * узел, а не всю страницу (заголовок/фильтры/сортировка остаются интерактивными во время
- * загрузки). До Task 10 существовал в двух почти идентичных копиях — `SearchResults`
- * (`SearchDesktop.tsx`, использовал `SearchResultsGrid`+`Pagination`) и `MobileSearchResults`
- * (`SearchMobile.tsx`, рендерил `Card` напрямую в собственном гриде + инлайновый
- * `MobilePagination`) — слиты в одну версию, т.к. после унификации `SearchResultsGrid`/
- * `Pagination` под mobile-first CSS (см. их докблоки) разница между вариантами была только в
- * обёртке, не в контенте/логике. Suspense-граница (обёртывающий `AsyncBoundary` в `Search` ниже)
- * сохранена как отдельная от остального дерева страницы — то самое обоснование, что было в обоих
- * исходных докблоках, не потеряно при слиянии.
- *
- * `query`/`filters`/`sort`/`page` здесь — deferred-значения из `useCatalogUpdateStatus`: пока
- * React их не догнал, `use()` внутри `useMovieCatalog` берёт cache-hit на старых параметрах
- * вместо повторного саспенда уже смонтированного дерева. `displayPage` — live-значение, отдельно
- * от `page`, чтобы клик по номеру страницы в `Pagination` подсвечивался мгновенно, а не только
- * после того, как deferred-фетч догонит live `page`.
+ * Результаты под `QueryBoundary`: заголовок/фильтры/сортировка остаются интерактивными во время
+ * загрузки. `movies`/`totalPages` могут относиться к предыдущим аргументам (stale-while-fetching),
+ * а `page` — live-значение из URL, чтобы клик по номеру страницы в `Pagination` подсвечивался
+ * сразу, а не после ответа.
  */
 const SearchResults = ({
-  query,
-  filters,
-  sort,
+  movies,
+  totalPages,
+  emptyDescription,
   page,
-  displayPage,
   onPageChange,
 }: SearchResultsProps) => {
-  const { movies, totalPages } = useMovieCatalog({ query, filters, sort, page })
-
   if (movies.length === 0) {
     return (
       <div className={s.emptyWrap}>
-        <EmptyState
-          title='Nothing found'
-          description={
-            query
-              ? `Ничего не найдено по «${query}»`
-              : 'Try adjusting the filters'
-          }
-        />
+        <EmptyState title='Nothing found' description={emptyDescription} />
         {/*
           Deep-linked/устаревший ?page может указывать за пределы реальной выдачи (курсор
-          закончился раньше целевой страницы — см. getMoviesPage.ts) — movies пуст, но
-          totalPages всё равно приходит из total. Без Pagination тут это тупик: EmptyState
+          закончился раньше целевой страницы — см. getMoviesPage в catalogApi.ts) — movies пуст,
+          но totalPages всё равно приходит из total. Без Pagination тут это тупик: EmptyState
           не даёт способа вернуться на валидную страницу.
         */}
         {totalPages > 0 && (
           <Pagination
-            page={displayPage}
+            page={page}
             totalPages={totalPages}
             onChange={onPageChange}
           />
@@ -112,12 +85,12 @@ const SearchResults = ({
       <SearchResultsGrid movies={movies} />
       <div className={s.paginationSection}>
         <Pagination
-          page={displayPage}
+          page={page}
           totalPages={totalPages}
           onChange={onPageChange}
         />
         <div className={s.countText} aria-live='polite'>
-          {movies.length} shown · page {displayPage} of {totalPages}
+          {movies.length} shown · page {page} of {totalPages}
         </div>
       </div>
     </>
@@ -179,18 +152,8 @@ export const Search = () => {
   useSearchAnalytics(query)
   const isSearchMode = query.trim().length > 0
   const { page, goToPage } = usePageSync({ query, filters })
-  const {
-    deferredQuery,
-    deferredFilters,
-    deferredSort,
-    deferredPage,
-    isUpdating,
-  } = useCatalogUpdateStatus({
-    query,
-    filters,
-    sort,
-    page,
-  })
+  const catalog = useMovieCatalog({ query, filters, sort, page })
+  const { isUpdating } = catalog
 
   const title = isSearchMode ? `Results for “${query}”` : 'Browse catalog'
 
@@ -253,26 +216,24 @@ export const Search = () => {
             className={`${s.resultsWrapper} ${isUpdating ? s.updating : ''}`}
             aria-busy={isUpdating}
           >
-            <AsyncBoundary
+            <QueryBoundary
+              query={catalog}
               fallback={<SearchResultSkeletonGrid />}
-              onRetry={() =>
-                invalidateMovieCatalog({
-                  query: deferredQuery,
-                  filters: deferredFilters,
-                  sort: deferredSort,
-                  page: deferredPage,
-                })
-              }
             >
-              <SearchResults
-                query={deferredQuery}
-                filters={deferredFilters}
-                sort={deferredSort}
-                page={deferredPage}
-                displayPage={page}
-                onPageChange={goToPage}
-              />
-            </AsyncBoundary>
+              {({ movies, mode, query: resultQuery, totalPages }) => (
+                <SearchResults
+                  movies={movies}
+                  totalPages={totalPages}
+                  emptyDescription={
+                    mode === 'search'
+                      ? `Ничего не найдено по «${resultQuery}»`
+                      : 'Try adjusting the filters'
+                  }
+                  page={page}
+                  onPageChange={goToPage}
+                />
+              )}
+            </QueryBoundary>
             {isUpdating && (
               <div className={s.updatingBadge}>
                 <Spinner size={14} />

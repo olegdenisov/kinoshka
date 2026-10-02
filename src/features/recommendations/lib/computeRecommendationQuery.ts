@@ -39,8 +39,8 @@ const topGenresByFrequency = (favorites: Movie[], count: number): string[] => {
  *   `rating.kp`, если ни один избранный фильм не имеет рейтинга — фильмы с
  *   `rating === 0` пропускаются при подсчёте среднего, а не считаются за 0)
  * - `sortField`/`sortType`: всегда `rating.kp` / `-1` (сортировка по рейтингу)
- * - без `limit` — `fetchCursorStep` (`getMoviesPage.ts`) безусловно перезаписывает
- *   его на `PER_PAGE`, указывать здесь — мёртвый код (см. Technical Details)
+ * - без `limit` — `getCatalogCursorStep` (`entities/movie/api/catalogApi.ts`)
+ *   безусловно перезаписывает его на `PER_PAGE`, указывать здесь — мёртвый код (см. Technical Details)
  */
 export const computeRecommendationQuery = (
   favorites: Movie[],

@@ -1,7 +1,8 @@
-import { Card, getMoviesByIds } from '@entities/movie'
+import { Card } from '@entities/movie'
+import type { Movie } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { useWatchlist, useWatchlistMovies } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { EmptyState, QueryBoundary, Skeleton } from '@shared/ui'
 
 import s from './Watchlist.module.css'
 
@@ -15,10 +16,12 @@ const WatchlistSkeletonGrid = () => (
   </div>
 )
 
-const WatchlistGrid = () => {
-  // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои
-  // бросает getMoviesByIds и ловит AsyncBoundary, поэтому текст — не про ошибку загрузки.
-  const movies = useWatchlistMovies()
+type WatchlistGridProps = { movies: Movie[] }
+
+const WatchlistGrid = ({ movies }: WatchlistGridProps) => {
+  // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои отдаёт
+  // endpoint getMoviesByIds как ошибку, её ловит QueryBoundary, поэтому текст — не про
+  // ошибку загрузки.
   const { isFavorite, toggle } = useFavorites()
 
   if (movies.length === 0) {
@@ -34,8 +37,8 @@ const WatchlistGrid = () => {
 
   return (
     <div className={s.grid}>
-      {/* Без onToggleWatchlist намеренно: снятие меняет ids → новый кэш-ключ getMoviesByIds →
-          перезагрузка всего грида. Убрать из списка можно со страницы фильма или с других списков. */}
+      {/* Без onToggleWatchlist намеренно: снятие меняет ids → новый аргумент getMoviesByIds →
+          перезапрос всего списка. Убрать из списка можно со страницы фильма или с других списков. */}
       {movies.map(movie => (
         <Card
           key={movie.id}
@@ -53,6 +56,7 @@ const WatchlistGrid = () => {
 // Chrome (Header/MobileHeader+BottomNav) рисует `AppLayout`, страница его не выбирает.
 export const Watchlist = () => {
   const { ids } = useWatchlist()
+  const query = useWatchlistMovies()
 
   return (
     <div className={s.page}>
@@ -66,12 +70,9 @@ export const Watchlist = () => {
             />
           </div>
         ) : (
-          <AsyncBoundary
-            fallback={<WatchlistSkeletonGrid />}
-            onRetry={() => getMoviesByIds.invalidate(ids)}
-          >
-            <WatchlistGrid />
-          </AsyncBoundary>
+          <QueryBoundary query={query} fallback={<WatchlistSkeletonGrid />}>
+            {movies => <WatchlistGrid movies={movies} />}
+          </QueryBoundary>
         )}
       </main>
     </div>

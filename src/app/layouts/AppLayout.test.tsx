@@ -1,17 +1,11 @@
 import type * as SharedLib from '@shared/lib'
-import { AsyncBoundary } from '@shared/ui'
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react'
+import { ErrorBoundary } from '@shared/ui'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 
+import { renderWithStore } from '../../test/renderWithStore'
 import { AppLayout } from './AppLayout'
 
 // Task 5 (docs/plans/20260910-web-vitals-analytics.md): AppLayout вызывает trackPageview() на
@@ -55,7 +49,7 @@ const setViewportWidth = (width: number) => {
 // вызывает useMatches() и требует data router, иначе падает с "useMatches must be used within a
 // data router".
 const renderAt = (path: string) =>
-  render(
+  renderWithStore(
     <RouterProvider
       router={createMemoryRouter(
         [
@@ -457,7 +451,7 @@ describe('AppLayout — page view tracking: смена pathname трекаетс
       { initialEntries: ['/'] },
     )
 
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     await waitFor(() => expect(trackPageview).toHaveBeenCalledTimes(1))
 
@@ -525,9 +519,11 @@ const createErrorRouter = (
             element: (
               <div>
                 <div>Favorites page shell</div>
-                <AsyncBoundary>
+                <ErrorBoundary
+                  fallback={({ error }) => <div>{error?.message}</div>}
+                >
                   <Bomb />
-                </AsyncBoundary>
+                </ErrorBoundary>
               </div>
             ),
           },
@@ -545,7 +541,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   })
 
   it('десктоп: падение страницы — Header остаётся, вместо контента ErrorState с фиксированным текстом и ссылкой на главную', () => {
-    render(<RouterProvider router={createErrorRouter('/popular')} />)
+    renderWithStore(<RouterProvider router={createErrorRouter('/popular')} />)
 
     expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(
@@ -564,7 +560,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
 
   it('мобильный: падение страницы — MobileHeader и BottomNav остаются в дереве', () => {
     setViewportWidth(MOBILE_WIDTH)
-    render(<RouterProvider router={createErrorRouter('/popular')} />)
+    renderWithStore(<RouterProvider router={createErrorRouter('/popular')} />)
 
     expect(
       within(screen.getByRole('banner')).getByText('Popular'),
@@ -577,7 +573,9 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   })
 
   it('падение самой / — ссылки на главную нет (key не сменится, она была бы no-op), retry есть', () => {
-    render(<RouterProvider router={createErrorRouter('/', <Bomb />)} />)
+    renderWithStore(
+      <RouterProvider router={createErrorRouter('/', <Bomb />)} />,
+    )
 
     expect(screen.getByText(ROUTE_FALLBACK_TEXT)).toBeInTheDocument()
     expect(
@@ -587,7 +585,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   })
 
   it('«Попробовать снова» восстанавливает страницу, если причина устранена — chrome вокруг сохраняется', () => {
-    render(<RouterProvider router={createErrorRouter('/popular')} />)
+    renderWithStore(<RouterProvider router={createErrorRouter('/popular')} />)
 
     expect(screen.getByText(ROUTE_FALLBACK_TEXT)).toBeInTheDocument()
 
@@ -600,7 +598,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   })
 
   it('падение страницы репортится через captureRouteError(error, errorInfo)', () => {
-    render(<RouterProvider router={createErrorRouter('/popular')} />)
+    renderWithStore(<RouterProvider router={createErrorRouter('/popular')} />)
 
     expect(captureRouteError).toHaveBeenCalledTimes(1)
     const [error, errorInfo] = vi.mocked(captureRouteError).mock.calls[0]
@@ -608,15 +606,14 @@ describe('AppLayout — per-route ErrorBoundary', () => {
     expect(errorInfo).toHaveProperty('componentStack')
   })
 
-  // Страничный AsyncBoundary ближе к ошибке — перехватывает её сам; per-route граница не
-  // срабатывает, и в Sentry такая ошибка не уходит (принятый gap: AsyncBoundary не прокидывает
-  // onError).
-  it('ошибку внутри страничного AsyncBoundary ловит он, а не per-route граница — captureRouteError не вызван', () => {
-    render(<RouterProvider router={createErrorRouter('/favorites')} />)
+  // Страничный ErrorBoundary ближе к ошибке — перехватывает её сам; per-route граница не
+  // срабатывает, и в Sentry такая ошибка не уходит (принятый gap: страничная граница без onError).
+  it('ошибку внутри страничного ErrorBoundary ловит он, а не per-route граница — captureRouteError не вызван', () => {
+    renderWithStore(<RouterProvider router={createErrorRouter('/favorites')} />)
 
     expect(screen.getByText('Favorites page shell')).toBeInTheDocument()
     expect(screen.getByText('boom')).toBeInTheDocument()
-    // Фолбэк AsyncBoundary — без secondaryAction, ссылки на главную нет.
+    // Фолбэк страничной границы — без secondaryAction, ссылки на главную нет.
     expect(
       screen.queryByRole('link', { name: 'Back to home' }),
     ).not.toBeInTheDocument()
@@ -626,7 +623,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
 
   it('навигация с упавшего роута на другой сбрасывает границу сама (key={pathname}), без retry', async () => {
     const router = createErrorRouter('/popular')
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     expect(screen.getByText(ROUTE_FALLBACK_TEXT)).toBeInTheDocument()
 
@@ -642,7 +639,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   // меняет pathname — граница и страница под ней ремаунтятся, а не переиспользуются.
   it('/person/1 → /person/2: страница ремаунтится (зафиксированное следствие key={pathname})', async () => {
     const router = createErrorRouter('/person/1')
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     await waitFor(() => expect(personMounts).toBe(1))
 

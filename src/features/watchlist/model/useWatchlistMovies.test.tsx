@@ -1,7 +1,8 @@
-import { AsyncBoundary } from '@shared/ui'
-import { act, render, screen } from '@testing-library/react'
+import { QueryBoundary } from '@shared/ui'
+import { screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { renderWithStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import { useWatchlistMovies } from './useWatchlistMovies'
 import { watchlistSlot } from './watchlistStorage'
@@ -40,13 +41,17 @@ const mockError = (id: number, status: number) => {
 }
 
 const Probe = () => {
-  const movies = useWatchlistMovies()
+  const query = useWatchlistMovies()
   return (
-    <ul>
-      {movies.map(movie => (
-        <li key={movie.id}>{movie.title}</li>
-      ))}
-    </ul>
+    <QueryBoundary query={query}>
+      {movies => (
+        <ul>
+          {movies.map(movie => (
+            <li key={movie.id}>{movie.title}</li>
+          ))}
+        </ul>
+      )}
+    </QueryBoundary>
   )
 }
 
@@ -58,15 +63,9 @@ describe('useWatchlistMovies', () => {
     mockMovie(701, { name: 'Watchlist Movie' })
     mockMovie(702, { name: 'Watchlist Series', type: 'tv-series' })
 
-    await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
-    })
+    renderWithStore(<Probe />)
 
-    expect(screen.getByText('Watchlist Movie')).toBeInTheDocument()
+    expect(await screen.findByText('Watchlist Movie')).toBeInTheDocument()
     expect(screen.getByText('Watchlist Series')).toBeInTheDocument()
   })
 
@@ -76,15 +75,9 @@ describe('useWatchlistMovies', () => {
     mockMovie(712, { name: 'Dead' })
     mockError(712, 404)
 
-    await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
-    })
+    renderWithStore(<Probe />)
 
-    expect(screen.getByText('Alive')).toBeInTheDocument()
+    expect(await screen.findByText('Alive')).toBeInTheDocument()
     expect(screen.queryByText('Dead')).not.toBeInTheDocument()
   })
 
@@ -93,43 +86,26 @@ describe('useWatchlistMovies', () => {
     mockError(721, 404)
     mockError(722, 404)
 
-    await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
-    })
+    renderWithStore(<Probe />)
 
+    await screen.findByRole('list')
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
 
-  it('5xx → ошибка уходит в AsyncBoundary, список не рендерится', async () => {
+  it('5xx → ошибка уходит в QueryBoundary, список не рендерится', async () => {
     watchlistSlot.set([731])
     mockError(731, 500)
 
-    await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
-    })
+    renderWithStore(<Probe />)
 
-    expect(screen.queryAllByRole('listitem')).toHaveLength(0)
     expect(
-      screen.getByRole('button', { name: /Попробовать снова/ }),
+      await screen.findByRole('button', { name: /Попробовать снова/ }),
     ).toBeInTheDocument()
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
 
   it('пустые ids → пустой список', async () => {
-    await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
-    })
+    renderWithStore(<Probe />)
 
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
