@@ -7,16 +7,16 @@ on:
     branches: [main]
 
 jobs:
-  # Временный стоп-кран: ветка rtk не должна попасть в main, пока миграция не
-  # готова. Job обязателен в ruleset protect-main, поэтому падение блокирует
-  # merge. Чтобы разрешить слияние — убрать rtk из BLOCKED_BRANCHES.
+  # Временный стоп-кран: ветки rtk и zustand не должны попасть в main, пока миграции не
+  # готовы. Job обязателен в ruleset protect-main, поэтому падение блокирует
+  # merge. Чтобы разрешить слияние — убрать ветку из BLOCKED_BRANCHES.
   branch-guard:
     runs-on: ubuntu-latest
     steps:
       - name: Block merging protected-from-merge branches
         env:
           HEAD_REF: ${{ github.head_ref }}
-          BLOCKED_BRANCHES: rtk
+          BLOCKED_BRANCHES: rtk zustand
         run: |
           for branch in $BLOCKED_BRANCHES; do
             if [ "$HEAD_REF" = "$branch" ]; then
