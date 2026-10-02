@@ -259,12 +259,12 @@ resetAllStores() // только для src/test/setup.ts
 - Create: `src/features/profile/model/profileStore.ts`, `src/features/profile/model/profileStore.test.ts`
 - Modify: `src/features/profile/model/useProfile.ts`, `src/features/profile/model/useProfile.test.tsx`
 
-- [ ] `useProfileStore` на `profileNameSlot`; запись имени возвращает `boolean` — `/profile` единственное место, показывающее ошибку сохранения в UI (`storage.md`); `normalizeProfileName` применяется как сейчас
-- [ ] `useProfile` сохраняет сигнатуру; в сторе одно поле `name` — простой селектор
-- [ ] имя профиля — пользовательский ввод: в `name` стора для devtools и в сообщения об ошибках значение не попадает (`sentry.md`)
-- [ ] тесты: успешная запись → `true` и новое значение; неудачная → `false`, значение прежнее; cross-tab
-- [ ] существующие тесты `useProfile` и страницы `/profile` проходят
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `useProfileStore` на `profileNameSlot`; запись имени возвращает `boolean` — `/profile` единственное место, показывающее ошибку сохранения в UI (`storage.md`); `normalizeProfileName` применяется как сейчас
+- [x] `useProfile` сохраняет сигнатуру; в сторе одно поле `name` — простой селектор
+- [x] имя профиля — пользовательский ввод: в `name` стора для devtools и в сообщения об ошибках значение не попадает (`sentry.md`)
+- [x] тесты: успешная запись → `true` и новое значение; неудачная → `false`, значение прежнее; cross-tab
+- [x] существующие тесты `useProfile` и страницы `/profile` проходят
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 7: `useSearchUiStore` — не-URL стейт страницы поиска
 
