@@ -4,7 +4,7 @@ import {
   invalidateMoviesPage,
 } from '@entities/movie'
 import type { CatalogParams, Movie } from '@entities/movie'
-import { useFavoriteMovies } from '@features/favorites'
+import { useFavorites } from '@features/favorites'
 import { computeRecommendationQuery } from '@features/recommendations'
 import { use } from 'react'
 
@@ -21,7 +21,10 @@ import { use } from 'react'
  * Solution Overview в плане про различие `null` vs `[]` для UI.
  */
 export const useRecommendedMovies = (): Movie[] | null => {
-  const favorites = useFavoriteMovies()
+  const { ids } = useFavorites()
+  // Временный мост до Task 14: рекомендации ещё на Suspense, поэтому читают избранное через
+  // старый кеширующий getMoviesByIds, а не через QueryResult-хук useFavoriteMovies
+  const favorites = use(getMoviesByIds(ids))
   const query = computeRecommendationQuery(favorites)
   lastQuery = query
 

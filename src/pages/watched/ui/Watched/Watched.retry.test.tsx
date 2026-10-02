@@ -1,84 +1,50 @@
-import type * as EntitiesMovie from '@entities/movie'
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
-import { vi } from 'vitest'
 
 import { seedStorage } from '../../../../test/seedStorage'
+import { server } from '../../../../test/setup'
 import { Watched } from './Watched'
 
-// Мокаем весь `getMoviesByIds` (а не MSW-эндпоинт) для точного контроля тайминга —
-// реальная композиция (см. getMoviesByIds.ts) тоже умеет реджектиться при полном отказе
-// (см. Watched.test.tsx — «полный отказ загрузки (сетевая/5xx ошибка)»), но здесь
-// нужно детерминированно проверить именно порядок вызовов invalidate→refetch, а не сам факт
-// реджекта. Мок ведёт себя как упрощённый `createCachedFetcher`: кэширует промис по
-// `JSON.stringify(ids)`, счётчик `fetchAttempts` растёт только на реальный промах кэша — так
-// тест проверяет то же самое свойство, что и `MoviePage.test.tsx` для Retry: `invalidate`
-// вызывается ДО повторного запроса.
-//
-// Отдельный файл от Watched.test.tsx (как Favorites.retry.test.tsx), потому что `vi.mock` здесь подменяет
-// `getMoviesByIds` для ВСЕГО файла — смешивать его с MSW-based тестами в одном файле означало бы
-// либо терять реальные сетевые сценарии, либо городить `vi.doMock`/`vi.resetModules` внутри теста.
-const { invalidate, getMoviesByIdsMock, getFetchAttempts } = vi.hoisted(() => {
-  const cache = new Map<string, Promise<unknown>>()
-  let fetchAttempts = 0
+// Отдельный файл от Watched.test.tsx: здесь счётчик сетевых запросов к одному id, а не набор сценариев.
+// Первый ответ 500, затем успех — Retry (refetch стора) обязан реально перезапросить упавший
+// detail, а не реплеить закешированную ошибку (fetch() не реплеит ошибки, см. createQueryStore).
+const STORAGE_KEY = 'kinoshka:watched'
 
-  const getMoviesByIdsMock = (ids: number[]) => {
-    const key = JSON.stringify(ids)
-    if (!cache.has(key)) {
-      fetchAttempts++
-      const promise =
-        fetchAttempts === 1
-          ? Promise.reject(new Error('Network error'))
-          : Promise.resolve([
-              {
-                id: ids[0],
-                title: `Recovered Movie ${ids[0]}`,
-                poster: 'https://example.com/poster.jpg',
-                year: 2024,
-                rating: 7.5,
-                genre: ['Drama'],
-                runtime: '120 min',
-                hue: 20,
-                type: 'movie',
-              },
-            ])
-      cache.set(key, promise)
-    }
-    return cache.get(key)
-  }
-
-  const invalidate = vi.fn((ids: number[]) => {
-    cache.delete(JSON.stringify(ids))
-  })
-
-  return {
-    invalidate,
-    getMoviesByIdsMock,
-    getFetchAttempts: () => fetchAttempts,
-  }
-})
-
-vi.mock('@entities/movie', async importOriginal => {
-  const actual = await importOriginal<typeof EntitiesMovie>()
-  return {
-    ...actual,
-    getMoviesByIds: Object.assign(getMoviesByIdsMock, {
-      invalidate,
-      clear: vi.fn(),
-    }),
-  }
-})
-
-const WATCHED_KEY = 'kinoshka:watched'
+let attempts = 0
 
 beforeEach(() => {
   localStorage.clear()
-  invalidate.mockClear()
+  attempts = 0
+  server.use(
+    http.get('*/v1.5/movie/1', () => {
+      attempts++
+      if (attempts === 1) {
+        return HttpResponse.json(
+          { statusCode: 500, message: 'Network error', error: 'err' },
+          { status: 500 },
+        )
+      }
+
+      return HttpResponse.json({
+        id: 1,
+        name: 'Recovered Movie 1',
+        year: 2024,
+        type: 'movie',
+        rating: { kp: 7.5, imdb: 7.5 },
+        genres: [{ name: 'drama' }],
+        movieLength: 120,
+        poster: { previewUrl: 'https://example.com/poster.jpg' },
+        persons: [],
+        countries: [],
+      })
+    }),
+  )
 })
 
-describe('Watched — Retry реально переинвалидирует кэш и повторяет запрос', () => {
-  it('клик Retry вызывает invalidate и повторно запрашивает данные', async () => {
-    seedStorage(WATCHED_KEY, JSON.stringify([1]))
+describe('Watched — Retry перезапрашивает упавший запрос', () => {
+  it('клик Retry повторно запрашивает данные и показывает их', async () => {
+    seedStorage(STORAGE_KEY, JSON.stringify([1]))
 
     await act(async () => {
       render(
@@ -89,14 +55,13 @@ describe('Watched — Retry реально переинвалидирует кэ
     })
 
     expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
-    expect(getFetchAttempts()).toBe(1)
+    expect(attempts).toBe(1)
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
     })
 
-    expect(invalidate).toHaveBeenCalledWith([1])
-    expect(getFetchAttempts()).toBe(2)
     expect(await screen.findByText('Recovered Movie 1')).toBeInTheDocument()
+    expect(attempts).toBe(2)
   })
 })

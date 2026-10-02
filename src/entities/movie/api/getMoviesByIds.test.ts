@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
-import { getMoviesByIds } from './getMoviesByIds'
+import { getMoviesByIds, moviesByIdsStore } from './getMoviesByIds'
 
 const doc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -115,5 +115,26 @@ describe('getMoviesByIds — edge cases', () => {
     })
 
     await expect(getMoviesByIds([601, 602])).rejects.toThrow()
+  })
+})
+
+describe('moviesByIdsStore', () => {
+  it('fetch() — порядок id сохраняется, 404 выпадает, повтор с тем же ключом берётся из кеша', async () => {
+    let calls = 0
+    server.use(
+      http.get('*/v1.5/movie/701', () => {
+        calls++
+        return HttpResponse.json(doc(701))
+      }),
+    )
+    mockError(702, 404, { statusCode: 404, message: 'nf', error: 'Not Found' })
+    mockSuccess(703)
+
+    const first = await moviesByIdsStore.fetch([703, 702, 701])
+    const second = await moviesByIdsStore.fetch([703, 702, 701])
+
+    expect(first.map(movie => movie.id)).toEqual([703, 701])
+    expect(second).toBe(first)
+    expect(calls).toBe(1)
   })
 })

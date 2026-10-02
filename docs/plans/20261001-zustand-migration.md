@@ -367,12 +367,12 @@ resetAllStores() // только для src/test/setup.ts
 - Modify: `src/pages/{favorites,watched,watchlist}/ui/**` + тесты
 - Modify: `src/pages/recommendations/model/useRecommendedMovies.ts` (временный мост до Task 14), `src/entities/movie/index.ts`
 
-- [ ] новый `moviesByIdsStore`: `fetcher` обходит id через `movieDetailStore.fetch(id)` + `Promise.allSettled`; 404-id молча выпадает; ключ — массив id
-- [ ] старый экспорт `getMoviesByIds` (кеширующий фетчер) не удаляется до Task 14; мост: `useRecommendedMovies` временно читает избранное через `use(getMoviesByIds(ids))` вместо `useFavoriteMovies()`, чтобы typecheck и тесты рекомендаций оставались зелёными
-- [ ] `useFavoriteMovies`/`useWatchedMovies`/`useWatchlistMovies` возвращают `QueryResult<Movie[]>`; пустой список id → `skip`, хук сам подставляет `data: []` (иначе `QueryBoundary` покажет fallback)
-- [ ] страницы: `QueryBoundary`, пустые состояния сохраняются; при удалении карточки сетка не мигает скелетоном (`keepPreviousData`), а `data` фильтруется по текущим `ids` — удалённая карточка исчезает сразу, не дожидаясь нового ключа
-- [ ] тесты: общий кеш с детальной страницей (второго запроса нет), 404-id отфильтрован, пустой список, Retry
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] новый `moviesByIdsStore`: `fetcher` обходит id через `movieDetailStore.fetch(id)` + `Promise.allSettled`; 404-id молча выпадает; ключ — массив id
+- [x] старый экспорт `getMoviesByIds` (кеширующий фетчер) не удаляется до Task 14; мост: `useRecommendedMovies` временно читает избранное через `use(getMoviesByIds(ids))` вместо `useFavoriteMovies()`, чтобы typecheck и тесты рекомендаций оставались зелёными
+- [x] `useFavoriteMovies`/`useWatchedMovies`/`useWatchlistMovies` возвращают `QueryResult<Movie[]>`; пустой список id → `skip`, хук сам подставляет `data: []` (иначе `QueryBoundary` покажет fallback)
+- [x] страницы: `QueryBoundary`, пустые состояния сохраняются; при удалении карточки сетка не мигает скелетоном (`keepPreviousData`), а `data` фильтруется по текущим `ids` — удалённая карточка исчезает сразу, не дожидаясь нового ключа
+- [x] тесты: общий кеш с детальной страницей (второго запроса нет), 404-id отфильтрован, пустой список, Retry
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 13: Каталог и поиск — пагинация и stale-while-fetching
 

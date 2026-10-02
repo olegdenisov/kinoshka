@@ -1,8 +1,8 @@
-import { Card, getMoviesByIds } from '@entities/movie'
+import { Card } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { useWatched, useWatchedMovies } from '@features/watched'
 import { useWatchlist } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { EmptyState, QueryBoundary, Skeleton } from '@shared/ui'
 
 import s from './Watched.module.css'
 
@@ -18,36 +18,42 @@ const WatchedSkeletonGrid = () => (
 
 const WatchedGrid = () => {
   // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои
-  // бросает getMoviesByIds и ловит AsyncBoundary, поэтому текст — не про ошибку загрузки.
-  const movies = useWatchedMovies()
+  // уходят в isError и ловит QueryBoundary, поэтому текст — не про ошибку загрузки.
+  const query = useWatchedMovies()
   const { isFavorite, toggle } = useFavorites()
   const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
-  if (movies.length === 0) {
-    return (
-      <div className={s.stateWrap}>
-        <EmptyState
-          title='Watched titles unavailable'
-          description='These titles are no longer available in the catalog.'
-        />
-      </div>
-    )
-  }
-
   return (
-    <div className={s.grid}>
-      {movies.map(movie => (
-        <Card
-          key={movie.id}
-          movie={movie}
-          variant='grid'
-          isFavorite={isFavorite(movie.id)}
-          onToggleFavorite={toggle}
-          inWatchlist={isInWatchlist(movie.id)}
-          onToggleWatchlist={toggleWatchlist}
-        />
-      ))}
-    </div>
+    <QueryBoundary query={query} fallback={<WatchedSkeletonGrid />}>
+      {movies => {
+        if (movies.length === 0) {
+          return (
+            <div className={s.stateWrap}>
+              <EmptyState
+                title='Watched titles unavailable'
+                description='These titles are no longer available in the catalog.'
+              />
+            </div>
+          )
+        }
+
+        return (
+          <div className={s.grid}>
+            {movies.map(movie => (
+              <Card
+                key={movie.id}
+                movie={movie}
+                variant='grid'
+                isFavorite={isFavorite(movie.id)}
+                onToggleFavorite={toggle}
+                inWatchlist={isInWatchlist(movie.id)}
+                onToggleWatchlist={toggleWatchlist}
+              />
+            ))}
+          </div>
+        )
+      }}
+    </QueryBoundary>
   )
 }
 
@@ -68,12 +74,7 @@ export const Watched = () => {
             />
           </div>
         ) : (
-          <AsyncBoundary
-            fallback={<WatchedSkeletonGrid />}
-            onRetry={() => getMoviesByIds.invalidate(ids)}
-          >
-            <WatchedGrid />
-          </AsyncBoundary>
+          <WatchedGrid />
         )}
       </main>
     </div>

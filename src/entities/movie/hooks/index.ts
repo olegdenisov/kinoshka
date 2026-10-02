@@ -1,6 +1,7 @@
 export { useNewMovies } from './useNewMovies'
 export { useTopRatedMovies } from './useTopRatedMovies'
 export { useMovieDetail } from './useMovieDetail'
+export { useMoviesByIds } from './useMoviesByIds'
 export { usePopularMovies } from './usePopularMovies'
 export type { MovieDetailBundle } from './useMovieDetail'
 export {
