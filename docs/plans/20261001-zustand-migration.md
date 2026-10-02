@@ -210,12 +210,12 @@ resetAllStores() // только для src/test/setup.ts
 - Create: `src/features/theme/model/themeStore.ts`, `src/features/theme/model/themeStore.test.ts`
 - Modify: `src/features/theme/model/useTheme.ts`, `src/features/theme/model/useTheme.test.tsx`
 
-- [ ] `useThemeStore` на `createPersistedStore` поверх `themeSlot` (ключ `kinoshka:theme`, схема без изменений): `{ theme, setTheme }`
-- [ ] `useTheme` читает `theme` и `setTheme` селекторами; `prefersDark`, `resolveTheme`, эффект `data-theme` и `toggleTheme` — без изменений; `UseThemeResult` не меняется
-- [ ] `index.html` и CSP-хэш не тронуты (`git diff main -- index.html vercel.json` пуст)
-- [ ] тесты стора: `setTheme` пишет `"light"`/`"dark"`/`"system"` голым JSON; чтение сохранённого значения при создании
-- [ ] существующие `useTheme.test.tsx` проходят (правки — только в подготовке/сбросе стейта)
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] `useThemeStore` на `createPersistedStore` поверх `themeSlot` (ключ `kinoshka:theme`, схема без изменений): `{ theme, setTheme }`
+- [x] `useTheme` читает `theme` и `setTheme` селекторами; `prefersDark`, `resolveTheme`, эффект `data-theme` и `toggleTheme` — без изменений; `UseThemeResult` не меняется
+- [x] `index.html` и CSP-хэш не тронуты (`git diff main -- index.html vercel.json` пуст)
+- [x] тесты стора: `setTheme` пишет `"light"`/`"dark"`/`"system"` голым JSON; чтение сохранённого значения при создании
+- [x] существующие `useTheme.test.tsx` проходят (правки — только в подготовке/сбросе стейта)
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 4: Сторы Watched и Watchlist
 
