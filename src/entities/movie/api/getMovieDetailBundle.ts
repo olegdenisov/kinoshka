@@ -4,7 +4,7 @@ import type { MovieDetail } from '../model/types'
 import { movieDetailStore } from './getMovieDetail'
 import { fetchMovieImages, type MovieImage } from './getMovieImages'
 
-export type MovieDetailBundle = {
+type MovieDetailBundle = {
   detail: MovieDetail
   images: MovieImage[]
 }

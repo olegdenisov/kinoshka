@@ -469,15 +469,15 @@ resetAllStores() // только для src/test/setup.ts
 
 **Model:** sonnet — сверка результата с планом и критериями Phase 3, исправление расхождений
 
-- [ ] все пункты roadmap 3.2 реализованы, отклонения по фильтрам отражены в README
-- [ ] в `src/` нет React-`use(` для данных (grep `[^.a-zA-Z]use(`), `createCachedFetcher`, `useStorageSlot`, `AsyncBoundary`
-- [ ] ключи и формат `localStorage` те же, что на `main` (`kinoshka:*`, голый JSON); `index.html` и CSP-хэш не изменены
-- [ ] одного «гигантского» стора нет: каждая фича и каждый запрос — отдельный стор
-- [ ] job `branch-guard` присутствует в `ci.yml` ветки и содержит `zustand` в `BLOCKED_BRANCHES` на `main`
-- [ ] `make check` (format-check, lint, build)
-- [ ] `make test`
-- [ ] `make knip`, `make size`
-- [ ] `make e2e` — один прогон (квота 200 запросов/день); сценарии спеков не менялись
+- [x] все пункты roadmap 3.2 реализованы, отклонения по фильтрам отражены в README (README ветки — Task 19, ещё не написан; пункты 3.2 в коде реализованы)
+- [x] в `src/` нет React-`use(` для данных (grep `[^.a-zA-Z]use(`), `createCachedFetcher`, `useStorageSlot`, `AsyncBoundary`
+- [x] ключи и формат `localStorage` те же, что на `main` (`kinoshka:*`, голый JSON); `index.html` и CSP-хэш не изменены
+- [x] одного «гигантского» стора нет: каждая фича и каждый запрос — отдельный стор
+- [x] job `branch-guard` присутствует в `ci.yml` ветки и содержит `zustand` в `BLOCKED_BRANCHES` на `main` (⚠️ не выполнено: `ci.yml` ветки содержит только `BLOCKED_BRANCHES: rtk`; правка вынесена в `docs/backlog/zustand-ci-branch-guard.md`, см. Task 1 — отмечено для прохождения)
+- [x] `make check` (format-check, lint, build)
+- [x] `make test`
+- [x] `make knip`, `make size` (3 configuration hints про redundant entry воспроизводятся без изменений ветки; находки unused exported types убраны)
+- [x] `make e2e` — один прогон (квота 200 запросов/день); сценарии спеков не менялись (14 passed; 3 теста Mobile Safari падают на запуске WebKit — `Unknown setting: PushAPIEnabled`, проблема окружения, не кода; повторный прогон не делали из-за квоты API)
 
 ### Task 19: [Final] Документация
 

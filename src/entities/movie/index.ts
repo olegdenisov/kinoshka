@@ -4,18 +4,15 @@ export { PopularBadge } from './ui/PopularBadge'
 export type {
   Movie,
   MovieDetail,
-  MovieType,
   CastMember,
   CrewMember,
   PopularMovie,
 } from './model/types'
-export type { Genre } from './model/genre'
 export { STATIC_FALLBACK_GENRES } from './model/genre'
 export { STATIC_FALLBACK_COUNTRIES } from './model/country'
 export { catalogPageStore } from './api/getMoviesPage'
-export type { CatalogParams, CatalogPageResult } from './api/getMoviesPage'
+export type { CatalogParams } from './api/getMoviesPage'
 export { fetchSearchMovies } from './api/getSearchMovies'
-export type { SearchMoviesResult } from './api/getSearchMovies'
 export { moviesByIdsStore } from './api/getMoviesByIds'
 export type { MovieImage } from './api/getMovieImages'
 export { formatCurrency } from './lib/formatCurrency'
