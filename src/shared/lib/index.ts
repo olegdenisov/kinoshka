@@ -10,10 +10,17 @@ export { createCachedFetcher, resetAllCachedFetchers } from './cachedFetcher'
 export type { CachedFetcher } from './cachedFetcher'
 export {
   createPersistedStore,
+  createQueryStore,
   registerStoreReset,
   resetAllStores,
 } from './store'
-export type { Commit, PersistedStore } from './store'
+export type {
+  Commit,
+  PersistedStore,
+  QueryResult,
+  QueryStore,
+  UseQueryOptions,
+} from './store'
 export { useDebouncedValue } from './debounce'
 export { useInView } from './inView'
 export { lazyNamed } from './lazyNamed'
