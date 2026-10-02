@@ -3,8 +3,10 @@ paths:
   - 'src/entities/movie/{api,hooks,model,lib}/**'
   - 'src/entities/person/**'
   - 'src/shared/api/**'
-  - 'src/shared/lib/{sessionCache,cachedFetcher}/**'
-  - 'src/shared/ui/{AsyncBoundary,ErrorBoundary,ErrorState}/**'
+  - 'src/shared/lib/store/**'
+  - 'src/shared/ui/{QueryBoundary,ErrorBoundary,ErrorState}/**'
+  - 'src/pages/search/model/movieCatalogStore.ts'
+  - 'src/pages/recommendations/model/**'
   - 'src/pages/{movie,person,popular,recommendations,favorites}/**'
   - 'src/features/{favorites,recommendations}/**'
 ---
@@ -15,19 +17,23 @@ paths:
 
 ## Shared building blocks
 
-- **`createCachedFetcher`** (`@shared/lib`) — use it for every new fetcher. Lives in `shared` because `@entities/person` needs it too and entity slices can't import each other. Errors are cached for 20s, so a Retry without `invalidate` replays the cached rejection.
-- `createSessionCache` persists to `sessionStorage` **only in DEV**; in prod the cache is in-memory and lost on reload.
-- **`AsyncBoundary`:** every retry-capable boundary wires `onRetry` to the `invalidate*` export next to its hook. Double-click protection is the synchronous `isRetryingRef`, **not** an error-reference comparison (fetchers replay the same `Error` object). It doesn't pass `onError` to its inner `ErrorBoundary` — data errors caught here never reach Sentry (accepted gap).
+- **`createQueryStore`** (`@shared/lib`) — use it for every new request; one store per request, instance lives in the owning slice (`shared` holds no domain data). It is not Zustand-provided caching: dedup, TTL and the cooldown are ours.
+- **Error cooldown (20s) applies only to the automatic start from `useQuery`**, to protect the 200 req/day quota. Imperative `fetch()` and `refetch()` bypass it and re-request a cached error — otherwise a composed store's Retry would be dead for 20s because nested steps would replay the old rejection. The quota is protected by the top-level key's cooldown.
+- **Compose through `store.fetch(params)`**, not by calling the raw fetcher — it shares cache and in-flight dedup (`getMoviesByIds` reuses movie details, the catalog reuses cursor steps).
+- **Requests start from an effect, not during render.** `isFetching` is derived synchronously in the first render for a missing/stale key, otherwise `keepPreviousData` would show one frame of old data without the indicator.
+- **A fetcher must not resolve `undefined`:** `data === undefined` means "no data". Recommendations return `null` instead of using `skip`, which would leave `QueryBoundary` on its fallback forever.
+- **Errors are stored as-is** (`ApiError` with `status`) — the store isn't serializable by design; the `/movie/:id` 404 branch relies on it.
+- **`QueryBoundary`:** `isError` shows `ErrorState` with Retry = `refetch` even when stale data exists (same as `main`). It doesn't report to Sentry — data errors caught here never reach it (accepted gap).
+- Entries are never evicted (page lifetime): stale data shows immediately and refreshes in the background. DEV no longer persists the cache to `sessionStorage`.
 - **`ErrorState` must not depend on `react-router`:** `GlobalErrorBoundary` renders it outside `<RouterProvider>`, hence the neutral `secondaryAction` slot instead of a built-in home link.
 - **Error DTOs:** endpoints that return `statusCode`/`message` instead of data must check `'statusCode' in response.data` and throw `ApiError` before reading fields.
 
 ## `/movie/:id`, `/person/:id`
 
-- Images rejecting → `images: []`, page still renders; detail rejecting (incl. 404) → `AsyncBoundary`.
+- Images rejecting → `images: []`, page still renders; detail rejecting (incl. 404) → `QueryBoundary` error state.
 - Person filmography is a text list, not `Card`s: `MovieInPerson` has no poster/year/genre, and a `getMoviesByIds` fan-out would burn the quota.
 - `facts[]`: HTML tags stripped, entities (`&laquo;`, `&nbsp;`) **not** decoded — accepted.
 - API calendar dates are UTC midnight → format in UTC.
-- **DEV only:** an error snapshot replayed from `sessionStorage` loses `ApiError.status`, so the 404 view falls back to the generic error.
 
 ## `/popular`
 
@@ -43,5 +49,5 @@ paths:
 
 ## `/recommendations`
 
-- `invalidateRecommendations` retries the last computed query kept in a module variable: favorites load async and aren't available at the `onRetry` call site.
+- The store key is the favorites `ids`: a changed list changes the key and refetches by itself; Retry is a plain `refetch`, no module-level variable. The fetcher runs the whole chain (`moviesByIdsStore.fetch` → rule → catalog fetch), so there is a single `QueryResult`.
 - Cards get no favorite toggle (a click changes the rule's input → recompute and refetch the grid), but do get the watchlist one — the query doesn't depend on it.

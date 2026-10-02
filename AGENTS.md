@@ -10,7 +10,7 @@ This file holds only repo-wide conventions. Area-specific decisions and gotchas 
 
 | Doc                 | Topic                                                                     |
 | ------------------- | ------------------------------------------------------------------------- |
-| `data-layer.md`     | fetch caching, `AsyncBoundary`/Retry, endpoint quirks, id-list fetching   |
+| `data-layer.md`     | query stores, `QueryBoundary`/Retry, endpoint quirks, id-list fetching    |
 | `search-catalog.md` | `/search` URL state, text-vs-filter modes, genres                         |
 | `storage.md`        | `createStorageSlot` semantics and failure handling                        |
 | `user-lists.md`     | Watched/Watchlist: independence, relation to Favorites                    |
@@ -155,12 +155,11 @@ Formatters over API numbers/dates (`formatCurrency()`/`formatDate()`, `@entities
 
 ## Data (summary)
 
-Async data is read with Suspense `use()` inside `AsyncBoundary`; client state lives in `localStorage` via `createStorageSlot`. Details → `data-layer.md`, `storage.md`. Check for an existing live-data hook before reaching for mock data.
+Async data is read with `useQuery` hooks of `createQueryStore` query stores inside `QueryBoundary`; client state lives in Zustand stores persisted to `localStorage` via `createPersistedStore` over `createStorageSlot`. Details → `data-layer.md`, `storage.md`. Check for an existing live-data hook before reaching for mock data.
 
 Repo-wide gotchas worth knowing everywhere:
 
-- **`useDeferredValue` over `useSearchParams()`-derived values is a silent no-op** — `setSearchParams` runs inside `startTransition`, so the deferred and live values change in the same commit. Mirror the value into `useState` from a `useEffect` first (see `useCatalogUpdateStatus.ts`).
-- **`createStorageSlot().set()` returns `boolean`** (`false` on quota/private-mode failure) instead of throwing — gate side effects (analytics, "saved" UI) on it.
+- **`createStorageSlot().set()` returns `boolean`** (`false` on quota/private-mode failure) instead of throwing; persisted stores expose it as the `commit()` result — gate side effects (analytics, "saved" UI) on it.
 
 ## Testing
 

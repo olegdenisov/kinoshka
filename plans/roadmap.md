@@ -528,11 +528,11 @@
 
 ### 3.2 `zustand`
 
-- [ ] `pnpm add zustand`.
-- [ ] Несколько изолированных stores: `useFavoritesStore`, `useThemeStore`, `useFiltersStore`.
-- [ ] `persist` middleware для favorites/theme.
-- [ ] Селекторы с `shallow` для объектных слайсов.
-- [ ] README ветки.
+- [x] `pnpm add zustand`.
+- [x] Несколько изолированных stores: `useFavoritesStore`, `useThemeStore`, `useFiltersStore` (отклонение: фильтры остаются в URL, вместо них `useSearchUiStore` для не-URL стейта страницы поиска).
+- [x] `persist` middleware для favorites/theme.
+- [x] Селекторы с `shallow` для объектных слайсов.
+- [x] README ветки.
 
 **Как лучше:** маленькие изолированные сторы = лучшая re-render-производительность. НЕ делай один gigant-store.
 
