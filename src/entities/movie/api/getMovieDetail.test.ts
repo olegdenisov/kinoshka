@@ -2,7 +2,7 @@ import { ApiError } from '@shared/api'
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
-import { getMovieDetail } from './getMovieDetail'
+import { fetchMovieDetail, movieDetailStore } from './getMovieDetail'
 
 const doc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -42,7 +42,7 @@ describe('getMovieDetail — success', () => {
   it('запрос уходит на /v1.5/movie/:id, ответ маппится в MovieDetail', async () => {
     mockSuccess(101, { name: 'Orbit of Silence' })
 
-    const detail = await getMovieDetail(101)
+    const detail = await fetchMovieDetail(101)
 
     expect(detail.id).toBe(101)
     expect(detail.title).toBe('Orbit of Silence')
@@ -50,14 +50,22 @@ describe('getMovieDetail — success', () => {
     expect(detail.synopsis).toBe('Full synopsis.')
   })
 
-  it('стабильный промис на один и тот же id', async () => {
-    mockSuccess(102)
+  it('movieDetailStore.fetch: параллельные вызовы и повтор в пределах TTL — один сетевой запрос', async () => {
+    let requests = 0
+    server.use(
+      http.get('*/v1.5/movie/102', () => {
+        requests += 1
+        return HttpResponse.json(doc(102))
+      }),
+    )
 
-    const first = getMovieDetail(102)
-    const second = getMovieDetail(102)
+    await Promise.all([
+      movieDetailStore.fetch(102),
+      movieDetailStore.fetch(102),
+    ])
+    await movieDetailStore.fetch(102)
 
-    expect(first).toBe(second)
-    await first
+    expect(requests).toBe(1)
   })
 })
 
@@ -69,21 +77,21 @@ describe('getMovieDetail — 404', () => {
       error: 'Not Found',
     })
 
-    const error = await getMovieDetail(666).catch((e: unknown) => e)
+    const error = await movieDetailStore.fetch(666).catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(ApiError)
     expect((error as ApiError).status).toBe(404)
   })
 })
 
-describe('getMovieDetail — 403 cooldown', () => {
-  it('403 — промис реджектится (регресс на createCachedFetcher)', async () => {
+describe('getMovieDetail — 403', () => {
+  it('403 — промис реджектится', async () => {
     mockError(555, 403, {
       statusCode: 403,
       message: 'Forbidden',
       error: 'Forbidden',
     })
 
-    await expect(getMovieDetail(555)).rejects.toThrow()
+    await expect(movieDetailStore.fetch(555)).rejects.toThrow()
   })
 })

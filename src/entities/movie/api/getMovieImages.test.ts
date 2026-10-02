@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
-import { getMovieImages } from './getMovieImages'
+import { fetchMovieImages } from './getMovieImages'
 
 const ENDPOINT = '*/v1.5/image'
 
@@ -46,11 +46,11 @@ const mockForbidden = () => {
   )
 }
 
-describe('getMovieImages — запрос', () => {
+describe('fetchMovieImages — запрос', () => {
   it('уходит на /v1.5/image с movieId, type:[frame,screenshot], limit:8, selectFields', async () => {
     const getRequest = mockSuccess([image()])
 
-    await getMovieImages(1)
+    await fetchMovieImages(1)
 
     const url = new URL(getRequest()!.url)
     expect(url.searchParams.getAll('movieId')).toEqual(['1'])
@@ -62,24 +62,14 @@ describe('getMovieImages — запрос', () => {
     ])
   })
 
-  it('403 — промис реджектится (isError-cooldown в фабрике)', async () => {
+  it('403 — промис реджектится', async () => {
     mockForbidden()
 
-    await expect(getMovieImages(2)).rejects.toThrow()
-  })
-
-  it('стабильный промис на один и тот же id', async () => {
-    mockSuccess([image()])
-
-    const first = getMovieImages(3)
-    const second = getMovieImages(3)
-
-    expect(first).toBe(second)
-    await first
+    await expect(fetchMovieImages(2)).rejects.toThrow()
   })
 })
 
-describe('getMovieImages — форма результата MovieImage[]', () => {
+describe('fetchMovieImages — форма результата MovieImage[]', () => {
   it('docs маппятся в { url, previewUrl }', async () => {
     mockSuccess([
       image({
@@ -88,7 +78,7 @@ describe('getMovieImages — форма результата MovieImage[]', () =
       }),
     ])
 
-    const images = await getMovieImages(4)
+    const images = await fetchMovieImages(4)
 
     expect(images).toEqual([
       {
@@ -101,7 +91,7 @@ describe('getMovieImages — форма результата MovieImage[]', () =
   it('previewUrl отсутствует — previewUrl undefined', async () => {
     mockSuccess([image({ previewUrl: undefined })])
 
-    const [result] = await getMovieImages(5)
+    const [result] = await fetchMovieImages(5)
 
     expect(result.previewUrl).toBeUndefined()
   })
@@ -112,7 +102,7 @@ describe('getMovieImages — форма результата MovieImage[]', () =
       image({ url: 'https://example.com/b.jpg' }),
     ])
 
-    const images = await getMovieImages(6)
+    const images = await fetchMovieImages(6)
 
     expect(images).toEqual([
       {
@@ -125,7 +115,7 @@ describe('getMovieImages — форма результата MovieImage[]', () =
   it('пустой docs — пустой массив', async () => {
     mockSuccess([])
 
-    const images = await getMovieImages(7)
+    const images = await fetchMovieImages(7)
 
     expect(images).toEqual([])
   })

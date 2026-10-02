@@ -1,6 +1,6 @@
-import { invalidatePersonDetail, usePersonDetail } from '@entities/person'
+import { usePersonDetail } from '@entities/person'
 import { ApiError } from '@shared/api'
-import { AsyncBoundary, ErrorState, type ErrorFallbackParams } from '@shared/ui'
+import { ErrorState, QueryBoundary } from '@shared/ui'
 import { useParams } from 'react-router'
 
 import { Person } from './ui/Person'
@@ -13,13 +13,9 @@ type PersonDetailContentProps = {
   id: number
 }
 
-const PersonDetailContent = ({ id }: PersonDetailContentProps) => {
-  const person = usePersonDetail(id)
-
-  // key={id} сбрасывает локальное состояние Person (развёрнутые группы
-  // фильмографии в Filmography) при переходе между разными персонами —
-  // тот же приём, что в MovieDetailContent для сброса активного таба.
-  return <Person key={id} person={person} />
+type ErrorFallbackParams = {
+  error: unknown
+  reset: () => void
 }
 
 const personErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
@@ -31,10 +27,29 @@ const personErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
       description={
         isNotFound
           ? NOT_FOUND_DESCRIPTION
-          : error?.message || 'Please try again later'
+          : (error instanceof Error && error.message) ||
+            'Please try again later'
       }
       onRetry={reset}
     />
+  )
+}
+
+const PersonDetailContent = ({ id }: PersonDetailContentProps) => {
+  // keepPreviousData не включаем: при смене :id нужен скелетон новой персоны, а не данные прежней
+  const query = usePersonDetail(id)
+
+  // key={id} сбрасывает локальное состояние Person (развёрнутые группы
+  // фильмографии в Filmography) при переходе между разными персонами —
+  // тот же приём, что в MovieDetailContent для сброса активного таба.
+  return (
+    <QueryBoundary
+      query={query}
+      fallback={<PersonDetailSkeleton />}
+      errorFallback={personErrorFallback}
+    >
+      {person => <Person key={id} person={person} />}
+    </QueryBoundary>
   )
 }
 
@@ -48,13 +63,5 @@ export const PersonPage = () => {
     )
   }
 
-  return (
-    <AsyncBoundary
-      errorFallback={personErrorFallback}
-      fallback={<PersonDetailSkeleton />}
-      onRetry={() => invalidatePersonDetail(numericId)}
-    >
-      <PersonDetailContent id={numericId} />
-    </AsyncBoundary>
-  )
+  return <PersonDetailContent id={numericId} />
 }

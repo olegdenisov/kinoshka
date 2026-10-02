@@ -347,14 +347,14 @@ resetAllStores() // только для src/test/setup.ts
 - Modify: `src/entities/movie/api/getMoviesByIds.ts` (временный мост до Task 12), `src/entities/movie/index.ts`
 - Modify: `src/pages/movie/MoviePage.tsx`, `src/pages/person/PersonPage.tsx` + тесты
 
-- [ ] стор «только detail по id» (`movieDetailStore`) — базовый; его `fetch()` переиспользуют бандл и `getMoviesByIds`
-- [ ] стор бандла фильма: `fetcher` = `Promise.allSettled([movieDetailStore.fetch(id), fetchMovieImages(id)])` — detail обязательно через стор, иначе кеш с `getMoviesByIds` не общий и квота тратится вдвое; images отклонился → `images: []`, страница рендерится; detail отклонился (включая 404) → ошибка
-- [ ] мост: старый `getMoviesByIds` (ещё на `createCachedFetcher`) переключается с `getMovieDetail(id)` на `movieDetailStore.fetch(id)` — его потребители до Task 12 продолжают работать
-- [ ] стор персоны; `ApiError.status` доступен в `error` — 404-вид отличается от общей ошибки
-- [ ] `MoviePage`/`PersonPage`: `QueryBoundary` с `errorFallback`, различающим 404
-- [ ] смена `:id` в URL: показывается скелетон нового id, а не данные предыдущего (`keepPreviousData` не включаем)
-- [ ] тесты: успех, 404, частичный отказ images, смена id
-- [ ] `make test && make typecheck && make lint` — зелёные
+- [x] стор «только detail по id» (`movieDetailStore`) — базовый; его `fetch()` переиспользуют бандл и `getMoviesByIds`
+- [x] стор бандла фильма: `fetcher` = `Promise.allSettled([movieDetailStore.fetch(id), fetchMovieImages(id)])` — detail обязательно через стор, иначе кеш с `getMoviesByIds` не общий и квота тратится вдвое; images отклонился → `images: []`, страница рендерится; detail отклонился (включая 404) → ошибка
+- [x] мост: старый `getMoviesByIds` (ещё на `createCachedFetcher`) переключается с `getMovieDetail(id)` на `movieDetailStore.fetch(id)` — его потребители до Task 12 продолжают работать
+- [x] стор персоны; `ApiError.status` доступен в `error` — 404-вид отличается от общей ошибки
+- [x] `MoviePage`/`PersonPage`: `QueryBoundary` с `errorFallback`, различающим 404
+- [x] смена `:id` в URL: показывается скелетон нового id, а не данные предыдущего (`keepPreviousData` не включаем)
+- [x] тесты: успех, 404, частичный отказ images, смена id
+- [x] `make test && make typecheck && make lint` — зелёные
 
 ### Task 12: Query-стор `getMoviesByIds` и страницы списков
 

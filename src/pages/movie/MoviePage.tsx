@@ -1,6 +1,6 @@
-import { invalidateMovieDetail, useMovieDetail } from '@entities/movie'
+import { useMovieDetail } from '@entities/movie'
 import { ApiError } from '@shared/api'
-import { AsyncBoundary, ErrorState, type ErrorFallbackParams } from '@shared/ui'
+import { ErrorState, QueryBoundary } from '@shared/ui'
 import { useParams } from 'react-router'
 
 import { Movie } from './ui/Movie'
@@ -13,14 +13,9 @@ type MovieDetailContentProps = {
   id: number
 }
 
-const MovieDetailContent = ({ id }: MovieDetailContentProps) => {
-  const { detail, images } = useMovieDetail(id)
-
-  // key={id} ремаунтит Movie (и, значит, сбрасывает активный таб на Overview) при переходе
-  // между разными фильмами — см. коммит 04cfa61 "reset movie tab on navigation". Раньше был
-  // навешан на MovieDesktop/MovieMobile по отдельности, после слияния (Task 9 плана
-  // docs/plans/20260827-mobile-first-adaptive-layout.md) — на едином Movie.
-  return <Movie key={id} movie={detail} images={images} />
+type ErrorFallbackParams = {
+  error: unknown
+  reset: () => void
 }
 
 const movieErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
@@ -32,10 +27,32 @@ const movieErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
       description={
         isNotFound
           ? NOT_FOUND_DESCRIPTION
-          : error?.message || 'Please try again later'
+          : (error instanceof Error && error.message) ||
+            'Please try again later'
       }
       onRetry={reset}
     />
+  )
+}
+
+const MovieDetailContent = ({ id }: MovieDetailContentProps) => {
+  // keepPreviousData не включаем: при смене :id нужен скелетон нового фильма, а не данные прежнего
+  const query = useMovieDetail(id)
+
+  // key={id} ремаунтит Movie (и, значит, сбрасывает активный таб на Overview) при переходе
+  // между разными фильмами — см. коммит 04cfa61 "reset movie tab on navigation". Раньше был
+  // навешан на MovieDesktop/MovieMobile по отдельности, после слияния (Task 9 плана
+  // docs/plans/20260827-mobile-first-adaptive-layout.md) — на едином Movie.
+  return (
+    <QueryBoundary
+      query={query}
+      fallback={<MovieDetailSkeleton />}
+      errorFallback={movieErrorFallback}
+    >
+      {({ detail, images }) => (
+        <Movie key={id} movie={detail} images={images} />
+      )}
+    </QueryBoundary>
   )
 }
 
@@ -49,13 +66,5 @@ export const MoviePage = () => {
     )
   }
 
-  return (
-    <AsyncBoundary
-      errorFallback={movieErrorFallback}
-      fallback={<MovieDetailSkeleton />}
-      onRetry={() => invalidateMovieDetail(numericId)}
-    >
-      <MovieDetailContent id={numericId} />
-    </AsyncBoundary>
-  )
+  return <MovieDetailContent id={numericId} />
 }

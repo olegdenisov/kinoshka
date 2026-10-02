@@ -2,13 +2,15 @@ import { ApiError } from '@shared/api'
 import { createCachedFetcher } from '@shared/lib'
 
 import type { Movie } from '../model/types'
-import { getMovieDetail } from './getMovieDetail'
+import { movieDetailStore } from './getMovieDetail'
 
 const isNotFound = (reason: unknown) =>
   reason instanceof ApiError && reason.status === 404
 
 const fetchMoviesByIds = async (ids: number[]): Promise<Movie[]> => {
-  const results = await Promise.allSettled(ids.map(id => getMovieDetail(id)))
+  const results = await Promise.allSettled(
+    ids.map(id => movieDetailStore.fetch(id)),
+  )
 
   const movies = results
     .filter(result => result.status === 'fulfilled')
