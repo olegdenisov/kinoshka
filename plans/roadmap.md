@@ -544,11 +544,13 @@
 
 ### 3.3 `reatom`
 
-- [ ] `pnpm add @reatom/framework @reatom/npm-react`.
-- [ ] Atoms на каждое поле, actions для мутаций.
-- [ ] `reatomAsync` / `reatomResource` для async.
-- [ ] Memoized derived atoms (явная демонстрация — `plans/main.md` 3.9).
-- [ ] README ветки.
+- [x] `pnpm add @reatom/framework @reatom/npm-react`.
+- [x] Atoms на каждое поле, actions для мутаций.
+- [x] `reatomAsync` / `reatomResource` для async.
+- [x] Memoized derived atoms (явная демонстрация — `plans/main.md` 3.9).
+- [x] README ветки.
+
+Реализация — на **Reatom v1001** (`@reatom/core@1001.3.0`, `@reatom/react`), а не на v3: `reatomAsync`/`reatomResource` заменены на `action + withAsync` / `computed(async) + withAsyncData`; ветка `reatom` покрывает client state, server state, URL-состояние и роутинг (`reatomRoute`). План: `docs/plans/20261002-reatom-v1001-migration.md`.
 
 **Как лучше:** Reatom — granular reactivity, не пытайся повторить redux-паттерны.
 

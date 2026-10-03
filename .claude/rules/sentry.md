@@ -2,7 +2,7 @@
 paths:
   - 'src/main.tsx'
   - 'src/app/sentry*.ts'
-  - 'src/app/router.tsx'
+  - 'src/app/model/routeTracing.ts'
   - 'src/app/GlobalErrorBoundary.tsx'
   - 'sentry.config.ts'
   - 'sentry-telemetry.config.ts'
@@ -19,8 +19,8 @@ Operational steps: `docs/telemetry-runbook.md`.
 
 ## Init
 
-- `sentry-bootstrap.ts` must stay the **first import of `main.tsx`**: `wrapCreateBrowserRouter` silently returns the router unwrapped if `createBrowserRouter` runs before `Sentry.init()`.
-- Use `reactRouterBrowserTracingIntegration` (not the deprecated V7 variant) + `wrapCreateBrowserRouter` → `/movie/:id` is one transaction name. Web Vitals come from Sentry, not Plausible.
+- `sentry-bootstrap.ts` must stay the **first import of `main.tsx`**: `initRouteTracing` takes the client via `Sentry.getClient()` and silently does nothing if it runs before `Sentry.init()`.
+- Pageload/navigation spans are created by hand in `routeTracing.ts`, the browser-tracing auto ones are off: auto-navigation fires on every `replaceState` (a `/search` query edit) and ends the current span, and renaming in `beforeStartSpan` forces the source to `custom`. Span name = route pattern (`/movie/:id`, unknown paths → `<not-found>`), source `route`; a span starts on `pathname` change only. Web Vitals come from Sentry, not Plausible.
 - `tracePropagationTargets` deliberately left at the default: the cross-origin API must first allow `sentry-trace`/`baggage` in CORS.
 - Report caught React errors via `Sentry.captureReactException` (what `captureRouteError` does), not a hand-rolled `captureException`.
 - `captureChunkLoadError` reports before `chunkPreloadRecovery` reloads — `preventDefault()` would otherwise swallow the cause.

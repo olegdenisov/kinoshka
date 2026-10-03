@@ -781,12 +781,12 @@ export const RouterOutlet = reatomComponent(
 - Modify: `README.md`, `AGENTS.md`, `.claude/rules/*.md`, `plans/roadmap.md`
 - Move: этот план → `docs/plans/completed/`
 
-- [ ] `README.md`: раздел ветки — паттерны Reatom v1001, плюсы и минусы, дельта бандла из Task 20, список принятых изменений поведения (нет сигнала о сбое записи, нет кэша ошибок, словари, страница `NotFound`)
-- [ ] `AGENTS.md` (на английском): убрать gotcha про `createStorageSlot().set()` и про `useDeferredValue` над `useSearchParams()`; стек, раздел Routing, API-слой, Data summary, Testing; второе исключение `interface` (`src/app/reatom.d.ts`); убрать упоминания удалённых хуков и `createStorageSlot`
-- [ ] `.claude/rules/*.md` — сначала удалить устаревшее: `search-catalog.md` (`areFiltersEqual` / `usePageSync` / `createDictionaryCache`), `data-layer.md` (`ErrorState` без `react-router`, `invalidate*`, кэш ошибок), `ui-patterns.md` (`themeSlot`, `<Link>`), `sentry.md` (репортер хранилища), `analytics.md` (`favorite added` только при успешной записи), `profile.md` и `build-budgets.md` (`router.tsx`, `AsyncBoundary`, сообщение о сбое сохранения)
-- [ ] `.claude/rules/*.md` — затем дописать (на английском, только неочевидное): `storage.md` — TTL persist в 1001.3.0, почему не `schema`, отказ от сигнала о сбое записи; `data-layer.md` — кэш только на action, отказ от кэша ошибок; `search-catalog.md` — одна запись в URL на мутацию, почему не `withSearchParams`; `ui-patterns.md` — ловушка React Compiler; `sentry.md` — именование спанов; `e2e.md`/тесты — порядок изоляции; обновить `paths:` во всех файлах под новые и удалённые файлы
-- [ ] `plans/roadmap.md`: отметить чекбоксы 3.3 и дописать, что реализация — на v1001
-- [ ] перенести этот план в `docs/plans/completed/`
+- [x] `README.md`: раздел ветки — паттерны Reatom v1001, плюсы и минусы, дельта бандла из Task 20, список принятых изменений поведения (нет сигнала о сбое записи, нет кэша ошибок, словари, страница `NotFound`)
+- [x] `AGENTS.md` (на английском): убрать gotcha про `createStorageSlot().set()` и про `useDeferredValue` над `useSearchParams()`; стек, раздел Routing, API-слой, Data summary, Testing; второе исключение `interface` (`src/app/reatom.d.ts`); убрать упоминания удалённых хуков и `createStorageSlot`
+- [x] `.claude/rules/*.md` — сначала удалить устаревшее: `search-catalog.md` (`areFiltersEqual` / `usePageSync` / `createDictionaryCache`), `data-layer.md` (`ErrorState` без `react-router`, `invalidate*`, кэш ошибок), `ui-patterns.md` (`themeSlot`, `<Link>`), `sentry.md` (репортер хранилища), `analytics.md` (`favorite added` только при успешной записи), `profile.md` и `build-budgets.md` (`router.tsx`, `AsyncBoundary`, сообщение о сбое сохранения)
+- [x] `.claude/rules/*.md` — затем дописать (на английском, только неочевидное): `storage.md` — TTL persist в 1001.3.0, почему не `schema`, отказ от сигнала о сбое записи; `data-layer.md` — кэш только на action, отказ от кэша ошибок; `search-catalog.md` — одна запись в URL на мутацию, почему не `withSearchParams`; `ui-patterns.md` — ловушка React Compiler; `sentry.md` — именование спанов; `e2e.md`/тесты — порядок изоляции; обновить `paths:` во всех файлах под новые и удалённые файлы
+- [x] `plans/roadmap.md`: отметить чекбоксы 3.3 и дописать, что реализация — на v1001
+- [x] перенести этот план в `docs/plans/completed/` (skipped - план переносит harness)
 
 ## Post-Completion
 

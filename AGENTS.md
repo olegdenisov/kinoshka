@@ -10,9 +10,9 @@ This file holds only repo-wide conventions. Area-specific decisions and gotchas 
 
 | Doc                 | Topic                                                                     |
 | ------------------- | ------------------------------------------------------------------------- |
-| `data-layer.md`     | fetch caching, `AsyncBoundary`/Retry, endpoint quirks, id-list fetching   |
+| `data-layer.md`     | action-level query cache, `AsyncContent`/retry, endpoint quirks, id lists |
 | `search-catalog.md` | `/search` URL state, text-vs-filter modes, genres                         |
-| `storage.md`        | `createStorageSlot` semantics and failure handling                        |
+| `storage.md`        | Reatom persist (`persistOptions`), TTL, failure semantics                 |
 | `user-lists.md`     | Watched/Watchlist: independence, relation to Favorites                    |
 | `profile.md`        | `/profile`, avatar contrast, `BottomNav`                                  |
 | `ui-patterns.md`    | `Card` stacking/stretched link, `YearRangeSlider`, theming, contrast test |
@@ -56,11 +56,12 @@ The rest (`dev`, `format`, `coverage`, `analyze`, `lighthouse`, `sentry-telemetr
 
 ## Architecture
 
-React 19 + TypeScript 7 + Vite 8 (Rolldown) single-page app.
+React 19 + TypeScript 7 + Vite 8 (Rolldown) single-page app. State, async, URL state and routing are on **Reatom v1001** (`@reatom/core`, `@reatom/react`).
 
 - **React Compiler is enabled** (`babel-plugin-react-compiler` via `@rolldown/plugin-babel`). Don't write manual `useMemo` / `useCallback` / `memo`.
+- **Components that read atoms are `reatomComponent(fn, 'Name')`**; handlers are wrapped in `wrap(...)`. A plain component calling an atom directly is compiled into compute-once — the value goes stale forever (details → `ui-patterns.md`).
 - **TypeScript strictness:** `noUnusedLocals`, `noUnusedParameters`, `erasableSyntaxOnly` (no `enum`, `namespace`, parameter properties).
-- **TypeScript style:** `type`, not `interface` — enforced by oxlint `typescript/consistent-type-definitions`. Single exception: `interface Window` in `src/vite-env.d.ts` (global declaration merging only works through `interface`), marked with `oxlint-disable-next-line`.
+- **TypeScript style:** `type`, not `interface` — enforced by oxlint `typescript/consistent-type-definitions`. Two exceptions, both global declaration merging (only works through `interface`) marked with `oxlint-disable-next-line`: `interface Window` in `src/vite-env.d.ts` and `interface RouteChild` in `src/app/reatom.d.ts`.
 - **Fonts:** Instrument Serif (`--font-serif`), Instrument Sans (`--font-display`/`--font-body`), JetBrains Mono (`--font-mono`), loaded in `index.html` (async-load details → `csp.md`). Don't add new font imports.
 - **Path aliases** map to FSD layers (`vite.config.ts` + `tsconfig.app.json`): `@app`, `@pages`, `@widgets`, `@features`, `@entities`, `@shared`. Use them for all cross-layer imports.
 
@@ -86,16 +87,16 @@ Import direction: `pages → widgets → features → entities → shared`. Neve
 
 ## Routing
 
-React Router 7. Route config: `src/app/router.tsx` (every route lazy via `lazyNamed`, router wrapped with `Sentry.wrapCreateBrowserRouter`); providers: `src/app/providers.tsx`; chrome/layout: `src/app/layouts/AppLayout.tsx`.
+`reatomRoute`, all routes in `src/app/routes.tsx` (pathless layout route renders `AppLayout` around `outlet()`; pages are lazy via `lazyNamed`; unknown paths render `NotFound`); `RouterOutlet` and providers: `src/app/providers.tsx`; chrome/layout: `src/app/layouts/AppLayout.tsx`. Lower layers don't import routes: they use the path builders and `matchRoutePattern` from `@shared/config`, plain `<a href>` and `urlAtom.go(...)`.
 
-Adding a route touches: `router.tsx`, `AppLayout`'s `ROUTE_CHROME`, a `codeSplitting` group + `size-limit` entry (see `build-budgets.md`), and possibly the Lighthouse URL list and an e2e spec.
+Adding a route touches: `routes.tsx`, `@shared/config` `paths.ts` (builder + `ROUTE_PATTERNS`), `AppLayout`'s `ROUTE_CHROME`, a `codeSplitting` group + `size-limit` entry (see `build-budgets.md`), and possibly the Lighthouse URL list and an e2e spec.
 
 ## API layer
 
 Client auto-generated from the Kinopoisk OpenAPI spec by `@siberiacancode/apicraft`.
 
 - **Generated, never edit:** `src/shared/api/instance.gen.ts` (`// @ts-nocheck` prepended by `make generate-api`), `src/shared/api/types.gen.ts`.
-- **Hand-written:** `src/shared/api/client.ts` — instantiates `apiClient`, response interceptor throws `ApiError extends Error { status?: number }`. Cross-cutting API behavior lives here.
+- **Hand-written:** `src/shared/api/client.ts` — instantiates `apiClient`, response interceptor throws `ApiError extends Error { status?: number }`. Cross-cutting API behavior lives here. Requests are Reatom `action`s in the owning slice's `model/`; `api/` keeps only mappers and config.
 - `apicraft.config.ts` reads `APP_API_URL` from `.env.local`.
 
 `.env.local` (required for `make generate-api` / real data):
@@ -155,13 +156,10 @@ Formatters over API numbers/dates (`formatCurrency()`/`formatDate()`, `@entities
 
 ## Data (summary)
 
-Async data is read with Suspense `use()` inside `AsyncBoundary`; client state lives in `localStorage` via `createStorageSlot`. Details → `data-layer.md`, `storage.md`. Check for an existing live-data hook before reaching for mock data.
+Requests are `action + withAsync + withQueryCache`; pages read `status()` of a `computed(async) + withAsyncData` resource (or a route loader) and render through `AsyncContent`. Suspense is only for lazy page chunks. Client state is Reatom atoms persisted with `withLocalStorage(persistOptions(...))`. Details → `data-layer.md`, `storage.md`. Check for an existing model before reaching for mock data.
 
-Repo-wide gotchas worth knowing everywhere:
-
-- **`useDeferredValue` over `useSearchParams()`-derived values is a silent no-op** — `setSearchParams` runs inside `startTransition`, so the deferred and live values change in the same commit. Mirror the value into `useState` from a `useEffect` first (see `useCatalogUpdateStatus.ts`).
-- **`createStorageSlot().set()` returns `boolean`** (`false` on quota/private-mode failure) instead of throwing — gate side effects (analytics, "saved" UI) on it.
+Persist write failures are swallowed by Reatom (state stays in memory) — there is no success signal to gate side effects on (→ `storage.md`).
 
 ## Testing
 
-Vitest config is inline in `vite.config.ts` (`jsdom`, `globals: true`, `e2e/**` excluded via `configDefaults.exclude`). API calls are mocked with **MSW** (`src/test/setup.ts`, `onUnhandledRequest: 'error'`). **Zod** validates only the `localStorage`/`sessionStorage` boundary — API responses are trusted against the generated types. Pure logic is extracted from config files (`sentry.config.ts`, `bundle.config.ts`, `sentry-telemetry.config.ts`) specifically to be unit-tested — follow that precedent instead of testing `vite.config.ts` directly.
+Vitest config is inline in `vite.config.ts` (`jsdom`, `globals: true`, `e2e/**` excluded via `configDefaults.exclude`). API calls are mocked with **MSW** (`src/test/setup.ts`, `onUnhandledRequest: 'error'`). Models are tested without React in the default Reatom context; component tests set the URL with `renderWithRouter` (`src/test/router.tsx`). Isolation is a single ordered `afterEach` in `setup.ts` (→ `e2e.md`). **Zod** validates only the `localStorage`/`sessionStorage` boundary — API responses are trusted against the generated types. Pure logic is extracted from config files (`sentry.config.ts`, `bundle.config.ts`, `sentry-telemetry.config.ts`) specifically to be unit-tested — follow that precedent instead of testing `vite.config.ts` directly.

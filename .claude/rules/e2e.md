@@ -2,6 +2,7 @@
 paths:
   - 'e2e/**'
   - 'playwright.config.ts'
+  - 'src/test/**'
   - '.github/workflows/e2e.yml'
 ---
 
@@ -14,3 +15,4 @@ paths:
 - Local macOS 14 can't run WebKit — validate mobile specs on Chromium with a mobile viewport; CI runs WebKit.
 - Specs use only Playwright APIs (no DOM lib in `tsconfig.node.json`).
 - CI is a separate label-triggered workflow (`run-e2e`), not part of `ci.yml` — its shared `pull_request` trigger would re-run every job on label events. No Sentry/Plausible env in CI — keeps noise out of prod projects.
+- **Unit/component test isolation** is one ordered `afterEach` in `src/test/setup.ts`: `cleanup()` → `urlAtom.init.abort()` → abort test frames → `context.reset()` → storage clear → `history.replaceState('/')` → module state outside atoms → `server.resetHandlers()`. Separate `afterEach`s run in reverse registration order, and pending requests must be aborted before `resetHandlers()` or they hit the next test's `onUnhandledRequest: 'error'`. `context.reset()` doesn't remove `urlAtom.init`'s `popstate`/click listeners — hence the explicit abort.

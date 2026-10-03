@@ -1,8 +1,8 @@
 ---
 paths:
   - 'src/shared/lib/analytics/**'
-  - 'src/pages/search/model/useSearchAnalytics.ts'
-  - 'src/features/catalog-filter/model/useFilterState.ts'
+  - 'src/pages/search/model/catalog.ts'
+  - 'src/features/catalog-filter/model/searchState.ts'
   - 'src/features/favorites/model/favorites.ts'
 ---
 
@@ -14,4 +14,5 @@ Goal/funnel setup (manual): `docs/telemetry-runbook.md`. Web Vitals live in Sent
 - The `window.plausible` queue stub must be installed **before** the async script is inserted, otherwise the first pageview is lost; `script.manual.js` → pageviews are sent manually.
 - Event names are fixed lowercase literals — renaming a Plausible goal loses its history. No props with user text.
 - `filter changed` fires even on no-op commits (accepted); `setSort` is not tracked.
-- `favorite added` fires on every add regardless of the storage write: Reatom persist swallows `setItem` failures, so there is no success signal.
+- `favorite added` fires on every add (in `toggleFavorite`) regardless of the storage write: Reatom persist swallows `setItem` failures, so there is no success signal.
+- `search submitted` is tracked from the `effect` in `catalog`'s connect hook on each `q` change.
