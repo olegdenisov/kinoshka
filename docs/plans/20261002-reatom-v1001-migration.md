@@ -742,10 +742,18 @@ export const RouterOutlet = reatomComponent(
 
 - Modify: `package.json` (`size-limit`), `vite.config.ts`, `knip.jsonc`, `bundle.config.ts` при необходимости
 
-- [ ] `make build-only` и `make analyze`: убедиться, что страницы остались отдельными чанками, а `routes.tsx` не втянул их в entry; `NotFound` лежит в entry — проверить, что он не съел запас бюджета
-- [ ] выставить бюджеты `size-limit` по правилу `build-budgets.md` (измеренный gzip + 15%, `entry` мерить с `VITE_SENTRY_DSN`); записать дельты `vendor`/`shared`/`entry` относительно `main` в раздел Progress Tracking этого файла
-- [ ] `make knip` — чисто; убрать устаревшие исключения и комментарии в `knip.jsonc`
-- [ ] `make check` и `make size` — зелёные перед Task 21
+- [x] `make build-only` и `make analyze`: убедиться, что страницы остались отдельными чанками, а `routes.tsx` не втянул их в entry; `NotFound` лежит в entry — проверить, что он не съел запас бюджета
+- [x] выставить бюджеты `size-limit` по правилу `build-budgets.md` (измеренный gzip + 15%, `entry` мерить с `VITE_SENTRY_DSN`); записать дельты `vendor`/`shared`/`entry` относительно `main` в раздел Progress Tracking этого файла
+- [x] `make knip` — чисто; убрать устаревшие исключения и комментарии в `knip.jsonc`
+- [x] `make check` и `make size` — зелёные перед Task 21
+
+Дельты бюджетов (gzip, измерено с `VITE_SENTRY_DSN`; `main` оценён по прежним лимитам, делённым на 1.15):
+
+- entry: ~3.5 KB -> 4.5 KB (+~1 KB; новый лимит 5.2 KB)
+- vendor: ~160.6 KB -> 151.6 KB (-~9 KB; лимит 174.4 KB)
+- shared: ~19.7 KB -> 20.4 KB (+~0.7 KB; лимит 23.45 KB)
+- страницы: лимиты пересчитаны по измерению (movie 8.55, search 4.75, person 4.35, home 2.8, profile 2.05, recommendations 1.36, остальные 1.15 KB)
+- все `page-*` импортируют только `rolldown-runtime`/`vendor`/`shared`; `NotFound` в entry бюджет не съел
 
 ### Task 21: Проверка критериев приёмки
 
