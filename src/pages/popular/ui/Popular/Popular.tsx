@@ -1,14 +1,9 @@
-import {
-  Card,
-  PopularBadge,
-  invalidatePopularMovies,
-  usePopularMovies,
-} from '@entities/movie'
+import { Card, PopularBadge, popularMovies } from '@entities/movie'
 import { favoriteIds, toggleFavorite } from '@features/favorites'
 import { watchlistIds } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { AsyncContent, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Popular.module.css'
 
@@ -25,7 +20,7 @@ const PopularSkeletonGrid = () => (
 )
 
 const PopularGrid = reatomComponent(() => {
-  const movies = usePopularMovies()
+  const movies = popularMovies.data()
 
   if (movies.length === 0) {
     return (
@@ -61,6 +56,20 @@ const PopularGrid = reatomComponent(() => {
   )
 }, 'PopularGrid')
 
+const PopularContent = reatomComponent(
+  () => (
+    <AsyncContent
+      pending={popularMovies.status().isFirstPending}
+      error={popularMovies.error()}
+      onRetry={wrap(popularMovies.retry)}
+      fallback={<PopularSkeletonGrid />}
+    >
+      <PopularGrid />
+    </AsyncContent>
+  ),
+  'PopularContent',
+)
+
 // Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
 // единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6
 // плана docs/plans/20260827-mobile-first-adaptive-layout.md), которая оборачивает роут
@@ -71,12 +80,7 @@ export const Popular = () => {
     <div className={s.page}>
       <main className={s.main}>
         <h1 className={s.heading}>Popular this week</h1>
-        <AsyncBoundary
-          fallback={<PopularSkeletonGrid />}
-          onRetry={() => invalidatePopularMovies()}
-        >
-          <PopularGrid />
-        </AsyncBoundary>
+        <PopularContent />
       </main>
     </div>
   )

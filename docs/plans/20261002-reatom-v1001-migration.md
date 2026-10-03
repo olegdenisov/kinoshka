@@ -504,12 +504,12 @@ export const RouterOutlet = reatomComponent(
 - Modify: `src/entities/movie/index.ts`, `src/entities/movie/hooks/index.ts`, `src/pages/home/ui/Home/Home.tsx` (четыре `AsyncBoundary` и три `invalidate*`), `src/pages/home/ui/{PersonalRails,TopAnimeRails,TrandingSeriesRail,PopularMoviesRail}/*.tsx`, `src/pages/popular/ui/Popular/Popular.tsx`
 - Delete: `src/entities/movie/hooks/{useTopRatedMovies,useNewMovies,usePopularMovies}.ts`, `src/entities/movie/api/{getMovies,getPopularMovies}.ts` и их тесты
 
-- [ ] запросы `fetchMovies`, `fetchPopularMovies` — `action + withAsync + withQueryCache`; у `fetchPopularMovies` `staleTime` 24 часа
-- [ ] ресурсы `topRatedMovies`, `topRatedAnime`, `newSeries`, `popularMovies` — `computed(async) + withAsyncData({ initState: [], status: true })` поверх запросов
-- [ ] рейлы и `Popular` → `reatomComponent` + `AsyncContent`; retry — `resource.retry` вместо `invalidate*`; пустой результат — прежний `EmptyState`; `fallback` рейлов остаётся `MovieRailSkeleton`, lazy-mount и `content-visibility` на рейле и скелетоне не меняются (`performance.md`)
-- [ ] тесты моделей: параметры запроса, маппинг, ошибка 403 → `error()`; два ресурса с одинаковыми параметрами делят запрос
-- [ ] обновить тесты страниц: скелетон, контент, ошибка с retry
-- [ ] запустить тесты — зелёные перед Task 9
+- [x] запросы `fetchMovies`, `fetchPopularMovies` — `action + withAsync + withQueryCache`; у `fetchPopularMovies` `staleTime` 24 часа
+- [x] ресурсы `topRatedMovies`, `topRatedAnime`, `newSeries`, `popularMovies` — `computed(async) + withAsyncData({ initState: [], status: true })` поверх запросов
+- [x] рейлы и `Popular` → `reatomComponent` + `AsyncContent`; retry — `resource.retry` вместо `invalidate*`; пустой результат — прежний `EmptyState`; `fallback` рейлов остаётся `MovieRailSkeleton`, lazy-mount и `content-visibility` на рейле и скелетоне не меняются (`performance.md`)
+- [x] тесты моделей: параметры запроса, маппинг, ошибка 403 → `error()`; два ресурса с одинаковыми параметрами делят запрос
+- [x] обновить тесты страниц: скелетон, контент, ошибка с retry
+- [x] запустить тесты — зелёные перед Task 9
 
 ### Task 9: Списки по id, страницы каталога и рекомендации
 

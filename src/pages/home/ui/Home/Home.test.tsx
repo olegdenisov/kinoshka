@@ -7,13 +7,13 @@ import { server } from '../../../../test/setup'
 import { Home } from './Home'
 
 // Реальный retry (roadmap 1.6): рейл падает → ErrorState с Retry → клик реально бьёт
-// в сеть заново (invalidateTopRatedMovies/invalidatePopularMovies из hooks/index.ts), а не
-// просто перерисовывает тот же rejected-промис из cooldown. Только TopAnimeRails (единственный
+// в сеть заново (resource.retry() ресурсов из model/rails.ts), а не просто перерисовывает
+// прежнюю ошибку. Только TopAnimeRails (единственный
 // рейл на /v1.5/movie с уникальным ключом query — rating.kp + type=anime, никто другой его не
 // делит) мокается падающим, чтобы у теста была ровно одна ErrorState-инстанция для клика.
 const MOVIE_ENDPOINT = '*/v1.5/movie'
 // PopularMoviesRail не делит эндпоинт/кэш с PersonalRails — он на отдельном курируемом списке
-// /v1.5/list/{slug} (usePopularMovies() → getPopularMovies).
+// /v1.5/list/{slug} (ресурс popularMovies → fetchPopularMovies).
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
 
 const doc = (overrides: Record<string, unknown> = {}) => ({
@@ -177,6 +177,35 @@ describe('Home — HeroSection (общий, не парный) отправля�
 
     expect(lastPathname).toBe('/search')
     expect(lastSearch).toBe('?q=dune')
+  })
+})
+
+describe('Home — скелетон рейлов', () => {
+  it('до ответа API рейлы не показывают ни контент, ни ошибку', async () => {
+    let release: () => void = () => {}
+    const gate = new Promise<void>(resolve => {
+      release = resolve
+    })
+    server.use(
+      http.get(MOVIE_ENDPOINT, async () => {
+        await gate
+        return successResponse([doc({ name: 'Late Movie' })])
+      }),
+      http.get(LIST_ENDPOINT, () =>
+        popularListSuccessResponse([popularListItem()]),
+      ),
+    )
+
+    await renderHome()
+
+    expect(screen.queryByText('Late Movie')).not.toBeInTheDocument()
+    expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
+
+    await act(async () => {
+      release()
+    })
+
+    expect((await screen.findAllByText('Late Movie')).length).toBeGreaterThan(0)
   })
 })
 

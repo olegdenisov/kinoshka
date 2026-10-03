@@ -1,13 +1,24 @@
-import { useTopRatedMovies } from '@entities/movie'
-import { MovieRail } from '@widgets/movie-rail'
+import { topRatedMovies } from '@entities/movie'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
+import { AsyncContent } from '@shared/ui'
+import { MovieRail, MovieRailSkeleton } from '@widgets/movie-rail'
 
-export const PersonalRails = () => {
-  const movies = useTopRatedMovies()
+export const PersonalRails = reatomComponent(() => {
+  const { isFirstPending } = topRatedMovies.status()
+
   return (
-    <MovieRail
-      title='Because you watched Orbit of Silence'
-      subtitle='Personal'
-      items={movies}
-    />
+    <AsyncContent
+      pending={isFirstPending}
+      error={topRatedMovies.error()}
+      onRetry={wrap(topRatedMovies.retry)}
+      fallback={<MovieRailSkeleton />}
+    >
+      <MovieRail
+        title='Because you watched Orbit of Silence'
+        subtitle='Personal'
+        items={topRatedMovies.data()}
+      />
+    </AsyncContent>
   )
-}
+}, 'PersonalRails')

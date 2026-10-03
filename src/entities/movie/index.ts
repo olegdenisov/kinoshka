@@ -21,3 +21,11 @@ export type { MovieImage } from './api/getMovieImages'
 export { formatCurrency } from './lib/formatCurrency'
 export { formatDate } from './lib/formatDate'
 export * from './hooks'
+export {
+  fetchMovies,
+  fetchPopularMovies,
+  topRatedMovies,
+  topRatedAnime,
+  newSeries,
+  popularMovies,
+} from './model/rails'

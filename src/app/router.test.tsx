@@ -41,7 +41,7 @@ describe('router.tsx — Sentry.wrapCreateBrowserRouter (regression)', () => {
 // `findBy`, не `getBy`.
 //
 // HomePage (через Home → TopAnimeRails/PersonalRails/PopularMoviesRail) реально бьёт в
-// */v1.5/movie (useTopRatedMovies/useNewMovies) и */v1.5/list/:slug (usePopularMovies) — по
+// */v1.5/movie (ресурсы topRatedMovies/newSeries) и */v1.5/list/:slug (ресурс popularMovies) — по
 // образцу Home.test.tsx. src/test/setup.ts запускает MSW с `onUnhandledRequest: 'error'`, так
 // что без этих хендлеров тест упал бы по сетевой ошибке, а не по причине, связанной с code
 // splitting.

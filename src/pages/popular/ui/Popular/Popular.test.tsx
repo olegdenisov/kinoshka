@@ -6,10 +6,8 @@ import { readPersisted } from '../../../../test/persist'
 import { server } from '../../../../test/setup'
 import { Popular } from './Popular'
 
-// Реальные MSW-хендлеры на /v1.5/list/:slug (не мок модуля) — тот же подход, что и
-// HomeDesktop.test.tsx для PopularMoviesRail: usePopularMovies()/invalidatePopularMovies() делят
-// один и тот же реальный createCachedFetcher-кэш, так что клик Retry по-настоящему инвалидирует
-// и бьёт в сеть заново, а не просто перерисовывает закэшированный rejected-промис.
+// Реальные MSW-хендлеры на /v1.5/list/:slug (не мок модуля): ресурс popularMovies делят рейл
+// главной и эта страница, клик Retry вызывает popularMovies.retry() и реально бьёт в сеть.
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
 
 const movieDoc = (overrides: Record<string, unknown> = {}) => ({
@@ -155,6 +153,37 @@ describe('Popular — Watchlist', () => {
   })
 })
 
+describe('Popular — скелетон', () => {
+  it('до ответа API нет ни карточек, ни ошибки, после ответа появляется контент', async () => {
+    let release: () => void = () => {}
+    const gate = new Promise<void>(resolve => {
+      release = resolve
+    })
+    server.use(
+      http.get(LIST_ENDPOINT, async () => {
+        await gate
+        return successResponse([
+          listItem({ movie: movieDoc({ name: 'Late Popular' }) }),
+        ])
+      }),
+    )
+
+    await renderPage()
+
+    expect(screen.queryByText('Late Popular')).not.toBeInTheDocument()
+    expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
+    expect(
+      screen.queryByText('No popular movies right now'),
+    ).not.toBeInTheDocument()
+
+    await act(async () => {
+      release()
+    })
+
+    expect(await screen.findByText('Late Popular')).toBeInTheDocument()
+  })
+})
+
 describe('Popular — пустой список', () => {
   it('пустой docs[] рендерит EmptyState, а не пустой грид', async () => {
     server.use(http.get(LIST_ENDPOINT, () => successResponse([])))
@@ -168,7 +197,7 @@ describe('Popular — пустой список', () => {
 })
 
 describe('Popular — полный отказ загрузки', () => {
-  it('показывает error-фолбэк AsyncBoundary с Retry, а Retry реально бьёт в сеть заново', async () => {
+  it('показывает error-фолбэк AsyncContent с Retry, а Retry реально бьёт в сеть заново', async () => {
     let requests = 0
     server.use(
       http.get(LIST_ENDPOINT, () => {

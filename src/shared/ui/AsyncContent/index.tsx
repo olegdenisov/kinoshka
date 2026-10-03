@@ -3,7 +3,7 @@ import { type ReactNode, useRef } from 'react'
 import { ErrorState } from '../ErrorState'
 import { Spinner } from '../Spinner'
 
-export type AsyncContentErrorParams = {
+type AsyncContentErrorParams = {
   error: Error
   // undefined без onRetry — дефолтный фолбэк тогда не рисует кнопку
   retry?: () => void
