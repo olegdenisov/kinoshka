@@ -1,5 +1,6 @@
 import { EMPTY_FILTERS, filtersToSearchParams } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
+import { paths } from '@shared/config'
 import { SearchIcon } from '@shared/ui'
 import { QUERY_MIN_LENGTH } from '@widgets/header'
 import { useState } from 'react'
@@ -57,7 +58,7 @@ export const HeroSection = () => {
       params.set('q', trimmed)
     }
 
-    navigate(params.toString() ? `/search?${params}` : '/search')
+    navigate(paths.search(params))
   }
 
   return (

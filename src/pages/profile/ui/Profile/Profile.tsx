@@ -12,6 +12,7 @@ import { watchedIds } from '@features/watched'
 import { watchlistIds } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
+import { paths } from '@shared/config'
 import {
   AvatarCircle,
   ChevronRightIcon,
@@ -69,25 +70,25 @@ export const Profile = reatomComponent(() => {
 
   const quickLinks = [
     {
-      to: '/favorites',
+      to: paths.favorites(),
       label: 'Favorites',
       Icon: ListsIcon,
       count: favoriteIds().size,
     },
     {
-      to: '/watched',
+      to: paths.watched(),
       label: 'Watched',
       Icon: EyeIcon,
       count: watchedIds().size,
     },
     {
-      to: '/watchlist',
+      to: paths.watchlist(),
       label: 'Watchlist',
       Icon: PlusIcon,
       count: watchlistIds().size,
     },
-    { to: '/popular', label: 'Popular', Icon: TrendingIcon },
-    { to: '/recommendations', label: 'Picks', Icon: StarIcon },
+    { to: paths.popular(), label: 'Popular', Icon: TrendingIcon },
+    { to: paths.recommendations(), label: 'Picks', Icon: StarIcon },
   ]
 
   // Сравниваем нормализованный черновик (trim/обрезка/отсев невидимых символов), ровно то, что

@@ -1,4 +1,5 @@
 import { reatomComponent } from '@reatom/react'
+import { paths } from '@shared/config'
 import { PROFILE_ARIA_LABEL_PREFIX } from '@shared/lib'
 import { AvatarCircle } from '@shared/ui'
 import { NavLink } from 'react-router'
@@ -22,7 +23,7 @@ export const ProfileAvatar = reatomComponent(() => {
 
   return (
     <NavLink
-      to='/profile'
+      to={paths.profile()}
       className={s.link}
       data-sentry-component='ProfileAvatar'
       aria-label={name ? `${PROFILE_ARIA_LABEL_PREFIX}${name}` : 'Your profile'}

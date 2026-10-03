@@ -1,5 +1,6 @@
 import { ProfileAvatar } from '@features/profile'
 import { ThemeToggle } from '@features/theme'
+import { paths } from '@shared/config'
 import { SearchIcon, ChevronLeftIcon } from '@shared/ui'
 import { useNavigate } from 'react-router'
 
@@ -21,7 +22,7 @@ export const MobileHeader = ({
   rightAction,
 }: MobileHeaderProps) => {
   const navigate = useNavigate()
-  const handleSearchFocus = onSearchFocus ?? (() => navigate('/search'))
+  const handleSearchFocus = onSearchFocus ?? (() => navigate(paths.search()))
 
   return (
     <header className={s.header}>

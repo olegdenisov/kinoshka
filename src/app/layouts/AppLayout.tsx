@@ -1,3 +1,4 @@
+import { paths } from '@shared/config'
 import { trackPageview, useViewport } from '@shared/lib'
 import {
   ErrorBoundary,
@@ -226,7 +227,7 @@ const renderRouteErrorFallback = (
     onRetry={reset}
     secondaryAction={
       isHome ? undefined : (
-        <Link className={s.homeLink} to='/'>
+        <Link className={s.homeLink} to={paths.home()}>
           Back to home
         </Link>
       )

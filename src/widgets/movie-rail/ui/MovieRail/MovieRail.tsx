@@ -4,6 +4,7 @@ import { favoriteIds, toggleFavorite } from '@features/favorites'
 import { watchlistIds } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
+import { paths } from '@shared/config'
 import { EmptyState } from '@shared/ui'
 import { useRef } from 'react'
 import { Link } from 'react-router'
@@ -20,7 +21,7 @@ type MovieRailProps = {
 }
 
 export const MovieRail = reatomComponent(
-  ({ title, subtitle, items, href = '/search' }: MovieRailProps) => {
+  ({ title, subtitle, items, href = paths.search() }: MovieRailProps) => {
     const scrollRef = useRef<HTMLDivElement>(null)
 
     const scroll = (dir: number) => {

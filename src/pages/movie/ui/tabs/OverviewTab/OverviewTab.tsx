@@ -1,4 +1,5 @@
 import type { CrewMember, MovieDetail } from '@entities/movie'
+import { paths } from '@shared/config'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 
@@ -44,7 +45,7 @@ const CrewMemberList = ({ members }: CrewMemberListProps) => {
         // профессии (дубли персон в API) — одного id как ключа недостаточно.
         <span key={`${m.id}-${i}`}>
           {i > 0 && ', '}
-          <Link to={`/person/${m.id}`} className={s.crewLink}>
+          <Link to={paths.person(m.id)} className={s.crewLink}>
             {m.name}
           </Link>
         </span>

@@ -1,3 +1,4 @@
+import { paths } from '@shared/config'
 import {
   HomeIcon,
   SearchIcon,
@@ -32,17 +33,27 @@ export const BottomNav = ({ active }: BottomNavProps) => {
     icon: typeof HomeIcon
     path: string
   }[] = [
-    { key: 'home', label: 'Home', icon: HomeIcon, path: '/' },
-    { key: 'search', label: 'Catalog', icon: SearchIcon, path: '/search' },
-    { key: 'lists', label: 'Lists', icon: ListsIcon, path: '/favorites' },
-    { key: 'popular', label: 'Popular', icon: TrendingIcon, path: '/popular' },
+    { key: 'home', label: 'Home', icon: HomeIcon, path: paths.home() },
+    { key: 'search', label: 'Catalog', icon: SearchIcon, path: paths.search() },
+    { key: 'lists', label: 'Lists', icon: ListsIcon, path: paths.favorites() },
+    {
+      key: 'popular',
+      label: 'Popular',
+      icon: TrendingIcon,
+      path: paths.popular(),
+    },
     {
       key: 'recommendations',
       label: 'Picks',
       icon: StarIcon,
-      path: '/recommendations',
+      path: paths.recommendations(),
     },
-    { key: 'profile', label: 'Profile', icon: ProfileIcon, path: '/profile' },
+    {
+      key: 'profile',
+      label: 'Profile',
+      icon: ProfileIcon,
+      path: paths.profile(),
+    },
   ]
 
   return (

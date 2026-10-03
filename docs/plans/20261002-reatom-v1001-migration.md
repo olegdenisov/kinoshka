@@ -582,12 +582,12 @@ export const RouterOutlet = reatomComponent(
 - Create: `src/shared/config/{paths.ts,paths.test.ts}`
 - Modify: `src/shared/config/index.ts`, прод-файлы с литералами путей в `to=` / `navigate(...)`
 
-- [ ] `paths.ts`: строители для всех десяти роутов; `paths.search(params?)` принимает `Record<string, string>` или `URLSearchParams` — сериализацию фильтров (`filtersToSearchParams`) делает вызывающий слой, `shared` о фильтрах не знает
-- [ ] `ROUTE_PATTERNS` и `matchRoutePattern(pathname)` — шаблон роута или `null` для неизвестного пути
-- [ ] перевести все `to=` и `navigate(...)` на `paths.*`
-- [ ] тесты строителей: кодирование id, пустые и непустые параметры поиска
-- [ ] тесты `matchRoutePattern`: каждый из десяти роутов, `/movie/1` и `/movie/2` дают один шаблон, хвостовой слэш, неизвестный путь → `null`
-- [ ] запустить тесты — зелёные перед Task 13
+- [x] `paths.ts`: строители для всех десяти роутов; `paths.search(params?)` принимает `Record<string, string>` или `URLSearchParams` — сериализацию фильтров (`filtersToSearchParams`) делает вызывающий слой, `shared` о фильтрах не знает
+- [x] `ROUTE_PATTERNS` и `matchRoutePattern(pathname)` — шаблон роута или `null` для неизвестного пути
+- [x] перевести все `to=` и `navigate(...)` на `paths.*`
+- [x] тесты строителей: кодирование id, пустые и непустые параметры поиска
+- [x] тесты `matchRoutePattern`: каждый из десяти роутов, `/movie/1` и `/movie/2` дают один шаблон, хвостовой слэш, неизвестный путь → `null`
+- [x] запустить тесты — зелёные перед Task 13
 
 ### Task 13: Модели URL-состояния `/search`
 

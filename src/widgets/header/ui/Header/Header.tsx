@@ -2,6 +2,7 @@ import { EMPTY_FILTERS, filtersToSearchParams } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
 import { ProfileAvatar } from '@features/profile'
 import { ThemeToggle } from '@features/theme'
+import { paths } from '@shared/config'
 import { useDebouncedValue } from '@shared/lib'
 import { SearchIcon, BellIcon, CloseIcon, IconButton } from '@shared/ui'
 import { useEffect, useRef, useState } from 'react'
@@ -22,7 +23,7 @@ type HeaderProps = {
 /** Строим /search-URL через тот же контракт, что HeroSection (@features/catalog-filter), а не
  * хардкодим ?type= вручную — так рефакторинг кодирования фильтра затронет и nav pills. */
 const searchPathForType = (type: FilterState['type']) =>
-  `/search?${filtersToSearchParams({ ...EMPTY_FILTERS, type })}`
+  paths.search(filtersToSearchParams({ ...EMPTY_FILTERS, type }))
 
 const typeNavItems = [
   { key: 'movie', label: 'Movies', path: searchPathForType('movie') },
@@ -31,11 +32,11 @@ const typeNavItems = [
 ]
 
 const navItems = [
-  { key: 'home', label: 'Home', path: '/' },
+  { key: 'home', label: 'Home', path: paths.home() },
   ...typeNavItems,
-  { key: 'favorites', label: 'Favorites', path: '/favorites' },
-  { key: 'popular', label: 'Popular', path: '/popular' },
-  { key: 'recommendations', label: 'Picks', path: '/recommendations' },
+  { key: 'favorites', label: 'Favorites', path: paths.favorites() },
+  { key: 'popular', label: 'Popular', path: paths.popular() },
+  { key: 'recommendations', label: 'Picks', path: paths.recommendations() },
 ]
 
 export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
@@ -150,7 +151,7 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
   return (
     <header className={s.header}>
       <div className={s.inner}>
-        <Link to='/' className={s.logo}>
+        <Link to={paths.home()} className={s.logo}>
           <span className={s.logoMain}>kino</span>
           <span className={s.logoDot}>·</span>
           <span className={s.logoMain}>shka</span>
@@ -203,7 +204,7 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
         <div className={s.actions}>
           {variant !== 'search' && (
             <IconButton
-              onClick={() => navigate('/search')}
+              onClick={() => navigate(paths.search())}
               aria-label='Open search'
             >
               <SearchIcon />

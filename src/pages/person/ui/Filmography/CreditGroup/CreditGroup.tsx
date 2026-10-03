@@ -1,3 +1,4 @@
+import { paths } from '@shared/config'
 import { useId, useState } from 'react'
 import { Link } from 'react-router'
 
@@ -47,7 +48,7 @@ export const CreditGroup = ({ group }: CreditGroupProps) => {
             key={`${credit.id}-${credit.profession ?? ''}-${index}`}
             className={s.item}
           >
-            <Link to={`/movie/${credit.id}`} className={s.link}>
+            <Link to={paths.movie(credit.id)} className={s.link}>
               {credit.title}
             </Link>
             {credit.role && <span className={s.role}>{credit.role}</span>}

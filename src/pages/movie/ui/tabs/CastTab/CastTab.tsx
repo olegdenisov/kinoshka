@@ -1,4 +1,5 @@
 import type { CastMember } from '@entities/movie'
+import { paths } from '@shared/config'
 import { Link } from 'react-router'
 
 import s from './CastTab.module.css'
@@ -56,7 +57,7 @@ export const CastTab = ({ cast }: CastTabProps) => {
           // такую карточку как раньше, обычным <div>, а не <Link> без доступного имени:
           // axe-правило link-name критично и уронило бы checkA11y на живых данных (Задача 14).
           return c.name ? (
-            <Link key={key} to={`/person/${c.id}`} className={s.castCard}>
+            <Link key={key} to={paths.person(c.id)} className={s.castCard}>
               {content}
             </Link>
           ) : (

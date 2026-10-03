@@ -1,3 +1,4 @@
+import { paths } from '@shared/config'
 import { StarIcon, PlusIcon, EyeIcon, HeartIcon } from '@shared/ui'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
@@ -36,7 +37,7 @@ export const Card = ({
         CSS `order` on .info — see Card.module.css.
       */}
       <div className={s.info}>
-        <Link to={`/movie/${movie.id}`} className={s.title}>
+        <Link to={paths.movie(movie.id)} className={s.title}>
           {/* Ссылка без текста валит Lighthouse `link-name` (a11y-гейт CI), поэтому
               для фильма без единого названия показываем запасной текст. */}
           {movie.title || 'Untitled'}

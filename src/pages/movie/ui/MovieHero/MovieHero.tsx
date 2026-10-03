@@ -1,5 +1,6 @@
 import type { MovieDetail } from '@entities/movie'
 import { Poster } from '@entities/movie'
+import { paths } from '@shared/config'
 import { StarIcon, PlayIcon } from '@shared/ui'
 import { Link } from 'react-router'
 
@@ -75,11 +76,11 @@ export const MovieHero = ({
 
       <div className={s.inner}>
         <nav className={s.breadcrumbs}>
-          <Link to='/' className={s.breadcrumbLink}>
+          <Link to={paths.home()} className={s.breadcrumbLink}>
             Home
           </Link>
           <span className={s.breadcrumbSep}>/</span>
-          <Link to='/search' className={s.breadcrumbLink}>
+          <Link to={paths.search()} className={s.breadcrumbLink}>
             Catalog
           </Link>
           <span className={s.breadcrumbSep}>/</span>
