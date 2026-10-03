@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
@@ -175,5 +175,35 @@ describe('Watchlist — полный отказ загрузки', () => {
     expect(
       screen.queryByText('Watchlist titles unavailable'),
     ).not.toBeInTheDocument()
+  })
+})
+
+describe('Watchlist — Retry после полного отказа', () => {
+  it('клик Retry повторяет запрос и показывает фильмы', async () => {
+    setWatchlist([1])
+    let attempts = 0
+    server.use(
+      http.get('*/v1.5/movie/1', () => {
+        attempts += 1
+        return attempts === 1
+          ? HttpResponse.json(
+              { statusCode: 500, message: 'boom', error: 'error' },
+              { status: 500 },
+            )
+          : HttpResponse.json(movieDoc(1, { name: 'Recovered Movie' }))
+      }),
+    )
+
+    await renderPage()
+
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
+    expect(attempts).toBe(1)
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
+    })
+
+    expect(await screen.findByText('Recovered Movie')).toBeInTheDocument()
+    expect(attempts).toBe(2)
   })
 })

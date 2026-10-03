@@ -1,9 +1,9 @@
-import { Card, getMoviesByIds } from '@entities/movie'
+import { Card } from '@entities/movie'
 import { favoriteIds, toggleFavorite } from '@features/favorites'
-import { watchlistIds, useWatchlistMovies } from '@features/watchlist'
+import { watchlistIds, watchlistMovies } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { AsyncContent, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Watchlist.module.css'
 
@@ -19,8 +19,8 @@ const WatchlistSkeletonGrid = () => (
 
 const WatchlistGrid = reatomComponent(() => {
   // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои
-  // бросает getMoviesByIds и ловит AsyncBoundary, поэтому текст — не про ошибку загрузки.
-  const movies = useWatchlistMovies()
+  // бросает reatomMoviesByIds и показывает AsyncContent, поэтому текст — не про ошибку загрузки.
+  const movies = watchlistMovies.data()
 
   if (movies.length === 0) {
     return (
@@ -35,8 +35,8 @@ const WatchlistGrid = reatomComponent(() => {
 
   return (
     <div className={s.grid}>
-      {/* Без onToggleWatchlist намеренно: снятие меняет ids → новый кэш-ключ getMoviesByIds →
-          перезагрузка всего грида. Убрать из списка можно со страницы фильма или с других списков. */}
+      {/* Без onToggleWatchlist намеренно: карточка исчезала бы из грида прямо под курсором.
+          Убрать из списка можно со страницы фильма или с других списков. */}
       {movies.map(movie => (
         <Card
           key={movie.id}
@@ -53,13 +53,11 @@ const WatchlistGrid = reatomComponent(() => {
 // Композиция features/entities прямо в UI — по образцу `Favorites` (без `model/`-фасада).
 // Chrome (Header/MobileHeader+BottomNav) рисует `AppLayout`, страница его не выбирает.
 export const Watchlist = reatomComponent(() => {
-  const ids = [...watchlistIds()]
-
   return (
     <div className={s.page}>
       <main className={s.main}>
         <h1 className={s.heading}>Watchlist</h1>
-        {ids.length === 0 ? (
+        {watchlistIds().size === 0 ? (
           <div className={s.stateWrap}>
             <EmptyState
               title='Nothing in your watchlist yet'
@@ -67,12 +65,14 @@ export const Watchlist = reatomComponent(() => {
             />
           </div>
         ) : (
-          <AsyncBoundary
+          <AsyncContent
+            pending={watchlistMovies.status().isFirstPending}
+            error={watchlistMovies.error()}
+            onRetry={wrap(watchlistMovies.retry)}
             fallback={<WatchlistSkeletonGrid />}
-            onRetry={() => getMoviesByIds.invalidate(ids)}
           >
             <WatchlistGrid />
-          </AsyncBoundary>
+          </AsyncContent>
         )}
       </main>
     </div>

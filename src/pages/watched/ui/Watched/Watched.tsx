@@ -1,10 +1,10 @@
-import { Card, getMoviesByIds } from '@entities/movie'
+import { Card } from '@entities/movie'
 import { favoriteIds, toggleFavorite } from '@features/favorites'
-import { watchedIds, useWatchedMovies } from '@features/watched'
+import { watchedIds, watchedMovies } from '@features/watched'
 import { watchlistIds } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { AsyncContent, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Watched.module.css'
 
@@ -20,8 +20,8 @@ const WatchedSkeletonGrid = () => (
 
 const WatchedGrid = reatomComponent(() => {
   // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои
-  // бросает getMoviesByIds и ловит AsyncBoundary, поэтому текст — не про ошибку загрузки.
-  const movies = useWatchedMovies()
+  // бросает reatomMoviesByIds и показывает AsyncContent, поэтому текст — не про ошибку загрузки.
+  const movies = watchedMovies.data()
 
   if (movies.length === 0) {
     return (
@@ -54,13 +54,11 @@ const WatchedGrid = reatomComponent(() => {
 // Композиция features/entities прямо в UI — по образцу `Favorites` (без `model/`-фасада).
 // Chrome (Header/MobileHeader+BottomNav) рисует `AppLayout`, страница его не выбирает.
 export const Watched = reatomComponent(() => {
-  const ids = [...watchedIds()]
-
   return (
     <div className={s.page}>
       <main className={s.main}>
         <h1 className={s.heading}>Watched</h1>
-        {ids.length === 0 ? (
+        {watchedIds().size === 0 ? (
           <div className={s.stateWrap}>
             <EmptyState
               title='No watched titles yet'
@@ -68,12 +66,14 @@ export const Watched = reatomComponent(() => {
             />
           </div>
         ) : (
-          <AsyncBoundary
+          <AsyncContent
+            pending={watchedMovies.status().isFirstPending}
+            error={watchedMovies.error()}
+            onRetry={wrap(watchedMovies.retry)}
             fallback={<WatchedSkeletonGrid />}
-            onRetry={() => getMoviesByIds.invalidate(ids)}
           >
             <WatchedGrid />
-          </AsyncBoundary>
+          </AsyncContent>
         )}
       </main>
     </div>

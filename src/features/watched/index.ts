@@ -1,2 +1,1 @@
-export { watchedIds } from './model/watched'
-export { useWatchedMovies } from './model/useWatchedMovies'
+export { watchedIds, watchedMovies } from './model/watched'

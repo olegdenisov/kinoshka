@@ -1,4 +1,5 @@
-import { act, render, screen } from '@testing-library/react'
+import { toggleFavorite } from '@features/favorites'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
@@ -212,5 +213,69 @@ describe('Favorites — снятие с избранного на самой с�
     expect(
       screen.getAllByRole('button', { name: 'Remove from favorites' }),
     ).toHaveLength(1)
+  })
+})
+
+describe('Favorites — Retry после полного отказа', () => {
+  it('клик Retry повторяет запрос и показывает фильмы', async () => {
+    setFavorites([1])
+    let attempts = 0
+    server.use(
+      http.get('*/v1.5/movie/1', () => {
+        attempts += 1
+        return attempts === 1
+          ? HttpResponse.json(
+              { statusCode: 500, message: 'boom', error: 'error' },
+              { status: 500 },
+            )
+          : HttpResponse.json(movieDoc(1, { name: 'Recovered Movie' }))
+      }),
+    )
+
+    await renderPage()
+
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
+    expect(attempts).toBe(1)
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
+    })
+
+    expect(await screen.findByText('Recovered Movie')).toBeInTheDocument()
+    expect(attempts).toBe(2)
+  })
+})
+
+describe('Favorites — переключение избранного на странице', () => {
+  it('не шлёт запросов за уже загруженными фильмами', async () => {
+    const user = userEvent.setup()
+    setFavorites([1, 2])
+    const requests: number[] = []
+    server.use(
+      http.get('*/v1.5/movie/:id', ({ params }) => {
+        const id = Number(params.id)
+        requests.push(id)
+        return HttpResponse.json(movieDoc(id, { name: `Favorite ${id}` }))
+      }),
+    )
+
+    await renderPage()
+    expect(await screen.findByText('Favorite 2')).toBeInTheDocument()
+    expect(requests.sort()).toEqual([1, 2])
+
+    await user.click(
+      screen.getAllByRole('button', { name: 'Remove from favorites' })[0],
+    )
+    await vi.waitFor(() =>
+      expect(screen.queryByText('Favorite 1')).not.toBeInTheDocument(),
+    )
+    expect(screen.getByText('Favorite 2')).toBeInTheDocument()
+
+    // Возврат в избранное через модель — фильм 1 берётся из кэша запроса.
+    await act(async () => {
+      toggleFavorite(1)
+    })
+    expect(await screen.findByText('Favorite 1')).toBeInTheDocument()
+    expect(requests).toHaveLength(2)
   })
 })

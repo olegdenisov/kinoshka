@@ -1,19 +1,10 @@
-import {
-  apiClient,
-  type MovieControllerFindManyByQueryV15Data,
-} from '@shared/api'
+import { apiClient } from '@shared/api'
 import { createCachedFetcher } from '@shared/lib'
 
+import type { CatalogPageResult, CatalogParams } from '../model/catalogPage'
 import type { Movie } from '../model/types'
 import { mapDocToMovie } from './mapDocToMovie'
 import { PER_PAGE, MAX_PAGES } from './paginationConfig'
-
-export type CatalogParams = MovieControllerFindManyByQueryV15Data['query']
-
-export type CatalogPageResult = {
-  movies: Movie[]
-  totalPages: number
-}
 
 type CursorStepParams = {
   params: CatalogParams

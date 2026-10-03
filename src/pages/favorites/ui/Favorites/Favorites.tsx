@@ -1,13 +1,13 @@
-import { Card, getMoviesByIds } from '@entities/movie'
+import { Card } from '@entities/movie'
 import {
   favoriteIds,
+  favoriteMovies,
   toggleFavorite,
-  useFavoriteMovies,
 } from '@features/favorites'
 import { watchlistIds } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { AsyncContent, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Favorites.module.css'
 
@@ -22,7 +22,7 @@ const FavoritesSkeletonGrid = () => (
 )
 
 const FavoritesGrid = reatomComponent(() => {
-  const movies = useFavoriteMovies()
+  const movies = favoriteMovies.data()
 
   if (movies.length === 0) {
     return (
@@ -58,13 +58,11 @@ const FavoritesGrid = reatomComponent(() => {
 // `/favorites` (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
 // Favorites больше не вызывает useViewport и не решает, какой chrome показать.
 export const Favorites = reatomComponent(() => {
-  const ids = [...favoriteIds()]
-
   return (
     <div className={s.page}>
       <main className={s.main}>
         <h1 className={s.heading}>Favorites</h1>
-        {ids.length === 0 ? (
+        {favoriteIds().size === 0 ? (
           <div className={s.stateWrap}>
             <EmptyState
               title='No favorites yet'
@@ -72,12 +70,14 @@ export const Favorites = reatomComponent(() => {
             />
           </div>
         ) : (
-          <AsyncBoundary
+          <AsyncContent
+            pending={favoriteMovies.status().isFirstPending}
+            error={favoriteMovies.error()}
+            onRetry={wrap(favoriteMovies.retry)}
             fallback={<FavoritesSkeletonGrid />}
-            onRetry={() => getMoviesByIds.invalidate(ids)}
           >
             <FavoritesGrid />
-          </AsyncBoundary>
+          </AsyncContent>
         )}
       </main>
     </div>

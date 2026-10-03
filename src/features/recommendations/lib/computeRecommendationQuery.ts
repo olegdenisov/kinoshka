@@ -26,7 +26,7 @@ const topGenresByFrequency = (favorites: Movie[], count: number): string[] => {
 }
 
 /**
- * Чистая функция-правило рекомендаций: избранное → query для `getMoviesPage`
+ * Чистая функция-правило рекомендаций: избранное → query для `loadMoviesPage`
  * (тот же каталожный эндпоинт, что `/search`), или `null`, если по пустому
  * избранному строить рекомендации нечего (см. Solution Overview в плане —
  * `null` отличается от `[]`, который каталог может вернуть по валидному query).
@@ -39,7 +39,7 @@ const topGenresByFrequency = (favorites: Movie[], count: number): string[] => {
  *   `rating.kp`, если ни один избранный фильм не имеет рейтинга — фильмы с
  *   `rating === 0` пропускаются при подсчёте среднего, а не считаются за 0)
  * - `sortField`/`sortType`: всегда `rating.kp` / `-1` (сортировка по рейтингу)
- * - без `limit` — `fetchCursorStep` (`getMoviesPage.ts`) безусловно перезаписывает
+ * - без `limit` — `fetchCursorStep` (`catalogPage.ts`) безусловно перезаписывает
  *   его на `PER_PAGE`, указывать здесь — мёртвый код (см. Technical Details)
  */
 export const computeRecommendationQuery = (

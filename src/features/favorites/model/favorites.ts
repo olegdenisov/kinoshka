@@ -1,3 +1,4 @@
+import { reatomMoviesByIds } from '@entities/movie'
 import { action, reatomSet, withLocalStorage } from '@reatom/core'
 import { persistOptions, trackEvent } from '@shared/lib'
 import { z } from 'zod'
@@ -20,3 +21,5 @@ export const toggleFavorite = action((id: number) => {
   // Событие не зависит от успеха записи в хранилище: Reatom проглатывает сбой setItem.
   if (added) trackEvent('favorite added')
 }, 'favorites.toggle')
+
+export const favoriteMovies = reatomMoviesByIds(favoriteIds, 'favorites.movies')

@@ -525,15 +525,15 @@ export const RouterOutlet = reatomComponent(
 
 Старый `getMoviesPage` остаётся для `useMovieCatalog` до Task 16.
 
-- [ ] добавить `favoriteMovies`, `watchedMovies`, `watchlistMovies` через `reatomMoviesByIds`
-- [ ] `catalogPage.ts`: `fetchCursorStep` — `action + withAsync + withQueryCache({ length: 50, ignoreAbort: true })`; `loadMoviesPage(params, page)` — обычная async-функция обхода курсоров с `wrap` на каждом шаге (логика `walkToPage`)
-- [ ] типы `CatalogParams` и `CatalogPageResult` перенести в `catalogPage.ts`; `getMoviesPage.ts` и `computeRecommendationQuery.ts` импортируют их оттуда
-- [ ] `recommendationQuery` (`computed` поверх `favoriteMovies.data()` и `computeRecommendationQuery`) и `recommendedMovies` (`computed(async) + withAsyncData`, `null` при пустом запросе)
-- [ ] страницы → `reatomComponent` + `AsyncContent`; пустые состояния без изменений
-- [ ] тесты: переключение избранного на `/favorites` не шлёт запросов за уже загруженными фильмами; 404 одного id не роняет список
-- [ ] тесты `catalogPage`: страница N после страницы N−1 шлёт один запрос; повтор той же страницы — ни одного; обрыв курсора даёт пустую страницу
-- [ ] тесты: `recommendationQuery` пересчитывается только при изменении избранного; пустое избранное → empty-state
-- [ ] запустить тесты — зелёные перед Task 10
+- [x] добавить `favoriteMovies`, `watchedMovies`, `watchlistMovies` через `reatomMoviesByIds`
+- [x] `catalogPage.ts`: `fetchCursorStep` — `action + withAsync + withQueryCache({ length: 50, ignoreAbort: true })`; `loadMoviesPage(params, page)` — обычная async-функция обхода курсоров с `wrap` на каждом шаге (логика `walkToPage`) — первый шаг с `cursor: null`, а не `undefined` (ключ кэша — массив параметров); `fetchCursorStep` не экспортируется
+- [x] типы `CatalogParams` и `CatalogPageResult` перенести в `catalogPage.ts`; `getMoviesPage.ts` и `computeRecommendationQuery.ts` импортируют их оттуда
+- [x] `recommendationQuery` (`computed` поверх `favoriteMovies.data()` и `computeRecommendationQuery`) и `recommendedMovies` (`computed(async) + withAsyncData`, `null` при пустом запросе) — `recommendationQuery` с `withMemo(isDeepEqual)`; `recommendedMovies` сначала ждёт `await wrap(favoriteMovies())`, иначе до загрузки избранного завершился бы с `null` (empty-state вместо скелетона); retry — action `retryRecommendations`: при ошибке избранного повторяет его, иначе подборку
+- [x] страницы → `reatomComponent` + `AsyncContent`; пустые состояния без изменений
+- [x] тесты: переключение избранного на `/favorites` не шлёт запросов за уже загруженными фильмами; 404 одного id не роняет список
+- [x] тесты `catalogPage`: страница N после страницы N−1 шлёт один запрос; повтор той же страницы — ни одного; обрыв курсора даёт пустую страницу
+- [x] тесты: `recommendationQuery` пересчитывается только при изменении избранного; пустое избранное → empty-state
+- [x] запустить тесты — зелёные перед Task 10 — ⚠️ `make knip` красный: удалённые `*.retry.test.tsx` мокали `@entities/movie` через `...actual` и тем маскировали давние неиспользуемые экспорты (`fetchMovies`, `fetchPopularMovies`, `invalidateGenreDictionary`, `MovieType`, `Genre`, `SearchMoviesResult`, `MovieDetailBundle`) — чинится в Task 10
 
 ### Task 10: Словари жанров и стран, удаление `createStorageSlot`
 

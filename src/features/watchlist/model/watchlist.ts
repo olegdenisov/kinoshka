@@ -1,3 +1,4 @@
+import { reatomMoviesByIds } from '@entities/movie'
 import { reatomSet, withLocalStorage } from '@reatom/core'
 import { persistOptions } from '@shared/lib'
 import { z } from 'zod'
@@ -12,4 +13,9 @@ export const watchlistIds = reatomSet<number>([], 'watchlist.ids').extend(
       toSnapshot: ids => [...ids],
     }),
   ),
+)
+
+export const watchlistMovies = reatomMoviesByIds(
+  watchlistIds,
+  'watchlist.movies',
 )
