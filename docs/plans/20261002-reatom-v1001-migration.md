@@ -726,13 +726,13 @@ export const RouterOutlet = reatomComponent(
 - Modify: `src/app/sentry.ts`, `src/app/sentry-bootstrap.ts`, `src/main.tsx`, их тесты
 - Create (только для запасного варианта): `src/app/model/{routeTracing.ts,routeTracing.test.ts}`
 
-- [ ] основной вариант: оставить авто-спаны pageload/navigation у `browserTracingIntegration` и переименовывать их в `beforeStartSpan` — имя `matchRoutePattern(pathname)` (`/movie/:id`), источник `route`; неизвестный путь — отдельное фиксированное имя; сверить наличие и поведение `beforeStartSpan` с установленным `@sentry/react`
-- [ ] проверить, создаёт ли авто-инструментирование navigation-спан на `replaceState` со сменой только query; если да — отфильтровать, смена query-параметров спан создавать не должна
-- [ ] запасной вариант, если `beforeStartSpan` не подходит: выключить авто-спаны и создавать их вручную в `routeTracing.ts` (pageload при старте, navigation при смене шаблона роута); записать здесь, какой вариант выбран и почему
-- [ ] обновить WHY-комментарии про порядок импортов в `main.tsx` / `sentry-bootstrap.ts`: требование «до создания роутера» заменяется на «до `reatom-setup`»
-- [ ] тесты: `/movie/1` и `/movie/2` дают одно имя транзакции; смена query-параметров спан не создаёт
-- [ ] существующие тесты PII-скраббинга и `captureRouteError` остаются зелёными
-- [ ] запустить тесты — зелёные перед Task 20
+- [x] основной вариант: оставить авто-спаны pageload/navigation у `browserTracingIntegration` и переименовывать их в `beforeStartSpan` — имя `matchRoutePattern(pathname)` (`/movie/:id`), источник `route`; неизвестный путь — отдельное фиксированное имя; сверить наличие и поведение `beforeStartSpan` с установленным `@sentry/react` — ⚠️ не подходит (`@sentry/browser` 10.71.0): `beforeStartSpan` есть, но при смене имени SDK безусловно ставит источник `custom`, а не `route`, и отменить спан он не может
+- [x] проверить, создаёт ли авто-инструментирование navigation-спан на `replaceState` со сменой только query; если да — отфильтровать, смена query-параметров спан создавать не должна — ⚠️ создаёт (обработчик history сравнивает полный `href`) и при этом завершает текущий pageload/navigation-спан; отфильтровать нечем — отсюда запасной вариант
+- [x] запасной вариант, если `beforeStartSpan` не подходит: выключить авто-спаны и создавать их вручную в `routeTracing.ts` (pageload при старте, navigation при смене шаблона роута); записать здесь, какой вариант выбран и почему — выбран запасной: `browserTracingIntegration({ instrumentPageLoad: false, instrumentNavigation: false })` + `initRouteTracing` (action в `reatom-setup.ts`, `effect` над `urlAtom`) через `startBrowserTracingPageLoadSpan` / `startBrowserTracingNavigationSpan`; navigation — на смену `pathname`, а не шаблона (`/movie/1 → /movie/2` — новая загрузка данных, отдельная транзакция с тем же именем); неизвестный путь — `<not-found>`; проверено разовым прогоном с настоящим SDK в jsdom: pageload `/movie/:id` (`route`), одна navigation, на replace query и сырой `replaceState` — ни одного спана
+- [x] обновить WHY-комментарии про порядок импортов в `main.tsx` / `sentry-bootstrap.ts`: требование «до создания роутера» заменяется на «до `reatom-setup`»
+- [x] тесты: `/movie/1` и `/movie/2` дают одно имя транзакции; смена query-параметров спан не создаёт
+- [x] существующие тесты PII-скраббинга и `captureRouteError` остаются зелёными
+- [x] запустить тесты — зелёные перед Task 20
 
 ### Task 20: Бюджеты бандла, code splitting, knip
 

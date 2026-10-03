@@ -264,6 +264,18 @@ describe('initSentry', () => {
     })
   })
 
+  it('авто-спаны pageload/navigation выключены — их создаёт initRouteTracing', () => {
+    vi.stubEnv('PROD', true)
+    vi.stubEnv('VITE_SENTRY_DSN', 'https://example.test/1')
+
+    initSentry()
+
+    expect(vi.mocked(Sentry.browserTracingIntegration)).toHaveBeenCalledWith({
+      instrumentPageLoad: false,
+      instrumentNavigation: false,
+    })
+  })
+
   it('tracePropagationTargets НЕ присутствует среди ключей вызова Sentry.init', () => {
     vi.stubEnv('PROD', true)
     vi.stubEnv('VITE_SENTRY_DSN', 'https://example.test/1')
