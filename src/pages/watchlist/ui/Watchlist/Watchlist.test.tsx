@@ -3,13 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
-import { readPersisted } from '../../../../test/persist'
+import { readPersisted, seedPersisted } from '../../../../test/persist'
 import { server } from '../../../../test/setup'
 import { Watchlist } from './Watchlist'
 
 const WATCHLIST_KEY = 'kinoshka:watchlist'
-const setWatchlist = (ids: number[]) =>
-  localStorage.setItem(WATCHLIST_KEY, JSON.stringify(ids))
+const setWatchlist = (ids: number[]) => seedPersisted(WATCHLIST_KEY, ids)
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -115,7 +114,7 @@ describe('Watchlist — непустой список', () => {
 
 describe('Watchlist — независимость от Watched', () => {
   it('тайтл, одновременно лежащий в watched и watchlist, отображается на странице', async () => {
-    localStorage.setItem('kinoshka:watched', JSON.stringify([1]))
+    seedPersisted('kinoshka:watched', [1])
     setWatchlist([1])
     mockMovie(1, { name: 'Both Lists' })
 
@@ -123,8 +122,8 @@ describe('Watchlist — независимость от Watched', () => {
 
     expect(await screen.findByText('Both Lists')).toBeInTheDocument()
     // Страница не трогает watched: ключ остаётся как был.
-    expect(localStorage.getItem('kinoshka:watched')).toBe('[1]')
-    expect(localStorage.getItem(WATCHLIST_KEY)).toBe('[1]')
+    expect(readPersisted('kinoshka:watched')).toEqual([1])
+    expect(readPersisted(WATCHLIST_KEY)).toEqual([1])
   })
 })
 

@@ -2,9 +2,9 @@ import { AsyncBoundary } from '@shared/ui'
 import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { seedPersisted } from '../../../test/persist'
 import { server } from '../../../test/setup'
 import { useWatchlistMovies } from './useWatchlistMovies'
-import { watchlistSlot } from './watchlistStorage'
 
 const doc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -53,8 +53,8 @@ const Probe = () => {
 beforeEach(() => localStorage.clear())
 
 describe('useWatchlistMovies', () => {
-  it('читает ids из useWatchlist и отдаёт фильмы и сериалы', async () => {
-    watchlistSlot.set([701, 702])
+  it('читает ids из watchlistIds и отдаёт фильмы и сериалы', async () => {
+    seedPersisted('kinoshka:watchlist', [701, 702])
     mockMovie(701, { name: 'Watchlist Movie' })
     mockMovie(702, { name: 'Watchlist Series', type: 'tv-series' })
 
@@ -71,7 +71,7 @@ describe('useWatchlistMovies', () => {
   })
 
   it('404 у одного id → он выпадает из списка', async () => {
-    watchlistSlot.set([711, 712])
+    seedPersisted('kinoshka:watchlist', [711, 712])
     mockMovie(711, { name: 'Alive' })
     mockMovie(712, { name: 'Dead' })
     mockError(712, 404)
@@ -89,7 +89,7 @@ describe('useWatchlistMovies', () => {
   })
 
   it('все id 404 → пустой список', async () => {
-    watchlistSlot.set([721, 722])
+    seedPersisted('kinoshka:watchlist', [721, 722])
     mockError(721, 404)
     mockError(722, 404)
 
@@ -105,7 +105,7 @@ describe('useWatchlistMovies', () => {
   })
 
   it('5xx → ошибка уходит в AsyncBoundary, список не рендерится', async () => {
-    watchlistSlot.set([731])
+    seedPersisted('kinoshka:watchlist', [731])
     mockError(731, 500)
 
     await act(async () => {

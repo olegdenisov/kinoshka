@@ -63,7 +63,7 @@ describe('RelatedMovies — Watchlist', () => {
 
     await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([1])
     expect(readPersisted('kinoshka:favorites')).toBeNull()
     expect(
       screen.getByRole('button', { name: 'Remove from watchlist' }),
@@ -79,7 +79,7 @@ describe('RelatedMovies — Watchlist', () => {
       screen.getByRole('button', { name: 'Remove from watchlist' }),
     )
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([])
   })
 })
 

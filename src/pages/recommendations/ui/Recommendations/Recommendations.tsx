@@ -1,6 +1,7 @@
 import { Card } from '@entities/movie'
 import { favoriteIds } from '@features/favorites'
-import { useWatchlist } from '@features/watchlist'
+import { watchlistIds } from '@features/watchlist'
+import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 
@@ -27,9 +28,8 @@ const RecommendationsSkeletonGrid = () => (
 // → весь грид уходит в Suspense заново → новый computeRecommendationQuery → новый запрос
 // getMoviesPage — полный skeleton-flash и пересчёт подборки на каждый клик.
 // Watchlist сюда подключён спокойно: подборка от него не зависит, кэш-ключ не меняется.
-const RecommendationsGrid = () => {
+const RecommendationsGrid = reatomComponent(() => {
   const movies = useRecommendedMovies()
-  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   if (movies === null) {
     return (
@@ -60,13 +60,13 @@ const RecommendationsGrid = () => {
           key={movie.id}
           movie={movie}
           variant='grid'
-          inWatchlist={isInWatchlist(movie.id)}
-          onToggleWatchlist={toggleWatchlist}
+          inWatchlist={watchlistIds().has(movie.id)}
+          onToggleWatchlist={wrap(watchlistIds.toggle)}
         />
       ))}
     </div>
   )
-}
+}, 'RecommendationsGrid')
 
 // Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
 // единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6

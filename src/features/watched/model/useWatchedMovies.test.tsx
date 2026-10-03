@@ -2,9 +2,9 @@ import { AsyncBoundary } from '@shared/ui'
 import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { seedPersisted } from '../../../test/persist'
 import { server } from '../../../test/setup'
 import { useWatchedMovies } from './useWatchedMovies'
-import { watchedSlot } from './watchedStorage'
 
 const doc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -42,8 +42,8 @@ const Probe = () => {
 beforeEach(() => localStorage.clear())
 
 describe('useWatchedMovies', () => {
-  it('читает ids из useWatched и отдаёт фильмы и сериалы', async () => {
-    watchedSlot.set([601, 602])
+  it('читает ids из watchedIds и отдаёт фильмы и сериалы', async () => {
+    seedPersisted('kinoshka:watched', [601, 602])
     mockMovie(601, { name: 'Watched Movie' })
     mockMovie(602, { name: 'Watched Series', type: 'tv-series' })
 
@@ -60,7 +60,7 @@ describe('useWatchedMovies', () => {
   })
 
   it('404 у одного id → он выпадает из списка', async () => {
-    watchedSlot.set([611, 612])
+    seedPersisted('kinoshka:watched', [611, 612])
     mockMovie(611, { name: 'Alive' })
     server.use(
       http.get('*/v1.5/movie/612', () =>

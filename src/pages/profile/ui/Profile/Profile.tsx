@@ -6,8 +6,8 @@ import {
 } from '@features/profile'
 import { useTheme } from '@features/theme'
 import type { Theme } from '@features/theme'
-import { useWatched } from '@features/watched'
-import { useWatchlist } from '@features/watchlist'
+import { watchedIds } from '@features/watched'
+import { watchlistIds } from '@features/watchlist'
 import { reatomComponent } from '@reatom/react'
 import {
   AvatarCircle,
@@ -44,8 +44,6 @@ type ProfileFailure = { action: 'save' | 'clear'; count: number }
 
 export const Profile = reatomComponent(() => {
   const { name, initials, setName, clearName } = useProfile()
-  const { ids: watchedIds } = useWatched()
-  const { ids: watchlistIds } = useWatchlist()
   const { theme, setTheme } = useTheme()
   const [draft, setDraft] = useState(name)
   const [prevName, setPrevName] = useState(name)
@@ -98,13 +96,13 @@ export const Profile = reatomComponent(() => {
       to: '/watched',
       label: 'Watched',
       Icon: EyeIcon,
-      count: watchedIds.length,
+      count: watchedIds().size,
     },
     {
       to: '/watchlist',
       label: 'Watchlist',
       Icon: PlusIcon,
-      count: watchlistIds.length,
+      count: watchlistIds().size,
     },
     { to: '/popular', label: 'Popular', Icon: TrendingIcon },
     { to: '/recommendations', label: 'Picks', Icon: StarIcon },

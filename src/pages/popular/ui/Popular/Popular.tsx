@@ -5,7 +5,7 @@ import {
   usePopularMovies,
 } from '@entities/movie'
 import { favoriteIds, toggleFavorite } from '@features/favorites'
-import { useWatchlist } from '@features/watchlist'
+import { watchlistIds } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
@@ -26,7 +26,6 @@ const PopularSkeletonGrid = () => (
 
 const PopularGrid = reatomComponent(() => {
   const movies = usePopularMovies()
-  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   if (movies.length === 0) {
     return (
@@ -48,8 +47,8 @@ const PopularGrid = reatomComponent(() => {
           variant='grid'
           isFavorite={favoriteIds().has(movie.id)}
           onToggleFavorite={wrap(toggleFavorite)}
-          inWatchlist={isInWatchlist(movie.id)}
-          onToggleWatchlist={toggleWatchlist}
+          inWatchlist={watchlistIds().has(movie.id)}
+          onToggleWatchlist={wrap(watchlistIds.toggle)}
           rankBadge={
             <PopularBadge
               position={movie.position}

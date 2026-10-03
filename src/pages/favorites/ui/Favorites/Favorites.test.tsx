@@ -111,7 +111,7 @@ describe('Favorites — Watchlist на карточке', () => {
       await screen.findByRole('button', { name: 'Add to watchlist' }),
     )
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([1])
     expect(readPersisted(FAVORITES_KEY)).toEqual([1])
     expect(screen.getByText('First Favorite')).toBeInTheDocument()
   })

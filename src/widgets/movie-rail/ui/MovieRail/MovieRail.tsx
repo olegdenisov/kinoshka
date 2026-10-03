@@ -1,7 +1,7 @@
 import type { Movie, PopularMovie } from '@entities/movie'
 import { Card, PopularBadge } from '@entities/movie'
 import { favoriteIds, toggleFavorite } from '@features/favorites'
-import { useWatchlist } from '@features/watchlist'
+import { watchlistIds } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
 import { EmptyState } from '@shared/ui'
@@ -22,7 +22,6 @@ type MovieRailProps = {
 export const MovieRail = reatomComponent(
   ({ title, subtitle, items, href = '/search' }: MovieRailProps) => {
     const scrollRef = useRef<HTMLDivElement>(null)
-    const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
     const scroll = (dir: number) => {
       scrollRef.current?.scrollBy({ left: dir * 480, behavior: 'smooth' })
@@ -63,8 +62,8 @@ export const MovieRail = reatomComponent(
                   variant='compact'
                   isFavorite={favoriteIds().has(m.id)}
                   onToggleFavorite={wrap(toggleFavorite)}
-                  inWatchlist={isInWatchlist(m.id)}
-                  onToggleWatchlist={toggleWatchlist}
+                  inWatchlist={watchlistIds().has(m.id)}
+                  onToggleWatchlist={wrap(watchlistIds.toggle)}
                   rankBadge={
                     'position' in m ? (
                       <PopularBadge

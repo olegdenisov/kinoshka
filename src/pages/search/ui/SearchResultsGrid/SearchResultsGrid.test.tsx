@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
-import { readPersisted } from '../../../../test/persist'
+import { readPersisted, seedPersisted } from '../../../../test/persist'
 import { SearchResultsGrid } from './SearchResultsGrid'
 
 const makeMovie = (id: number): Movie => ({
@@ -59,7 +59,7 @@ describe('SearchResultsGrid — Watchlist', () => {
 
     await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([1])
     expect(readPersisted('kinoshka:favorites')).toBeNull()
   })
 
@@ -72,11 +72,11 @@ describe('SearchResultsGrid — Watchlist', () => {
       screen.getByRole('button', { name: 'Remove from watchlist' }),
     )
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([])
   })
 
   it('фильм уже в watchlist — кнопка сразу в состоянии «Remove from watchlist»', () => {
-    localStorage.setItem('kinoshka:watchlist', '[1]')
+    seedPersisted('kinoshka:watchlist', [1])
     renderGrid([makeMovie(1), makeMovie(2)])
 
     expect(

@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
+import { readPersisted } from '../../../../test/persist'
 import { server } from '../../../../test/setup'
 import { Popular } from './Popular'
 
@@ -146,10 +147,10 @@ describe('Popular — Watchlist', () => {
       await screen.findByRole('button', { name: 'Add to watchlist' }),
     )
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([1])
     expect(screen.getByText('First Popular')).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Remove from watchlist' }),
+      await screen.findByRole('button', { name: 'Remove from watchlist' }),
     ).toBeInTheDocument()
   })
 })

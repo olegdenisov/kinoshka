@@ -387,7 +387,7 @@ describe('Profile', () => {
   })
 
   it('счётчик просмотренного отражает содержимое localStorage', () => {
-    localStorage.setItem('kinoshka:watched', JSON.stringify([1, 2]))
+    seedPersisted('kinoshka:watched', [1, 2])
     renderProfile()
 
     expect(screen.getByRole('link', { name: /Watched/ })).toHaveTextContent('2')
@@ -398,7 +398,7 @@ describe('Profile', () => {
   })
 
   it('счётчик watchlist отражает содержимое localStorage', () => {
-    localStorage.setItem('kinoshka:watchlist', JSON.stringify([1, 2, 3]))
+    seedPersisted('kinoshka:watchlist', [1, 2, 3])
     renderProfile()
 
     const link = screen.getByRole('link', { name: /^Watchlist/ })

@@ -179,11 +179,11 @@ describe('Recommendations — непустое избранное, успешн�
       await screen.findByRole('button', { name: 'Add to watchlist' }),
     )
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[701]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([701])
     expect(readPersisted(FAVORITES_KEY)).toEqual([601, 602])
     expect(screen.getByText('Recommended Movie')).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Remove from watchlist' }),
+      await screen.findByRole('button', { name: 'Remove from watchlist' }),
     ).toBeInTheDocument()
   })
 

@@ -1,7 +1,7 @@
 import { Card } from '@entities/movie'
 import type { Movie } from '@entities/movie'
 import { favoriteIds, toggleFavorite } from '@features/favorites'
-import { useWatchlist } from '@features/watchlist'
+import { watchlistIds } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
 
@@ -20,8 +20,6 @@ type SearchResultsGridProps = {
  */
 export const SearchResultsGrid = reatomComponent(
   ({ movies }: SearchResultsGridProps) => {
-    const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
-
     return (
       <div className={s.grid}>
         {movies.map(m => (
@@ -31,8 +29,8 @@ export const SearchResultsGrid = reatomComponent(
             variant='grid'
             isFavorite={favoriteIds().has(m.id)}
             onToggleFavorite={wrap(toggleFavorite)}
-            inWatchlist={isInWatchlist(m.id)}
-            onToggleWatchlist={toggleWatchlist}
+            inWatchlist={watchlistIds().has(m.id)}
+            onToggleWatchlist={wrap(watchlistIds.toggle)}
           />
         ))}
       </div>

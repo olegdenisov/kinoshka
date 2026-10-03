@@ -1,10 +1,11 @@
 import { getMoviesByIds, type Movie } from '@entities/movie'
+import { useAtom } from '@reatom/react'
 import { use } from 'react'
 
-import { useWatchlist } from './useWatchlist'
+import { watchlistIds } from './watchlist'
 
+// Временно: заменяется ресурсом в Task 9.
 export const useWatchlistMovies = (): Movie[] => {
-  const { ids } = useWatchlist()
-
-  return use(getMoviesByIds(ids))
+  const [ids] = useAtom(watchlistIds)
+  return use(getMoviesByIds([...ids]))
 }

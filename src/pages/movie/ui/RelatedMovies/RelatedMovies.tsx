@@ -1,7 +1,7 @@
 import type { Movie } from '@entities/movie'
 import { Card } from '@entities/movie'
 import { favoriteIds, toggleFavorite } from '@features/favorites'
-import { useWatchlist } from '@features/watchlist'
+import { watchlistIds } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
 import { useInView } from '@shared/lib'
@@ -15,7 +15,6 @@ type RelatedMoviesProps = {
 
 export const RelatedMovies = reatomComponent(
   ({ movies, movieTitle }: RelatedMoviesProps) => {
-    const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
     const { ref, inView } = useInView()
 
     if (movies.length === 0) {
@@ -39,8 +38,8 @@ export const RelatedMovies = reatomComponent(
                   variant='grid'
                   isFavorite={favoriteIds().has(x.id)}
                   onToggleFavorite={wrap(toggleFavorite)}
-                  inWatchlist={isInWatchlist(x.id)}
-                  onToggleWatchlist={toggleWatchlist}
+                  inWatchlist={watchlistIds().has(x.id)}
+                  onToggleWatchlist={wrap(watchlistIds.toggle)}
                 />
               ))
             : movies.map(x => (

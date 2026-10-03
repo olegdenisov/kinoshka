@@ -430,12 +430,12 @@ export const RouterOutlet = reatomComponent(
 - Modify: `src/features/{watched,watchlist}/index.ts`, потребители `useWatched()` / `useWatchlist()`
 - Delete: `src/features/{watched,watchlist}/model/{*Storage,useWatched,useWatchlist}.ts` и их тесты
 
-- [ ] создать `watchedIds` и `watchlistIds` (`reatomSet` + `withLocalStorage`), без action-обёрток
-- [ ] перевести потребителей на `reatomComponent`; независимость списков друг от друга и от favorites сохраняется (`user-lists.md`)
-- [ ] `useWatchedMovies` / `useWatchlistMovies` временно читают атомы через `useAtom` (до Task 9)
-- [ ] тесты моделей: toggle, персист (в `localStorage` — конверт с массивом id, восстановление из `seedPersisted`), независимость трёх списков
-- [ ] обновить тесты потребителей на `seedPersisted`
-- [ ] запустить тесты — зелёные перед Task 5
+- [x] создать `watchedIds` и `watchlistIds` (`reatomSet` + `withLocalStorage`), без action-обёрток
+- [x] перевести потребителей на `reatomComponent`; независимость списков друг от друга и от favorites сохраняется (`user-lists.md`)
+- [x] `useWatchedMovies` / `useWatchlistMovies` временно читают атомы через `useAtom` (до Task 9)
+- [x] тесты моделей: toggle, персист (в `localStorage` — конверт с массивом id, восстановление из `seedPersisted`), независимость трёх списков
+- [x] обновить тесты потребителей на `seedPersisted`
+- [x] запустить тесты — зелёные перед Task 5
 
 ### Task 5: Модель theme и inline-скрипт
 

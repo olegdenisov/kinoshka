@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
-import { readPersisted } from '../../../../test/persist'
+import { readPersisted, seedPersisted } from '../../../../test/persist'
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
 import { Movie } from './Movie'
 
@@ -126,7 +126,7 @@ describe('Movie — Watched', () => {
   })
 
   it('предустановленный id в storage → нажата с первого рендера', () => {
-    localStorage.setItem('kinoshka:watched', JSON.stringify([MOVIE.id]))
+    seedPersisted('kinoshka:watched', [MOVIE.id])
     renderMovie()
 
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
@@ -139,12 +139,12 @@ describe('Movie — Watched', () => {
     await user.click(watchedButton())
 
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
-    expect(localStorage.getItem('kinoshka:watched')).toBe(`[${MOVIE.id}]`)
+    expect(readPersisted('kinoshka:watched')).toEqual([MOVIE.id])
 
     await user.click(watchedButton())
 
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'false')
-    expect(localStorage.getItem('kinoshka:watched')).toBe('[]')
+    expect(readPersisted('kinoshka:watched')).toEqual([])
   })
 
   it('состояние переживает перемонтирование страницы', async () => {
@@ -198,12 +198,12 @@ describe('Movie — Watchlist', () => {
     await user.click(watchlistButton())
 
     expect(watchlistButton()).toHaveAttribute('aria-pressed', 'true')
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe(`[${MOVIE.id}]`)
+    expect(readPersisted('kinoshka:watchlist')).toEqual([MOVIE.id])
 
     await user.click(watchlistButton())
 
     expect(watchlistButton()).toHaveAttribute('aria-pressed', 'false')
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([])
   })
 
   it('состояние переживает перемонтирование страницы', async () => {
@@ -224,7 +224,7 @@ describe('Movie — Watchlist', () => {
     await user.click(watchedButton())
 
     expect(watchlistButton()).toHaveAttribute('aria-pressed', 'false')
-    expect(localStorage.getItem('kinoshka:watchlist')).toBeNull()
+    expect(readPersisted('kinoshka:watchlist')).toBeNull()
 
     await user.click(watchlistButton())
     await user.click(watchedButton())
@@ -234,7 +234,7 @@ describe('Movie — Watchlist', () => {
   })
 
   it('просмотренный тайтл можно добавить в watchlist', async () => {
-    localStorage.setItem('kinoshka:watched', JSON.stringify([MOVIE.id]))
+    seedPersisted('kinoshka:watched', [MOVIE.id])
     const user = userEvent.setup()
     renderMovie()
 
@@ -242,7 +242,7 @@ describe('Movie — Watchlist', () => {
 
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
     expect(watchlistButton()).toHaveAttribute('aria-pressed', 'true')
-    expect(localStorage.getItem('kinoshka:watched')).toBe(`[${MOVIE.id}]`)
+    expect(readPersisted('kinoshka:watched')).toEqual([MOVIE.id])
   })
 })
 

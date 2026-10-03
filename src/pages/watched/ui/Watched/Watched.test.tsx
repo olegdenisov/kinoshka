@@ -3,13 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
-import { readPersisted } from '../../../../test/persist'
+import { readPersisted, seedPersisted } from '../../../../test/persist'
 import { server } from '../../../../test/setup'
 import { Watched } from './Watched'
 
 const WATCHED_KEY = 'kinoshka:watched'
-const setWatched = (ids: number[]) =>
-  localStorage.setItem(WATCHED_KEY, JSON.stringify(ids))
+const setWatched = (ids: number[]) => seedPersisted(WATCHED_KEY, ids)
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -120,8 +119,8 @@ describe('Watched — Watchlist на карточке', () => {
       await screen.findByRole('button', { name: 'Add to watchlist' }),
     )
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
-    expect(localStorage.getItem(WATCHED_KEY)).toBe('[1]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([1])
+    expect(readPersisted(WATCHED_KEY)).toEqual([1])
     expect(screen.getByText('Watched Movie')).toBeInTheDocument()
   })
 })

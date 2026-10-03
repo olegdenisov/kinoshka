@@ -1,6 +1,6 @@
 import { Card, getMoviesByIds } from '@entities/movie'
 import { favoriteIds, toggleFavorite } from '@features/favorites'
-import { useWatchlist, useWatchlistMovies } from '@features/watchlist'
+import { watchlistIds, useWatchlistMovies } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
@@ -52,8 +52,8 @@ const WatchlistGrid = reatomComponent(() => {
 
 // Композиция features/entities прямо в UI — по образцу `Favorites` (без `model/`-фасада).
 // Chrome (Header/MobileHeader+BottomNav) рисует `AppLayout`, страница его не выбирает.
-export const Watchlist = () => {
-  const { ids } = useWatchlist()
+export const Watchlist = reatomComponent(() => {
+  const ids = [...watchlistIds()]
 
   return (
     <div className={s.page}>
@@ -77,4 +77,4 @@ export const Watchlist = () => {
       </main>
     </div>
   )
-}
+}, 'Watchlist')

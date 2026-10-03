@@ -4,7 +4,7 @@ import {
   toggleFavorite,
   useFavoriteMovies,
 } from '@features/favorites'
-import { useWatchlist } from '@features/watchlist'
+import { watchlistIds } from '@features/watchlist'
 import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
@@ -23,7 +23,6 @@ const FavoritesSkeletonGrid = () => (
 
 const FavoritesGrid = reatomComponent(() => {
   const movies = useFavoriteMovies()
-  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   if (movies.length === 0) {
     return (
@@ -45,8 +44,8 @@ const FavoritesGrid = reatomComponent(() => {
           variant='grid'
           isFavorite={favoriteIds().has(movie.id)}
           onToggleFavorite={wrap(toggleFavorite)}
-          inWatchlist={isInWatchlist(movie.id)}
-          onToggleWatchlist={toggleWatchlist}
+          inWatchlist={watchlistIds().has(movie.id)}
+          onToggleWatchlist={wrap(watchlistIds.toggle)}
         />
       ))}
     </div>
