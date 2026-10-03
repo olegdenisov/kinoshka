@@ -485,14 +485,14 @@ export const RouterOutlet = reatomComponent(
 - Create: `src/entities/movie/model/{movieDetail.ts,moviesByIds.ts}` и тесты
 - Modify: `src/shared/lib/index.ts`, `src/shared/ui/index.ts`, `src/entities/movie/index.ts`
 
-- [ ] `withQueryCache` (`QUERY_STALE_MS` — 5 минут) и `devSessionPersist` в `@shared/lib`
-- [ ] `AsyncContent` в `@shared/ui` (защита retry от двойного клика переносится из `AsyncBoundary`)
-- [ ] `fetchMovieDetail` — `action + withAsync + withQueryCache({ length: 100, ignoreAbort: true })`; вызов `apiClient` и проверка `'statusCode' in response.data` — в теле action (`fetchMovieImages` и `loadMovieDetailBundle` появляются в Task 18 вместе с потребителем, иначе knip в Task 10 красный)
-- [ ] `reatomMoviesByIds(ids, name)` — `ids` реактивный источник; логика частичных отказов и 404 из `getMoviesByIds`; в баррель `@entities/movie` экспортируется в Task 9 вместе с первым потребителем
-- [ ] тесты: повторный вызов action с тем же id не шлёт запрос; параллельные вызовы делят один запрос; запись сверх `length` вытесняется; отклонённый результат не кэшируется
-- [ ] тесты: `computed`-ресурс без зависимостей после ошибки не перезапрашивается при отписке и новой подписке, только по `retry()`
-- [ ] тесты `AsyncContent`: pending, ошибка с retry, контент, пользовательский `errorFallback`
-- [ ] запустить тесты — зелёные перед Task 8
+- [x] `withQueryCache` (`QUERY_STALE_MS` — 5 минут) и `devSessionPersist` в `@shared/lib` — ⚠️ без `ignoreAbort: true` параллельные вызовы с параметрами из разных кадров не делят промис (кэш сверяет abort-контроллер), поэтому запросам с параметрами нужен явный `ignoreAbort: true`
+- [x] `AsyncContent` в `@shared/ui` (защита retry от двойного клика переносится из `AsyncBoundary`) — гвард снимается микротаской (рендера фолбэка после retry, как в `AsyncBoundary`, здесь нет); `pending` важнее `error`; без `onRetry` кнопки нет
+- [x] `fetchMovieDetail` — `action + withAsync + withQueryCache({ length: 100, ignoreAbort: true })`; вызов `apiClient` и проверка `'statusCode' in response.data` — в теле action (`fetchMovieImages` и `loadMovieDetailBundle` появляются в Task 18 вместе с потребителем, иначе knip в Task 10 красный) — тело без `wrap` вокруг запроса: общий промис не должен падать с AbortError при отмене первого вызывающего; `wrap` — у вызывающего
+- [x] `reatomMoviesByIds(ids, name)` — `ids` реактивный источник; логика частичных отказов и 404 из `getMoviesByIds`; в баррель `@entities/movie` экспортируется в Task 9 вместе с первым потребителем — `fetchMovieDetail` в баррель тоже не попадает до Task 18, `index.ts` слайса не менялся
+- [x] тесты: повторный вызов action с тем же id не шлёт запрос; параллельные вызовы делят один запрос; запись сверх `length` вытесняется; отклонённый результат не кэшируется
+- [x] тесты: `computed`-ресурс без зависимостей после ошибки не перезапрашивается при отписке и новой подписке, только по `retry()`
+- [x] тесты `AsyncContent`: pending, ошибка с retry, контент, пользовательский `errorFallback`
+- [x] запустить тесты — зелёные перед Task 8
 
 ### Task 8: Ресурсы главной и `/popular`
 
