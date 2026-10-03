@@ -392,14 +392,14 @@ export const RouterOutlet = reatomComponent(
 - Create: `src/shared/lib/persist/{index.ts,persistOptions.ts,persistOptions.test.ts}`
 - Modify: `src/shared/lib/index.ts`
 
-- [ ] `persistOptions.ts`: `PERSIST_FOREVER_MS` и `persistOptions({ key, schema, fallback, fromValid?, toSnapshot? })`
-- [ ] тесты: `reatomSet` с `toSnapshot` — в `localStorage` лежит конверт с массивом, после пересоздания контекста восстанавливается `Set` с тем же порядком; если `reatomSet` сериализуется сам и `toSnapshot` не нужен — убрать параметр и зафиксировать это здесь
-- [ ] экспортировать из `@shared/lib`
-- [ ] тесты (атом с `withLocalStorage(persistOptions(...))`): значение переживает пересоздание контекста; невалидный JSON, значение без конверта и снапшот, не прошедший схему, дают дефолт без исключения
-- [ ] тесты: запись не истекает (проверка поля `to` в `localStorage`)
-- [ ] тесты: `setItem` бросает → чтение и запись атома не бросают, значение обновлено в памяти
-- [ ] тесты: `new StorageEvent('storage', { storageArea: localStorage, … })` обновляет подключённый атом
-- [ ] запустить тесты — зелёные перед Task 3
+- [x] `persistOptions.ts`: `PERSIST_FOREVER_MS` и `persistOptions({ key, schema, fallback, fromValid?, toSnapshot? })`
+- [x] тесты: `reatomSet` с `toSnapshot` — в `localStorage` лежит конверт с массивом, после пересоздания контекста восстанавливается `Set` с тем же порядком; если `reatomSet` сериализуется сам и `toSnapshot` не нужен — убрать параметр и зафиксировать это здесь — `toSnapshot` нужен (в тесте `reatomSet` без него не восстанавливается из массива); оставлен
+- [x] экспортировать из `@shared/lib`
+- [x] тесты (атом с `withLocalStorage(persistOptions(...))`): значение переживает пересоздание контекста; невалидный JSON, значение без конверта и снапшот, не прошедший схему, дают дефолт без исключения
+- [x] тесты: запись не истекает (проверка поля `to` в `localStorage`) — `to` = `Date.now() + time` (больше `Number.MAX_SAFE_INTEGER` из-за сложения), тест проверяет «дальше чем через год»
+- [x] тесты: `setItem` бросает → чтение и запись атома не бросают, значение обновлено в памяти
+- [x] тесты: `new StorageEvent('storage', { storageArea: localStorage, … })` обновляет подключённый атом — подписка на `storage` ставится в connect-hook асинхронно: перед `dispatchEvent` нужен `await` макротаска после `subscribe`
+- [x] запустить тесты — зелёные перед Task 3
 
 ### Task 3: Модель favorites
 
