@@ -15,10 +15,10 @@ export { loadMoviesPage } from './model/catalogPage'
 export type { CatalogParams } from './model/catalogPage'
 export { fetchSearchMovies } from './model/searchMovies'
 export { reatomMoviesByIds } from './model/moviesByIds'
-export type { MovieImage } from './api/getMovieImages'
+export { loadMovieDetailBundle } from './model/movieDetail'
+export type { MovieDetailBundle, MovieImage } from './model/movieDetail'
 export { formatCurrency } from './lib/formatCurrency'
 export { formatDate } from './lib/formatDate'
-export * from './hooks'
 export {
   topRatedMovies,
   topRatedAnime,

@@ -1,10 +1,11 @@
-import { act, fireEvent, screen } from '@testing-library/react'
+import { urlAtom } from '@reatom/core'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 
+import { Providers } from '../../app/providers'
 import { renderWithRouter } from '../../test/router'
 import { server } from '../../test/setup'
-import { MoviePage } from './MoviePage'
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -44,17 +45,6 @@ const mockMovie = (id: number, overrides: Record<string, unknown> = {}) => {
   )
 }
 
-const mockMovieError = (id: number, status: number, message = 'error') => {
-  server.use(
-    http.get(`*/v1.5/movie/${id}`, () =>
-      HttpResponse.json(
-        { statusCode: status, message, error: 'error' },
-        { status },
-      ),
-    ),
-  )
-}
-
 const mockImages = (docs: Record<string, unknown>[] = []) => {
   server.use(
     http.get('*/v1.5/image', () =>
@@ -70,35 +60,35 @@ const mockImages = (docs: Record<string, unknown>[] = []) => {
   )
 }
 
+// Страница рендерится через роут (loader создаёт роут, а не страница). Первый заход грузит
+// lazy-чанк страницы — отсюда увеличенные таймауты findBy*.
 const renderMoviePage = async (initialEntry: string) => {
   let result: ReturnType<typeof renderWithRouter> | undefined
 
   await act(async () => {
-    // id приходит пропом из render роута; здесь — сырой сегмент пути, как его отдаёт роут.
-    result = renderWithRouter(
-      <MoviePage id={decodeURIComponent(initialEntry.split('/')[2] ?? '')} />,
-      { url: initialEntry },
-    )
+    result = renderWithRouter(<Providers />, { url: initialEntry })
   })
 
   return result!
 }
 
-beforeEach(() => {
-  sessionStorage.clear()
-})
+const FIRST_LOAD = { timeout: 5000 }
 
 describe('MoviePage — /movie/1, пока запрос не завершён', () => {
-  it('показывает MovieDetailSkeleton, а не реальные данные', () => {
+  it('показывает MovieDetailSkeleton, а не реальные данные', async () => {
     // Хендлер, который никогда не резолвится — фиксируем состояние "запрос ушёл, ответа нет".
     server.use(http.get('*/v1.5/movie/1', () => new Promise(() => {})))
     mockImages([])
 
-    const { container } = renderWithRouter(<MoviePage id='1' />, {
-      url: '/movie/1',
-    })
+    const { container } = await renderMoviePage('/movie/1')
 
-    expect(container.querySelector('[class*="skeleton"]')).toBeInTheDocument()
+    await waitFor(
+      () =>
+        expect(
+          container.querySelector('[class*="skeleton"]'),
+        ).toBeInTheDocument(),
+      FIRST_LOAD,
+    )
     expect(screen.queryByText('Orbit of Silence')).not.toBeInTheDocument()
   })
 })
@@ -116,7 +106,9 @@ describe('MoviePage — /movie/1 happy path', () => {
     const user = userEvent.setup()
     const result = await renderMoviePage('/movie/1')
 
-    expect(screen.getAllByText('Orbit of Silence').length).toBeGreaterThan(0)
+    expect(
+      (await screen.findAllByText('Orbit of Silence', {}, FIRST_LOAD)).length,
+    ).toBeGreaterThan(0)
     expect(
       result.container.querySelector('[class*="skeleton"]'),
     ).not.toBeInTheDocument()
@@ -139,10 +131,29 @@ describe('MoviePage — /movie/1 happy path', () => {
       screen.getAllByText('Full synopsis text about the observatory.').length,
     ).toBeGreaterThan(0)
   })
+
+  it('отказ запроса картинок не ломает страницу', async () => {
+    mockMovie(1)
+    server.use(
+      http.get('*/v1.5/image', () =>
+        HttpResponse.json(
+          { statusCode: 500, message: 'boom', error: 'error' },
+          { status: 500 },
+        ),
+      ),
+    )
+
+    await renderMoviePage('/movie/1')
+
+    expect(
+      (await screen.findAllByText('Orbit of Silence', {}, FIRST_LOAD)).length,
+    ).toBeGreaterThan(0)
+    expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
+  })
 })
 
 describe('MoviePage — /movie/666 не найден (404)', () => {
-  it('рендерит ErrorState с not-found текстом и рабочей кнопкой retry (реальный повторный запрос без ожидания cooldown)', async () => {
+  it('рендерит ErrorState с not-found текстом и рабочей кнопкой retry', async () => {
     let requestCount = 0
     server.use(
       http.get('*/v1.5/movie/666', () => {
@@ -161,20 +172,16 @@ describe('MoviePage — /movie/666 не найден (404)', () => {
 
     await renderMoviePage('/movie/666')
 
-    expect(await screen.findByText('Movie not found')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Movie not found', {}, FIRST_LOAD),
+    ).toBeInTheDocument()
     expect(
       screen.getByText("This movie doesn't exist or was removed."),
     ).toBeInTheDocument()
     expect(requestCount).toBe(1)
 
-    const retryButton = screen.getByRole('button', {
-      name: 'Попробовать снова',
-    })
-
-    // invalidateMovieDetail инвалидирует кэш-запись до reset(), поэтому клик реально
-    // уходит в сеть сразу, без ожидания ERROR_CACHE_TTL_MS (20с) cooldown.
     await act(async () => {
-      fireEvent.click(retryButton)
+      fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
     })
 
     expect(await screen.findByText('Movie not found')).toBeInTheDocument()
@@ -182,8 +189,8 @@ describe('MoviePage — /movie/666 не найден (404)', () => {
   })
 })
 
-describe('MoviePage — /movie/888 общая ошибка → Retry (Task 6, roadmap 1.6)', () => {
-  it('клик Retry делает реальный повторный запрос без ожидания 20с, рендерит данные', async () => {
+describe('MoviePage — /movie/888 общая ошибка → Retry', () => {
+  it('клик Retry делает реальный повторный запрос, рендерит данные', async () => {
     let requestCount = 0
     server.use(
       http.get('*/v1.5/movie/888', () => {
@@ -198,7 +205,9 @@ describe('MoviePage — /movie/888 общая ошибка → Retry (Task 6, ro
 
     await renderMoviePage('/movie/888')
 
-    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Something went wrong', {}, FIRST_LOAD),
+    ).toBeInTheDocument()
     expect(requestCount).toBe(1)
 
     server.use(
@@ -212,44 +221,101 @@ describe('MoviePage — /movie/888 общая ошибка → Retry (Task 6, ro
       fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
     })
 
-    // Без реальной инвалидации кэша этот клик отдал бы тот же rejected-промис из
-    // ERROR_CACHE_TTL_MS cooldown (20с), и ErrorState остался бы на месте — сеть бы
-    // не была тронута (requestCount остался бы 1).
-    expect(requestCount).toBe(2)
     expect(
       (await screen.findAllByText('Recovered Movie')).length,
     ).toBeGreaterThan(0)
+    expect(requestCount).toBe(2)
+  })
+
+  it('повторный заход на упавший роут шлёт ровно один запрос', async () => {
+    let requestCount = 0
+    server.use(
+      http.get('*/v1.5/movie/889', () => {
+        requestCount++
+        return HttpResponse.json(
+          { statusCode: 500, message: 'Internal Server Error', error: 'error' },
+          { status: 500 },
+        )
+      }),
+    )
+    mockImages([])
+
+    await renderMoviePage('/movie/889')
+    await screen.findByText('Something went wrong', {}, FIRST_LOAD)
+    expect(requestCount).toBe(1)
+
+    await act(async () => urlAtom.go('/popular'))
+    await act(async () => urlAtom.go('/movie/889'))
+
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
+    expect(requestCount).toBe(2)
   })
 })
 
-describe('MoviePage — /movie/abc (нечисловой id)', () => {
-  it('рендерит not-found без единого сетевого запроса', async () => {
-    // Ни один MSW-хендлер не зарегистрирован — onUnhandledRequest: 'error' завалит тест,
-    // если компонент всё же попытается сделать запрос.
-    await renderMoviePage('/movie/abc')
+describe('MoviePage — невалидный id', () => {
+  it.each(['abc', '-1', '1.5', '0'])(
+    '/movie/%s рендерит not-found без сетевого запроса',
+    async raw => {
+      // Ни один MSW-хендлер не зарегистрирован — onUnhandledRequest: 'error' завалит тест.
+      await renderMoviePage(`/movie/${raw}`)
 
-    expect(await screen.findByText('Movie not found')).toBeInTheDocument()
+      expect(
+        await screen.findByText('Movie not found', {}, FIRST_LOAD),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText("This movie doesn't exist or was removed."),
+      ).toBeInTheDocument()
+    },
+  )
+})
+
+describe('MoviePage — переходы между фильмами', () => {
+  it('/movie/1 → /movie/2 показывает скелетон, а не фильм 1', async () => {
+    mockMovie(1)
+    server.use(http.get('*/v1.5/movie/2', () => new Promise(() => {})))
+    mockImages([])
+
+    const { container } = await renderMoviePage('/movie/1')
     expect(
-      screen.getByText("This movie doesn't exist or was removed."),
-    ).toBeInTheDocument()
+      (await screen.findAllByText('Orbit of Silence', {}, FIRST_LOAD)).length,
+    ).toBeGreaterThan(0)
+
+    await act(async () => urlAtom.go('/movie/2'))
+
+    await waitFor(() =>
+      expect(
+        container.querySelector('[class*="skeleton"]'),
+      ).toBeInTheDocument(),
+    )
+    expect(screen.queryByText('Orbit of Silence')).not.toBeInTheDocument()
   })
-})
 
-describe('MoviePage — /movie/-1 и /movie/1.5 (отрицательный/дробный id)', () => {
-  it('отрицательный id — рендерит not-found без сетевого запроса', async () => {
-    await renderMoviePage('/movie/-1')
+  it('возврат на уже открытый фильм не шлёт запрос', async () => {
+    let movie1Requests = 0
+    server.use(
+      http.get('*/v1.5/movie/1', () => {
+        movie1Requests++
+        return HttpResponse.json(movieDoc(1))
+      }),
+    )
+    mockMovie(2, { name: 'Second Movie' })
+    mockImages([])
 
-    expect(await screen.findByText('Movie not found')).toBeInTheDocument()
+    await renderMoviePage('/movie/1')
+    await screen.findAllByText('Orbit of Silence', {}, FIRST_LOAD)
+
+    await act(async () => urlAtom.go('/movie/2'))
+    expect((await screen.findAllByText('Second Movie')).length).toBeGreaterThan(
+      0,
+    )
+    await act(async () => urlAtom.go('/movie/1'))
+
+    expect(
+      (await screen.findAllByText('Orbit of Silence')).length,
+    ).toBeGreaterThan(0)
+    expect(movie1Requests).toBe(1)
   })
 
-  it('дробный id — рендерит not-found без сетевого запроса', async () => {
-    await renderMoviePage('/movie/1.5')
-
-    expect(await screen.findByText('Movie not found')).toBeInTheDocument()
-  })
-})
-
-describe('MoviePage — навигация между фильмами через похожие (backlog: tab не сбрасывался)', () => {
   it('ссылка из Similar titles ведёт на страницу другого фильма', async () => {
     mockMovie(1, {
       similarMovies: [
@@ -260,32 +326,14 @@ describe('MoviePage — навигация между фильмами чере�
     mockImages([])
 
     const user = userEvent.setup()
-    const { container } = await renderMoviePage('/movie/1')
-
-    expect(screen.getAllByText('Orbit of Silence').length).toBeGreaterThan(0)
+    await renderMoviePage('/movie/1')
+    await screen.findAllByText('Orbit of Silence', {}, FIRST_LOAD)
 
     await user.click(screen.getByRole('button', { name: 'Cast' }))
-    expect(
-      container.querySelector('[class*="tabBtnActive"]'),
-    ).toHaveTextContent('Cast')
 
-    // Клик по <a href> до Task 15 даёт полную перезагрузку — проверяем цель ссылки;
-    // сброс таба при смене фильма (key={id}) проверяется в routes.test.tsx (Task 15).
     expect(screen.getByRole('link', { name: 'Second Movie' })).toHaveAttribute(
       'href',
       '/movie/2',
     )
-  })
-})
-
-describe('MoviePage — общая ошибка (500)', () => {
-  it('рендерит общий ErrorState, текстово отличимый от not-found-варианта', async () => {
-    mockMovieError(777, 500, 'Internal Server Error')
-    mockImages([])
-
-    await renderMoviePage('/movie/777')
-
-    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
-    expect(screen.queryByText('Movie not found')).not.toBeInTheDocument()
   })
 })

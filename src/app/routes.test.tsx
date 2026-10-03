@@ -33,7 +33,7 @@ vi.mock('../pages/recommendations', () => ({
 vi.mock('../pages/search', () => ({ SearchPage: () => <p>Search page</p> }))
 vi.mock('../pages/profile', () => ({ ProfilePage: () => <p>Profile page</p> }))
 vi.mock('../pages/person', () => ({
-  PersonPage: ({ id }: { id: string }) => <p>Person page {id}</p>,
+  PersonPage: () => <p>Person page</p>,
 }))
 
 const movieDoc = (id: number, name: string, extra = {}) => ({
@@ -79,14 +79,20 @@ describe('routes — каждый путь рендерит свою стран�
     [paths.recommendations(), 'Recommendations page'],
     [paths.search({ q: 'dune' }), 'Search page'],
     [paths.profile(), 'Profile page'],
-    [paths.person(7), 'Person page 7'],
+    [paths.person(7), 'Person page'],
   ])('%s → %s', async (url, text) => {
+    // Loader /person/:id уходит в сеть, даже когда страница замокана.
+    server.use(
+      http.get('*/v1.5/person/7', () =>
+        HttpResponse.json({ id: 7, name: 'Seventh Person' }),
+      ),
+    )
     await renderApp(url)
 
     expect(await screen.findByText(text)).toBeInTheDocument()
   })
 
-  it('/movie/:id получает id пропом из роута', async () => {
+  it('/movie/:id грузит фильм loader-ом роута', async () => {
     server.use(
       http.get('*/v1.5/movie/5', () =>
         HttpResponse.json(movieDoc(5, 'Fifth Movie')),

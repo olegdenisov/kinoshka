@@ -1,9 +1,9 @@
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { Providers } from '../../app/providers'
 import { renderWithRouter } from '../../test/router'
 import { server } from '../../test/setup'
-import { PersonPage } from './PersonPage'
 
 const personDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -23,23 +23,18 @@ const mockPerson = (id: number, overrides: Record<string, unknown> = {}) => {
   )
 }
 
+// Страница рендерится через роут (loader создаёт роут). Первый заход грузит lazy-чанк.
 const renderPersonPage = async (initialEntry: string) => {
   let result: ReturnType<typeof renderWithRouter> | undefined
 
   await act(async () => {
-    // id приходит пропом из render роута; здесь — сырой сегмент пути, как его отдаёт роут.
-    result = renderWithRouter(
-      <PersonPage id={decodeURIComponent(initialEntry.split('/')[2] ?? '')} />,
-      { url: initialEntry },
-    )
+    result = renderWithRouter(<Providers />, { url: initialEntry })
   })
 
   return result!
 }
 
-beforeEach(() => {
-  sessionStorage.clear()
-})
+const FIRST_LOAD = { timeout: 5000 }
 
 describe('PersonPage — невалидный id', () => {
   it('/person/abc — рендерит not-found без сетевого запроса', async () => {
@@ -47,7 +42,9 @@ describe('PersonPage — невалидный id', () => {
     // завалит тест, если компонент всё же попытается сделать запрос.
     await renderPersonPage('/person/abc')
 
-    expect(await screen.findByText('Person not found')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Person not found', {}, FIRST_LOAD),
+    ).toBeInTheDocument()
     expect(
       screen.getByText("This person doesn't exist or was removed."),
     ).toBeInTheDocument()
@@ -56,27 +53,35 @@ describe('PersonPage — невалидный id', () => {
   it('/person/0 — рендерит not-found без сетевого запроса', async () => {
     await renderPersonPage('/person/0')
 
-    expect(await screen.findByText('Person not found')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Person not found', {}, FIRST_LOAD),
+    ).toBeInTheDocument()
   })
 
   it('/person/-1 — рендерит not-found без сетевого запроса', async () => {
     await renderPersonPage('/person/-1')
 
-    expect(await screen.findByText('Person not found')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Person not found', {}, FIRST_LOAD),
+    ).toBeInTheDocument()
   })
 })
 
 describe('PersonPage — /person/1, пока запрос не завершён', () => {
-  it('показывает PersonDetailSkeleton, а не реальные данные', () => {
+  it('показывает PersonDetailSkeleton, а не реальные данные', async () => {
     // Хендлер, который никогда не резолвится — фиксируем состояние
     // "запрос ушёл, ответа нет".
     server.use(http.get('*/v1.5/person/1', () => new Promise(() => {})))
 
-    const { container } = renderWithRouter(<PersonPage id='1' />, {
-      url: '/person/1',
-    })
+    const { container } = await renderPersonPage('/person/1')
 
-    expect(container.querySelector('[class*="skeleton"]')).toBeInTheDocument()
+    await waitFor(
+      () =>
+        expect(
+          container.querySelector('[class*="skeleton"]'),
+        ).toBeInTheDocument(),
+      FIRST_LOAD,
+    )
     expect(screen.queryByText('Anna Actress')).not.toBeInTheDocument()
   })
 })
@@ -87,7 +92,9 @@ describe('PersonPage — /person/1 happy path', () => {
 
     const result = await renderPersonPage('/person/1')
 
-    expect(screen.getByText('Anna Actress')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Anna Actress', {}, FIRST_LOAD),
+    ).toBeInTheDocument()
     expect(
       result.container.querySelector('[class*="skeleton"]'),
     ).not.toBeInTheDocument()
@@ -113,7 +120,9 @@ describe('PersonPage — /person/666 не найден (404)', () => {
 
     await renderPersonPage('/person/666')
 
-    expect(await screen.findByText('Person not found')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Person not found', {}, FIRST_LOAD),
+    ).toBeInTheDocument()
     expect(
       screen.getByText("This person doesn't exist or was removed."),
     ).toBeInTheDocument()
@@ -123,13 +132,13 @@ describe('PersonPage — /person/666 не найден (404)', () => {
       name: 'Попробовать снова',
     })
 
-    // invalidatePersonDetail инвалидирует кэш-запись до reset(), поэтому клик
-    // реально уходит в сеть сразу, без ожидания ERROR_CACHE_TTL_MS (20с) cooldown.
     await act(async () => {
       fireEvent.click(retryButton)
     })
 
-    expect(await screen.findByText('Person not found')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Person not found', {}, FIRST_LOAD),
+    ).toBeInTheDocument()
     expect(requestCount).toBe(2)
   })
 })
@@ -149,7 +158,9 @@ describe('PersonPage — /person/888 общая ошибка (500) → Retry', (
 
     await renderPersonPage('/person/888')
 
-    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Something went wrong', {}, FIRST_LOAD),
+    ).toBeInTheDocument()
     expect(screen.queryByText('Person not found')).not.toBeInTheDocument()
     expect(requestCount).toBe(1)
 
@@ -164,9 +175,6 @@ describe('PersonPage — /person/888 общая ошибка (500) → Retry', (
       fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
     })
 
-    // Без реальной инвалидации кэша этот клик отдал бы тот же rejected-промис
-    // из ERROR_CACHE_TTL_MS cooldown (20с), и ErrorState остался бы на месте —
-    // сеть бы не была тронута (requestCount остался бы 1).
     expect(requestCount).toBe(2)
     expect(await screen.findByText('Recovered Person')).toBeInTheDocument()
   })

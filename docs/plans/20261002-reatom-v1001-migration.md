@@ -708,14 +708,14 @@ export const RouterOutlet = reatomComponent(
 - Modify: `src/entities/{movie,person}/index.ts`, `src/shared/lib/index.ts`, `src/shared/ui/index.ts`, `src/test/setup.ts`
 - Delete: `src/entities/movie/hooks/`, `src/entities/person/hooks/`, `src/entities/movie/api/{getMovieDetail,getMovieImages}.ts`, `src/entities/person/api/getPersonDetail.ts`, `src/shared/lib/{cachedFetcher,sessionCache}/`, `src/shared/ui/AsyncBoundary/` и их тесты (мапперы `mapDocToMovie`, `mapDtoToMovieDetail`, `mapDtoToPersonDetail` и `paginationConfig` остаются в `api/`)
 
-- [ ] `movieDetail.ts`: `fetchMovieImages` (`action + withAsync + withQueryCache({ length: 100, ignoreAbort: true })`) и `loadMovieDetailBundle(id)` — деталь обязательна, картинки допускают отказ (как `combineDetail`); типы `MovieImage`, `MovieDetailBundle` переезжают сюда
-- [ ] `movieRoute`: loader вызывает `loadMovieDetailBundle`; невалидный id → `ApiError` со статусом 404
-- [ ] `personRoute`: loader поверх `fetchPersonDetail` (`action + withAsync + withQueryCache({ length: 50, ignoreAbort: true })`)
-- [ ] `MoviePage` / `PersonPage` → `reatomComponent`, проп `loader` типизирован типом ядра; скелетон при `!ready()`, различение 404 и прочих ошибок, retry — `loader.retry`
-- [ ] удалить `createCachedFetcher`, `sessionCache`, `AsyncBoundary`, `resetAllCachedFetchers` из `setup.ts`
-- [ ] тесты: `/movie/1 → /movie/2` показывает скелетон, а не фильм 1; `/movie/abc` и 404 API → «Movie not found»; отказ картинок не ломает страницу
-- [ ] тесты: возврат на уже открытый фильм не шлёт запрос; повторный заход на упавший роут шлёт ровно один запрос
-- [ ] запустить тесты и `make knip` — зелёные перед Task 19
+- [x] `movieDetail.ts`: `fetchMovieImages` (`action + withAsync + withQueryCache({ length: 100, ignoreAbort: true })`) и `loadMovieDetailBundle(id)` — деталь обязательна, картинки допускают отказ (как `combineDetail`); типы `MovieImage`, `MovieDetailBundle` переезжают сюда
+- [x] `movieRoute`: loader вызывает `loadMovieDetailBundle`; невалидный id → `ApiError` со статусом 404
+- [x] `personRoute`: loader поверх `fetchPersonDetail` (`action + withAsync + withQueryCache({ length: 50, ignoreAbort: true })`)
+- [x] `MoviePage` / `PersonPage` → `reatomComponent`, проп `loader` типизирован типом ядра; скелетон при `!ready()`, различение 404 и прочих ошибок, retry — `loader.retry`
+- [x] удалить `createCachedFetcher`, `sessionCache`, `AsyncBoundary`, `resetAllCachedFetchers` из `setup.ts`
+- [x] тесты: `/movie/1 → /movie/2` показывает скелетон, а не фильм 1; `/movie/abc` и 404 API → «Movie not found»; отказ картинок не ломает страницу
+- [x] тесты: возврат на уже открытый фильм не шлёт запрос; повторный заход на упавший роут шлёт ровно один запрос
+- [x] запустить тесты и `make knip` — зелёные перед Task 19
 
 ### Task 19: Sentry-трейсинг роутов
 

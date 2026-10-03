@@ -2,7 +2,6 @@ import '@testing-library/jest-dom/vitest'
 // Тоже после reatomTestScope: модуль создаёт action при импорте.
 import { resetScrollRestoration } from '@app/model/scrollRestoration'
 import { context, urlAtom } from '@reatom/core'
-import { resetAllCachedFetchers } from '@shared/lib'
 import { cleanup } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
@@ -156,9 +155,6 @@ afterEach(async () => {
   // долетает посреди следующего и подменяет его URL. Дожидаемся её до сброса на '/'.
   await new Promise(resolve => setTimeout(resolve, 0))
   window.history.replaceState(null, '', '/')
-  // Модульное состояние вне атомов: in-memory кэш createCachedFetcher живёт между тестами и
-  // файлами, иначе тест получает закэшированный промис прошлого теста вместо своего MSW-хендлера.
-  resetAllCachedFetchers()
   // Модель скролла держит слушатели и ключ текущей записи истории вне атомов.
   resetScrollRestoration()
   server.resetHandlers()

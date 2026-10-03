@@ -1,6 +1,9 @@
-import { invalidateMovieDetail, useMovieDetail } from '@entities/movie'
+import type { MovieDetailBundle } from '@entities/movie'
+import type { RouteLoader } from '@reatom/core'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
 import { ApiError } from '@shared/api'
-import { AsyncBoundary, ErrorState, type ErrorFallbackParams } from '@shared/ui'
+import { AsyncContent, ErrorState } from '@shared/ui'
 
 import { Movie } from './ui/Movie'
 import { MovieDetailSkeleton } from './ui/MovieDetailSkeleton'
@@ -8,57 +11,47 @@ import { MovieDetailSkeleton } from './ui/MovieDetailSkeleton'
 const NOT_FOUND_TITLE = 'Movie not found'
 const NOT_FOUND_DESCRIPTION = "This movie doesn't exist or was removed."
 
-type MovieDetailContentProps = {
-  id: number
-}
-
-const MovieDetailContent = ({ id }: MovieDetailContentProps) => {
-  const { detail, images } = useMovieDetail(id)
-
-  // key={id} ремаунтит Movie (и, значит, сбрасывает активный таб на Overview) при переходе
-  // между разными фильмами — см. коммит 04cfa61 "reset movie tab on navigation". Раньше был
-  // навешан на MovieDesktop/MovieMobile по отдельности, после слияния (Task 9 плана
-  // docs/plans/20260827-mobile-first-adaptive-layout.md) — на едином Movie.
-  return <Movie key={id} movie={detail} images={images} />
-}
-
-const movieErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
-  const isNotFound = error instanceof ApiError && error.status === 404
-
-  return (
-    <ErrorState
-      title={isNotFound ? NOT_FOUND_TITLE : 'Something went wrong'}
-      description={
-        isNotFound
-          ? NOT_FOUND_DESCRIPTION
-          : error?.message || 'Please try again later'
-      }
-      onRetry={reset}
-    />
-  )
-}
-
 type MoviePageProps = {
-  /** Сырой сегмент пути из роута (`/movie/:id`); валидирует страница. */
-  id: string
+  loader: RouteLoader<{ id: string }, MovieDetailBundle>
 }
 
-export const MoviePage = ({ id }: MoviePageProps) => {
-  const numericId = Number(id)
-
-  if (!id || !Number.isInteger(numericId) || numericId <= 0) {
-    return (
-      <ErrorState title={NOT_FOUND_TITLE} description={NOT_FOUND_DESCRIPTION} />
-    )
-  }
+export const MoviePage = reatomComponent(({ loader }: MoviePageProps) => {
+  const bundle = loader.data()
+  const error = loader.error()
+  // loader.data() не очищается при смене :id, поэтому «идёт загрузка» берём из ready(), а не
+  // из отсутствия данных — иначе на /movie/1 → /movie/2 мелькнул бы фильм 1.
+  const pending = !loader.ready() || (!bundle && !error)
 
   return (
-    <AsyncBoundary
-      errorFallback={movieErrorFallback}
+    <AsyncContent
+      pending={pending}
+      error={error}
+      onRetry={wrap(loader.retry)}
       fallback={<MovieDetailSkeleton />}
-      onRetry={() => invalidateMovieDetail(numericId)}
+      errorFallback={({ error: err, retry }) => {
+        const isNotFound = err instanceof ApiError && err.status === 404
+
+        return (
+          <ErrorState
+            title={isNotFound ? NOT_FOUND_TITLE : 'Something went wrong'}
+            description={
+              isNotFound
+                ? NOT_FOUND_DESCRIPTION
+                : err.message || 'Please try again later'
+            }
+            onRetry={retry}
+          />
+        )
+      }}
     >
-      <MovieDetailContent id={numericId} />
-    </AsyncBoundary>
+      {bundle && (
+        // key сбрасывает активный таб Movie при переходе между разными фильмами.
+        <Movie
+          key={bundle.detail.id}
+          movie={bundle.detail}
+          images={bundle.images}
+        />
+      )}
+    </AsyncContent>
   )
-}
+}, 'MoviePage')

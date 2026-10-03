@@ -1,5 +1,8 @@
-import { reatomRoute } from '@reatom/core'
+import { loadMovieDetailBundle } from '@entities/movie'
+import { fetchPersonDetail } from '@entities/person'
+import { reatomRoute, wrap } from '@reatom/core'
 import type { RouteChild } from '@reatom/core'
+import { ApiError } from '@shared/api'
 import { lazyNamed } from '@shared/lib'
 
 import { AppLayout } from './layouts/AppLayout'
@@ -40,18 +43,30 @@ export const layoutRoute = reatomRoute(
   'routes.layout',
 )
 
-// Дочерние роуты регистрируются в layoutRoute.routes самим вызовом — ссылки на них не нужны:
+// Невалидный :id роут не снимает (иначе вместо страницы был бы общий NotFound без контекста):
+// loader отвечает 404, и страница показывает «not found» тем же путём, что и ответ API.
+const parseRouteId = (raw: string): number => {
+  const id = Number(raw)
+
+  if (!raw || !Number.isInteger(id) || id <= 0) {
+    throw new ApiError('Invalid id', 404)
+  }
+
+  return id
+}
+
+// Дочерние роуты регистрируются в layoutRoute.routes самим вызовом; ссылки на них не нужны:
 // навигация идёт через <a href> / urlAtom.go и строители @shared/config.
 layoutRoute.reatomRoute(
   { path: '', render: (): RouteChild => <HomePage /> },
   'routes.home',
 )
 
-// Невалидный :id роут не снимает: страница сама показывает «not found» (как на main).
 layoutRoute.reatomRoute(
   {
     path: 'movie/:id',
-    render: (self): RouteChild => <MoviePage id={self().id} />,
+    loader: async ({ id }) => await loadMovieDetailBundle(parseRouteId(id)),
+    render: (self): RouteChild => <MoviePage loader={self.loader} />,
   },
   'routes.movie',
 )
@@ -59,7 +74,8 @@ layoutRoute.reatomRoute(
 layoutRoute.reatomRoute(
   {
     path: 'person/:id',
-    render: (self): RouteChild => <PersonPage id={self().id} />,
+    loader: async ({ id }) => await wrap(fetchPersonDetail(parseRouteId(id))),
+    render: (self): RouteChild => <PersonPage loader={self.loader} />,
   },
   'routes.person',
 )

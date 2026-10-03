@@ -1,7 +1,4 @@
 export { useViewport } from './viewport'
-export { createSessionCache } from './sessionCache'
-export { createCachedFetcher, resetAllCachedFetchers } from './cachedFetcher'
-export type { CachedFetcher } from './cachedFetcher'
 export { useDebouncedValue } from './debounce'
 export { useInView } from './inView'
 export { lazyNamed } from './lazyNamed'

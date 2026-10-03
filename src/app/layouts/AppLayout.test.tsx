@@ -2,7 +2,6 @@ import { urlAtom } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
 import { matchRoutePattern } from '@shared/config'
 import type * as SharedLib from '@shared/lib'
-import { AsyncBoundary } from '@shared/ui'
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
@@ -477,15 +476,6 @@ const ErrorPages = reatomComponent(({ home }: ErrorPagesProps) => {
       return home
     case '/popular':
       return <Bomb />
-    case '/favorites':
-      return (
-        <div>
-          <div>Favorites page shell</div>
-          <AsyncBoundary>
-            <Bomb />
-          </AsyncBoundary>
-        </div>
-      )
     case '/person/:id':
       return <PersonPlaceholder />
     default:
@@ -572,22 +562,6 @@ describe('AppLayout — per-route ErrorBoundary', () => {
     const [error, errorInfo] = vi.mocked(captureRouteError).mock.calls[0]
     expect(error.message).toBe('boom')
     expect(errorInfo).toHaveProperty('componentStack')
-  })
-
-  // Страничный AsyncBoundary ближе к ошибке — перехватывает её сам; per-route граница не
-  // срабатывает, и в Sentry такая ошибка не уходит (принятый gap: AsyncBoundary не прокидывает
-  // onError).
-  it('ошибку внутри страничного AsyncBoundary ловит он, а не per-route граница — captureRouteError не вызван', () => {
-    renderErrorApp('/favorites')
-
-    expect(screen.getByText('Favorites page shell')).toBeInTheDocument()
-    expect(screen.getByText('boom')).toBeInTheDocument()
-    // Фолбэк AsyncBoundary — без secondaryAction, ссылки на главную нет.
-    expect(
-      screen.queryByRole('link', { name: 'Back to home' }),
-    ).not.toBeInTheDocument()
-    expect(screen.getByRole('banner')).toBeInTheDocument()
-    expect(captureRouteError).not.toHaveBeenCalled()
   })
 
   it('навигация с упавшего роута на другой сбрасывает границу сама (key={pathname}), без retry', async () => {

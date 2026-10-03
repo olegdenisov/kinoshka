@@ -311,11 +311,10 @@ export const AppLayout = reatomComponent(({ children }: AppLayoutProps) => {
 
       {/* Suspense-боундари здесь — про загрузку JS-чанка страницы (route-based code
       splitting, роадмап 2.5.3), не про данные: каждая страница уже оборачивает свою
-      async-секцию в собственный `<AsyncBoundary>` (см. AGENTS.md, "Loading / Empty / Error
-      везде"). Единая точка на всё дерево роутов — как и сам outlet (`children`).
-      Per-route ErrorBoundary (роадмап 2.6) — снаружи Suspense (тот же порядок, что в
-      AsyncBoundary), чтобы ловить и сбой загрузки чанка, и runtime-ошибку страницы, не теряя
-      chrome вокруг. Перехватывает раньше GlobalErrorBoundary — поэтому сам репортит в Sentry
+      async-секцию через `<AsyncContent>` по статусу ресурса (см. AGENTS.md, "Loading / Empty /
+      Error везде"). Единая точка на всё дерево роутов — как и сам outlet (`children`).
+      Per-route ErrorBoundary (роадмап 2.6) — снаружи Suspense, чтобы ловить и сбой загрузки чанка, и runtime-ошибку страницы, не
+      теряя chrome вокруг. Перехватывает раньше GlobalErrorBoundary — поэтому сам репортит в Sentry
       через onError. `key={pathname}` сбрасывает границу при переходе на другой роут; принятое
       следствие — ремаунт Suspense+страницы и на смене параметра (`/movie/1 → /movie/2`), без
       удержания старого контента во время загрузки нового. Второе принятое следствие: на
