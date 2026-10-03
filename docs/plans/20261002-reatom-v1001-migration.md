@@ -676,9 +676,9 @@ export const RouterOutlet = reatomComponent(
 - Delete: `src/features/catalog-filter/model/useFilterState.ts`, `src/pages/search/model/{useMovieCatalog,usePageSync,useCatalogUpdateStatus,useSearchAnalytics}.ts`, `src/entities/movie/api/{getMoviesPage,getSearchMovies}.ts` и их тесты
 - Modify: `src/features/catalog-filter/index.ts`, `src/entities/movie/index.ts`, `package.json` (удалить `react-router`)
 
-- [ ] удалить перечисленные модули, их тесты и экспорты из баррелей (в том числе тип `ActiveChip`)
-- [ ] удалить `react-router` из зависимостей; `grep -r react-router src` пуст (кроме комментариев — их обновить или убрать)
-- [ ] запустить `make test`, `make typecheck`, `make lint`, `make knip` — зелёные перед Task 17
+- [x] удалить перечисленные модули, их тесты и экспорты из баррелей (в том числе тип `ActiveChip`)
+- [x] удалить `react-router` из зависимостей; `grep -r react-router src` пуст (кроме комментариев — их обновить или убрать)
+- [x] запустить `make test`, `make typecheck`, `make lint`, `make knip` — зелёные перед Task 17
 
 ### Task 17: Восстановление скролла
 
