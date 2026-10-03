@@ -5,6 +5,7 @@ paths:
   - 'src/features/theme/**'
   - 'src/app/reatom.d.ts'
   - 'src/app/routes.tsx'
+  - 'src/app/model/scrollRestoration.ts'
   - 'src/app/styles/**'
 ---
 
@@ -22,6 +23,10 @@ paths:
 - **React Compiler trap:** a plain component that calls an atom directly (`count()`) is compiled into compute-once and the value goes stale forever. Components that read atoms are `reatomComponent(fn, 'Name')`; `useAtom` is the only alternative. This also applies to `layoutRoute.render()` — it's called in the `RouterOutlet` `reatomComponent`, not in `Providers`.
 - A `reatomComponent` re-renders asynchronously: tests assert with `findBy*`/`waitFor` after clicks.
 - Links are plain `<a href={paths.x()}>` (clicks are intercepted by `urlAtom`, except `target=_blank`, other origins, modifiers); `rel=external` opts out.
+
+## Scroll restoration
+
+- `src/app/model/scrollRestoration.ts` is a middleware on `urlAtom` with keyed history entries and `history.scrollRestoration = 'manual'` (replaces `<ScrollRestoration />`). In tests `resetScrollRestoration` (`src/test/setup.ts`) must be imported after `reatomTestScope`.
 
 ## `YearRangeSlider`
 

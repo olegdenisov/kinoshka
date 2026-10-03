@@ -86,6 +86,9 @@ export const catalogParams = computed(
 ).extend(withMemo(isDeepEqual))
 
 const withSearch = (url: URL, params: URLSearchParams) => {
+  // Семантически не изменилось — отдаём тот же url, чтобы не делать лишний replaceState
+  // (повторная сериализация переписала бы, например, `%20` на `+`).
+  if (params.toString() === url.search.slice(1)) return url
   const next = new URL(url)
   next.search = params.toString()
   return next
@@ -94,14 +97,14 @@ const withSearch = (url: URL, params: URLSearchParams) => {
 // Единственная точка записи: вся мутация (включая сброс страницы и зачистку фильтров) — один
 // urlAtom.set, а значит одна запись в history. Реактивный сброс дал бы вторую запись.
 const updateSearchUrl = action(
-  (mutator: (params: URLSearchParams) => URLSearchParams) => {
-    urlAtom.set(
-      url =>
-        isSearchPath(url.pathname)
-          ? withSearch(url, mutator(new URLSearchParams(url.search)))
-          : url,
-      true,
-    )
+  (mutator: (params: URLSearchParams) => URLSearchParams): boolean => {
+    let wrote = false
+    urlAtom.set(url => {
+      if (!isSearchPath(url.pathname)) return url
+      wrote = true
+      return withSearch(url, mutator(new URLSearchParams(url.search)))
+    }, true)
+    return wrote
   },
   'catalogFilter.updateUrl',
 )
@@ -109,7 +112,7 @@ const updateSearchUrl = action(
 export const setFilters = action(
   (next: FilterState | ((prev: FilterState) => FilterState)) => {
     const resolved = typeof next === 'function' ? next(filters()) : next
-    updateSearchUrl(params => {
+    const wrote = updateSearchUrl(params => {
       const updated = new URLSearchParams(params)
       FILTER_URL_KEYS.forEach(key => updated.delete(key))
       filtersToSearchParams(resolved).forEach((value, key) =>
@@ -119,7 +122,7 @@ export const setFilters = action(
     })
     // Единственная точка коммита FilterState — setSort трекается отдельно и намеренно не
     // проходит через setFilters.
-    trackEvent('filter changed')
+    if (wrote) trackEvent('filter changed')
   },
   'catalogFilter.setFilters',
 )

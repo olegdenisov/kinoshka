@@ -123,7 +123,7 @@ export const filtersToSearchParams = (
 /**
  * Возвращает новый URLSearchParams без ключей фильтров и сортировки (`?q`/`?page` не трогает).
  * Не мутирует переданный `params` — используется при атомарной сборке апдейта в одном
- * `setSearchParams` (см. `usePageSync`).
+ * `setSearchParams` (см. `updateSearchUrl` в `model/searchState.ts`).
  */
 export const stripFilterAndSortParams = (
   params: URLSearchParams,

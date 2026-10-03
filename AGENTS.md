@@ -71,7 +71,7 @@ React 19 + TypeScript 7 + Vite 8 (Rolldown) single-page app. State, async, URL s
 
 ```
 src/
-├── app/          # providers, router, layouts, global styles, sentry bootstrap
+├── app/          # providers, routes, reatom-setup, layouts, model/ (scroll restoration, route tracing), global styles, sentry bootstrap
 ├── pages/        # route-level components
 ├── widgets/      # large reusable UI sections (header, mobile-chrome, movie-rail, search-sidebar)
 ├── features/     # user-facing interactive features (catalog-filter, favorites, watched, watchlist, theme, profile, recommendations)
@@ -83,7 +83,7 @@ Import direction: `pages → widgets → features → entities → shared`. Neve
 
 **Public API:** every slice in `widgets/` and `features/` (and every `entities/*` slice) exposes an `index.ts`. Import only through it — `import { Header } from '@widgets/header'`, never `@widgets/header/ui/Header` (lint error). Same for `@shared/{ui,lib,api,config}`. The barrel `index.ts` is the source of truth for what a slice exports — read it before adding a new hook; an equivalent may already exist.
 
-**Page-slice `model/` facade.** When a page needs to combine more than one downward slice (e.g. `@features/*` + `@entities/*`), put the composing hook in `src/pages/<page>/model/` — a lower slice can't import a higher one. Page-internal, not exported. Examples: `useMovieCatalog`, `useRecommendedMovies`, `useSearchAnalytics`.
+**Page-slice `model/` facade.** When a page needs to combine more than one downward slice (e.g. `@features/*` + `@entities/*`), put the composing Reatom model in `src/pages/<page>/model/` — a lower slice can't import a higher one. Page-internal, not exported. Examples: `src/pages/search/model/catalog.ts`, `src/pages/recommendations/model/recommendations.ts`.
 
 ## Routing
 

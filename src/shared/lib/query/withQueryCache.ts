@@ -10,7 +10,7 @@ import {
 export const QUERY_STALE_MS = 5 * 60 * 1000
 
 // Только в DEV: кэш запросов переживает перезагрузку страницы при HMR/ручной отладке и не жжёт
-// квоту. В проде кэш — в памяти, как раньше у createSessionCache.
+// квоту. В проде кэш — только в памяти.
 export const devSessionPersist =
   import.meta.env.MODE === 'development' ? withSessionStorage : undefined
 

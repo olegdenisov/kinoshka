@@ -198,8 +198,8 @@ describe('Search (desktop-ветка) — режим catalog (без ?q, ест�
   })
 })
 
-describe('Search — ошибка фетчера (403/квота) достигает AsyncBoundary', () => {
-  it('реджект от search-эндпоинта рендерит ErrorState вместо краша страницы, сайдбар/заголовок остаются (падает только контент AsyncBoundary)', async () => {
+describe('Search — ошибка фетчера (403/квота) достигает AsyncContent', () => {
+  it('реджект от search-эндпоинта рендерит ErrorState вместо краша страницы, сайдбар/заголовок остаются (падает только контент AsyncContent)', async () => {
     server.use(
       http.get(SEARCH_ENDPOINT, () =>
         HttpResponse.json(
@@ -673,8 +673,8 @@ describe('Search (mobile-ветка) — режимы search/catalog', () => {
   })
 })
 
-describe('Search (mobile-ветка) — ошибка фетчера достигает AsyncBoundary', () => {
-  it('реджект рендерит ErrorState, filter-bar триггеры остаются (падает только контент AsyncBoundary)', async () => {
+describe('Search (mobile-ветка) — ошибка фетчера достигает AsyncContent', () => {
+  it('реджект рендерит ErrorState, filter-bar триггеры остаются (падает только контент AsyncContent)', async () => {
     setViewportWidth(MOBILE_WIDTH)
     server.use(
       http.get(CATALOG_ENDPOINT, () =>

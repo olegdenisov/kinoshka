@@ -38,7 +38,7 @@ type GenreSelectorProps = {
  * внутри `Search`), и в bottom-sheet-фильтрах того же `Search` (мобильный вариант, `compact`).
  *
  * Читает атом `genres` (`@entities/movie`) без Suspense, поэтому вызывающей стороне не нужен
- * `AsyncBoundary`/skeleton: компонент всегда рендерится сразу (статический шорт-лист или
+ * `AsyncContent`/skeleton: компонент всегда рендерится сразу (статический шорт-лист или
  * справочник из localStorage), подгрузка из API реактивно подменяет список, когда (и если) придёт.
  */
 export const GenreSelector = reatomComponent(

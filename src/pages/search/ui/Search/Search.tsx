@@ -115,10 +115,7 @@ const SearchResults = reatomComponent(() => {
  * в одну раскладку — оба варианта остаются как разные под-деревья, но выбор между ними (и выбор
  * `Pagination`-варианта — впрочем, тот последний свёлся к чистому CSS, см. `Pagination`'s
  * докблок) переехал в эту единую точку (`Search`) вместо того, чтобы быть разбросанным по
- * `SearchDesktop.tsx`/`SearchMobile.tsx` по отдельности. Тот же принцип отклонения от буквального
- * роадмапа уже задокументирован в AGENTS.md для `useRecommendedMovies` (vs роадмапного
- * `useRecommendations`) — здесь применяется тот же приём: расхождение зафиксировано явно, а не
- * обнаружено постфактум.
+ * `SearchDesktop.tsx`/`SearchMobile.tsx` по отдельности.
  *
  * **Chrome (`Header`/`MobileHeader`+`BottomNav`) сюда не входит** — `/search` подключён под
  * `AppLayout` (см. `src/app/routes.tsx`), который сам решает `Header`'s `variant='search'`/

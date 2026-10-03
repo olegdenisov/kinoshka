@@ -76,7 +76,7 @@ type RouteChromeConfig = {
  *   - `/movie/:id` (Task 9): НЕ простой случай — см. `MOVIE_CHROME` и докблок
  *     `RouteChromeConfig.onBack`/`rightAction` выше.
  *   - `/search` (Task 10): `Header`'s `activeNav` там читается не из пути (путь один и тот же),
- *     а из `?type` в URL (`useFilterState()`/`getFilterFromSearchParams`) — реализовано в
+ *     а из `?type` в URL (атом `filters`, `getFilterFromSearchParams` из `@features/catalog-filter`) — реализовано в
  *     `AppLayout` ниже через `filters().type` + `isSearchRoute`, см. `SEARCH_CHROME` и
  *     докблок `AppLayout`.
  *   - `/person/:id` (Task 10): НЕ простой случай, аналогично `/movie/:id` — см. `PERSON_CHROME`
@@ -239,14 +239,13 @@ const renderRouteErrorFallback = (
  *
  * `Header` и `MobileHeader`+`BottomNav` НЕ монтируются одновременно с видимостью через
  * `display: none` — выбор через `useViewport()` в этой единственной точке решает, какой вариант
- * вообще попадает в дерево. Причина: `Header`'s `?q`-debounce-эффект (`Header.tsx:84-124`)
- * пишет/стирает `?q` в URL безусловно, независимо от `variant`/видимости — скрытый `display:
- * none` `Header` продолжил бы это делать на роутах вроде `/favorites`, где `?q` не нужен и не
- * ожидается. Явное условное (не)монтирование через `useViewport()` — тот самый точечный JS-форк,
+ * вообще попадает в дерево. Причина: `Header` держит собственные подписки/⌘K-листенер и
+ * коммитит поисковый черновик в URL (`commitSearchDraft`) — скрытый `display: none` `Header`
+ * продолжил бы жить на роутах вроде `/favorites`, где поиск не нужен. Явное условное (не)монтирование через `useViewport()` — тот самый точечный JS-форк,
  * зафиксированный в Task 1/Audit как оправданный (CSS `hover`/`pointer` не может выразить "не
  * монтировать вообще"). На момент Task 1 ни один из пяти подключённых роутов (`/`, `/favorites`,
  * `/popular`, `/recommendations`, `/movie/:id`) не использовал `variant='search'` — эта ветка
- * `Header` (и её ⌘K-листенер, и её `?q`-эффект в контексте реального поиска) присоединится
+ * `Header` (и её ⌘K-листенер, и её коммит `?q` в контексте реального поиска) присоединится
  * только вместе с `/search` в Task 10 (актуальный список роутов под layout — в `routes.tsx`;
  * `/profile` тоже подключён и `variant='search'` не использует).
  *
