@@ -763,14 +763,14 @@ export const RouterOutlet = reatomComponent(
 
 - Modify: `e2e/*.spec.ts` — только при изменившемся наблюдаемом поведении
 
-- [ ] все пункты таблицы соответствия 3.3 реализованы
-- [ ] `grep -rE "react-router|createStorageSlot|createCachedFetcher|useSyncExternalStore" src e2e knip.jsonc` — пусто; устаревшие комментарии (`src/app/chunkPreloadRecovery.ts`, `GlobalErrorBoundary.tsx`, `e2e/utils/movieCard.ts`, `e2e/person-detail.spec.ts`, `knip.jsonc`) обновить или убрать
-- [ ] ни один обычный (не `reatomComponent`) компонент не вызывает атом напрямую — проверить поиском по импортам моделей
-- [ ] ни на одном `computed` нет `withCache` / `withQueryCache`
-- [ ] `useViewport()` по-прежнему имеет ровно двух потребителей
-- [ ] `make check`, `make test`, `make knip`, `make size` — зелёные
-- [ ] `make build-only && make e2e` — один прогон
-- [ ] покрытие (`make coverage`) не ниже текущего уровня ветки
+- [x] все пункты таблицы соответствия 3.3 реализованы
+- [x] `grep -rE "react-router|createStorageSlot|createCachedFetcher|useSyncExternalStore" src e2e knip.jsonc` — пусто; устаревшие комментарии (`src/app/chunkPreloadRecovery.ts`, `GlobalErrorBoundary.tsx`, `e2e/utils/movieCard.ts`, `e2e/person-detail.spec.ts`, `knip.jsonc`) обновить или убрать
+- [x] ни один обычный (не `reatomComponent`) компонент не вызывает атом напрямую — проверить поиском по импортам моделей
+- [x] ни на одном `computed` нет `withCache` / `withQueryCache`
+- [x] `useViewport()` по-прежнему имеет ровно двух потребителей
+- [x] `make check`, `make test`, `make knip`, `make size` — зелёные
+- [x] `make build-only && make e2e` — один прогон (chromium 12/13 зелёных, search-фильтр флейкнул на живом API и прошёл при перезапуске; 3 Mobile Safari падают на `Unknown setting: PushAPIEnabled` — ограничение локального webkit, не код)
+- [x] покрытие (`make coverage`) не ниже текущего уровня ветки
 
 ### Task 22: [Final] Документация
 

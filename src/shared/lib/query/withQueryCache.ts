@@ -5,7 +5,7 @@ import {
   withSessionStorage,
 } from '@reatom/core'
 
-// 5 минут — тот же TTL, что был у createCachedFetcher: повторные заходы на страницу укладываются
+// 5 минут: повторные заходы на страницу укладываются
 // в квоту API (200 запросов/сутки).
 export const QUERY_STALE_MS = 5 * 60 * 1000
 
