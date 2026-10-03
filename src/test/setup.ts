@@ -1,7 +1,3 @@
-import {
-  resetCountryDictionaryState,
-  resetGenreDictionaryState,
-} from '@entities/movie'
 import '@testing-library/jest-dom/vitest'
 import { context, urlAtom } from '@reatom/core'
 import { resetAllCachedFetchers } from '@shared/lib'
@@ -154,12 +150,9 @@ afterEach(() => {
   localStorage.clear()
   sessionStorage.clear()
   window.history.replaceState(null, '', '/')
-  // Модульное состояние вне атомов: in-memory кэш createCachedFetcher и словари (жанры,
-  // страны) живут между тестами и файлами, иначе тест получает закэшированный промис
-  // прошлого теста вместо своего MSW-хендлера.
+  // Модульное состояние вне атомов: in-memory кэш createCachedFetcher живёт между тестами и
+  // файлами, иначе тест получает закэшированный промис прошлого теста вместо своего MSW-хендлера.
   resetAllCachedFetchers()
-  resetGenreDictionaryState()
-  resetCountryDictionaryState()
   server.resetHandlers()
 })
 afterAll(() => server.close())

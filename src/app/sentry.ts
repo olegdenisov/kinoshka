@@ -1,6 +1,5 @@
 import * as Sentry from '@sentry/react'
-import { PROFILE_ARIA_LABEL_PREFIX, setStorageErrorReporter } from '@shared/lib'
-import type { StorageErrorReporter } from '@shared/lib'
+import { PROFILE_ARIA_LABEL_PREFIX } from '@shared/lib'
 import type { ErrorInfo } from 'react'
 import { useEffect } from 'react'
 import {
@@ -144,27 +143,6 @@ export const scrubProfileNameSpan: BeforeSendSpan = span => {
   return { ...span, description, data }
 }
 
-// Репортер ошибок localStorage (createStorageSlot, @shared/lib) — раньше эти исключения
-// (QuotaExceededError/SecurityError из тем/избранного/профиля в приватном режиме) долетали до
-// Sentry сами через globalHandlersIntegration; try/catch вокруг localStorage их проглотил, так
-// что без явной переотправки сюда отказ хранилища стал бы полностью невидимым в проде. captureException,
-// не breadcrumb: это самостоятельное событие уровня warning, а не контекст для будущей ошибки —
-// само хранилище содержимого (значение, которое не удалось записать) сюда не передаётся, только
-// ключ/операция/исключение (см. StorageErrorContext, @shared/lib/storage/storage.ts).
-const reportStorageErrorToSentry: StorageErrorReporter = ({
-  key,
-  operation,
-  error,
-}) => {
-  Sentry.captureException(
-    error instanceof Error ? error : new Error(String(error)),
-    {
-      level: 'warning',
-      tags: { storageKey: key, storageOperation: operation },
-    },
-  )
-}
-
 // Перехватывается раньше GlobalErrorBoundary — требует явного репортинга. captureReactException —
 // тот же путь, что у Sentry.ErrorBoundary: componentStack прикрепляется и в contexts.react, и как
 // `cause` ошибки (лучше группировка), mechanism выставляет сам SDK — не собираем это вручную.
@@ -220,6 +198,4 @@ export const initSentry = (): void => {
     ],
     tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
   })
-
-  setStorageErrorReporter(reportStorageErrorToSentry)
 }

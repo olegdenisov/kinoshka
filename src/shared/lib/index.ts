@@ -1,10 +1,4 @@
 export { useViewport } from './viewport'
-export {
-  createStorageSlot,
-  setStorageErrorReporter,
-  useStorageSlot,
-} from './storage'
-export type { StorageErrorContext, StorageErrorReporter } from './storage'
 export { createSessionCache } from './sessionCache'
 export { createCachedFetcher, resetAllCachedFetchers } from './cachedFetcher'
 export type { CachedFetcher } from './cachedFetcher'

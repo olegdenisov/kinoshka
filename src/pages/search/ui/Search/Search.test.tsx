@@ -152,9 +152,8 @@ beforeEach(() => {
   setViewportWidth(DESKTOP_WIDTH)
 })
 
-// Search рендерит GenreSelector, которая фонит (fire-and-forget) фоновый useGenreDictionary()
-// рефреш на монтировании — без ожидания он может резолвиться уже после конца теста и писать в
-// localStorage/module state (см. тот же приём в GenreSelector.test.tsx/useGenreDictionary.test.tsx).
+// Search рендерит GenreSelector, которая подключает ресурс genreDictionary и шлёт запрос на
+// монтировании — без ожидания он может резолвиться уже после конца теста и писать в localStorage.
 afterEach(async () => {
   await new Promise(resolve => setTimeout(resolve, 0))
 })

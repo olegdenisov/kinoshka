@@ -1,4 +1,5 @@
-import { STATIC_FALLBACK_GENRES, useGenreDictionary } from '@entities/movie'
+import { genres, STATIC_FALLBACK_GENRES } from '@entities/movie'
+import { reatomComponent } from '@reatom/react'
 
 import { getGenreLabel } from '../../lib/genreMap'
 import { ChipSelect } from '../ChipSelect'
@@ -36,22 +37,14 @@ type GenreSelectorProps = {
  * заменяет захардкоженный `ALL_GENRES.map(...)` и в `SearchSidebar` (десктопный вариант фильтров
  * внутри `Search`), и в bottom-sheet-фильтрах того же `Search` (мобильный вариант, `compact`).
  *
- * Сам вызывает `useGenreDictionary()` — обычный синхронный хук без Suspense/`use()`, поэтому
- * вызывающей стороне не нужен `AsyncBoundary`/skeleton: компонент всегда рендерится сразу
- * (статический шорт-лист или уже закэшированный справочник), фоновая подгрузка справочника
- * из API реактивно подменяет список, когда (и если) придёт.
+ * Читает атом `genres` (`@entities/movie`) без Suspense, поэтому вызывающей стороне не нужен
+ * `AsyncBoundary`/skeleton: компонент всегда рендерится сразу (статический шорт-лист или
+ * справочник из localStorage), подгрузка из API реактивно подменяет список, когда (и если) придёт.
  */
-export const GenreSelector = ({
-  selected,
-  onToggle,
-  disabled,
-  compact,
-}: GenreSelectorProps) => {
-  const genres = useGenreDictionary()
-
-  return (
+export const GenreSelector = reatomComponent(
+  ({ selected, onToggle, disabled, compact }: GenreSelectorProps) => (
     <ChipSelect
-      items={genres.map(g => g.name)}
+      items={genres().map(g => g.name)}
       defaults={STATIC_FALLBACK_GENRES.map(g => g.name)}
       selected={selected}
       getLabel={getGenreLabel}
@@ -60,5 +53,6 @@ export const GenreSelector = ({
       compact={compact}
       groupLabel='Genre'
     />
-  )
-}
+  ),
+  'GenreSelector',
+)

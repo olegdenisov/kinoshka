@@ -545,15 +545,15 @@ export const RouterOutlet = reatomComponent(
 - Modify: `src/entities/movie/index.ts`, `src/features/catalog-filter/ui/{GenreSelector,CountrySelector}/*.tsx`, `src/test/setup.ts`, `src/app/sentry.ts`, `src/app/sentry.test.ts`
 - Delete: `src/entities/movie/api/{createDictionaryCache,genreDictionaryCache,countryDictionaryCache,getGenreDictionary,getCountryDictionary}.ts`, `src/entities/movie/hooks/{useGenreDictionary,useCountryDictionary}.ts`, `src/shared/lib/storage/` и их тесты
 
-- [ ] запросы `fetchGenreNames`, `fetchCountryNames` — `action + withAsync + withCache({ swr: false, staleTime: 7 дней, withPersist })`; тела запросов из `getGenreDictionary.ts` / `getCountryDictionary.ts` переезжают в actions
-- [ ] `withPersist: options => withLocalStorage({ ...options, key: 'kinoshka:genres', fromSnapshot })`, где `fromSnapshot` проверяет снапшот Zod-схемой и при невалидном возвращает текущее состояние, иначе делегирует `options.fromSnapshot`; для стран — `kinoshka:countries`
-- [ ] ресурсы `genreDictionary`, `countryDictionary` — `computed(async) + withAsyncData({ initState: [] })`; `genres`, `countries` — `computed` с подстановкой `STATIC_FALLBACK_*` при пустых данных и при ошибке
-- [ ] селекторы → `reatomComponent`
-- [ ] убрать из `src/test/setup.ts` `resetGenreDictionaryState` / `resetCountryDictionaryState`
-- [ ] удалить `src/shared/lib/storage/` и экспорты из `@shared/lib`; удалить из `src/app/sentry.ts` репортер сбоев хранилища (`setStorageErrorReporter`) и его тесты
-- [ ] тесты изменённого поведения: во время перезапроса устаревшего словаря показывается статический fallback; после ошибки запрос не повторяется до пересоздания контекста
-- [ ] тесты: fallback до загрузки и при ошибке; словарь из хранилища не шлёт запрос после пересоздания контекста; запись старше 7 дней перезапрашивается; мусор в хранилище не роняет чтение
-- [ ] запустить тесты и `make knip` — зелёные перед Task 11
+- [x] запросы `fetchGenreNames`, `fetchCountryNames` — `action + withAsync + withCache({ swr: false, staleTime: 7 дней, withPersist })`; тела запросов из `getGenreDictionary.ts` / `getCountryDictionary.ts` переезжают в actions
+- [x] `withPersist: options => withLocalStorage({ ...options, key: 'kinoshka:genres', fromSnapshot })`, где `fromSnapshot` проверяет снапшот Zod-схемой и при невалидном возвращает текущее состояние, иначе делегирует `options.fromSnapshot`; для стран — `kinoshka:countries`
+- [x] ресурсы `genreDictionary`, `countryDictionary` — `computed(async) + withAsyncData({ initState: [] })`; `genres`, `countries` — `computed` с подстановкой `STATIC_FALLBACK_*` при пустых данных и при ошибке
+- [x] селекторы → `reatomComponent`
+- [x] убрать из `src/test/setup.ts` `resetGenreDictionaryState` / `resetCountryDictionaryState`
+- [x] удалить `src/shared/lib/storage/` и экспорты из `@shared/lib`; удалить из `src/app/sentry.ts` репортер сбоев хранилища (`setStorageErrorReporter`) и его тесты
+- [x] тесты изменённого поведения: во время перезапроса устаревшего словаря показывается статический fallback; после ошибки запрос не повторяется до пересоздания контекста
+- [x] тесты: fallback до загрузки и при ошибке; словарь из хранилища не шлёт запрос после пересоздания контекста; запись старше 7 дней перезапрашивается; мусор в хранилище не роняет чтение
+- [x] запустить тесты и `make knip` — зелёные перед Task 11
 
 ### Task 11: Хелпер `renderWithRouter` и перевод тестов на него
 

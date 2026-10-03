@@ -1,6 +1,5 @@
 import type { ErrorEvent as SentryErrorEvent } from '@sentry/react'
 import * as Sentry from '@sentry/react'
-import { setStorageErrorReporter } from '@shared/lib'
 
 import { SENTRY_TRACES_SAMPLE_RATE } from '../../sentry.config'
 import {
@@ -23,12 +22,7 @@ vi.mock('@sentry/react', () => ({
 }))
 
 beforeEach(() => vi.clearAllMocks())
-afterEach(() => {
-  vi.unstubAllEnvs()
-  // initSentry() подключает реальный репортер в module-global хранилище — без сброса он остался бы
-  // установленным для всех последующих тестов файла (order-dependent состояние)
-  setStorageErrorReporter(() => {})
-})
+afterEach(() => vi.unstubAllEnvs())
 
 describe('scrubApiKeyHeader', () => {
   it('вырезает X-API-KEY, остальные заголовки не трогает', () => {
@@ -269,70 +263,6 @@ describe('initSentry', () => {
       integrations: [{ name: 'ReactRouterBrowserTracing' }],
       tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
     })
-  })
-
-  // Сквозной тест, не мок setStorageErrorReporter: @shared/lib здесь не замокан, только
-  // '@sentry/react' — так что это реальная связка storage.ts → sentry.ts → Sentry.captureException,
-  // а не проверка, что нужная функция просто была передана куда-то.
-  it('подключает репортер ошибок localStorage: сбой createStorageSlot.set доходит до Sentry.captureException', async () => {
-    vi.stubEnv('PROD', true)
-    vi.stubEnv('VITE_SENTRY_DSN', 'https://example.test/1')
-    initSentry()
-
-    const { createStorageSlot } = await import('@shared/lib')
-    const { z } = await import('zod')
-    const slot = createStorageSlot(
-      'sentry-wiring-test',
-      z.array(z.number()),
-      [],
-    )
-    const spy = vi
-      .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(() => {
-        throw new DOMException('full', 'QuotaExceededError')
-      })
-
-    slot.set([1])
-    spy.mockRestore()
-
-    expect(Sentry.captureException).toHaveBeenCalledTimes(1)
-    const [sentError, sentContext] = vi.mocked(Sentry.captureException).mock
-      .calls[0]!
-    // jsdom's DOMException не является instanceof Error (в реальном браузере — является) —
-    // reportStorageErrorToSentry на этот случай оборачивает в new Error(String(error)), так что
-    // здесь проверяем именно это защитное поведение, а не точный класс исключения.
-    expect(sentError).toBeInstanceOf(Error)
-    expect((sentError as Error).message).toContain('QuotaExceededError')
-    expect(sentContext).toEqual({
-      level: 'warning',
-      tags: { storageKey: 'sentry-wiring-test', storageOperation: 'set' },
-    })
-  })
-
-  it('репортер ошибок localStorage передаёт настоящий Error в captureException как есть', async () => {
-    vi.stubEnv('PROD', true)
-    vi.stubEnv('VITE_SENTRY_DSN', 'https://example.test/1')
-    initSentry()
-
-    const { createStorageSlot } = await import('@shared/lib')
-    const { z } = await import('zod')
-    const slot = createStorageSlot(
-      'sentry-wiring-real-error',
-      z.array(z.number()),
-      [],
-    )
-    const original = new Error('quota')
-    const spy = vi
-      .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(() => {
-        throw original
-      })
-
-    slot.set([1])
-    spy.mockRestore()
-
-    expect(Sentry.captureException).toHaveBeenCalledTimes(1)
-    expect(vi.mocked(Sentry.captureException).mock.calls[0]![0]).toBe(original)
   })
 
   it('tracePropagationTargets НЕ присутствует среди ключей вызова Sentry.init', () => {
