@@ -24,7 +24,6 @@ import {
 } from '@shared/ui'
 import { useRef, useState } from 'react'
 import type { SubmitEvent } from 'react'
-import { Link } from 'react-router'
 
 import s from './Profile.module.css'
 
@@ -151,7 +150,7 @@ export const Profile = reatomComponent(() => {
           <ul className={s.linkList}>
             {quickLinks.map(({ to, label, Icon, count }) => (
               <li key={to}>
-                <Link className={s.linkRow} to={to}>
+                <a className={s.linkRow} href={to}>
                   <span className={s.linkIcon} aria-hidden='true'>
                     <Icon size={18} />
                   </span>
@@ -162,7 +161,7 @@ export const Profile = reatomComponent(() => {
                   <span className={s.linkChevron} aria-hidden='true'>
                     <ChevronRightIcon />
                   </span>
-                </Link>
+                </a>
               </li>
             ))}
           </ul>

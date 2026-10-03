@@ -2,7 +2,6 @@ import type { MovieDetail } from '@entities/movie'
 import { Poster } from '@entities/movie'
 import { paths } from '@shared/config'
 import { StarIcon, PlayIcon } from '@shared/ui'
-import { Link } from 'react-router'
 
 import { MovieActions } from '../MovieActions'
 import type { LikedState } from '../types'
@@ -76,13 +75,13 @@ export const MovieHero = ({
 
       <div className={s.inner}>
         <nav className={s.breadcrumbs}>
-          <Link to={paths.home()} className={s.breadcrumbLink}>
+          <a href={paths.home()} className={s.breadcrumbLink}>
             Home
-          </Link>
+          </a>
           <span className={s.breadcrumbSep}>/</span>
-          <Link to={paths.search()} className={s.breadcrumbLink}>
+          <a href={paths.search()} className={s.breadcrumbLink}>
             Catalog
-          </Link>
+          </a>
           <span className={s.breadcrumbSep}>/</span>
           <span className={s.breadcrumbCurrent}>{movie.title}</span>
         </nav>

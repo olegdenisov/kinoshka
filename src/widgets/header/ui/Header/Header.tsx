@@ -11,7 +11,7 @@ import { paths } from '@shared/config'
 import { useDebouncedValue } from '@shared/lib'
 import { SearchIcon, BellIcon, CloseIcon, IconButton } from '@shared/ui'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 
 import { NavPill } from '../NavPill'
 
@@ -153,11 +153,11 @@ export const Header = ({ variant = 'default', activeNav }: HeaderProps) => {
   return (
     <header className={s.header}>
       <div className={s.inner}>
-        <Link to={paths.home()} className={s.logo}>
+        <a href={paths.home()} className={s.logo}>
           <span className={s.logoMain}>kino</span>
           <span className={s.logoDot}>·</span>
           <span className={s.logoMain}>shka</span>
-        </Link>
+        </a>
 
         {variant === 'search' ? (
           <div className={s.searchVariantCenter}>

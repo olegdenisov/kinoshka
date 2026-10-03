@@ -628,10 +628,10 @@ export const RouterOutlet = reatomComponent(
 
 Известный разрыв до Task 15: под React Router клик по `<a href>` даёт полную перезагрузку страницы. `NavLink` в `ProfileAvatar`, `Link` в `AppLayout` и вся программная навигация остаются до Task 15.
 
-- [ ] заменить `<Link to={…}>` на `<a href={paths.…}>` в перечисленных файлах; stretched-link `Card` и его стекинг (`ui-patterns.md`) не меняются
-- [ ] тесты этих компонентов: проверять `href`, а не переход по клику; `Card.test.tsx` больше не нуждается в `<Routes>`
-- [ ] e2e-селектор `a[href^="/movie/"]` остаётся валидным — проверить поиском по `e2e/`
-- [ ] запустить `make test`, `make typecheck`, `make lint` — зелёные перед Task 15
+- [x] заменить `<Link to={…}>` на `<a href={paths.…}>` в перечисленных файлах; stretched-link `Card` и его стекинг (`ui-patterns.md`) не меняются
+- [x] тесты этих компонентов (сценарий «Similar titles → смена фильма, сброс таба» в `MoviePage.test.tsx` свёлся к проверке `href`; сброс таба по `key={id}` возвращается в `routes.test.tsx`, Task 15): проверять `href`, а не переход по клику; `Card.test.tsx` больше не нуждается в `<Routes>`
+- [x] e2e-селектор `a[href^="/movie/"]` остаётся валидным — проверить поиском по `e2e/`
+- [x] запустить `make test`, `make typecheck`, `make lint` — зелёные перед Task 15
 
 ### Task 15: Замена React Router на `reatomRoute` — ядро
 

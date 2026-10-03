@@ -1,6 +1,5 @@
 import type { CastMember } from '@entities/movie'
 import { paths } from '@shared/config'
-import { Link } from 'react-router'
 
 import s from './CastTab.module.css'
 
@@ -49,17 +48,17 @@ export const CastTab = ({ cast }: CastTabProps) => {
           // persons (напр. актёр в двух ролях/дубляже) — id одинаковый, role разная.
           const key = `${c.id}-${c.role}`
 
-          // Обычный <Link>-обёртка, а не stretched-link паттерн из Card: в карточке персоны
+          // Обычный <a>-обёртка, а не stretched-link паттерн из Card: в карточке персоны
           // нет вложенных интерактивных элементов (кнопок-действий), которые пришлось бы
           // выносить DOM-соседями ссылки, — вкладывать их в <a> не пришлось бы, а обособленный
           // ::after поверх карточки тут ничего не даёт.
           // DTO не гарантирует имя персоны (mapDtoToMovieDetail может отдать name: '') — рендерим
-          // такую карточку как раньше, обычным <div>, а не <Link> без доступного имени:
+          // такую карточку как раньше, обычным <div>, а не <a> без доступного имени:
           // axe-правило link-name критично и уронило бы checkA11y на живых данных (Задача 14).
           return c.name ? (
-            <Link key={key} to={paths.person(c.id)} className={s.castCard}>
+            <a key={key} href={paths.person(c.id)} className={s.castCard}>
               {content}
-            </Link>
+            </a>
           ) : (
             <div key={key} className={s.castCard}>
               {content}

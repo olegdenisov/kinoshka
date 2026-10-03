@@ -250,7 +250,7 @@ describe('MoviePage — /movie/-1 и /movie/1.5 (отрицательный/др
 })
 
 describe('MoviePage — навигация между фильмами через похожие (backlog: tab не сбрасывался)', () => {
-  it('переход на другой фильм по ссылке из Similar titles сбрасывает активный таб на Overview', async () => {
+  it('ссылка из Similar titles ведёт на страницу другого фильма', async () => {
     mockMovie(1, {
       similarMovies: [
         { id: 2, name: 'Second Movie', year: 2023, type: 'movie' },
@@ -269,20 +269,12 @@ describe('MoviePage — навигация между фильмами чере�
       container.querySelector('[class*="tabBtnActive"]'),
     ).toHaveTextContent('Cast')
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole('link', { name: 'Second Movie' }))
-    })
-
-    // "Second Movie" уже виден на странице фильма 1 как заголовок карточки в Similar
-    // titles — ждём не сам текст, а заголовок h1 (появляется только после того, как
-    // навигация внутри react-router'овского startTransition реально закоммитилась).
-    expect(
-      await screen.findByRole('heading', { level: 1, name: 'Second Movie' }),
-    ).toBeInTheDocument()
-    expect(screen.queryByText('Orbit of Silence')).not.toBeInTheDocument()
-    expect(
-      container.querySelector('[class*="tabBtnActive"]'),
-    ).toHaveTextContent('Overview')
+    // Клик по <a href> до Task 15 даёт полную перезагрузку — проверяем цель ссылки;
+    // сброс таба при смене фильма (key={id}) проверяется в routes.test.tsx (Task 15).
+    expect(screen.getByRole('link', { name: 'Second Movie' })).toHaveAttribute(
+      'href',
+      '/movie/2',
+    )
   })
 })
 

@@ -1,7 +1,6 @@
 import { paths } from '@shared/config'
 import { StarIcon, PlusIcon, EyeIcon, HeartIcon } from '@shared/ui'
 import type { ReactNode } from 'react'
-import { Link } from 'react-router'
 
 import type { Movie } from '../../model/types'
 import { Poster } from '../Poster'
@@ -31,17 +30,17 @@ export const Card = ({
   return (
     <div className={s.card}>
       {/*
-        DOM order is intentionally info-before-poster so the title Link is
+        DOM order is intentionally info-before-poster so the title link is
         reachable via Tab before the (unlabeled) action buttons inside
         posterContainer. Visual order (poster on top) is restored purely via
         CSS `order` on .info — see Card.module.css.
       */}
       <div className={s.info}>
-        <Link to={paths.movie(movie.id)} className={s.title}>
+        <a href={paths.movie(movie.id)} className={s.title}>
           {/* Ссылка без текста валит Lighthouse `link-name` (a11y-гейт CI), поэтому
               для фильма без единого названия показываем запасной текст. */}
           {movie.title || 'Untitled'}
-        </Link>
+        </a>
         <div className={s.meta}>
           <span>{movie.year ? movie.year : 'Unknown'}</span>
           {movie.genre[0] && (

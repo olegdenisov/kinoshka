@@ -1,7 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
-import { Routes, Route } from 'react-router'
 
 import { renderWithRouter } from '../../../../test/router'
 import type { Movie } from '../../model/types'
@@ -29,7 +28,6 @@ const renderCard = (
   },
 ) => renderWithRouter(<Card movie={movie} {...props} />)
 
-// Тесты с несколькими <Route> остаются на react-router: переписываются в Task 15.
 describe('Card', () => {
   it('рендерит год, когда movie.year задан', () => {
     renderCard(baseMovie)
@@ -159,23 +157,16 @@ describe('Card', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('клик по Add не триггерит переход по Link (location не меняется)', async () => {
+  it('клик по Add не триггерит переход по ссылке (URL не меняется)', async () => {
     const user = userEvent.setup()
 
-    renderWithRouter(
-      <Routes>
-        <Route
-          path='/'
-          element={<Card movie={baseMovie} onToggleWatchlist={vi.fn()} />}
-        />
-        <Route path='/movie/:id' element={<div>movie page</div>} />
-      </Routes>,
-      { url: '/' },
-    )
+    const { getUrl } = renderCard(baseMovie, {
+      onToggleWatchlist: vi.fn(),
+    })
 
     await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
 
-    expect(screen.queryByText('movie page')).not.toBeInTheDocument()
+    expect(getUrl()).toBe('/')
   })
 
   it('isFavorite=true — сердечко рендерится в filled-состоянии (label "Remove from favorites")', () => {
@@ -201,27 +192,16 @@ describe('Card', () => {
     )
   })
 
-  it('клик по сердечку не триггерит переход по Link (location не меняется)', async () => {
+  it('клик по сердечку не триггерит переход по ссылке (URL не меняется)', async () => {
     const user = userEvent.setup()
     const onToggleFavorite = vi.fn()
 
-    renderWithRouter(
-      <Routes>
-        <Route
-          path='/'
-          element={
-            <Card movie={baseMovie} onToggleFavorite={onToggleFavorite} />
-          }
-        />
-        <Route path='/movie/:id' element={<div>movie page</div>} />
-      </Routes>,
-      { url: '/' },
-    )
+    const { getUrl } = renderCard(baseMovie, { onToggleFavorite })
 
     await user.click(screen.getByLabelText('Add to favorites'))
 
     expect(onToggleFavorite).toHaveBeenCalledWith(1)
-    expect(screen.queryByText('movie page')).not.toBeInTheDocument()
+    expect(getUrl()).toBe('/')
   })
 
   it('без rankBadge узел бейджа не рендерится (regression-guard)', () => {

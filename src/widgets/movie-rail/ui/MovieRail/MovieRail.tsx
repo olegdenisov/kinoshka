@@ -7,7 +7,6 @@ import { reatomComponent } from '@reatom/react'
 import { paths } from '@shared/config'
 import { EmptyState } from '@shared/ui'
 import { useRef } from 'react'
-import { Link } from 'react-router'
 
 import { ArrowBtn } from './ArrowBtn'
 
@@ -34,10 +33,10 @@ export const MovieRail = reatomComponent(
           <div className={s.titleGroup}>
             <div className={s.subtitle}>{subtitle}</div>
             <h2 className={s.title}>
-              <Link to={href} className={s.titleLink}>
+              <a href={href} className={s.titleLink}>
                 {title}
                 <span className={s.titleArrow}>→</span>
-              </Link>
+              </a>
             </h2>
           </div>
           {/* Стрелки рендерятся всегда: видимость управляется CSS-медиа-фичей
