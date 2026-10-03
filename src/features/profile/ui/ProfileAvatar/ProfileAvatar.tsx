@@ -1,8 +1,9 @@
+import { reatomComponent } from '@reatom/react'
 import { PROFILE_ARIA_LABEL_PREFIX } from '@shared/lib'
 import { AvatarCircle } from '@shared/ui'
 import { NavLink } from 'react-router'
 
-import { useProfile } from '../../model/useProfile'
+import { profileInitials, profileName } from '../../model/profile'
 
 import s from './ProfileAvatar.module.css'
 
@@ -15,8 +16,9 @@ import s from './ProfileAvatar.module.css'
 // sentry.ts (@shared/lib), а не два независимых литерала: см. её докблок. Визуальный кружок —
 // AvatarCircle (@shared/ui), общий с декоративным аватаром на самой /profile (Profile.tsx);
 // здесь он только внутри ссылки — фокус/text-decoration остаются на NavLink (см. .link ниже).
-export const ProfileAvatar = () => {
-  const { name, initials } = useProfile()
+export const ProfileAvatar = reatomComponent(() => {
+  const name = profileName()
+  const initials = profileInitials()
 
   return (
     <NavLink
@@ -28,4 +30,4 @@ export const ProfileAvatar = () => {
       <AvatarCircle initials={initials} size='sm' />
     </NavLink>
   )
-}
+}, 'ProfileAvatar')

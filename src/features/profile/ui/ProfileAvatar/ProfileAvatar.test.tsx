@@ -1,10 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 
-import { profileNameSlot } from '../../model/profileStorage'
+import { seedPersisted } from '../../../../test/persist'
 import { ProfileAvatar } from './ProfileAvatar'
-
-beforeEach(() => localStorage.clear())
 
 const renderAvatar = () =>
   render(
@@ -24,21 +22,21 @@ describe('ProfileAvatar', () => {
   })
 
   it('имя из одного слова даёт одну инициал-букву', () => {
-    profileNameSlot.set('oleg')
+    seedPersisted('kinoshka:profile', 'oleg')
     renderAvatar()
 
     expect(screen.getByRole('link').textContent).toBe('O')
   })
 
   it('имя, начинающееся с эмодзи, не режет суррогатную пару', () => {
-    profileNameSlot.set('😀 Oleg')
+    seedPersisted('kinoshka:profile', '😀 Oleg')
     renderAvatar()
 
     expect(screen.getByRole('link').textContent).toBe('😀O')
   })
 
   it('имя с ведущим невидимым символом (ZWSP) рисует видимый инициал, а не пустой кружок', () => {
-    profileNameSlot.set('\u200BAda')
+    seedPersisted('kinoshka:profile', '\u200BAda')
     renderAvatar()
 
     const link = screen.getByRole('link')
@@ -60,7 +58,7 @@ describe('ProfileAvatar', () => {
   })
 
   it('с сохранённым именем показывает инициалы, а доступное имя содержит само имя', () => {
-    profileNameSlot.set('Oleg Denisov')
+    seedPersisted('kinoshka:profile', 'Oleg Denisov')
     renderAvatar()
 
     const link = screen.getByRole('link', {
@@ -70,7 +68,7 @@ describe('ProfileAvatar', () => {
   })
 
   it('несёт data-sentry-component: Sentry не читает aria-label (с именем) для такого элемента', () => {
-    profileNameSlot.set('Ada Lovelace')
+    seedPersisted('kinoshka:profile', 'Ada Lovelace')
     renderAvatar()
 
     expect(screen.getByRole('link')).toHaveAttribute(

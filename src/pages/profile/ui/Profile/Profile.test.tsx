@@ -1,13 +1,6 @@
-import { PROFILE_NAME_MAX_LENGTH, useProfile } from '@features/profile'
+import { PROFILE_NAME_MAX_LENGTH, profileName } from '@features/profile'
 import { initThemeSync, ThemeToggle } from '@features/theme'
-import {
-  act,
-  render,
-  renderHook,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
@@ -15,6 +8,8 @@ import { readPersisted, seedPersisted } from '../../../../test/persist'
 import { Profile } from './Profile'
 
 const PROFILE_KEY = 'kinoshka:profile'
+
+const seedName = (name: string) => seedPersisted(PROFILE_KEY, name)
 
 const renderProfile = () =>
   render(
@@ -106,14 +101,12 @@ describe('Profile', () => {
     expect(screen.getByText('Oleg Denisov')).toBeInTheDocument()
     expect(screen.getByText('OD')).toBeInTheDocument()
     expect(screen.queryByText('Guest')).not.toBeInTheDocument()
-    expect(JSON.parse(localStorage.getItem(PROFILE_KEY) ?? 'null')).toBe(
-      'Oleg Denisov',
-    )
+    expect(readPersisted(PROFILE_KEY)).toBe('Oleg Denisov')
   })
 
   it('Save задизейблена, пока значение не изменилось, и активируется после правки', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedName('Oleg')
     renderProfile()
 
     const save = screen.getByRole('button', { name: 'Save' })
@@ -129,7 +122,7 @@ describe('Profile', () => {
 
   it('пробелы в конце существующего имени не активируют Save', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedName('Oleg')
     renderProfile()
 
     await user.type(screen.getByLabelText('Display name'), '  ')
@@ -139,7 +132,7 @@ describe('Profile', () => {
 
   it('черновик с пробелами по краям поверх другого имени сохраняется тримленным, инпут пересинхронизируется', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Ann'))
+    seedName('Ann')
     renderProfile()
 
     const input = screen.getByLabelText('Display name')
@@ -148,7 +141,7 @@ describe('Profile', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
-    expect(JSON.parse(localStorage.getItem(PROFILE_KEY) ?? 'null')).toBe('Bob')
+    expect(readPersisted(PROFILE_KEY)).toBe('Bob')
     expect(input).toHaveValue('Bob')
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
   })
@@ -161,7 +154,7 @@ describe('Profile', () => {
 
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
     expect(screen.getByText('Guest')).toBeInTheDocument()
-    expect(localStorage.getItem(PROFILE_KEY)).toBeNull()
+    expect(readPersisted(PROFILE_KEY)).toBeNull()
   })
 
   it('черновик из одних невидимых символов не активирует Save и не сохраняется', async () => {
@@ -174,11 +167,11 @@ describe('Profile', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
     await user.type(screen.getByLabelText('Display name'), '{Enter}')
     expect(screen.getByText('Guest')).toBeInTheDocument()
-    expect(localStorage.getItem(PROFILE_KEY)).toBeNull()
+    expect(readPersisted(PROFILE_KEY)).toBeNull()
   })
 
   it('невидимое имя в localStorage (мимо UI) даёт Guest и иконку', () => {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('\u200B'))
+    seedName('\u200B')
     const { container } = renderProfile()
 
     const avatar = getAvatar(container)
@@ -186,32 +179,6 @@ describe('Profile', () => {
     expect(
       screen.queryByRole('button', { name: 'Clear name' }),
     ).not.toBeInTheDocument()
-  })
-
-  it('недоступное хранилище: Save показывает сообщение об ошибке, черновик сохраняется, правка убирает сообщение', async () => {
-    const user = userEvent.setup()
-    renderProfile()
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new DOMException('full', 'QuotaExceededError')
-    })
-
-    await user.type(screen.getByLabelText('Display name'), 'Oleg')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      /Couldn.t save the name/,
-    )
-    expect(screen.getByLabelText('Display name')).toHaveValue('Oleg')
-    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
-    expect(screen.getByText('Guest')).toBeInTheDocument()
-
-    vi.restoreAllMocks()
-    await user.type(screen.getByLabelText('Display name'), '2')
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(screen.getByText('Oleg2')).toBeInTheDocument()
   })
 
   it('успешное сохранение возвращает фокус на инпут имени (Save дизейблится и теряет фокус)', async () => {
@@ -269,49 +236,6 @@ describe('Profile', () => {
     }
   })
 
-  it('два отказа Save подряд переанонсируют ошибку — DOM-узел алерта меняется, а не переиспользуется', async () => {
-    const user = userEvent.setup()
-    renderProfile()
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new DOMException('full', 'QuotaExceededError')
-    })
-
-    await user.type(screen.getByLabelText('Display name'), 'Oleg')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-    const firstAlert = screen.getByRole('alert')
-
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-    const secondAlert = screen.getByRole('alert')
-
-    expect(secondAlert).not.toBe(firstAlert)
-  })
-
-  it('стороннее изменение имени (другая вкладка) во время показанной ошибки сохранения убирает устаревший алерт', async () => {
-    const user = userEvent.setup()
-    renderProfile()
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new DOMException('full', 'QuotaExceededError')
-    })
-
-    await user.type(screen.getByLabelText('Display name'), 'Oleg')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-    expect(screen.getByRole('alert')).toBeInTheDocument()
-
-    vi.restoreAllMocks()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('External'))
-    await act(async () => {
-      window.dispatchEvent(
-        new StorageEvent('storage', {
-          key: PROFILE_KEY,
-          newValue: JSON.stringify('External'),
-        }),
-      )
-    })
-
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Display name')).toHaveValue('External')
-  })
-
   it('имя с эмодзи сохраняется целиком, инициалы не режут суррогатную пару', async () => {
     const user = userEvent.setup()
     renderProfile()
@@ -322,9 +246,7 @@ describe('Profile', () => {
 
     expect(screen.getByText('😀 Oleg')).toBeInTheDocument()
     expect(screen.getByText('😀O')).toBeInTheDocument()
-    expect(JSON.parse(localStorage.getItem(PROFILE_KEY) ?? 'null')).toBe(
-      '😀 Oleg',
-    )
+    expect(readPersisted(PROFILE_KEY)).toBe('😀 Oleg')
   })
 
   it('имя ровно на лимите сохраняется целиком, лишний символ инпут не принимает', async () => {
@@ -338,22 +260,25 @@ describe('Profile', () => {
     )
 
     expect(screen.getByLabelText('Display name')).toHaveValue(limitName)
-    expect(JSON.parse(localStorage.getItem(PROFILE_KEY) ?? 'null')).toBe(
-      limitName,
-    )
+    expect(readPersisted(PROFILE_KEY)).toBe(limitName)
   })
 
   it('подтягивает имя, изменённое в другой вкладке, и не оставляет Save активной', async () => {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Old'))
+    seedName('Old')
     renderProfile()
     expect(screen.getByLabelText('Display name')).toHaveValue('Old')
 
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('New Name'))
+    // подписка на 'storage' ставится в connect-hook атома асинхронно
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0))
+    })
+    seedName('New Name')
     await act(async () => {
       window.dispatchEvent(
         new StorageEvent('storage', {
           key: PROFILE_KEY,
-          newValue: JSON.stringify('New Name'),
+          newValue: localStorage.getItem(PROFILE_KEY),
+          storageArea: localStorage,
         }),
       )
     })
@@ -362,14 +287,13 @@ describe('Profile', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
   })
 
-  it('после сброса имени через clearName инпут пустеет, Save не активна', async () => {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
-    const { result } = renderHook(() => useProfile())
+  it('после сброса имени через profileName.set("") инпут пустеет, Save не активна', async () => {
+    seedName('Oleg')
     renderProfile()
     expect(screen.getByLabelText('Display name')).toHaveValue('Oleg')
 
     await act(async () => {
-      result.current.clearName()
+      profileName.set('')
     })
 
     expect(screen.getByLabelText('Display name')).toHaveValue('')
@@ -499,7 +423,7 @@ describe('Profile', () => {
 
   it('Clear name очищает заданное имя, скрывается и возвращает фокус на инпут (кнопка размонтирована)', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedName('Oleg')
     renderProfile()
 
     await user.click(screen.getByRole('button', { name: 'Clear name' }))
@@ -509,121 +433,15 @@ describe('Profile', () => {
     expect(
       screen.queryByRole('button', { name: 'Clear name' }),
     ).not.toBeInTheDocument()
-    expect(JSON.parse(localStorage.getItem(PROFILE_KEY) ?? 'null')).toBe('')
+    expect(readPersisted(PROFILE_KEY)).toBe('')
     // Кнопка Clear name размонтирована условием {name && ...} — без явного переноса фокус упал
     // бы на <body>.
     expect(screen.getByLabelText('Display name')).toHaveFocus()
   })
 
-  it('Clear name: недоступное хранилище показывает сообщение об ошибке с текстом про Clear, имя не сбрасывается', async () => {
-    const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
-    renderProfile()
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new DOMException('full', 'QuotaExceededError')
-    })
-
-    await user.click(screen.getByRole('button', { name: 'Clear name' }))
-
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      /Couldn.t clear the name/,
-    )
-    expect(screen.getByText('Oleg')).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: 'Clear name' }),
-    ).toBeInTheDocument()
-  })
-
-  it('Clear-отказ хранилища не гасится редактированием инпута (гасится только устаревший Save-отказ)', async () => {
-    const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
-    renderProfile()
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new DOMException('full', 'QuotaExceededError')
-    })
-
-    await user.click(screen.getByRole('button', { name: 'Clear name' }))
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      /Couldn.t clear the name/,
-    )
-
-    await user.type(screen.getByLabelText('Display name'), '2')
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      /Couldn.t clear the name/,
-    )
-  })
-
-  it('отказ Clear заменяет прежний отказ Save: текст алерта переключается на "clear"', async () => {
-    const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
-    renderProfile()
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new DOMException('full', 'QuotaExceededError')
-    })
-
-    await user.type(screen.getByLabelText('Display name'), '2')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      /Couldn.t save the name/,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Clear name' }))
-
-    expect(screen.getAllByRole('alert')).toHaveLength(1)
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      /Couldn.t clear the name/,
-    )
-  })
-
-  it('стороннее изменение имени убирает и устаревший отказ Clear', async () => {
-    const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
-    renderProfile()
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new DOMException('full', 'QuotaExceededError')
-    })
-
-    await user.click(screen.getByRole('button', { name: 'Clear name' }))
-    expect(screen.getByRole('alert')).toBeInTheDocument()
-
-    vi.restoreAllMocks()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('External'))
-    await act(async () => {
-      window.dispatchEvent(
-        new StorageEvent('storage', {
-          key: PROFILE_KEY,
-          newValue: JSON.stringify('External'),
-        }),
-      )
-    })
-
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Display name')).toHaveValue('External')
-  })
-
-  it('успешный Clear после отказа убирает алерт', async () => {
-    const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
-    renderProfile()
-    const spy = vi
-      .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(() => {
-        throw new DOMException('full', 'QuotaExceededError')
-      })
-
-    await user.click(screen.getByRole('button', { name: 'Clear name' }))
-    expect(screen.getByRole('alert')).toBeInTheDocument()
-
-    spy.mockRestore()
-    await user.click(screen.getByRole('button', { name: 'Clear name' }))
-
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(screen.getByText('Guest')).toBeInTheDocument()
-  })
-
   it('Clear name отбрасывает несохранённый черновик', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedName('Oleg')
     renderProfile()
 
     await user.type(screen.getByLabelText('Display name'), '2')
@@ -636,7 +454,7 @@ describe('Profile', () => {
   })
 
   it('значение из одних пробелов в localStorage (мимо UI) даёт Guest и не показывает Clear name', () => {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('   '))
+    seedName('   ')
     renderProfile()
 
     expect(screen.getByText('Guest')).toBeInTheDocument()

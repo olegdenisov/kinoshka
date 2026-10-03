@@ -1,6 +1,8 @@
-import { createStorageSlot } from '@shared/lib'
+import { action, atom, computed, withLocalStorage } from '@reatom/core'
+import { persistOptions } from '@shared/lib'
 import { z } from 'zod'
 
+import { getInitials } from '../lib/getInitials'
 import { hasVisibleChar } from '../lib/visibleChars'
 
 export const PROFILE_NAME_MAX_LENGTH = 40
@@ -20,12 +22,12 @@ export const PROFILE_NAME_MAX_LENGTH = 40
 // Intl.Segmenter).
 //
 // RTL override (U+202E) и другие управляющие символы двунаправленного текста НЕ вырезаются
-// здесь, если рядом есть видимые буквы — INVISIBLE_ONLY/hasVisibleChar решают судьбу имени
-// целиком, а не каждого code point по отдельности, так что имя вида "видимый текст" с embedded
-// RLO проходит нормализацию как есть и визуально рисуется в обратном порядке (косметическая,
-// локальная проблема — значение остаётся тем же текстом, скринридер использует логический, а
-// не визуальный порядок). Оставлено как принятое ограничение, не починка: вырезание bidi-меток
-// потенциально ломает легитимные RTL-имена (иврит, арабский), а не только злонамеренный ввод.
+// здесь, если рядом есть видимые буквы — hasVisibleChar решает судьбу имени целиком, а не
+// каждого code point по отдельности, так что имя вида "видимый текст" с embedded RLO проходит
+// нормализацию как есть и визуально рисуется в обратном порядке (косметическая, локальная
+// проблема — значение остаётся тем же текстом, скринридер использует логический, а не визуальный
+// порядок). Оставлено как принятое ограничение, не починка: вырезание bidi-меток потенциально
+// ломает легитимные RTL-имена (иврит, арабский), а не только злонамеренный ввод.
 export const normalizeProfileName = (raw: string): string => {
   const sliced = Array.from(raw.trim())
     .slice(0, PROFILE_NAME_MAX_LENGTH)
@@ -46,8 +48,23 @@ const profileNameSchema = z
       (value === '' || hasVisibleChar(value)),
   )
 
-export const profileNameSlot = createStorageSlot(
-  'kinoshka:profile',
-  profileNameSchema,
-  '',
+export const profileName = atom('', 'profile.name').extend(
+  withLocalStorage(
+    persistOptions({
+      key: 'kinoshka:profile',
+      schema: profileNameSchema,
+      fallback: '',
+    }),
+  ),
 )
+
+export const profileInitials = computed(
+  () => getInitials(profileName()),
+  'profile.initials',
+)
+
+// maxLength на инпуте — лишь UI-хинт: значение может прийти из автозаполнения/вставки, поэтому
+// запись всегда идёт через normalizeProfileName. Очистка — profileName.set('').
+export const setProfileName = action((next: string) => {
+  profileName.set(normalizeProfileName(next))
+}, 'profile.setName')

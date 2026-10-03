@@ -10,6 +10,7 @@ import {
   useNavigate,
 } from 'react-router'
 
+import { seedPersisted } from '../../../../test/persist'
 import { Header } from './Header'
 
 /** Читает текущую строку query из роутера — способ проверить, что запись в URL реально произошла. */
@@ -578,7 +579,7 @@ describe('Header — аватар профиля (ProfileAvatar)', () => {
   })
 
   it('с сохранённым именем показывает инициалы', () => {
-    localStorage.setItem('kinoshka:profile', JSON.stringify('Oleg Denisov'))
+    seedPersisted('kinoshka:profile', 'Oleg Denisov')
 
     render(
       <MemoryRouter initialEntries={['/']}>

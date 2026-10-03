@@ -2,6 +2,7 @@ import { initThemeSync } from '@features/theme'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 
+import { seedPersisted } from '../../../../test/persist'
 import { MobileHeader } from './MobileHeader'
 
 beforeEach(() => {
@@ -66,7 +67,7 @@ describe('MobileHeader', () => {
   })
 
   it('аватар — ссылка на /profile с инициалами сохранённого имени', () => {
-    localStorage.setItem('kinoshka:profile', JSON.stringify('Oleg Denisov'))
+    seedPersisted('kinoshka:profile', 'Oleg Denisov')
 
     render(
       <MemoryRouter>

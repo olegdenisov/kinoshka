@@ -92,16 +92,6 @@
   margin-top: 20px;
 }
 
-.saveError {
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: 13px;
-  /* --danger, не --accent-warm: тот же токен используют CTA/ссылки/выбранный чип темы —
-     единственное сообщение об ошибке на странице читалось бы как акцент, а не как сбой. */
-  color: var(--danger);
-  text-align: center;
-}
-
 .sectionHeading {
   margin: 0 0 8px;
   font-family: var(--font-mono);

@@ -468,11 +468,11 @@ export const RouterOutlet = reatomComponent(
 - Modify: `src/features/profile/index.ts`, `src/features/profile/ui/ProfileAvatar/ProfileAvatar.tsx`, `src/pages/profile/ui/Profile/Profile.tsx`
 - Delete: `src/features/profile/model/{profileStorage,useProfile}.ts` и их тесты
 
-- [ ] создать `profileName`, `profileInitials`, `setProfileName`; `normalizeProfileName`, `PROFILE_NAME_MAX_LENGTH` и схема переезжают в `profile.ts`
-- [ ] `Profile.tsx`: убрать ветку «не удалось сохранить», CSS-класс `saveError` и их тесты; очистка имени — `profileName.set('')`
-- [ ] `ProfileAvatar` и `Profile` → `reatomComponent`; правило про пользовательский текст в `aria-label` (`sentry.md`) не нарушать
-- [ ] тесты: нормализация при записи, значение мимо UI (длинное, невидимое, с пробелами) даёт `''`, инициалы пересчитываются
-- [ ] запустить тесты — зелёные перед Task 7
+- [x] создать `profileName`, `profileInitials`, `setProfileName`; `normalizeProfileName`, `PROFILE_NAME_MAX_LENGTH` и схема переезжают в `profile.ts`
+- [x] `Profile.tsx`: убрать ветку «не удалось сохранить», CSS-класс `saveError` и их тесты; очистка имени — `profileName.set('')`
+- [x] `ProfileAvatar` и `Profile` → `reatomComponent`; правило про пользовательский текст в `aria-label` (`sentry.md`) не нарушать
+- [x] тесты: нормализация при записи, значение мимо UI (длинное, невидимое, с пробелами) даёт `''`, инициалы пересчитываются
+- [x] запустить тесты — зелёные перед Task 7
 
 ### Task 7: Async-фундамент — политика кэша, `AsyncContent`, запросы фильма по id
 
