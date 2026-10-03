@@ -1,12 +1,17 @@
-import '@testing-library/jest-dom/vitest'
 import {
   resetCountryDictionaryState,
   resetGenreDictionaryState,
 } from '@entities/movie'
+import '@testing-library/jest-dom/vitest'
+import { context, urlAtom } from '@reatom/core'
 import { resetAllCachedFetchers } from '@shared/lib'
+import { cleanup } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+
+// Первым: глобальное расширение Reatom должно зарегистрироваться до создания атомов модулями ниже.
+import { abortTestFrames } from './reatomTestScope'
 
 // window.matchMedia — jsdom вообще не реализует этот API (docs/plans/20260819-theme-toggle.md,
 // Task 4). useTheme() безусловно вызывает `window.matchMedia('(prefers-color-scheme: dark)')`,
@@ -131,18 +136,30 @@ export const server = setupServer(
 )
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => server.resetHandlers())
-// createCachedFetcher's in-memory cache is module-level (survives across tests within the
-// same file and across files) — without this, tests hitting the same {query, page, ...} key
-// as an earlier test would silently get a stale cached promise instead of exercising the
-// current test's MSW handler. See createCachedFetcher.ts's resetAllCachedFetchers docblock.
-afterEach(() => resetAllCachedFetchers())
-// Dictionary caches (genres, countries): localStorage slot + in-memory cooldown/in-flight state
-// are module-level too — same rationale as resetAllCachedFetchers above, plus localStorage.clear()
-// so a cached dictionary from one test doesn't leak into the next (see createDictionaryCache.ts).
+// Один afterEach с явным порядком: несколько отдельных afterEach Vitest выполняет в обратном
+// порядке регистрации, и зависимость шагов друг от друга становится неочевидной.
+// - cleanup() первым: размонтирование снимает подписки компонентов до сброса контекста.
+// - urlAtom.init.abort() — context.reset() не снимает слушатели popstate/click, поставленные
+//   urlAtom.init; без этого они копятся от теста к тесту и дублируют pushState.
+// - abortTestFrames() — явная отмена: context.reset() асинхронные продолжения не абортит
+//   (см. reatomTestScope.ts). Отмена до сброса хранилищ, чтобы незавершённый запрос прошлого
+//   теста не дописал persist-значение в уже чистый storage.
+// - server.resetHandlers() последним: к этому моменту запросы прошлого теста уже отменены,
+//   иначе они попадают в onUnhandledRequest: 'error' следующего теста.
 afterEach(() => {
+  cleanup()
+  urlAtom.init.abort()
+  abortTestFrames()
+  context.reset()
   localStorage.clear()
+  sessionStorage.clear()
+  window.history.replaceState(null, '', '/')
+  // Модульное состояние вне атомов: in-memory кэш createCachedFetcher и словари (жанры,
+  // страны) живут между тестами и файлами, иначе тест получает закэшированный промис
+  // прошлого теста вместо своего MSW-хендлера.
+  resetAllCachedFetchers()
   resetGenreDictionaryState()
   resetCountryDictionaryState()
+  server.resetHandlers()
 })
 afterAll(() => server.close())

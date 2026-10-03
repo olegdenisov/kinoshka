@@ -366,21 +366,22 @@ export const RouterOutlet = reatomComponent(
 - Create: `src/app/reatom-setup.ts`
 - Create: `src/test/persist.ts`
 - Create: `src/test/reatom.test.tsx`
+- ➕ Create: `src/test/reatomTestScope.ts`
 
-- [ ] `pnpm add @reatom/core@1001.3.0 @reatom/react@1001.0.1`, `pnpm add -D @reatom/vite` (точную версию закрепить в `package.json`); если установку блокирует минимальный возраст релиза — добавить пакеты в `minimumReleaseAgeExclude` в `pnpm-workspace.yaml`
-- [ ] подключить `reatom()` из `@reatom/vite` в `vite.config.ts`; если плагин несовместим с Vite 8/Rolldown — убрать зависимость и зафиксировать здесь ручной HMR-сниппет из handbook
-- [ ] создать `src/app/reatom-setup.ts` (`connectLogger()` только при `MODE === 'development'`) и импортировать его в `src/main.tsx` сразу после `./app/sentry-bootstrap`
-- [ ] в `src/test/setup.ts`: свести три существующих `afterEach` в один с порядком из Testing Strategy (`cleanup()` → `urlAtom.init.abort()` → `context.reset()` → очистка `localStorage` / `sessionStorage` → URL на `/` → `resetAllCachedFetchers()` и сброс словарей → `server.resetHandlers()`)
-- [ ] тест: значение persist-атома, записанное в одном тесте, не видно в следующем (после `localStorage.clear()` + `context.reset()`)
-- [ ] тест: незавершённый запрос одного теста не падает как unhandled request в следующем; если `context.reset()` запросы не отменяет — добавить в `afterEach` явную отмену и зафиксировать это здесь
-- [ ] тест: компонент с `use()` внутри `reatomComponent` приостанавливается и возобновляется под `Suspense`; если нет — зафиксировать здесь, что компоненты с `use()` до Task 8/9 остаются обычными с `useAtom`
-- [ ] создать `src/test/persist.ts` с `seedPersisted(key, data)` — пишет `PersistRecord` в `localStorage`
-- [ ] тест: состояние атома не протекает между тестами
-- [ ] тест: клик по `<a>` в двух тестах подряд даёт по одному `pushState` (слушатели `urlAtom` не копятся)
-- [ ] тест: `reatomComponent` перерисовывается при изменении атома в сборке с React Compiler и в `StrictMode`
-- [ ] тест: обработчик через `wrap(...)` обновляет атом; размонтирование не оставляет подписок
-- [ ] тест: запрос через `apiClient` с сигналом из `abortVar` под MSW проходит и отменяется; если jsdom-`AbortSignal` несовместим с клиентом — зафиксировать здесь, что сигнал в клиент не передаётся
-- [ ] запустить `make test`, `make typecheck`, `make lint` — зелёные перед Task 2
+- [x] `pnpm add @reatom/core@1001.3.0 @reatom/react@1001.0.1`, `pnpm add -D @reatom/vite` (точную версию закрепить в `package.json`); если установку блокирует минимальный возраст релиза — добавить пакеты в `minimumReleaseAgeExclude` в `pnpm-workspace.yaml` — блокировки не было, `@reatom/vite` закреплён как `1001.0.0`
+- [x] подключить `reatom()` из `@reatom/vite` в `vite.config.ts`; если плагин несовместим с Vite 8/Rolldown — убрать зависимость и зафиксировать здесь ручной HMR-сниппет из handbook — совместим: плагин `apply: 'serve'`, тянет собственный `typescript@5.9` (проектный TS 7 не задевает)
+- [x] создать `src/app/reatom-setup.ts` (`connectLogger()` только при `MODE === 'development'`) и импортировать его в `src/main.tsx` сразу после `./app/sentry-bootstrap`
+- [x] в `src/test/setup.ts`: свести три существующих `afterEach` в один с порядком из Testing Strategy (`cleanup()` → `urlAtom.init.abort()` → `context.reset()` → очистка `localStorage` / `sessionStorage` → URL на `/` → `resetAllCachedFetchers()` и сброс словарей → `server.resetHandlers()`); между `urlAtom.init.abort()` и `context.reset()` добавлен `abortTestFrames()` (см. следующий пункт)
+- [x] тест: значение persist-атома, записанное в одном тесте, не видно в следующем (после `localStorage.clear()` + `context.reset()`)
+- [x] тест: незавершённый запрос одного теста не падает как unhandled request в следующем; если `context.reset()` запросы не отменяет — добавить в `afterEach` явную отмену и зафиксировать это здесь — ⚠️ **не отменяет**: проверка «context reset» в `wrap` сравнивает `root` кадра с самим собой, дочерние кадры держат старый root. Добавлен `src/test/reatomTestScope.ts`: глобальное расширение запоминает кадры всех атомов/actions теста, `abortTestFrames()` в `afterEach` их абортит. Модуль импортируется первым в `setup.ts` (расширение применяется только к атомам, созданным после регистрации). Проверено и для action вне компонента, и для `computed + withAsyncData` в размонтированном компоненте — размонтирование само запрос тоже не отменяет
+- [x] тест: компонент с `use()` внутри `reatomComponent` приостанавливается и возобновляется под `Suspense`; если нет — зафиксировать здесь, что компоненты с `use()` до Task 8/9 остаются обычными с `useAtom` — работает; рендер с `use()` в тестах — внутри `await act(async () => render(...))`, как и для обычных компонентов
+- [x] создать `src/test/persist.ts` с `seedPersisted(key, data)` — пишет `PersistRecord` в `localStorage`
+- [x] тест: состояние атома не протекает между тестами
+- [x] тест: клик по `<a>` в двух тестах подряд даёт по одному `pushState` (слушатели `urlAtom` не копятся)
+- [x] тест: `reatomComponent` перерисовывается при изменении атома в сборке с React Compiler и в `StrictMode` — ⚠️ перерисовка асинхронная (уведомления в микротаске): синхронный `act(() => atom.set(...))` / `fireEvent` DOM не обновляет, в тестах нужен `await act(async () => ...)` или `findBy*`
+- [x] тест: обработчик через `wrap(...)` обновляет атом; размонтирование не оставляет подписок
+- [x] тест: запрос через `apiClient` с сигналом из `abortVar` под MSW проходит и отменяется; если jsdom-`AbortSignal` несовместим с клиентом — зафиксировать здесь, что сигнал в клиент не передаётся — сигнал передаётся через `config: { signal }` и отменяет запрос; ⚠️ клиент отклоняется нативным `DOMException` (в jsdom не `instanceof Error`), поэтому `isAbort()` из Reatom его не распознаёт — проверять по `name === 'AbortError'`
+- [x] запустить `make test`, `make typecheck`, `make lint` — зелёные перед Task 2
 
 ### Task 2: Хелпер `persistOptions`
 

@@ -4,6 +4,7 @@
 // (см. WHY-комментарий в src/app/sentry-bootstrap.ts). Следующий редактор: не переставляй этот
 // импорт ниже других, даже если линтер/автосортировка это не поймает.
 import './app/sentry-bootstrap'
+import './app/reatom-setup'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 

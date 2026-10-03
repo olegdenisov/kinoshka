@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import path from 'path'
 
+import { reatom } from '@reatom/vite'
 import babel from '@rolldown/plugin-babel'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
@@ -43,6 +44,9 @@ export default defineConfig(({ mode, command }) => {
   const analyzeEnabled = isAnalyzeEnabled({ command, env })
 
   const plugins: PluginOption[] = [
+    // HMR для reatomRoute: без него при горячей замене модуля роутов в outlet родителя
+    // остаётся старый дочерний роут. Плагин активен только в dev (apply: 'serve').
+    reatom(),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
   ]
