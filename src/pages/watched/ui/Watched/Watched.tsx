@@ -1,7 +1,9 @@
 import { Card, getMoviesByIds } from '@entities/movie'
-import { useFavorites } from '@features/favorites'
+import { favoriteIds, toggleFavorite } from '@features/favorites'
 import { useWatched, useWatchedMovies } from '@features/watched'
 import { useWatchlist } from '@features/watchlist'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Watched.module.css'
@@ -16,11 +18,10 @@ const WatchedSkeletonGrid = () => (
   </div>
 )
 
-const WatchedGrid = () => {
+const WatchedGrid = reatomComponent(() => {
   // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои
   // бросает getMoviesByIds и ловит AsyncBoundary, поэтому текст — не про ошибку загрузки.
   const movies = useWatchedMovies()
-  const { isFavorite, toggle } = useFavorites()
   const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   if (movies.length === 0) {
@@ -41,15 +42,15 @@ const WatchedGrid = () => {
           key={movie.id}
           movie={movie}
           variant='grid'
-          isFavorite={isFavorite(movie.id)}
-          onToggleFavorite={toggle}
+          isFavorite={favoriteIds().has(movie.id)}
+          onToggleFavorite={wrap(toggleFavorite)}
           inWatchlist={isInWatchlist(movie.id)}
           onToggleWatchlist={toggleWatchlist}
         />
       ))}
     </div>
   )
-}
+}, 'WatchedGrid')
 
 // Композиция features/entities прямо в UI — по образцу `Favorites` (без `model/`-фасада).
 // Chrome (Header/MobileHeader+BottomNav) рисует `AppLayout`, страница его не выбирает.

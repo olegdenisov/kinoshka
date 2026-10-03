@@ -1,6 +1,7 @@
 import { Card } from '@entities/movie'
-import { useFavorites } from '@features/favorites'
+import { favoriteIds } from '@features/favorites'
 import { useWatchlist } from '@features/watchlist'
+import { reatomComponent } from '@reatom/react'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 
 import {
@@ -22,7 +23,7 @@ const RecommendationsSkeletonGrid = () => (
 
 // Без isFavorite/onToggleFavorite — намеренно (см. Technical Details плана
 // docs/plans/20260825-recommendations-rule-based.md): передача toggle сюда меняла бы
-// `ids` в useFavorites() при каждом клике по сердечку → новый кэш-ключ getMoviesByIds(ids)
+// `ids` из favoriteIds при каждом клике по сердечку → новый кэш-ключ getMoviesByIds(ids)
 // → весь грид уходит в Suspense заново → новый computeRecommendationQuery → новый запрос
 // getMoviesPage — полный skeleton-flash и пересчёт подборки на каждый клик.
 // Watchlist сюда подключён спокойно: подборка от него не зависит, кэш-ключ не меняется.
@@ -72,8 +73,8 @@ const RecommendationsGrid = () => {
 // плана docs/plans/20260827-mobile-first-adaptive-layout.md), которая оборачивает роут
 // `/recommendations` (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav
 // снаружи. Recommendations больше не вызывает useViewport и не решает, какой chrome показать.
-export const Recommendations = () => {
-  const { ids } = useFavorites()
+export const Recommendations = reatomComponent(() => {
+  const ids = [...favoriteIds()]
 
   return (
     <div className={s.page}>
@@ -97,4 +98,4 @@ export const Recommendations = () => {
       </main>
     </div>
   )
-}
+}, 'Recommendations')

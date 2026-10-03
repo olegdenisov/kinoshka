@@ -3,12 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
+import { readPersisted, seedPersisted } from '../../../../test/persist'
 import { server } from '../../../../test/setup'
 import { Favorites } from './Favorites'
 
 const FAVORITES_KEY = 'kinoshka:favorites'
-const setFavorites = (ids: number[]) =>
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids))
+const setFavorites = (ids: number[]) => seedPersisted(FAVORITES_KEY, ids)
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -112,7 +112,7 @@ describe('Favorites — Watchlist на карточке', () => {
     )
 
     expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
-    expect(localStorage.getItem(FAVORITES_KEY)).toBe('[1]')
+    expect(readPersisted(FAVORITES_KEY)).toEqual([1])
     expect(screen.getByText('First Favorite')).toBeInTheDocument()
   })
 })

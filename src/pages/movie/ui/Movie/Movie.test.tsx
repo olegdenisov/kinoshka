@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
+import { readPersisted } from '../../../../test/persist'
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
 import { Movie } from './Movie'
 
@@ -109,9 +110,9 @@ describe('Movie — RelatedMovies', () => {
       screen.getAllByRole('button', { name: 'Add to favorites' })[0],
     )
 
-    expect(localStorage.getItem('kinoshka:favorites')).toBe(
-      `[${MOVIE.similarMovies[0].id}]`,
-    )
+    expect(readPersisted('kinoshka:favorites')).toEqual([
+      MOVIE.similarMovies[0].id,
+    ])
   })
 })
 

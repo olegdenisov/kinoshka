@@ -3,6 +3,7 @@ import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
+import { readPersisted } from '../../../../test/persist'
 import { RelatedMovies } from './RelatedMovies'
 
 const makeMovie = (id: number): Movie => ({
@@ -33,7 +34,7 @@ describe('RelatedMovies — избранное', () => {
 
     await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
 
-    expect(localStorage.getItem('kinoshka:favorites')).toBe('[1]')
+    expect(readPersisted('kinoshka:favorites')).toEqual([1])
     expect(
       screen.getByRole('button', { name: 'Remove from favorites' }),
     ).toBeInTheDocument()
@@ -48,7 +49,7 @@ describe('RelatedMovies — избранное', () => {
       screen.getByRole('button', { name: 'Remove from favorites' }),
     )
 
-    expect(localStorage.getItem('kinoshka:favorites')).toBe('[]')
+    expect(readPersisted('kinoshka:favorites')).toEqual([])
     expect(
       screen.getByRole('button', { name: 'Add to favorites' }),
     ).toBeInTheDocument()
@@ -63,7 +64,7 @@ describe('RelatedMovies — Watchlist', () => {
     await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
 
     expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
-    expect(localStorage.getItem('kinoshka:favorites')).toBeNull()
+    expect(readPersisted('kinoshka:favorites')).toBeNull()
     expect(
       screen.getByRole('button', { name: 'Remove from watchlist' }),
     ).toBeInTheDocument()

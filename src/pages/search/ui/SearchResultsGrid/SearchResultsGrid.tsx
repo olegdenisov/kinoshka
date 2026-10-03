@@ -1,7 +1,9 @@
 import { Card } from '@entities/movie'
 import type { Movie } from '@entities/movie'
-import { useFavorites } from '@features/favorites'
+import { favoriteIds, toggleFavorite } from '@features/favorites'
 import { useWatchlist } from '@features/watchlist'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
 
 import s from './SearchResultsGrid.module.css'
 
@@ -16,23 +18,25 @@ type SearchResultsGridProps = {
  * Единый `Search` использует этот компонент на обоих брейкпоинтах — разница (2 колонки мобильный/
  * 4 десктоп) выражена целиком в `SearchResultsGrid.module.css` через mobile-first `@media`.
  */
-export const SearchResultsGrid = ({ movies }: SearchResultsGridProps) => {
-  const { isFavorite, toggle } = useFavorites()
-  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
+export const SearchResultsGrid = reatomComponent(
+  ({ movies }: SearchResultsGridProps) => {
+    const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
-  return (
-    <div className={s.grid}>
-      {movies.map(m => (
-        <Card
-          key={m.id}
-          movie={m}
-          variant='grid'
-          isFavorite={isFavorite(m.id)}
-          onToggleFavorite={toggle}
-          inWatchlist={isInWatchlist(m.id)}
-          onToggleWatchlist={toggleWatchlist}
-        />
-      ))}
-    </div>
-  )
-}
+    return (
+      <div className={s.grid}>
+        {movies.map(m => (
+          <Card
+            key={m.id}
+            movie={m}
+            variant='grid'
+            isFavorite={favoriteIds().has(m.id)}
+            onToggleFavorite={wrap(toggleFavorite)}
+            inWatchlist={isInWatchlist(m.id)}
+            onToggleWatchlist={toggleWatchlist}
+          />
+        ))}
+      </div>
+    )
+  },
+  'SearchResultsGrid',
+)

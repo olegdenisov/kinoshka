@@ -1,6 +1,12 @@
 import { Card, getMoviesByIds } from '@entities/movie'
-import { useFavoriteMovies, useFavorites } from '@features/favorites'
+import {
+  favoriteIds,
+  toggleFavorite,
+  useFavoriteMovies,
+} from '@features/favorites'
 import { useWatchlist } from '@features/watchlist'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Favorites.module.css'
@@ -15,9 +21,8 @@ const FavoritesSkeletonGrid = () => (
   </div>
 )
 
-const FavoritesGrid = () => {
+const FavoritesGrid = reatomComponent(() => {
   const movies = useFavoriteMovies()
-  const { isFavorite, toggle } = useFavorites()
   const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   if (movies.length === 0) {
@@ -38,23 +43,23 @@ const FavoritesGrid = () => {
           key={movie.id}
           movie={movie}
           variant='grid'
-          isFavorite={isFavorite(movie.id)}
-          onToggleFavorite={toggle}
+          isFavorite={favoriteIds().has(movie.id)}
+          onToggleFavorite={wrap(toggleFavorite)}
           inWatchlist={isInWatchlist(movie.id)}
           onToggleWatchlist={toggleWatchlist}
         />
       ))}
     </div>
   )
-}
+}, 'FavoritesGrid')
 
 // Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
 // единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6
 // плана docs/plans/20260827-mobile-first-adaptive-layout.md), которая оборачивает роут
 // `/favorites` (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
 // Favorites больше не вызывает useViewport и не решает, какой chrome показать.
-export const Favorites = () => {
-  const { ids } = useFavorites()
+export const Favorites = reatomComponent(() => {
+  const ids = [...favoriteIds()]
 
   return (
     <div className={s.page}>
@@ -78,4 +83,4 @@ export const Favorites = () => {
       </main>
     </div>
   )
-}
+}, 'Favorites')

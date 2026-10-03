@@ -1,3 +1,2 @@
-export { useFavorites } from './model/useFavorites'
-export type { UseFavoritesResult } from './model/useFavorites'
+export { favoriteIds, toggleFavorite } from './model/favorites'
 export { useFavoriteMovies } from './model/useFavoriteMovies'

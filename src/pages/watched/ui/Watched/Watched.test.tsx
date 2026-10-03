@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
+import { readPersisted } from '../../../../test/persist'
 import { server } from '../../../../test/setup'
 import { Watched } from './Watched'
 
@@ -103,7 +104,7 @@ describe('Watched — непустой список', () => {
       await screen.findByRole('button', { name: 'Add to favorites' }),
     )
 
-    expect(localStorage.getItem('kinoshka:favorites')).toBe('[1]')
+    expect(readPersisted('kinoshka:favorites')).toEqual([1])
     expect(screen.getByText('Watched Movie')).toBeInTheDocument()
   })
 })

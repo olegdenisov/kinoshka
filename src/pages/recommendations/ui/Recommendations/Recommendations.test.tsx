@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
+import { readPersisted, seedPersisted } from '../../../../test/persist'
 import { server } from '../../../../test/setup'
 import { Recommendations } from './Recommendations'
 
@@ -13,8 +14,7 @@ const FAVORITES_KEY = 'kinoshka:favorites'
 const MOVIE_ENDPOINT = (id: number) => `*/v1.5/movie/${id}`
 const CATALOG_ENDPOINT = '*/v1.5/movie'
 
-const setFavorites = (ids: number[]) =>
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids))
+const setFavorites = (ids: number[]) => seedPersisted(FAVORITES_KEY, ids)
 
 const favoriteDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -180,7 +180,7 @@ describe('Recommendations — непустое избранное, успешн�
     )
 
     expect(localStorage.getItem('kinoshka:watchlist')).toBe('[701]')
-    expect(localStorage.getItem(FAVORITES_KEY)).toBe('[601,602]')
+    expect(readPersisted(FAVORITES_KEY)).toEqual([601, 602])
     expect(screen.getByText('Recommended Movie')).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Remove from watchlist' }),

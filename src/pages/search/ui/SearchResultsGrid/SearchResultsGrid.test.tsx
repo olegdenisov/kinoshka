@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
+import { readPersisted } from '../../../../test/persist'
 import { SearchResultsGrid } from './SearchResultsGrid'
 
 const makeMovie = (id: number): Movie => ({
@@ -33,7 +34,7 @@ describe('SearchResultsGrid — избранное', () => {
 
     await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
 
-    expect(localStorage.getItem('kinoshka:favorites')).toBe('[1]')
+    expect(readPersisted('kinoshka:favorites')).toEqual([1])
   })
 
   it('повторный клик по уже избранной карточке снимает избранное (toggle туда-обратно)', async () => {
@@ -41,13 +42,13 @@ describe('SearchResultsGrid — избранное', () => {
     renderGrid([makeMovie(1)])
 
     await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
-    expect(localStorage.getItem('kinoshka:favorites')).toBe('[1]')
+    expect(readPersisted('kinoshka:favorites')).toEqual([1])
 
     await user.click(
       screen.getByRole('button', { name: 'Remove from favorites' }),
     )
 
-    expect(localStorage.getItem('kinoshka:favorites')).toBe('[]')
+    expect(readPersisted('kinoshka:favorites')).toEqual([])
   })
 })
 
@@ -59,7 +60,7 @@ describe('SearchResultsGrid — Watchlist', () => {
     await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
 
     expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
-    expect(localStorage.getItem('kinoshka:favorites')).toBeNull()
+    expect(readPersisted('kinoshka:favorites')).toBeNull()
   })
 
   it('повторный клик снимает фильм из watchlist (toggle туда-обратно)', async () => {

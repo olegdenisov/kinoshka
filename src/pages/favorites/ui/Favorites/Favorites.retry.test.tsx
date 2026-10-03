@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { vi } from 'vitest'
 
+import { seedPersisted } from '../../../../test/persist'
 import { Favorites } from './Favorites'
 
 // Мокаем весь `getMoviesByIds` (а не MSW-эндпоинт) для точного контроля тайминга —
@@ -78,7 +79,7 @@ beforeEach(() => {
 
 describe('Favorites — Retry реально переинвалидирует кэш и повторяет запрос', () => {
   it('клик Retry вызывает invalidate и повторно запрашивает данные', async () => {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify([1]))
+    seedPersisted(FAVORITES_KEY, [1])
 
     await act(async () => {
       render(

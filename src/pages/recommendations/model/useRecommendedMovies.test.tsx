@@ -4,6 +4,7 @@ import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import type { ComponentType } from 'react'
 
+import { seedPersisted } from '../../../test/persist'
 import { server } from '../../../test/setup'
 import type { useRecommendedMovies as UseRecommendedMovies } from './useRecommendedMovies'
 
@@ -159,7 +160,7 @@ beforeEach(() => {
 
 describe('useRecommendedMovies — непустые favorites с жанрами/рейтингом', () => {
   it('возвращает список фильмов; исходящий запрос реально содержит id/genres.name/rating.kp правила', async () => {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify([601, 602]))
+    seedPersisted(FAVORITES_KEY, [601, 602])
     mockFavorite(601, { genres: [{ name: 'триллер' }], rating: { kp: 8.0 } })
     mockFavorite(602, { genres: [{ name: 'драма' }], rating: { kp: 6.0 } })
     const { getRequest } = mockCatalog([catalogDoc(701, 'Recommended Movie')])
@@ -183,7 +184,7 @@ describe('useRecommendedMovies — непустые favorites с жанрами/
 
 describe('useRecommendedMovies — все favorite id 404-нулись', () => {
   it('getMoviesByIds резолвится в [] → хук возвращает null, без обращения к каталожному эндпоинту', async () => {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify([801, 802]))
+    seedPersisted(FAVORITES_KEY, [801, 802])
     mockFavoriteNotFound(801)
     mockFavoriteNotFound(802)
     let catalogRequests = 0
@@ -211,7 +212,7 @@ describe('useRecommendedMovies — все favorite id 404-нулись', () => {
 
 describe('invalidateRecommendations — Retry реально бьёт в сеть', () => {
   it('после успешного рендера хука инвалидатор сбрасывает pageCache для последнего query — повторный getMoviesPage идёт в сеть заново', async () => {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify([901]))
+    seedPersisted(FAVORITES_KEY, [901])
     mockFavorite(901, { genres: [{ name: 'триллер' }], rating: { kp: 8.0 } })
     const { getRequests } = mockCatalog([catalogDoc(1001, 'First Result')])
 

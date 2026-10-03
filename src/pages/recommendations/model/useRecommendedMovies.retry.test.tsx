@@ -1,6 +1,8 @@
 import type * as EntitiesMovie from '@entities/movie'
 import { vi } from 'vitest'
 
+import { seedPersisted } from '../../../test/persist'
+
 // Мокаем `getMoviesByIds` целиком (тот же приём, что `FavoritesDesktop.retry.test.tsx`) —
 // а не гоняем реальный запрос через MSW. Причина: `getMoviesByIds` внутри реально оборачивает
 // N вызовов `getMovieDetail(id)` (см. getMoviesByIds.ts), а у КАЖДОГО `getMovieDetail(id)` свой
@@ -75,7 +77,7 @@ beforeEach(() => {
 describe('invalidateRecommendations — Retry реально сбрасывает favorites-кэш (getMoviesByIds)', () => {
   it('после recoverable-провала invalidateRecommendations(ids) вызывает getMoviesByIds.invalidate(ids), и следующий вызов реально идёт в сеть заново', async () => {
     const ids = [1101, 1102]
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids))
+    seedPersisted(FAVORITES_KEY, ids)
 
     const { invalidateRecommendations } = await import('./useRecommendedMovies')
     const { getMoviesByIds } = await import('@entities/movie')

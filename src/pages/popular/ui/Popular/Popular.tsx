@@ -4,8 +4,10 @@ import {
   invalidatePopularMovies,
   usePopularMovies,
 } from '@entities/movie'
-import { useFavorites } from '@features/favorites'
+import { favoriteIds, toggleFavorite } from '@features/favorites'
 import { useWatchlist } from '@features/watchlist'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
 import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Popular.module.css'
@@ -22,9 +24,8 @@ const PopularSkeletonGrid = () => (
   </div>
 )
 
-const PopularGrid = () => {
+const PopularGrid = reatomComponent(() => {
   const movies = usePopularMovies()
-  const { isFavorite, toggle } = useFavorites()
   const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
   if (movies.length === 0) {
@@ -45,8 +46,8 @@ const PopularGrid = () => {
           key={movie.id}
           movie={movie}
           variant='grid'
-          isFavorite={isFavorite(movie.id)}
-          onToggleFavorite={toggle}
+          isFavorite={favoriteIds().has(movie.id)}
+          onToggleFavorite={wrap(toggleFavorite)}
           inWatchlist={isInWatchlist(movie.id)}
           onToggleWatchlist={toggleWatchlist}
           rankBadge={
@@ -59,7 +60,7 @@ const PopularGrid = () => {
       ))}
     </div>
   )
-}
+}, 'PopularGrid')
 
 // Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
 // единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6

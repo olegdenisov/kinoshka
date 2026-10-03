@@ -412,13 +412,13 @@ export const RouterOutlet = reatomComponent(
 - Delete: `src/features/favorites/model/{favoritesStorage,useFavorites}.ts` и их тесты
 - Modify: потребители `useFavorites()` — `src/widgets/movie-rail/ui/MovieRail/MovieRail.tsx`, `src/pages/movie/ui/RelatedMovies/RelatedMovies.tsx`, `src/pages/search/ui/SearchResultsGrid/SearchResultsGrid.tsx`, страницы `favorites`, `popular`, `recommendations`, `watched`, `watchlist`, `profile`
 
-- [ ] создать `favoriteIds` (`reatomSet` + `withLocalStorage`) и `toggleFavorite` (событие `favorite added` только при добавлении)
-- [ ] перевести потребителей на `reatomComponent` и прямое чтение модели; `Card` продолжает получать `isFavorite`/`onToggleFavorite` пропсами; компоненты, которые ещё вызывают `use()`, переводятся по результату теста из Task 1
-- [ ] `useFavoriteMovies` временно читает `favoriteIds` через `useAtom` (заменяется в Task 9)
-- [ ] тесты модели: toggle/add/delete/clear, порядок вставки сохраняется, событие аналитики уходит при добавлении и не уходит при удалении
-- [ ] тест персиста: после `toggleFavorite` в `localStorage['kinoshka:favorites']` лежит конверт с массивом id; значение из `seedPersisted` читается при старте
-- [ ] обновить тесты потребителей: сидирование через `seedPersisted`
-- [ ] запустить тесты — зелёные перед Task 4
+- [x] создать `favoriteIds` (`reatomSet` + `withLocalStorage`) и `toggleFavorite` (событие `favorite added` только при добавлении)
+- [x] перевести потребителей на `reatomComponent` и прямое чтение модели; `Card` продолжает получать `isFavorite`/`onToggleFavorite` пропсами; компоненты, которые ещё вызывают `use()`, переводятся по результату теста из Task 1
+- [x] `useFavoriteMovies` временно читает `favoriteIds` через `useAtom` (заменяется в Task 9)
+- [x] тесты модели: toggle/add/delete/clear, порядок вставки сохраняется, событие аналитики уходит при добавлении и не уходит при удалении
+- [x] тест персиста: после `toggleFavorite` в `localStorage['kinoshka:favorites']` лежит конверт с массивом id; значение из `seedPersisted` читается при старте
+- [x] обновить тесты потребителей: сидирование через `seedPersisted`
+- [x] запустить тесты — зелёные перед Task 4
 
 ### Task 4: Модели watched и watchlist
 

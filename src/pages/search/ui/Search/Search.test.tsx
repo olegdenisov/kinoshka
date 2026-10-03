@@ -11,6 +11,7 @@ import { http, HttpResponse } from 'msw'
 import { useEffect } from 'react'
 import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
 
+import { readPersisted } from '../../../../test/persist'
 import { server } from '../../../../test/setup'
 import { Search } from './Search'
 
@@ -847,7 +848,7 @@ describe('Search (mobile-ветка) — избранное в гриде рез
 
     await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
 
-    expect(localStorage.getItem('kinoshka:favorites')).toBe('[801]')
+    expect(readPersisted('kinoshka:favorites')).toEqual([801])
   })
 })
 

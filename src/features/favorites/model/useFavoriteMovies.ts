@@ -1,10 +1,11 @@
 import { getMoviesByIds, type Movie } from '@entities/movie'
+import { useAtom } from '@reatom/react'
 import { use } from 'react'
 
-import { useFavorites } from './useFavorites'
+import { favoriteIds } from './favorites'
 
+// Временно: заменяется ресурсом favoriteMovies в Task 9.
 export const useFavoriteMovies = (): Movie[] => {
-  const { ids } = useFavorites()
-
-  return use(getMoviesByIds(ids))
+  const [ids] = useAtom(favoriteIds)
+  return use(getMoviesByIds([...ids]))
 }

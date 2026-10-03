@@ -4,6 +4,7 @@ import { act, render, renderHook, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
+import { seedPersisted } from '../../../../test/persist'
 import { Profile } from './Profile'
 
 const PROFILE_KEY = 'kinoshka:profile'
@@ -369,7 +370,7 @@ describe('Profile', () => {
   })
 
   it('счётчик избранного отражает содержимое localStorage', () => {
-    localStorage.setItem('kinoshka:favorites', JSON.stringify([1, 2, 3]))
+    seedPersisted('kinoshka:favorites', [1, 2, 3])
     renderProfile()
 
     expect(screen.getByRole('link', { name: /Favorites/ })).toHaveTextContent(

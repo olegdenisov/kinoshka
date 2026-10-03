@@ -2,8 +2,8 @@ import { AsyncBoundary } from '@shared/ui'
 import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { seedPersisted } from '../../../test/persist'
 import { server } from '../../../test/setup'
-import { favoritesSlot } from './favoritesStorage'
 import { useFavoriteMovies } from './useFavoriteMovies'
 
 const doc = (id: number, overrides: Record<string, unknown> = {}) => ({
@@ -42,8 +42,8 @@ const Probe = () => {
 beforeEach(() => localStorage.clear())
 
 describe('useFavoriteMovies', () => {
-  it('читает ids из useFavorites и отдаёт соответствующие Movie', async () => {
-    favoritesSlot.set([501, 502])
+  it('читает ids из favoriteIds и отдаёт соответствующие Movie', async () => {
+    seedPersisted('kinoshka:favorites', [501, 502])
     mockMovie(501, { name: 'First Favorite' })
     mockMovie(502, { name: 'Second Favorite' })
 

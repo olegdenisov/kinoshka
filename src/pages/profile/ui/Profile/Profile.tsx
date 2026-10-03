@@ -1,4 +1,4 @@
-import { useFavorites } from '@features/favorites'
+import { favoriteIds } from '@features/favorites'
 import {
   PROFILE_NAME_MAX_LENGTH,
   normalizeProfileName,
@@ -8,6 +8,7 @@ import { useTheme } from '@features/theme'
 import type { Theme } from '@features/theme'
 import { useWatched } from '@features/watched'
 import { useWatchlist } from '@features/watchlist'
+import { reatomComponent } from '@reatom/react'
 import {
   AvatarCircle,
   ChevronRightIcon,
@@ -41,9 +42,8 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
 // скринридер озвучивал только первый отказ.
 type ProfileFailure = { action: 'save' | 'clear'; count: number }
 
-export const Profile = () => {
+export const Profile = reatomComponent(() => {
   const { name, initials, setName, clearName } = useProfile()
-  const { ids } = useFavorites()
   const { ids: watchedIds } = useWatched()
   const { ids: watchlistIds } = useWatchlist()
   const { theme, setTheme } = useTheme()
@@ -92,7 +92,7 @@ export const Profile = () => {
       to: '/favorites',
       label: 'Favorites',
       Icon: ListsIcon,
-      count: ids.length,
+      count: favoriteIds().size,
     },
     {
       to: '/watched',
@@ -250,4 +250,4 @@ export const Profile = () => {
       </main>
     </div>
   )
-}
+}, 'Profile')

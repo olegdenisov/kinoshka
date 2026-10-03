@@ -13,3 +13,9 @@ export const seedPersisted = (key: string, data: unknown) => {
   }
   localStorage.setItem(key, JSON.stringify(record))
 }
+
+// Читает `data` из конверта; null — если ключа нет.
+export const readPersisted = (key: string): unknown => {
+  const raw = localStorage.getItem(key)
+  return raw === null ? null : (JSON.parse(raw) as PersistRecord).data
+}
