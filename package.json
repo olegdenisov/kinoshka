@@ -17,7 +17,7 @@
     "commit": "cz"
   },
   "dependencies": {
-    "@sentry/react": "^10.71.0",
+    "@sentry/react": "^10.73.0",
     "@siberiacancode/fetches": "^1.14.3",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
