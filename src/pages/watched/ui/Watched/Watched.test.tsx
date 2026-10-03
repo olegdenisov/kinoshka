@@ -1,9 +1,9 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { MemoryRouter } from 'react-router'
 
 import { readPersisted, seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { server } from '../../../../test/setup'
 import { Watched } from './Watched'
 
@@ -45,11 +45,7 @@ const mockMovieError = (id: number, status: number) => {
 
 const renderPage = async () => {
   await act(async () => {
-    render(
-      <MemoryRouter>
-        <Watched />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Watched />)
   })
 }
 

@@ -30,6 +30,7 @@ const { initAnalytics } = await import('@shared/lib')
 const { registerChunkPreloadRecovery } = await import('./chunkPreloadRecovery')
 const { Providers } = await import('./providers')
 
+// Переписывается в Task 15: конфигурация роутов react-router заменяется на reatomRoute.
 describe('Providers', () => {
   it('вызывает initAnalytics по одному разу при импорте модуля', () => {
     expect(initAnalytics).toHaveBeenCalledTimes(1)

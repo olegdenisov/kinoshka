@@ -1,9 +1,9 @@
 import type { MovieDetail, MovieImage } from '@entities/movie'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
 
 import { readPersisted, seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
 import { Movie } from './Movie'
 
@@ -18,12 +18,7 @@ import { Movie } from './Movie'
 const renderMovie = (
   movie: MovieDetail = MOVIE,
   images: MovieImage[] = IMAGES,
-) =>
-  render(
-    <MemoryRouter>
-      <Movie movie={movie} images={images} />
-    </MemoryRouter>,
-  )
+) => renderWithRouter(<Movie movie={movie} images={images} />)
 
 beforeEach(() => localStorage.clear())
 

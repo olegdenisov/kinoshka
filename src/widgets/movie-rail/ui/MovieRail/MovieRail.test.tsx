@@ -1,9 +1,9 @@
 import type { Movie, PopularMovie } from '@entities/movie'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
 
 import { readPersisted, seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { MovieRail } from './MovieRail'
 
 const makeMovie = (id: number): Movie => ({
@@ -25,15 +25,8 @@ const makePopularMovie = (id: number, position: number): PopularMovie => ({
 })
 
 const renderRail = (items: (Movie | PopularMovie)[], href?: string) =>
-  render(
-    <MemoryRouter>
-      <MovieRail
-        title='Popular'
-        subtitle='Trending'
-        items={items}
-        href={href}
-      />
-    </MemoryRouter>,
+  renderWithRouter(
+    <MovieRail title='Popular' subtitle='Trending' items={items} href={href} />,
   )
 
 beforeEach(() => localStorage.clear())

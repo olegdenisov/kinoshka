@@ -566,10 +566,12 @@ export const RouterOutlet = reatomComponent(
 
 Не переводятся: тесты файлов, удаляемых в Task 16 (`useFilterState.test.tsx`, тесты `usePageSync`, `useMovieCatalog`, `useCatalogUpdateStatus`, `useSearchAnalytics`).
 
-- [ ] создать `renderWithRouter(ui, { url, path? })` — пока обёртка над `MemoryRouter`; с `path` оборачивает `ui` в `<Routes><Route path>` (нужно тестам с `useParams`: `MoviePage.test.tsx`, `PersonPage.test.tsx`); возвращает `getUrl()` (pathname + search)
-- [ ] перевести тесты с `MemoryRouter` на хелпер; проверки URL — через `getUrl()` внутри `waitFor`, а не `useLocation`-пробники
-- [ ] тесты с собственной конфигурацией роутов пометить комментарием «переписывается в Task 15»: `src/app/router.test.tsx` (реальный `router` + `RouterProvider`), `src/app/providers.test.tsx`, `src/app/layouts/AppLayout.test.tsx` (`createMemoryRouter`), `Header.test.tsx` и `Card.test.tsx` (`<Routes>` с несколькими роутами)
-- [ ] запустить тесты — зелёные перед Task 12
+- [ ] создать `renderWithRouter(ui, { url, path? })` — пока обёртка над `MemoryRouter`; с `path` оборачивает `ui` в `<Routes><Route path>` (нужно тестам с `useParams`: `MoviePage.test.tsx`, `PersonPage.test.tsx`); возвращает `getUrl()` (pathname + search) — реализовано через `wrapper` у `render`, поэтому `rerender` сохраняет роутер; добавлен `src/test/router.test.tsx`
+- [x] перевести тесты с `MemoryRouter` на хелпер; проверки URL — через `getUrl()` внутри `waitFor`, а не `useLocation`-пробники
+- [x] тесты с собственной конфигурацией роутов пометить комментарием «переписывается в Task 15»: `src/app/router.test.tsx` (реальный `router` + `RouterProvider`), `src/app/providers.test.tsx`, `src/app/layouts/AppLayout.test.tsx` (`createMemoryRouter`), `Header.test.tsx` и `Card.test.tsx` (`<Routes>` с несколькими роутами)
+- [x] запустить тесты — зелёные перед Task 12
+
+- ➕ Тесты с историей (`BottomNav.test.tsx`: `initialEntries` из нескольких записей, «Назад») оставлены на `MemoryRouter` с комментарием «Task 15»; `Search.test.tsx` сохраняет `useSearchParams`-хелпер `HeaderQuerySetter` (переписывается в Task 16)
 
 ### Task 12: Строители путей `paths`
 

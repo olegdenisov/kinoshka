@@ -1,8 +1,8 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { MemoryRouter, Route, Routes } from 'react-router'
 
+import { renderWithRouter } from '../../test/router'
 import { server } from '../../test/setup'
 import { MoviePage } from './MoviePage'
 
@@ -71,16 +71,13 @@ const mockImages = (docs: Record<string, unknown>[] = []) => {
 }
 
 const renderMoviePage = async (initialEntry: string) => {
-  let result: ReturnType<typeof render> | undefined
+  let result: ReturnType<typeof renderWithRouter> | undefined
 
   await act(async () => {
-    result = render(
-      <MemoryRouter initialEntries={[initialEntry]}>
-        <Routes>
-          <Route path='/movie/:id' element={<MoviePage />} />
-        </Routes>
-      </MemoryRouter>,
-    )
+    result = renderWithRouter(<MoviePage />, {
+      url: initialEntry,
+      path: '/movie/:id',
+    })
   })
 
   return result!
@@ -96,13 +93,10 @@ describe('MoviePage — /movie/1, пока запрос не завершён', 
     server.use(http.get('*/v1.5/movie/1', () => new Promise(() => {})))
     mockImages([])
 
-    const { container } = render(
-      <MemoryRouter initialEntries={['/movie/1']}>
-        <Routes>
-          <Route path='/movie/:id' element={<MoviePage />} />
-        </Routes>
-      </MemoryRouter>,
-    )
+    const { container } = renderWithRouter(<MoviePage />, {
+      url: '/movie/1',
+      path: '/movie/:id',
+    })
 
     expect(container.querySelector('[class*="skeleton"]')).toBeInTheDocument()
     expect(screen.queryByText('Orbit of Silence')).not.toBeInTheDocument()

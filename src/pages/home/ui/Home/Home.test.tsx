@@ -1,8 +1,7 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { useEffect } from 'react'
-import { MemoryRouter, useLocation } from 'react-router'
 
+import { renderWithRouter } from '../../../../test/router'
 import { server } from '../../../../test/setup'
 import { Home } from './Home'
 
@@ -75,38 +74,16 @@ const popularListErrorResponse = () =>
 
 const renderHome = async () => {
   await act(async () => {
-    render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Home />)
   })
 }
 
-/** Читает текущие pathname/search из роутера — тот же приём, что HeroSection.test.tsx, для
- * проверки навигации без Routes-дерева (MemoryRouter без Route не размонтирует Home на переходе). */
-let lastPathname = '/'
-let lastSearch = ''
-const LocationProbe = () => {
-  const { pathname, search } = useLocation()
-  useEffect(() => {
-    lastPathname = pathname
-    lastSearch = search
-  }, [pathname, search])
-  return null
-}
-
-const renderHomeWithLocationProbe = async () => {
-  lastPathname = '/'
-  lastSearch = ''
+const renderHomeWithUrl = async () => {
+  let getUrl = () => ''
   await act(async () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Home />
-        <LocationProbe />
-      </MemoryRouter>,
-    )
+    getUrl = renderWithRouter(<Home />, { url: '/' }).getUrl
   })
+  return getUrl
 }
 
 beforeEach(() => {
@@ -164,7 +141,7 @@ describe('Home — HeroSection (общий, не парный) отправля�
       ),
     )
 
-    await renderHomeWithLocationProbe()
+    const getUrl = await renderHomeWithUrl()
 
     const input = screen.getByPlaceholderText(
       'Try "films from 2024 rated 8+" or a title…',
@@ -175,8 +152,7 @@ describe('Home — HeroSection (общий, не парный) отправля�
       fireEvent.keyDown(input, { key: 'Enter' })
     })
 
-    expect(lastPathname).toBe('/search')
-    expect(lastSearch).toBe('?q=dune')
+    expect(getUrl()).toBe('/search?q=dune')
   })
 })
 

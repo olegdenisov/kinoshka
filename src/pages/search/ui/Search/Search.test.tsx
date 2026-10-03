@@ -1,17 +1,10 @@
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { useEffect } from 'react'
-import { MemoryRouter, useLocation, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 
 import { readPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { server } from '../../../../test/setup'
 import { Search } from './Search'
 
@@ -29,14 +22,12 @@ const setViewportWidth = (width: number) => {
   window.innerWidth = width
 }
 
-/** Читает текущую строку query из роутера — способ проверить, что запись в URL реально произошла. */
-let lastSearch = ''
-const LocationProbe = () => {
-  const { search } = useLocation()
-  useEffect(() => {
-    lastSearch = search
-  }, [search])
-  return null
+/** Текущая строка query — способ проверить, что запись в URL реально произошла. */
+let getUrl = () => ''
+const currentSearch = () => {
+  const url = getUrl()
+  const i = url.indexOf('?')
+  return i < 0 ? '' : url.slice(i)
 }
 
 // Search больше не рендерит Header сама (chrome — забота AppLayout, см. router.tsx/AppLayout.tsx)
@@ -132,17 +123,18 @@ const renderSearch = async (
   initialEntries: string[],
   extra?: React.ReactNode,
 ) => {
-  lastSearch = ''
-  let result: ReturnType<typeof render> | undefined
+  getUrl = () => ''
+  let result: ReturnType<typeof renderWithRouter> | undefined
   await act(async () => {
-    result = render(
-      <MemoryRouter initialEntries={initialEntries}>
+    result = renderWithRouter(
+      <>
         <Search />
         {extra}
-        <LocationProbe />
-      </MemoryRouter>,
+      </>,
+      { url: initialEntries[0] },
     )
   })
+  getUrl = result!.getUrl
   return result!
 }
 
@@ -360,7 +352,7 @@ describe('Search — устаревший/deep-linked ?page вне диапаз�
       fireEvent.click(pageOneBtn)
     })
 
-    expect(lastSearch).toContain('page=1')
+    expect(currentSearch()).toContain('page=1')
   })
 
   it('не рендерит Pagination, когда результат пуст по-настоящему (totalPages: 0)', async () => {
@@ -551,7 +543,7 @@ describe('Search — пагинация: клик пишет ?page', () => {
       fireEvent.click(screen.getByRole('button', { name: '2' }))
     })
 
-    expect(lastSearch).toContain('page=2')
+    expect(currentSearch()).toContain('page=2')
   })
 })
 
@@ -568,7 +560,7 @@ describe('Search — YearRangeSlider в сайдбаре', () => {
       fireEvent.change(fromInput, { target: { value: '1900' } })
       fireEvent.mouseUp(fromInput)
     })
-    expect(lastSearch).toContain('yearFrom=1900')
+    expect(currentSearch()).toContain('yearFrom=1900')
 
     await act(async () => {
       fireEvent.change(toInput, {
@@ -577,8 +569,8 @@ describe('Search — YearRangeSlider в сайдбаре', () => {
       fireEvent.mouseUp(toInput)
     })
 
-    expect(lastSearch).not.toContain('yearFrom=')
-    expect(lastSearch).not.toContain('yearTo=')
+    expect(currentSearch()).not.toContain('yearFrom=')
+    expect(currentSearch()).not.toContain('yearTo=')
   })
 })
 
@@ -587,7 +579,7 @@ describe('Search — пагинация: сброс ?page на 1 при смен
     mockCatalog([catalogDoc('Dune Part Two', 201)], { total: 50 })
 
     await renderSearch(['/search?genres=Drama&page=3'])
-    expect(lastSearch).toContain('page=3')
+    expect(currentSearch()).toContain('page=3')
 
     const sidebar = document.querySelector('aside')!
     const moviesBtn = within(sidebar).getByRole('button', { name: /^Movies/ })
@@ -596,8 +588,8 @@ describe('Search — пагинация: сброс ?page на 1 при смен
       fireEvent.click(moviesBtn)
     })
 
-    expect(lastSearch).toContain('page=1')
-    expect(lastSearch).not.toContain('page=3')
+    expect(currentSearch()).toContain('page=1')
+    expect(currentSearch()).not.toContain('page=3')
   })
 
   // Search больше не рендерит Header (chrome — AppLayout, см. router.tsx), а debounce-запись ?q
@@ -614,7 +606,7 @@ describe('Search — пагинация: сброс ?page на 1 при смен
       ['/search?genres=Drama&sort=Newest&page=3'],
       <HeaderQuerySetter />,
     )
-    expect(lastSearch).toContain('page=3')
+    expect(currentSearch()).toContain('page=3')
 
     const main = document.querySelector('main')!
     expect(within(main).getByText('Drama')).toBeInTheDocument()
@@ -628,11 +620,11 @@ describe('Search — пагинация: сброс ?page на 1 при смен
       )
     })
 
-    expect(lastSearch).toContain('q=matrix')
-    expect(lastSearch).not.toContain('page=3')
-    expect(lastSearch).toContain('page=1')
-    expect(lastSearch).not.toContain('genres=')
-    expect(lastSearch).not.toContain('sort=')
+    expect(currentSearch()).toContain('q=matrix')
+    expect(currentSearch()).not.toContain('page=3')
+    expect(currentSearch()).toContain('page=1')
+    expect(currentSearch()).not.toContain('genres=')
+    expect(currentSearch()).not.toContain('sort=')
 
     expect(within(main).queryByText('Drama')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Sort/ })).toHaveTextContent(
@@ -648,7 +640,7 @@ describe('Search — пагинация: сброс ?page на 1 при смен
       ['/search?countries=США&duration=long&platforms=Okko&list=top250'],
       <HeaderQuerySetter />,
     )
-    expect(lastSearch).toContain('duration=long')
+    expect(currentSearch()).toContain('duration=long')
     // Группа Country открыта deep-link'ом — ждём фоновый fetch словаря стран («Аргентина» вне
     // шорт-листа даёт кнопку «Показать все»), чтобы он не долетел в соседний тест.
     await screen.findByRole('button', { name: /Показать все.*Country/ })
@@ -659,9 +651,9 @@ describe('Search — пагинация: сброс ?page на 1 при смен
       )
     })
 
-    expect(lastSearch).toContain('q=matrix')
+    expect(currentSearch()).toContain('q=matrix')
     for (const key of ['countries=', 'duration=', 'platforms=', 'list=']) {
-      expect(lastSearch).not.toContain(key)
+      expect(currentSearch()).not.toContain(key)
     }
   })
 })
@@ -736,8 +728,8 @@ describe('Search (mobile-ветка) — BottomSheet фильтров пишет
       fireEvent.click(screen.getByRole('button', { name: 'Movies' }))
     })
 
-    expect(lastSearch).toContain('type=movie')
-    expect(lastSearch).toContain('page=1')
+    expect(currentSearch()).toContain('type=movie')
+    expect(currentSearch()).toContain('page=1')
   })
 
   it('YearRangeSlider в BottomSheet: значения читаются из ?yearFrom/?yearTo, коммит drag пишет их обратно', async () => {
@@ -759,7 +751,7 @@ describe('Search (mobile-ветка) — BottomSheet фильтров пишет
       fireEvent.mouseUp(fromInput)
     })
 
-    expect(lastSearch).toContain('yearFrom=1995')
+    expect(currentSearch()).toContain('yearFrom=1995')
   })
 })
 
@@ -777,7 +769,7 @@ describe('Search (mobile-ветка) — BottomSheet сортировки пиш
       fireEvent.click(screen.getByRole('button', { name: /Newest/ }))
     })
 
-    expect(lastSearch).toContain('sort=Newest')
+    expect(currentSearch()).toContain('sort=Newest')
   })
 })
 
@@ -801,8 +793,8 @@ describe('Search (mobile-ветка) — футер BottomSheet фильтров
       fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
     })
 
-    expect(lastSearch).not.toContain('genres=')
-    expect(lastSearch).not.toContain('rating=')
+    expect(currentSearch()).not.toContain('genres=')
+    expect(currentSearch()).not.toContain('rating=')
     // Bottom-sheet остаётся открытым — Reset не совпадает по семантике с закрытием
     // (`BottomSheet` всегда рендерит children, открытость — CSS-класс на backdrop/sheet).
     expect(screen.getByRole('button', { name: '8+' }).className).not.toMatch(
@@ -833,7 +825,7 @@ describe('Search (mobile-ветка) — футер BottomSheet фильтров
 
     expect(filterBackdrop().className).not.toMatch(/backdropOpen/)
     // Фильтр остаётся применённым — Show results закрывает лист, не сбрасывая выбор.
-    expect(lastSearch).toContain('genres=Drama')
+    expect(currentSearch()).toContain('genres=Drama')
   })
 })
 
@@ -891,7 +883,7 @@ describe('Search — фильтр длительности из UI доходи�
 
     await pickShortDuration(user)
 
-    expect(lastSearch).toContain('duration=short')
+    expect(currentSearch()).toContain('duration=short')
     await waitFor(() =>
       expect(
         urls.some(u => u.searchParams.getAll('movieLength').includes('1-89')),
@@ -911,7 +903,7 @@ describe('Search — фильтр длительности из UI доходи�
 
     await pickShortDuration(user)
 
-    expect(lastSearch).toContain('duration=short')
+    expect(currentSearch()).toContain('duration=short')
     await waitFor(() =>
       expect(
         urls.some(

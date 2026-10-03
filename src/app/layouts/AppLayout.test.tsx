@@ -117,6 +117,7 @@ afterEach(() => {
   document.documentElement.removeAttribute('data-theme')
 })
 
+// Переписывается в Task 15: конфигурация роутов react-router заменяется на reatomRoute.
 describe('AppLayout — Outlet рендерит контент страницы независимо от chrome', () => {
   it('десктоп: контент /favorites рендерится рядом с Header', () => {
     renderAt('/favorites')

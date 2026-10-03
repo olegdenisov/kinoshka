@@ -1,9 +1,9 @@
 import type { Movie } from '@entities/movie'
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
 
 import { readPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { RelatedMovies } from './RelatedMovies'
 
 const makeMovie = (id: number): Movie => ({
@@ -19,11 +19,7 @@ const makeMovie = (id: number): Movie => ({
 })
 
 const renderRelated = (movies: Movie[]) =>
-  render(
-    <MemoryRouter>
-      <RelatedMovies movies={movies} movieTitle='Some Movie' />
-    </MemoryRouter>,
-  )
+  renderWithRouter(<RelatedMovies movies={movies} movieTitle='Some Movie' />)
 
 beforeEach(() => localStorage.clear())
 

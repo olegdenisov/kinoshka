@@ -1,15 +1,10 @@
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router'
+import { screen } from '@testing-library/react'
 
 import { seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { ProfileAvatar } from './ProfileAvatar'
 
-const renderAvatar = () =>
-  render(
-    <MemoryRouter>
-      <ProfileAvatar />
-    </MemoryRouter>,
-  )
+const renderAvatar = () => renderWithRouter(<ProfileAvatar />)
 
 describe('ProfileAvatar', () => {
   it('без имени — ссылка на /profile с именем "Your profile" и без текстовых инициалов', () => {
@@ -45,11 +40,7 @@ describe('ProfileAvatar', () => {
   })
 
   it('на /profile ссылка помечена aria-current="page", на других страницах — нет', () => {
-    const { unmount } = render(
-      <MemoryRouter initialEntries={['/profile']}>
-        <ProfileAvatar />
-      </MemoryRouter>,
-    )
+    const { unmount } = renderWithRouter(<ProfileAvatar />, { url: '/profile' })
     expect(screen.getByRole('link')).toHaveAttribute('aria-current', 'page')
     unmount()
 

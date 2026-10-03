@@ -1,8 +1,8 @@
 import { initThemeSync } from '@features/theme'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 
 import { seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { MobileHeader } from './MobileHeader'
 
 beforeEach(() => {
@@ -19,41 +19,25 @@ afterEach(() => {
 
 describe('MobileHeader', () => {
   it('рендерится успешно с логотипом по умолчанию', () => {
-    render(
-      <MemoryRouter>
-        <MobileHeader />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<MobileHeader />)
 
     expect(screen.getByText('kino')).toBeInTheDocument()
   })
 
   it('содержит кнопку-тоггл темы', () => {
-    render(
-      <MemoryRouter>
-        <MobileHeader />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<MobileHeader />)
 
     expect(screen.getByRole('button', { name: /theme/i })).toBeInTheDocument()
   })
 
   it('кнопка "назад" (onBack передан) имеет aria-label="Back" (a11y baseline, Task 2)', () => {
-    render(
-      <MemoryRouter>
-        <MobileHeader onBack={vi.fn()} />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<MobileHeader onBack={vi.fn()} />)
 
     expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
   })
 
   it('клик по тогглу темы меняет document.documentElement.dataset.theme', async () => {
-    render(
-      <MemoryRouter>
-        <MobileHeader />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<MobileHeader />)
 
     const toggle = screen.getByRole('button', { name: /theme/i })
 
@@ -69,11 +53,7 @@ describe('MobileHeader', () => {
   it('аватар — ссылка на /profile с инициалами сохранённого имени', () => {
     seedPersisted('kinoshka:profile', 'Oleg Denisov')
 
-    render(
-      <MemoryRouter>
-        <MobileHeader />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<MobileHeader />)
 
     const link = screen.getByRole('link', {
       name: 'Your profile: Oleg Denisov',
@@ -83,10 +63,8 @@ describe('MobileHeader', () => {
   })
 
   it('переданный rightAction перекрывает аватар (регресс-гард для /movie/:id)', () => {
-    render(
-      <MemoryRouter>
-        <MobileHeader rightAction={<button type='button'>Share</button>} />
-      </MemoryRouter>,
+    renderWithRouter(
+      <MobileHeader rightAction={<button type='button'>Share</button>} />,
     )
 
     expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument()

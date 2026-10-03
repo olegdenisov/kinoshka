@@ -1,7 +1,7 @@
 import type { PersonDetail } from '@entities/person'
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router'
+import { screen } from '@testing-library/react'
 
+import { renderWithRouter } from '../../../../test/router'
 import { Person } from './Person'
 
 const mockPerson = (overrides: Partial<PersonDetail> = {}): PersonDetail => ({
@@ -39,11 +39,7 @@ const mockPerson = (overrides: Partial<PersonDetail> = {}): PersonDetail => ({
 
 // Помощник для рендера с MemoryRouter, т.к. Filmography содержит <Link>
 const renderPerson = (person: PersonDetail) => {
-  return render(
-    <MemoryRouter>
-      <Person person={person} />
-    </MemoryRouter>,
-  )
+  return renderWithRouter(<Person person={person} />)
 }
 
 describe('Person — композиция компонентов', () => {

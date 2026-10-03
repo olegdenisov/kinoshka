@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { useEffect } from 'react'
 import { MemoryRouter, useLocation, useNavigate } from 'react-router'
 
+import { renderWithRouter } from '../../../../test/router'
 import { BottomNav } from './BottomNav'
 
 const renderWithProbe = (
@@ -13,24 +13,12 @@ const renderWithProbe = (
     | 'recommendations'
     | 'profile',
 ) => {
-  let lastPathname = ''
-  const PathnameProbe = () => {
-    const { pathname } = useLocation()
-    useEffect(() => {
-      lastPathname = pathname
-    }, [pathname])
-    return null
-  }
-
-  render(
-    <MemoryRouter initialEntries={['/']}>
-      <BottomNav active={active} />
-      <PathnameProbe />
-    </MemoryRouter>,
-  )
+  const { getUrl } = renderWithRouter(<BottomNav active={active} />, {
+    url: '/',
+  })
 
   return {
-    getPathname: () => lastPathname,
+    getPathname: () => getUrl(),
   }
 }
 
@@ -112,6 +100,7 @@ describe('BottomNav — навигация к /recommendations (пункт "Pick
   })
 })
 
+// Тесты с историей (initialIndex, «Назад») остаются на MemoryRouter: переписываются в Task 15.
 describe('BottomNav — повторный тап по пункту текущей страницы', () => {
   const BackButton = () => {
     const navigate = useNavigate()

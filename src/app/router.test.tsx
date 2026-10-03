@@ -23,6 +23,7 @@ vi.mock('@sentry/react', async importOriginal => {
   }
 })
 
+// Переписывается в Task 15: конфигурация роутов react-router заменяется на reatomRoute.
 describe('router.tsx — Sentry.wrapCreateBrowserRouter (regression)', () => {
   it('createBrowserRouter обёрнут через Sentry.wrapCreateBrowserRouter ровно один раз', () => {
     expect(Sentry.wrapCreateBrowserRouter).toHaveBeenCalledTimes(1)

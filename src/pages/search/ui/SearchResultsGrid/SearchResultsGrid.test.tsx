@@ -1,9 +1,9 @@
 import type { Movie } from '@entities/movie'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
 
 import { readPersisted, seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { SearchResultsGrid } from './SearchResultsGrid'
 
 const makeMovie = (id: number): Movie => ({
@@ -19,11 +19,7 @@ const makeMovie = (id: number): Movie => ({
 })
 
 const renderGrid = (movies: Movie[]) =>
-  render(
-    <MemoryRouter>
-      <SearchResultsGrid movies={movies} />
-    </MemoryRouter>,
-  )
+  renderWithRouter(<SearchResultsGrid movies={movies} />)
 
 beforeEach(() => localStorage.clear())
 

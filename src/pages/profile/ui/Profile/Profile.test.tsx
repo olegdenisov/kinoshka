@@ -1,22 +1,17 @@
 import { PROFILE_NAME_MAX_LENGTH, profileName } from '@features/profile'
 import { initThemeSync, ThemeToggle } from '@features/theme'
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
 
 import { readPersisted, seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { Profile } from './Profile'
 
 const PROFILE_KEY = 'kinoshka:profile'
 
 const seedName = (name: string) => seedPersisted(PROFILE_KEY, name)
 
-const renderProfile = () =>
-  render(
-    <MemoryRouter>
-      <Profile />
-    </MemoryRouter>,
-  )
+const renderProfile = () => renderWithRouter(<Profile />)
 
 // Большой аватар — первый aria-hidden внутри main (секция header идёт первой, иконки быстрых
 // ссылок ниже по документу); не завязываемся на соседство с именем в DOM.
@@ -390,11 +385,11 @@ describe('Profile', () => {
 
   it('клик по ThemeToggle после выбора system заменяет его на явную тему (задокументированное поведение)', async () => {
     const user = userEvent.setup()
-    render(
-      <MemoryRouter>
+    renderWithRouter(
+      <>
         <ThemeToggle />
         <Profile />
-      </MemoryRouter>,
+      </>,
     )
 
     await user.click(screen.getByRole('radio', { name: 'System' }))

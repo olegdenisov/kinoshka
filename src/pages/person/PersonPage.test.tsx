@@ -1,7 +1,7 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { MemoryRouter, Route, Routes } from 'react-router'
 
+import { renderWithRouter } from '../../test/router'
 import { server } from '../../test/setup'
 import { PersonPage } from './PersonPage'
 
@@ -24,16 +24,13 @@ const mockPerson = (id: number, overrides: Record<string, unknown> = {}) => {
 }
 
 const renderPersonPage = async (initialEntry: string) => {
-  let result: ReturnType<typeof render> | undefined
+  let result: ReturnType<typeof renderWithRouter> | undefined
 
   await act(async () => {
-    result = render(
-      <MemoryRouter initialEntries={[initialEntry]}>
-        <Routes>
-          <Route path='/person/:id' element={<PersonPage />} />
-        </Routes>
-      </MemoryRouter>,
-    )
+    result = renderWithRouter(<PersonPage />, {
+      url: initialEntry,
+      path: '/person/:id',
+    })
   })
 
   return result!
@@ -74,13 +71,10 @@ describe('PersonPage — /person/1, пока запрос не завершён'
     // "запрос ушёл, ответа нет".
     server.use(http.get('*/v1.5/person/1', () => new Promise(() => {})))
 
-    const { container } = render(
-      <MemoryRouter initialEntries={['/person/1']}>
-        <Routes>
-          <Route path='/person/:id' element={<PersonPage />} />
-        </Routes>
-      </MemoryRouter>,
-    )
+    const { container } = renderWithRouter(<PersonPage />, {
+      url: '/person/1',
+      path: '/person/:id',
+    })
 
     expect(container.querySelector('[class*="skeleton"]')).toBeInTheDocument()
     expect(screen.queryByText('Anna Actress')).not.toBeInTheDocument()

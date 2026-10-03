@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
-import { MemoryRouter, Routes, Route } from 'react-router'
+import { Routes, Route } from 'react-router'
 
+import { renderWithRouter } from '../../../../test/router'
 import type { Movie } from '../../model/types'
 import { Card } from './index'
 
@@ -26,13 +27,9 @@ const renderCard = (
     onToggleWatchlist?: (id: number) => void
     rankBadge?: ReactNode
   },
-) =>
-  render(
-    <MemoryRouter>
-      <Card movie={movie} {...props} />
-    </MemoryRouter>,
-  )
+) => renderWithRouter(<Card movie={movie} {...props} />)
 
+// Тесты с несколькими <Route> остаются на react-router: переписываются в Task 15.
 describe('Card', () => {
   it('рендерит год, когда movie.year задан', () => {
     renderCard(baseMovie)
@@ -165,16 +162,15 @@ describe('Card', () => {
   it('клик по Add не триггерит переход по Link (location не меняется)', async () => {
     const user = userEvent.setup()
 
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route
-            path='/'
-            element={<Card movie={baseMovie} onToggleWatchlist={vi.fn()} />}
-          />
-          <Route path='/movie/:id' element={<div>movie page</div>} />
-        </Routes>
-      </MemoryRouter>,
+    renderWithRouter(
+      <Routes>
+        <Route
+          path='/'
+          element={<Card movie={baseMovie} onToggleWatchlist={vi.fn()} />}
+        />
+        <Route path='/movie/:id' element={<div>movie page</div>} />
+      </Routes>,
+      { url: '/' },
     )
 
     await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
@@ -209,18 +205,17 @@ describe('Card', () => {
     const user = userEvent.setup()
     const onToggleFavorite = vi.fn()
 
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route
-            path='/'
-            element={
-              <Card movie={baseMovie} onToggleFavorite={onToggleFavorite} />
-            }
-          />
-          <Route path='/movie/:id' element={<div>movie page</div>} />
-        </Routes>
-      </MemoryRouter>,
+    renderWithRouter(
+      <Routes>
+        <Route
+          path='/'
+          element={
+            <Card movie={baseMovie} onToggleFavorite={onToggleFavorite} />
+          }
+        />
+        <Route path='/movie/:id' element={<div>movie page</div>} />
+      </Routes>,
+      { url: '/' },
     )
 
     await user.click(screen.getByLabelText('Add to favorites'))
