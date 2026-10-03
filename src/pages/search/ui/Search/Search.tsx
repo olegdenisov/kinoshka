@@ -1,14 +1,24 @@
 import {
   ActiveFilterChips,
+  activeChips,
   FilterGroup,
   FilterPanel,
-  useFilterState,
+  filters as filtersAtom,
+  goToPage,
+  page,
+  removeFilterChip,
+  resetFilters,
+  searchQuery,
+  setFilters,
+  setSort,
+  sort as sortAtom,
   SORT_LABELS,
 } from '@features/catalog-filter'
-import type { FilterState } from '@features/catalog-filter'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
 import { useViewport } from '@shared/lib'
 import {
-  AsyncBoundary,
+  AsyncContent,
   EmptyState,
   Spinner,
   FilterIcon,
@@ -18,15 +28,8 @@ import {
 import { BottomSheet } from '@widgets/mobile-chrome'
 import { SearchSidebar } from '@widgets/search-sidebar'
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
 
-import { useCatalogUpdateStatus } from '../../model/useCatalogUpdateStatus'
-import {
-  invalidateMovieCatalog,
-  useMovieCatalog,
-} from '../../model/useMovieCatalog'
-import { usePageSync } from '../../model/usePageSync'
-import { useSearchAnalytics } from '../../model/useSearchAnalytics'
+import { catalog } from '../../model/catalog'
 import { Pagination } from '../Pagination'
 import { SearchControls } from '../SearchControls'
 import { SearchHeader } from '../SearchHeader'
@@ -37,42 +40,16 @@ import {
 
 import s from './Search.module.css'
 
-type SearchResultsProps = {
-  query: string
-  filters: FilterState
-  sort: string
-  page: number
-  displayPage: number
-  onPageChange: (p: number) => void
-}
-
 /**
- * Отдельный компонент под `use()` внутри `useMovieCatalog` — Suspense должен ловить именно этот
- * узел, а не всю страницу (заголовок/фильтры/сортировка остаются интерактивными во время
- * загрузки). До Task 10 существовал в двух почти идентичных копиях — `SearchResults`
- * (`SearchDesktop.tsx`, использовал `SearchResultsGrid`+`Pagination`) и `MobileSearchResults`
- * (`SearchMobile.tsx`, рендерил `Card` напрямую в собственном гриде + инлайновый
- * `MobilePagination`) — слиты в одну версию, т.к. после унификации `SearchResultsGrid`/
- * `Pagination` под mobile-first CSS (см. их докблоки) разница между вариантами была только в
- * обёртке, не в контенте/логике. Suspense-граница (обёртывающий `AsyncBoundary` в `Search` ниже)
- * сохранена как отдельная от остального дерева страницы — то самое обоснование, что было в обоих
- * исходных докблоках, не потеряно при слиянии.
- *
- * `query`/`filters`/`sort`/`page` здесь — deferred-значения из `useCatalogUpdateStatus`: пока
- * React их не догнал, `use()` внутри `useMovieCatalog` берёт cache-hit на старых параметрах
- * вместо повторного саспенда уже смонтированного дерева. `displayPage` — live-значение, отдельно
- * от `page`, чтобы клик по номеру страницы в `Pagination` подсвечивался мгновенно, а не только
- * после того, как deferred-фетч догонит live `page`.
+ * Выдача каталога. Во время обновления (смена страницы/фильтров) показывает прежние данные —
+ * `catalog.data()` не сбрасывается, пока идёт новый запрос; `Pagination` подсвечивает живой
+ * `page()` сразу, не дожидаясь ответа.
  */
-const SearchResults = ({
-  query,
-  filters,
-  sort,
-  page,
-  displayPage,
-  onPageChange,
-}: SearchResultsProps) => {
-  const { movies, totalPages } = useMovieCatalog({ query, filters, sort, page })
+const SearchResults = reatomComponent(() => {
+  const { movies, totalPages } = catalog.data()
+  const query = searchQuery()
+  const displayPage = page()
+  const onPageChange = wrap(goToPage)
 
   if (movies.length === 0) {
     return (
@@ -87,7 +64,7 @@ const SearchResults = ({
         />
         {/*
           Deep-linked/устаревший ?page может указывать за пределы реальной выдачи (курсор
-          закончился раньше целевой страницы — см. getMoviesPage.ts) — movies пуст, но
+          закончился раньше целевой страницы — см. loadMoviesPage) — movies пуст, но
           totalPages всё равно приходит из total. Без Pagination тут это тупик: EmptyState
           не даёт способа вернуться на валидную страницу.
         */}
@@ -122,7 +99,7 @@ const SearchResults = ({
       </div>
     </>
   )
-}
+}, 'SearchResults')
 
 /**
  * Единый адаптивный `Search` (Task 10, план `docs/plans/20260827-mobile-first-adaptive-layout.md`
@@ -144,7 +121,7 @@ const SearchResults = ({
  * обнаружено постфактум.
  *
  * **Chrome (`Header`/`MobileHeader`+`BottomNav`) сюда не входит** — `/search` подключён под
- * `AppLayout` (см. `src/app/router.tsx`), который сам решает `Header`'s `variant='search'`/
+ * `AppLayout` (см. `src/app/routes.tsx`), который сам решает `Header`'s `variant='search'`/
  * `activeNav` (из `?type`, не из пути — см. `AppLayout.tsx`'s `SEARCH_CHROME`/`isSearchRoute`) и
  * `MobileHeader`+`BottomNav` для мобильного брейкпоинта. `Search` — только контент страницы.
  *
@@ -167,30 +144,18 @@ const SearchResults = ({
  * полноэкранный bottom-sheet со списком (мобильный, тач) — тоже разный UX, не просто разный CSS,
  * тот же принцип, что применяется к фильтрам выше. Оба выбираются тем же `isMobile`.
  */
-export const Search = () => {
+export const Search = reatomComponent(() => {
   const { isMobile } = useViewport()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
-  const { filters, setFilters, sort, setSort, resetFilters, activeChips } =
-    useFilterState()
-  const [searchParams] = useSearchParams()
-
-  const query = searchParams.get('q') ?? ''
-  useSearchAnalytics(query)
+  const filters = filtersAtom()
+  const sort = sortAtom()
+  const chips = activeChips()
+  const query = searchQuery()
   const isSearchMode = query.trim().length > 0
-  const { page, goToPage } = usePageSync({ query, filters })
-  const {
-    deferredQuery,
-    deferredFilters,
-    deferredSort,
-    deferredPage,
-    isUpdating,
-  } = useCatalogUpdateStatus({
-    query,
-    filters,
-    sort,
-    page,
-  })
+  // Скелетон — только до первых данных; дальше обновление идёт поверх старой выдачи с бейджем.
+  const { isFirstPending, isPending } = catalog.status()
+  const isUpdating = isPending && !isFirstPending
 
   const title = isSearchMode ? `Results for “${query}”` : 'Browse catalog'
 
@@ -202,12 +167,12 @@ export const Search = () => {
             type='button'
             onClick={() => setFiltersOpen(true)}
             disabled={isSearchMode}
-            className={`${s.filterBtn} ${activeChips.length ? s.filterBtnActive : ''}`}
+            className={`${s.filterBtn} ${chips.length ? s.filterBtnActive : ''}`}
           >
             <FilterIcon />
             Filters
-            {activeChips.length > 0 && (
-              <span className={s.filterCount}>{activeChips.length}</span>
+            {chips.length > 0 && (
+              <span className={s.filterCount}>{chips.length}</span>
             )}
           </button>
 
@@ -222,7 +187,11 @@ export const Search = () => {
             <ChevronDownIcon />
           </button>
 
-          <ActiveFilterChips chips={activeChips} compact />
+          <ActiveFilterChips
+            chips={chips}
+            onRemove={wrap(removeFilterChip)}
+            compact
+          />
         </div>
       )}
 
@@ -230,8 +199,8 @@ export const Search = () => {
         {!isMobile && (
           <SearchSidebar
             filters={filters}
-            onFiltersChange={setFilters}
-            onReset={resetFilters}
+            onFiltersChange={wrap(setFilters)}
+            onReset={wrap(resetFilters)}
             disabled={isSearchMode}
           />
         )}
@@ -241,10 +210,11 @@ export const Search = () => {
 
           {!isMobile && (
             <SearchControls
-              chips={activeChips}
-              onClearAll={resetFilters}
+              chips={chips}
+              onRemoveChip={wrap(removeFilterChip)}
+              onClearAll={wrap(resetFilters)}
               sort={sort}
-              onSortChange={setSort}
+              onSortChange={wrap(setSort)}
               sortDisabled={isSearchMode}
             />
           )}
@@ -253,26 +223,14 @@ export const Search = () => {
             className={`${s.resultsWrapper} ${isUpdating ? s.updating : ''}`}
             aria-busy={isUpdating}
           >
-            <AsyncBoundary
+            <AsyncContent
+              pending={isFirstPending}
+              error={catalog.error()}
+              onRetry={wrap(catalog.retry)}
               fallback={<SearchResultSkeletonGrid />}
-              onRetry={() =>
-                invalidateMovieCatalog({
-                  query: deferredQuery,
-                  filters: deferredFilters,
-                  sort: deferredSort,
-                  page: deferredPage,
-                })
-              }
             >
-              <SearchResults
-                query={deferredQuery}
-                filters={deferredFilters}
-                sort={deferredSort}
-                page={deferredPage}
-                displayPage={page}
-                onPageChange={goToPage}
-              />
-            </AsyncBoundary>
+              <SearchResults />
+            </AsyncContent>
             {isUpdating && (
               <div className={s.updatingBadge}>
                 <Spinner size={14} />
@@ -301,7 +259,9 @@ export const Search = () => {
                   <button
                     type='button'
                     key={t.key}
-                    onClick={() => setFilters({ ...filters, type: t.key })}
+                    onClick={wrap(() =>
+                      setFilters({ ...filters, type: t.key }),
+                    )}
                     className={`${s.typeBtn} ${filters.type === t.key ? s.typeBtnActive : ''}`}
                   >
                     {t.label}
@@ -312,7 +272,7 @@ export const Search = () => {
 
             <FilterPanel
               filters={filters}
-              onFiltersChange={setFilters}
+              onFiltersChange={wrap(setFilters)}
               disabled={isSearchMode}
               compact
             />
@@ -321,7 +281,7 @@ export const Search = () => {
             <div className={s.sheetFooter}>
               <button
                 type='button'
-                onClick={resetFilters}
+                onClick={wrap(resetFilters)}
                 className={s.resetBtn}
               >
                 Reset
@@ -347,10 +307,10 @@ export const Search = () => {
                 <button
                   type='button'
                   key={o}
-                  onClick={() => {
+                  onClick={wrap(() => {
                     setSort(o)
                     setSortOpen(false)
-                  }}
+                  })}
                   className={`${s.sortOption} ${sort === o ? s.sortOptionActive : ''}`}
                 >
                   {o}
@@ -363,4 +323,4 @@ export const Search = () => {
       )}
     </div>
   )
-}
+}, 'Search')

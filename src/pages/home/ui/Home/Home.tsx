@@ -11,7 +11,7 @@ import s from './Home.module.css'
 // Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
 // единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6
 // плана docs/plans/20260827-mobile-first-adaptive-layout.md), которая оборачивает роут `/`
-// (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи. Home больше не
+// (см. `src/app/routes.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи. Home больше не
 // вызывает useViewport и не решает, какой chrome показать — обе раскладки (мобильная и
 // десктопная) рендерят один и тот же контент, разница только в CSS (Home.module.css,
 // HeroSection.module.css).

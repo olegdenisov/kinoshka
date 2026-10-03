@@ -1,5 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { MemoryRouter, useLocation, useNavigate } from 'react-router'
+import { fireEvent, screen } from '@testing-library/react'
 
 import { renderWithRouter } from '../../../../test/router'
 import { BottomNav } from './BottomNav'
@@ -100,112 +99,72 @@ describe('BottomNav — навигация к /recommendations (пункт "Pick
   })
 })
 
-// Тесты с историей (initialIndex, «Назад») остаются на MemoryRouter: переписываются в Task 15.
+// urlAtom пишет в history отложенно (setTimeout(0)) — проверяем, что ушло в history: повторный
+// тап не кладёт дубль (urlAtom на тот же URL не пишет вовсе, replace — страховка), и первое
+// «Назад» уводит на предыдущую страницу.
 describe('BottomNav — повторный тап по пункту текущей страницы', () => {
-  const BackButton = () => {
-    const navigate = useNavigate()
-    return (
-      <button type='button' onClick={() => navigate(-1)}>
-        back
-      </button>
-    )
+  const flushHistory = () => new Promise(resolve => setTimeout(resolve, 0))
+
+  const tap = async (
+    url: string,
+    active: 'profile' | 'search',
+    name: RegExp,
+  ) => {
+    const { getUrl } = renderWithRouter(<BottomNav active={active} />, { url })
+    const push = vi.spyOn(window.history, 'pushState')
+    const replace = vi.spyOn(window.history, 'replaceState')
+
+    fireEvent.click(screen.getByRole('button', { name }))
+    await flushHistory()
+
+    return { getUrl, push, replace }
   }
 
-  it('не кладёт дубль в историю: одно «Назад» уводит на предыдущую страницу', () => {
-    const PathnameOutput = () => <output>{useLocation().pathname}</output>
-    render(
-      <MemoryRouter initialEntries={['/popular', '/profile']} initialIndex={1}>
-        <BottomNav active='profile' />
-        <BackButton />
-        <PathnameOutput />
-      </MemoryRouter>,
-    )
+  afterEach(() => vi.restoreAllMocks())
 
-    fireEvent.click(screen.getByRole('button', { name: /Profile/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'back' }))
+  it('тап по пункту уже открытой страницы — дубля в истории нет', async () => {
+    const { push } = await tap('/profile', 'profile', /Profile/)
 
-    expect(screen.getByRole('status')).toHaveTextContent('/popular')
+    expect(push).not.toHaveBeenCalled()
+    expect(window.location.pathname).toBe('/profile')
   })
 
-  it('переход на другую страницу — обычный push: «Назад» возвращает на исходную', () => {
-    const PathnameOutput = () => <output>{useLocation().pathname}</output>
-    render(
-      <MemoryRouter initialEntries={['/movie/1']}>
-        <BottomNav active='search' />
-        <BackButton />
-        <PathnameOutput />
-      </MemoryRouter>,
-    )
+  it('переход на другую страницу — обычный push', async () => {
+    const { getUrl, push, replace } = await tap('/movie/1', 'search', /Catalog/)
 
-    fireEvent.click(screen.getByRole('button', { name: /Catalog/ }))
-    expect(screen.getByRole('status')).toHaveTextContent('/search')
-    fireEvent.click(screen.getByRole('button', { name: 'back' }))
-
-    expect(screen.getByRole('status')).toHaveTextContent('/movie/1')
+    expect(getUrl()).toBe('/search')
+    expect(push).toHaveBeenCalledTimes(1)
+    expect(replace).not.toHaveBeenCalled()
   })
 
-  it('тап по «Catalog» на /search?q=… с фильтрами в URL — push, а не replace: «Назад» восстанавливает URL с фильтрами', () => {
-    const PathnameOutput = () => {
-      const { pathname, search } = useLocation()
-      return <output>{`${pathname}${search}`}</output>
-    }
-    render(
-      <MemoryRouter initialEntries={['/search?q=matrix&genres=драма&page=3']}>
-        <BottomNav active='search' />
-        <BackButton />
-        <PathnameOutput />
-      </MemoryRouter>,
-    )
-
-    expect(screen.getByRole('status')).toHaveTextContent(
+  it('тап по «Catalog» на /search?q=… с фильтрами в URL — push, а не replace: URL с фильтрами остаётся в истории', async () => {
+    const { getUrl, push, replace } = await tap(
       '/search?q=matrix&genres=драма&page=3',
+      'search',
+      /Catalog/,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /Catalog/ }))
-    expect(screen.getByRole('status')).toHaveTextContent('/search')
-
-    fireEvent.click(screen.getByRole('button', { name: 'back' }))
-    expect(screen.getByRole('status')).toHaveTextContent(
-      '/search?q=matrix&genres=драма&page=3',
-    )
+    expect(getUrl()).toBe('/search')
+    expect(push).toHaveBeenCalledTimes(1)
+    expect(replace).not.toHaveBeenCalled()
   })
 
-  it('тап по «Catalog» на голом /search (без query) — replace: «Назад» уводит на предыдущую страницу', () => {
-    const PathnameOutput = () => <output>{useLocation().pathname}</output>
-    render(
-      <MemoryRouter initialEntries={['/popular', '/search']} initialIndex={1}>
-        <BottomNav active='search' />
-        <BackButton />
-        <PathnameOutput />
-      </MemoryRouter>,
-    )
+  it('тап по «Catalog» на голом /search (без query) — дубля в истории нет', async () => {
+    const { push } = await tap('/search', 'search', /Catalog/)
 
-    fireEvent.click(screen.getByRole('button', { name: /Catalog/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'back' }))
-
-    expect(screen.getByRole('status')).toHaveTextContent('/popular')
+    expect(push).not.toHaveBeenCalled()
   })
 
-  it('тап по пункту страницы, открытой с #hash, — push, а не replace: «Назад» возвращает на URL с hash', () => {
-    const LocationOutput = () => {
-      const { pathname, hash } = useLocation()
-      return <output>{`${pathname}${hash}`}</output>
-    }
-    render(
-      <MemoryRouter
-        initialEntries={['/popular', '/profile#top']}
-        initialIndex={1}
-      >
-        <BottomNav active='profile' />
-        <BackButton />
-        <LocationOutput />
-      </MemoryRouter>,
+  it('тап по пункту страницы, открытой с #hash, — push, а не replace: URL с hash остаётся в истории', async () => {
+    const { getUrl, push, replace } = await tap(
+      '/profile#top',
+      'profile',
+      /Profile/,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /Profile/ }))
-    expect(screen.getByRole('status')).toHaveTextContent(/^\/profile$/)
-    fireEvent.click(screen.getByRole('button', { name: 'back' }))
-
-    expect(screen.getByRole('status')).toHaveTextContent('/profile#top')
+    expect(getUrl()).toBe('/profile')
+    expect(window.location.hash).toBe('')
+    expect(push).toHaveBeenCalledTimes(1)
+    expect(replace).not.toHaveBeenCalled()
   })
 })

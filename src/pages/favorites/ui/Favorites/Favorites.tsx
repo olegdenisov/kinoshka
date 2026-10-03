@@ -55,7 +55,7 @@ const FavoritesGrid = reatomComponent(() => {
 // Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
 // единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6
 // плана docs/plans/20260827-mobile-first-adaptive-layout.md), которая оборачивает роут
-// `/favorites` (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
+// `/favorites` (см. `src/app/routes.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
 // Favorites больше не вызывает useViewport и не решает, какой chrome показать.
 export const Favorites = reatomComponent(() => {
   return (

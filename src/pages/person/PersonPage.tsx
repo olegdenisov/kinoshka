@@ -1,7 +1,6 @@
 import { invalidatePersonDetail, usePersonDetail } from '@entities/person'
 import { ApiError } from '@shared/api'
 import { AsyncBoundary, ErrorState, type ErrorFallbackParams } from '@shared/ui'
-import { useParams } from 'react-router'
 
 import { Person } from './ui/Person'
 import { PersonDetailSkeleton } from './ui/PersonDetailSkeleton'
@@ -38,8 +37,12 @@ const personErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
   )
 }
 
-export const PersonPage = () => {
-  const { id } = useParams<{ id: string }>()
+type PersonPageProps = {
+  /** Сырой сегмент пути из роута (`/person/:id`); валидирует страница. */
+  id: string
+}
+
+export const PersonPage = ({ id }: PersonPageProps) => {
   const numericId = Number(id)
 
   if (!id || !Number.isInteger(numericId) || numericId <= 0) {

@@ -1,7 +1,6 @@
 import { invalidateMovieDetail, useMovieDetail } from '@entities/movie'
 import { ApiError } from '@shared/api'
 import { AsyncBoundary, ErrorState, type ErrorFallbackParams } from '@shared/ui'
-import { useParams } from 'react-router'
 
 import { Movie } from './ui/Movie'
 import { MovieDetailSkeleton } from './ui/MovieDetailSkeleton'
@@ -39,8 +38,12 @@ const movieErrorFallback = ({ error, reset }: ErrorFallbackParams) => {
   )
 }
 
-export const MoviePage = () => {
-  const { id } = useParams<{ id: string }>()
+type MoviePageProps = {
+  /** Сырой сегмент пути из роута (`/movie/:id`); валидирует страница. */
+  id: string
+}
+
+export const MoviePage = ({ id }: MoviePageProps) => {
   const numericId = Number(id)
 
   if (!id || !Number.isInteger(numericId) || numericId <= 0) {

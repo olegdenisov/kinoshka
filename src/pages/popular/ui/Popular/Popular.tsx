@@ -73,7 +73,7 @@ const PopularContent = reatomComponent(
 // Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
 // единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6
 // плана docs/plans/20260827-mobile-first-adaptive-layout.md), которая оборачивает роут
-// `/popular` (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
+// `/popular` (см. `src/app/routes.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
 // Popular больше не вызывает useViewport и не решает, какой chrome показать.
 export const Popular = () => {
   return (

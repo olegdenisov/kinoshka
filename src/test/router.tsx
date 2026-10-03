@@ -1,44 +1,36 @@
+import { urlAtom } from '@reatom/core'
 import { render } from '@testing-library/react'
-import type { ReactElement, ReactNode } from 'react'
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
+import type { ReactElement } from 'react'
 
 type RenderWithRouterOptions = {
   /** Начальный URL (pathname + search + hash). */
   url?: string
-  /** Шаблон роута: нужен тестам, где компонент читает параметры пути (`/movie/:id`). */
-  path?: string
 }
 
-// Единая точка, через которую тесты задают и читают URL: на Task 15 меняется только эта
-// реализация (MemoryRouter -> urlAtom), а сами тесты остаются как есть.
+/** Выставляет URL страницы и синхронизирует с ним urlAtom (до или после его инициализации). */
+export const setTestUrl = (url: string) => {
+  window.history.replaceState(null, '', url)
+  // Первое чтение инициализирует urlAtom из location и ставит перехват кликов по <a>.
+  // Повторный вызов в том же тесте: атом уже инициализирован — синхронизируем без записи в history.
+  if (urlAtom().href !== window.location.href) {
+    urlAtom.syncFromSource(new URL(window.location.href), true)
+  }
+}
+
+// Единая точка, через которую тесты задают и читают URL. Провайдера роутера нет: компоненты
+// читают urlAtom напрямую, параметры пути страницы получают пропом.
 export const renderWithRouter = (
   ui: ReactElement,
-  { url = '/', path }: RenderWithRouterOptions = {},
+  { url = '/' }: RenderWithRouterOptions = {},
 ) => {
-  const location = { current: url }
+  setTestUrl(url)
+  const result = render(ui)
 
-  const LocationProbe = () => {
-    const { pathname, search } = useLocation()
-    // Побочная запись в объект вне React-состояния — допустимо только в эффекте-аналоге
-    // рендера тестового пробника; значение читается лишь из getUrl() после коммита.
-    location.current = pathname + search
-    return null
+  // Читает атом, а не location: urlAtom пишет в history отложенно (setTimeout(0)).
+  const getUrl = () => {
+    const { pathname, search } = urlAtom()
+    return pathname + search
   }
 
-  const Wrapper = ({ children }: { children: ReactNode }) => (
-    <MemoryRouter initialEntries={[url]}>
-      {path ? (
-        <Routes>
-          <Route path={path} element={children} />
-        </Routes>
-      ) : (
-        children
-      )}
-      <LocationProbe />
-    </MemoryRouter>
-  )
-
-  const result = render(ui, { wrapper: Wrapper })
-
-  return { ...result, getUrl: () => location.current }
+  return { ...result, getUrl }
 }

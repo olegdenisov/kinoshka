@@ -4,10 +4,10 @@ import {
   QUERY_MIN_LENGTH,
 } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
+import { urlAtom } from '@reatom/core'
 import { paths } from '@shared/config'
 import { SearchIcon } from '@shared/ui'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
 
 import s from './HeroSection.module.css'
 
@@ -46,7 +46,6 @@ const Stat = ({ value, label }: StatProps) => (
 )
 
 export const HeroSection = () => {
-  const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState<FilterState['type']>(null)
   const [q, setQ] = useState('')
 
@@ -61,7 +60,8 @@ export const HeroSection = () => {
       params.set('q', trimmed)
     }
 
-    navigate(paths.search(params))
+    // Одна запись в history: фильтр и запрос уходят одним URL, без последующей нормализации.
+    urlAtom.go(paths.search(params))
   }
 
   return (

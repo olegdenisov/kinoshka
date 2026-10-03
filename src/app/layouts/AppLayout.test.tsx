@@ -1,17 +1,13 @@
+import { urlAtom } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
+import { matchRoutePattern } from '@shared/config'
 import type * as SharedLib from '@shared/lib'
 import { AsyncBoundary } from '@shared/ui'
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
-import { createMemoryRouter, RouterProvider } from 'react-router'
 
+import { renderWithRouter } from '../../test/router'
 import { AppLayout } from './AppLayout'
 
 // Task 5 (docs/plans/20260910-web-vitals-analytics.md): AppLayout вызывает trackPageview() на
@@ -43,66 +39,36 @@ const setViewportWidth = (width: number) => {
   window.innerWidth = width
 }
 
-// Повторяет структуру src/app/router.tsx: AppLayout — layout-route с <Outlet/>, дочерние роуты —
-// уже слитые страницы (Task 3-5 Favorites/Popular/Recommendations, Task 8 Home, Task 9 Movie,
-// Task 10 Search и Person; здесь — плейсхолдеры вместо реальных компонентов, проверяем именно
-// композицию chrome + Outlet, а не их бизнес-логику, которая уже покрыта Home.test.tsx/
-// Favorites.test.tsx/Popular.test.tsx/Recommendations.test.tsx/Movie.test.tsx/Search.test.tsx/
-// PersonPage.test.tsx). `/search` — тоже плейсхолдер `<div>`, не реальный `Search`: `path` может
-// включать query (`/search?type=series`), createMemoryRouter матчит по pathname, query долетает
-// до `AppLayout`'s `useSearchParams()` как есть. Data router (createMemoryRouter + RouterProvider),
-// не декларативный <MemoryRouter>, — AppLayout рендерит <ScrollRestoration/>, которая внутри
-// вызывает useMatches() и требует data router, иначе падает с "useMatches must be used within a
-// data router".
+// AppLayout получает страницу через children (в проде — outlet layout-роута, routes.tsx). Здесь
+// вместо реальных страниц — плейсхолдер по шаблону текущего пути: проверяем композицию chrome +
+// контент, а не бизнес-логику страниц (у них свои тесты).
+const PAGE_TEXT: Record<string, string> = {
+  '/': 'Home page content',
+  '/movie/:id': 'Movie page content',
+  '/favorites': 'Favorites page content',
+  '/watched': 'Watched page content',
+  '/watchlist': 'Watchlist page content',
+  '/popular': 'Popular page content',
+  '/recommendations': 'Recommendations page content',
+  '/search': 'Search page content',
+  '/profile': 'Profile page content',
+  '/person/:id': 'Person page content',
+}
+
+const PagePlaceholder = reatomComponent(() => {
+  const pattern = matchRoutePattern(urlAtom().pathname)
+  return <div>{pattern ? PAGE_TEXT[pattern] : 'Unknown page content'}</div>
+}, 'PagePlaceholder')
+
 const renderAt = (path: string) =>
-  render(
-    <RouterProvider
-      router={createMemoryRouter(
-        [
-          {
-            element: <AppLayout />,
-            children: [
-              { path: '/', element: <div>Home page content</div> },
-              {
-                path: '/movie/:id',
-                element: <div>Movie page content</div>,
-              },
-              {
-                path: '/favorites',
-                element: <div>Favorites page content</div>,
-              },
-              {
-                path: '/watched',
-                element: <div>Watched page content</div>,
-              },
-              {
-                path: '/watchlist',
-                element: <div>Watchlist page content</div>,
-              },
-              {
-                path: '/popular',
-                element: <div>Popular page content</div>,
-              },
-              {
-                path: '/recommendations',
-                element: <div>Recommendations page content</div>,
-              },
-              { path: '/search', element: <div>Search page content</div> },
-              {
-                path: '/profile',
-                element: <div>Profile page content</div>,
-              },
-              {
-                path: '/person/:id',
-                element: <div>Person page content</div>,
-              },
-            ],
-          },
-        ],
-        { initialEntries: [path] },
-      )}
-    />,
+  renderWithRouter(
+    <AppLayout>
+      <PagePlaceholder />
+    </AppLayout>,
+    { url: path },
   )
+
+const navigateTo = (path: string) => act(async () => urlAtom.go(path))
 
 beforeEach(() => {
   vi.mocked(trackPageview).mockClear()
@@ -117,8 +83,7 @@ afterEach(() => {
   document.documentElement.removeAttribute('data-theme')
 })
 
-// Переписывается в Task 15: конфигурация роутов react-router заменяется на reatomRoute.
-describe('AppLayout — Outlet рендерит контент страницы независимо от chrome', () => {
+describe('AppLayout — children рендерит контент страницы независимо от chrome', () => {
   it('десктоп: контент /favorites рендерится рядом с Header', () => {
     renderAt('/favorites')
     expect(screen.getByText('Favorites page content')).toBeInTheDocument()
@@ -384,8 +349,33 @@ describe('AppLayout — мобильный рендерит MobileHeader+BottomN
   })
 })
 
+// Неизвестный путь (страница NotFound в routes.tsx) получает chrome главной.
+describe('AppLayout — неизвестный путь: chrome главной', () => {
+  it('десктоп: Header с подсвеченным "Home"', () => {
+    renderAt('/no-such-page')
+
+    expect(screen.getByText('Unknown page content')).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('banner')).getByRole('button', { name: 'Home' })
+        .className,
+    ).toMatch(/navPillActive/)
+  })
+
+  it('мобильный: MobileHeader с search-триггером и BottomNav', () => {
+    setViewportWidth(MOBILE_WIDTH)
+    renderAt('/no-such-page')
+
+    expect(
+      within(screen.getByRole('banner')).getByText('Search…'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Home/ }).className).toMatch(
+      /navItemActive/,
+    )
+  })
+})
+
 // /search (Task 10) — единственный роут, где Header's activeNav не выводится из pathname (один
-// и тот же путь для любого ?type), а из useSearchParams().get('type') (см. SEARCH_CHROME/
+// и тот же путь для любого ?type), а из filters().type (см. SEARCH_CHROME/
 // isSearchRoute в AppLayout.tsx). Реализация раньше жила в удалённом SearchDesktop.tsx
 // (`activeNav={filters.type ?? 'search'}`) — тест "nav pill в шапке подсвечивается по ?type"
 // переехал сюда вместе с этой логикой (было в SearchDesktop.test.tsx до слияния в единый Search).
@@ -431,57 +421,25 @@ describe('AppLayout — /search: Header.variant="search", activeNav из ?type (
 })
 
 // Task 5 (docs/plans/20260910-web-vitals-analytics.md): trackPageview() реагирует на смену
-// pathname, не на смену query-параметров. Не переиспользует renderAt() выше — тот монтирует
-// свежий MemoryRouter на каждый вызов, так что два отдельных renderAt('/a')/renderAt('/a?x=1')
-// дают тривиально по 1 вызову каждый и не различают "сменился pathname" от "сменились только
-// query-параметры". Здесь роутер монтируется один раз (createMemoryRouter + RouterProvider) и
-// дальше реально навигируется внутри того же дерева через router.navigate(...).
+// pathname, не на смену query-параметров. Дерево монтируется один раз и дальше навигируется
+// через urlAtom.go — два отдельных рендера не различили бы смену pathname и смену query.
 describe('AppLayout — page view tracking: смена pathname трекается, смена только query — нет', () => {
   it('маунт на /: 1 вызов; navigate на /favorites: ещё вызов; navigate на /favorites?x=1: без нового вызова', async () => {
-    const router = createMemoryRouter(
-      [
-        {
-          element: <AppLayout />,
-          children: [
-            { path: '/', element: <div>Home page content</div> },
-            {
-              path: '/favorites',
-              element: <div>Favorites page content</div>,
-            },
-            {
-              path: '/person/:id',
-              element: <div>Person page content</div>,
-            },
-          ],
-        },
-      ],
-      { initialEntries: ['/'] },
-    )
-
-    render(<RouterProvider router={router} />)
+    renderAt('/')
 
     await waitFor(() => expect(trackPageview).toHaveBeenCalledTimes(1))
 
-    await act(async () => {
-      await router.navigate('/favorites')
-    })
+    await navigateTo('/favorites')
     await waitFor(() => expect(trackPageview).toHaveBeenCalledTimes(2))
     expect(screen.getByText('Favorites page content')).toBeInTheDocument()
 
-    await act(async () => {
-      await router.navigate('/favorites?x=1')
-    })
+    await navigateTo('/favorites?x=1')
     // Тот же pathname, сменился только query — trackPageview не должен вызваться повторно.
-    // waitFor на реальном условии (не просто await Promise.resolve()) страхует от ложного
-    // прохождения теста, если navigate ещё не долетел до commit к моменту проверки.
-    await waitFor(() => expect(router.state.location.search).toBe('?x=1'))
+    expect(urlAtom().search).toBe('?x=1')
     expect(trackPageview).toHaveBeenCalledTimes(2)
 
-    // /person/:id (Task 10) — динамический сегмент тоже меняет pathname, trackPageview должен
-    // вызваться ещё раз.
-    await act(async () => {
-      await router.navigate('/person/1')
-    })
+    // Динамический сегмент тоже меняет pathname — trackPageview вызывается ещё раз.
+    await navigateTo('/person/1')
     await waitFor(() => expect(trackPageview).toHaveBeenCalledTimes(3))
     expect(screen.getByText('Person page content')).toBeInTheDocument()
   })
@@ -507,36 +465,43 @@ const PersonPlaceholder = () => {
   return <div>Person page content</div>
 }
 
-// Роутер монтируется один раз — навигация через router.navigate (как в tracking-describe выше).
 // Бомба стоит на /popular (а не на отдельном /broken), чтобы у роута был ROUTE_CHROME-конфиг и на
 // мобильном рендерился BottomNav — иначе проверка «chrome цел» на мобильном была бы пустой.
-const createErrorRouter = (
+type ErrorPagesProps = {
+  home: ReactNode
+}
+
+const ErrorPages = reatomComponent(({ home }: ErrorPagesProps) => {
+  switch (matchRoutePattern(urlAtom().pathname)) {
+    case '/':
+      return home
+    case '/popular':
+      return <Bomb />
+    case '/favorites':
+      return (
+        <div>
+          <div>Favorites page shell</div>
+          <AsyncBoundary>
+            <Bomb />
+          </AsyncBoundary>
+        </div>
+      )
+    case '/person/:id':
+      return <PersonPlaceholder />
+    default:
+      return null
+  }
+}, 'ErrorPages')
+
+const renderErrorApp = (
   initialPath: string,
-  homeElement: ReactNode = <div>Home page content</div>,
+  home: ReactNode = <div>Home page content</div>,
 ) =>
-  createMemoryRouter(
-    [
-      {
-        element: <AppLayout />,
-        children: [
-          { path: '/', element: homeElement },
-          { path: '/popular', element: <Bomb /> },
-          {
-            path: '/favorites',
-            element: (
-              <div>
-                <div>Favorites page shell</div>
-                <AsyncBoundary>
-                  <Bomb />
-                </AsyncBoundary>
-              </div>
-            ),
-          },
-          { path: '/person/:id', element: <PersonPlaceholder /> },
-        ],
-      },
-    ],
-    { initialEntries: [initialPath] },
+  renderWithRouter(
+    <AppLayout>
+      <ErrorPages home={home} />
+    </AppLayout>,
+    { url: initialPath },
   )
 
 describe('AppLayout — per-route ErrorBoundary', () => {
@@ -546,7 +511,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   })
 
   it('десктоп: падение страницы — Header остаётся, вместо контента ErrorState с фиксированным текстом и ссылкой на главную', () => {
-    render(<RouterProvider router={createErrorRouter('/popular')} />)
+    renderErrorApp('/popular')
 
     expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(
@@ -565,7 +530,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
 
   it('мобильный: падение страницы — MobileHeader и BottomNav остаются в дереве', () => {
     setViewportWidth(MOBILE_WIDTH)
-    render(<RouterProvider router={createErrorRouter('/popular')} />)
+    renderErrorApp('/popular')
 
     expect(
       within(screen.getByRole('banner')).getByText('Popular'),
@@ -578,7 +543,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   })
 
   it('падение самой / — ссылки на главную нет (key не сменится, она была бы no-op), retry есть', () => {
-    render(<RouterProvider router={createErrorRouter('/', <Bomb />)} />)
+    renderErrorApp('/', <Bomb />)
 
     expect(screen.getByText(ROUTE_FALLBACK_TEXT)).toBeInTheDocument()
     expect(
@@ -588,7 +553,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   })
 
   it('«Попробовать снова» восстанавливает страницу, если причина устранена — chrome вокруг сохраняется', () => {
-    render(<RouterProvider router={createErrorRouter('/popular')} />)
+    renderErrorApp('/popular')
 
     expect(screen.getByText(ROUTE_FALLBACK_TEXT)).toBeInTheDocument()
 
@@ -601,7 +566,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   })
 
   it('падение страницы репортится через captureRouteError(error, errorInfo)', () => {
-    render(<RouterProvider router={createErrorRouter('/popular')} />)
+    renderErrorApp('/popular')
 
     expect(captureRouteError).toHaveBeenCalledTimes(1)
     const [error, errorInfo] = vi.mocked(captureRouteError).mock.calls[0]
@@ -613,7 +578,7 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   // срабатывает, и в Sentry такая ошибка не уходит (принятый gap: AsyncBoundary не прокидывает
   // onError).
   it('ошибку внутри страничного AsyncBoundary ловит он, а не per-route граница — captureRouteError не вызван', () => {
-    render(<RouterProvider router={createErrorRouter('/favorites')} />)
+    renderErrorApp('/favorites')
 
     expect(screen.getByText('Favorites page shell')).toBeInTheDocument()
     expect(screen.getByText('boom')).toBeInTheDocument()
@@ -626,14 +591,11 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   })
 
   it('навигация с упавшего роута на другой сбрасывает границу сама (key={pathname}), без retry', async () => {
-    const router = createErrorRouter('/popular')
-    render(<RouterProvider router={router} />)
+    renderErrorApp('/popular')
 
     expect(screen.getByText(ROUTE_FALLBACK_TEXT)).toBeInTheDocument()
 
-    await act(async () => {
-      await router.navigate('/')
-    })
+    await navigateTo('/')
 
     expect(await screen.findByText('Home page content')).toBeInTheDocument()
     expect(screen.queryByText(ROUTE_FALLBACK_TEXT)).not.toBeInTheDocument()
@@ -642,14 +604,11 @@ describe('AppLayout — per-route ErrorBoundary', () => {
   // Принятое следствие key={pathname} (см. Overview плана): смена параметра динамического роута
   // меняет pathname — граница и страница под ней ремаунтятся, а не переиспользуются.
   it('/person/1 → /person/2: страница ремаунтится (зафиксированное следствие key={pathname})', async () => {
-    const router = createErrorRouter('/person/1')
-    render(<RouterProvider router={router} />)
+    renderErrorApp('/person/1')
 
     await waitFor(() => expect(personMounts).toBe(1))
 
-    await act(async () => {
-      await router.navigate('/person/2')
-    })
+    await navigateTo('/person/2')
 
     await waitFor(() => expect(personMounts).toBe(2))
     expect(screen.getByText('Person page content')).toBeInTheDocument()

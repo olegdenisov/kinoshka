@@ -140,15 +140,19 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 // - abortTestFrames() — явная отмена: context.reset() асинхронные продолжения не абортит
 //   (см. reatomTestScope.ts). Отмена до сброса хранилищ, чтобы незавершённый запрос прошлого
 //   теста не дописал persist-значение в уже чистый storage.
+// - пауза на макротаск перед сбросом URL — см. комментарий у history.replaceState ниже.
 // - server.resetHandlers() последним: к этому моменту запросы прошлого теста уже отменены,
 //   иначе они попадают в onUnhandledRequest: 'error' следующего теста.
-afterEach(() => {
+afterEach(async () => {
   cleanup()
   urlAtom.init.abort()
   abortTestFrames()
   context.reset()
   localStorage.clear()
   sessionStorage.clear()
+  // urlAtom пишет в history через setTimeout(0): отложенная запись прошлого теста иначе
+  // долетает посреди следующего и подменяет его URL. Дожидаемся её до сброса на '/'.
+  await new Promise(resolve => setTimeout(resolve, 0))
   window.history.replaceState(null, '', '/')
   // Модульное состояние вне атомов: in-memory кэш createCachedFetcher живёт между тестами и
   // файлами, иначе тест получает закэшированный промис прошлого теста вместо своего MSW-хендлера.

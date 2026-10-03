@@ -15,10 +15,9 @@ vi.mock('@sentry/react', () => ({
   init: vi.fn(),
   captureException: vi.fn(),
   captureReactException: vi.fn(),
-  reactRouterBrowserTracingIntegration: vi.fn(() => ({
-    name: 'ReactRouterBrowserTracing',
+  browserTracingIntegration: vi.fn(() => ({
+    name: 'BrowserTracing',
   })),
-  wrapCreateBrowserRouter: vi.fn(fn => fn),
 }))
 
 beforeEach(() => vi.clearAllMocks())
@@ -260,7 +259,7 @@ describe('initSentry', () => {
       beforeSend: scrubApiKeyHeader,
       beforeBreadcrumb: scrubProfileNameBreadcrumb,
       beforeSendSpan: scrubProfileNameSpan,
-      integrations: [{ name: 'ReactRouterBrowserTracing' }],
+      integrations: [{ name: 'BrowserTracing' }],
       tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
     })
   })

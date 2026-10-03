@@ -1,3 +1,5 @@
+import { urlAtom, wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
 import { paths } from '@shared/config'
 import {
   HomeIcon,
@@ -7,7 +9,6 @@ import {
   StarIcon,
   ProfileIcon,
 } from '@shared/ui'
-import { useLocation, useNavigate } from 'react-router'
 
 import s from './BottomNav.module.css'
 
@@ -23,9 +24,8 @@ type BottomNavProps = {
   active: NavKey
 }
 
-export const BottomNav = ({ active }: BottomNavProps) => {
-  const navigate = useNavigate()
-  const { pathname, search, hash } = useLocation()
+export const BottomNav = reatomComponent(({ active }: BottomNavProps) => {
+  const { pathname, search, hash } = urlAtom()
 
   const items: {
     key: NavKey
@@ -74,11 +74,9 @@ export const BottomNav = ({ active }: BottomNavProps) => {
               // query/hash, так что на /search?q=… (BottomNav есть в SEARCH_CHROME) повторный тап
               // по «Catalog» иначе стёр бы отфильтрованный URL из истории через replace, хотя
               // страница другая — просто с тем же pathname.
-              onClick={() =>
-                navigate(it.path, {
-                  replace: `${pathname}${search}${hash}` === it.path,
-                })
-              }
+              onClick={wrap(() =>
+                urlAtom.go(it.path, `${pathname}${search}${hash}` === it.path),
+              )}
               className={`${s.navItem} ${isActive ? s.navItemActive : ''}`}
             >
               <Icon size={20} filled={isActive} />
@@ -93,4 +91,4 @@ export const BottomNav = ({ active }: BottomNavProps) => {
       </div>
     </nav>
   )
-}
+}, 'BottomNav')

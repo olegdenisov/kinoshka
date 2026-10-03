@@ -68,7 +68,7 @@ const RecommendationsGrid = reatomComponent(() => {
 // Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
 // единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6
 // плана docs/plans/20260827-mobile-first-adaptive-layout.md), которая оборачивает роут
-// `/recommendations` (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav
+// `/recommendations` (см. `src/app/routes.tsx`) и рендерит Header/MobileHeader+BottomNav
 // снаружи. Recommendations больше не вызывает useViewport и не решает, какой chrome показать.
 export const Recommendations = reatomComponent(() => {
   return (

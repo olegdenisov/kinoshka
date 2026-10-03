@@ -27,10 +27,11 @@ const renderPersonPage = async (initialEntry: string) => {
   let result: ReturnType<typeof renderWithRouter> | undefined
 
   await act(async () => {
-    result = renderWithRouter(<PersonPage />, {
-      url: initialEntry,
-      path: '/person/:id',
-    })
+    // id приходит пропом из render роута; здесь — сырой сегмент пути, как его отдаёт роут.
+    result = renderWithRouter(
+      <PersonPage id={decodeURIComponent(initialEntry.split('/')[2] ?? '')} />,
+      { url: initialEntry },
+    )
   })
 
   return result!
@@ -71,9 +72,8 @@ describe('PersonPage — /person/1, пока запрос не завершён'
     // "запрос ушёл, ответа нет".
     server.use(http.get('*/v1.5/person/1', () => new Promise(() => {})))
 
-    const { container } = renderWithRouter(<PersonPage />, {
+    const { container } = renderWithRouter(<PersonPage id='1' />, {
       url: '/person/1',
-      path: '/person/:id',
     })
 
     expect(container.querySelector('[class*="skeleton"]')).toBeInTheDocument()

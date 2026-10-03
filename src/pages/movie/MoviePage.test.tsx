@@ -74,10 +74,11 @@ const renderMoviePage = async (initialEntry: string) => {
   let result: ReturnType<typeof renderWithRouter> | undefined
 
   await act(async () => {
-    result = renderWithRouter(<MoviePage />, {
-      url: initialEntry,
-      path: '/movie/:id',
-    })
+    // id приходит пропом из render роута; здесь — сырой сегмент пути, как его отдаёт роут.
+    result = renderWithRouter(
+      <MoviePage id={decodeURIComponent(initialEntry.split('/')[2] ?? '')} />,
+      { url: initialEntry },
+    )
   })
 
   return result!
@@ -93,9 +94,8 @@ describe('MoviePage — /movie/1, пока запрос не завершён', 
     server.use(http.get('*/v1.5/movie/1', () => new Promise(() => {})))
     mockImages([])
 
-    const { container } = renderWithRouter(<MoviePage />, {
+    const { container } = renderWithRouter(<MoviePage id='1' />, {
       url: '/movie/1',
-      path: '/movie/:id',
     })
 
     expect(container.querySelector('[class*="skeleton"]')).toBeInTheDocument()

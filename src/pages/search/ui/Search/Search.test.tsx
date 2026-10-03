@@ -1,7 +1,7 @@
+import { submitSearchQuery } from '@features/catalog-filter'
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { useSearchParams } from 'react-router'
 
 import { readPersisted } from '../../../../test/persist'
 import { renderWithRouter } from '../../../../test/router'
@@ -30,32 +30,14 @@ const currentSearch = () => {
   return i < 0 ? '' : url.slice(i)
 }
 
-// Search больше не рендерит Header сама (chrome — забота AppLayout, см. router.tsx/AppLayout.tsx)
-// — тесты, которым раньше был нужен реальный десктопный Header (debounce-запись ?q при вводе в
-// поисковый инпут), воспроизводят тот же URL-переход этим хелпером вместо рендера Header целиком.
-// Тот же приём уже использовался в удалённом SearchMobile.test.tsx (там Header тоже не был частью
-// SearchMobile) — теперь применяется единообразно для обоих брейкпоинтов, раз оба читают ?q из
-// одного и того же useSearchParams().
-const HeaderQuerySetter = () => {
-  const [, setSearchParams] = useSearchParams()
-  return (
-    <button
-      type='button'
-      onClick={() =>
-        setSearchParams(
-          prev => {
-            const params = new URLSearchParams(prev)
-            params.set('q', 'matrix')
-            return params
-          },
-          { replace: true },
-        )
-      }
-    >
-      simulate header q write
-    </button>
-  )
-}
+// Search не рендерит Header (chrome — AppLayout): ввод в поисковый инпут Header коммитит в URL
+// через submitSearchQuery (после debounce). Хелпер вызывает тот же action напрямую — Search
+// реагирует на смену ?q в URL независимо от того, кто её записал.
+const HeaderQuerySetter = () => (
+  <button type='button' onClick={() => submitSearchQuery('matrix')}>
+    simulate header q write
+  </button>
+)
 
 const SEARCH_ENDPOINT = '*/v1.5/movie/search'
 const CATALOG_ENDPOINT = '*/v1.5/movie'
@@ -592,13 +574,10 @@ describe('Search — пагинация: сброс ?page на 1 при смен
     expect(currentSearch()).not.toContain('page=3')
   })
 
-  // Search больше не рендерит Header (chrome — AppLayout, см. router.tsx), а debounce-запись ?q
-  // при вводе в поисковый инпут — логика самого Header, не Search. usePageSync/useFilterState
-  // (баг 2, не трогается этой задачей) реагируют на *URL-переход* ?q независимо от того, кто его
-  // записал — HeaderQuerySetter выше воспроизводит ровно то, что делает Header.tsx's debounce-
-  // эффект, без рендера Header целиком (тот же приём уже использовался в удалённом
-  // SearchMobile.test.tsx, теперь — единообразно для обеих веток).
-  it('появление ?q сбрасывает ?page на 1 и зачищает фильтры/sort', async () => {
+  // Debounce-запись ?q — логика Header, не Search; HeaderQuerySetter выше вызывает тот же
+  // submitSearchQuery, без рендера Header целиком. Новый запрос — новая выдача: ?page уходит
+  // целиком (submitSearchQuery), фильтры и сортировка зачищаются в той же записи.
+  it('появление ?q убирает ?page и зачищает фильтры/sort', async () => {
     mockCatalog([catalogDoc('Dune Part Two', 201)], { total: 50 })
     mockSearch([searchDoc('Matrix Revolutions', 101)])
 
@@ -621,8 +600,7 @@ describe('Search — пагинация: сброс ?page на 1 при смен
     })
 
     expect(currentSearch()).toContain('q=matrix')
-    expect(currentSearch()).not.toContain('page=3')
-    expect(currentSearch()).toContain('page=1')
+    expect(currentSearch()).not.toContain('page=')
     expect(currentSearch()).not.toContain('genres=')
     expect(currentSearch()).not.toContain('sort=')
 

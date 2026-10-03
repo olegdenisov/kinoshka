@@ -650,22 +650,22 @@ export const RouterOutlet = reatomComponent(
 
 Известный разрыв до Task 17: скролл при навигации не сбрасывается и не восстанавливается.
 
-- [ ] `routes.tsx`: `layoutRoute`, десять дочерних роутов с `render`, `RouterOutlet` (`reatomComponent`); страницы остаются ленивыми через `lazyNamed`; `RouteChild` — в `src/app/reatom.d.ts` с `oxlint-disable-next-line`
-- [ ] `NotFound`: заголовок и `<a href={paths.home()}>` на главную, стили через токены в `NotFound.module.css`; для неизвестного пути `AppLayout` показывает chrome главной (на мобильном — с `BottomNav`)
-- [ ] `AppLayout` → `reatomComponent` с `children`, без импорта `routes.tsx`: chrome — по `matchRoutePattern(urlAtom().pathname)`, `activeNav` для `/search` — из `filters().type`; `key` у `ErrorBoundary` — `urlAtom().pathname`; `trackPageview` по смене `pathname` (не по смене query); убрать `<ScrollRestoration />`
-- [ ] `providers.tsx` рендерит `<RouterOutlet />` внутри `GlobalErrorBoundary`; `Providers` остаётся обычным компонентом и атомы не читает
-- [ ] `ProfileAvatar`: `<a>` + `aria-current='page'` по `urlAtom().pathname === paths.profile()`; тест на `aria-current` сохраняется
-- [ ] `BottomNav`, `MobileHeader`: `urlAtom.go(...)` и `history.back()` по таблице замен; `BottomNav` сохраняет `replace` при совпадении `pathname + search + hash`, тест на это сохраняется
-- [ ] `/movie/:id` и `/person/:id`: id приходит пропом из `render` (данные пока через прежние хуки и `AsyncBoundary` — до Task 18); `key={id}` у `Movie` сохраняется
-- [ ] `Search`, `ActiveFilterChips`, `FilterPanel`, `SearchResultsGrid` → модели Task 13; скелетон по `isFirstPending`, бейдж «Updating…» при обновлении поверх старых данных
-- [ ] `Header` → `searchDraft` / `commitSearchDraft`; `HeroSection` → один `urlAtom.go(paths.search({ q }))`
-- [ ] `sentry.ts`: заменить `reactRouterBrowserTracingIntegration` на `browserTracingIntegration()` без хуков роутера (имена по шаблону роута — Task 19)
-- [ ] `renderWithRouter`: выставляет URL через `history.replaceState`, рендерит без провайдера роутера; опция `path` удаляется (id передаётся пропом); `getUrl()` читает `urlAtom()`
-- [ ] `routes.test.tsx`: каждый путь рендерит свою страницу; неизвестный путь → `NotFound`; `paths.*` и `ROUTE_PATTERNS` совпадают с роутами; клик по `<a>` меняет страницу без перезагрузки; `history.back()` возвращает предыдущую
-- [ ] тест: навигация перерисовывает дерево, смонтированное через `Providers` (в сборке с React Compiler)
-- [ ] переписать помеченные в Task 11 тесты (`providers.test.tsx`, `AppLayout.test.tsx`, `Header.test.tsx`) под новые роуты; сценарии `router.test.tsx` переезжают в `routes.test.tsx`
-- [ ] `grep -rE "from 'react-router" src` находит только файлы, удаляемые в Task 16
-- [ ] запустить `make test`, `make typecheck`, `make lint` — зелёные перед Task 16
+- [x] `routes.tsx`: `layoutRoute`, десять дочерних роутов с `render`, `RouterOutlet` (`reatomComponent`); страницы остаются ленивыми через `lazyNamed`; `RouteChild` — в `src/app/reatom.d.ts` с `oxlint-disable-next-line` — `RouterOutlet` живёт в `providers.tsx` (не экспортируется): `routes.tsx` экспортирует `layoutRoute`, а файл с компонентом и не-компонентом валит `react/only-export-components`; дочерние роуты — вызовы без переменных (ссылки на них пока никому не нужны, Task 18 заведёт `movieRoute`/`personRoute`); `page()`-обёртки нет — `Suspense` вокруг outlet уже стоит в `AppLayout`
+- [x] `NotFound`: заголовок и `<a href={paths.home()}>` на главную, стили через токены в `NotFound.module.css`; для неизвестного пути `AppLayout` показывает chrome главной (на мобильном — с `BottomNav`)
+- [x] `AppLayout` → `reatomComponent` с `children`, без импорта `routes.tsx`: chrome — по `matchRoutePattern(urlAtom().pathname)`, `activeNav` для `/search` — из `filters().type`; `key` у `ErrorBoundary` — `urlAtom().pathname`; `trackPageview` по смене `pathname` (не по смене query); убрать `<ScrollRestoration />`
+- [x] `providers.tsx` рендерит `<RouterOutlet />` внутри `GlobalErrorBoundary`; `Providers` остаётся обычным компонентом и атомы не читает
+- [x] `ProfileAvatar`: `<a>` + `aria-current='page'` по `urlAtom().pathname === paths.profile()`; тест на `aria-current` сохраняется
+- [x] `BottomNav`, `MobileHeader`: `urlAtom.go(...)` и `history.back()` по таблице замен; `BottomNav` сохраняет `replace` при совпадении `pathname + search + hash`, тест на это сохраняется — `urlAtom.set` на тот же URL вообще не пишет в history, так что тесты проверяют «нет `pushState`» (повторный тап) и «`pushState`» (другая страница/URL с query или hash) шпионами, без `history.back()` jsdom
+- [x] `/movie/:id` и `/person/:id`: id приходит пропом из `render` (данные пока через прежние хуки и `AsyncBoundary` — до Task 18); `key={id}` у `Movie` сохраняется
+- [x] `Search`, `ActiveFilterChips`, `FilterPanel`, `SearchResultsGrid` → модели Task 13; скелетон по `isFirstPending`, бейдж «Updating…» при обновлении поверх старых данных — модели читает `Search` (`reatomComponent`); `ActiveFilterChips` и `FilterPanel` остаются презентационными (`ActiveFilterChips` принимает `FilterChip[]` + `onRemove(id)`), иначе пришлось бы переводить на модель и виджет `SearchSidebar`
+- [x] `Header` → `searchDraft` / `commitSearchDraft`; `HeroSection` → один `urlAtom.go(paths.search({ q }))`
+- [x] `sentry.ts`: заменить `reactRouterBrowserTracingIntegration` на `browserTracingIntegration()` без хуков роутера (имена по шаблону роута — Task 19)
+- [x] `renderWithRouter`: выставляет URL через `history.replaceState`, рендерит без провайдера роутера; опция `path` удаляется (id передаётся пропом); `getUrl()` читает `urlAtom()` — ➕ экспортирован `setTestUrl` (повторный вызов в том же тесте синхронизирует уже инициализированный `urlAtom` через `syncFromSource`); ⚠️ общий `afterEach` стал async: перед сбросом URL ждёт макротаск, иначе отложенная (`setTimeout(0)`) запись в history прошлого теста долетает посреди следующего
+- [x] `routes.test.tsx`: каждый путь рендерит свою страницу; неизвестный путь → `NotFound`; `paths.*` и `ROUTE_PATTERNS` совпадают с роутами; клик по `<a>` меняет страницу без перезагрузки; `history.back()` возвращает предыдущую
+- [x] тест: навигация перерисовывает дерево, смонтированное через `Providers` (в сборке с React Compiler) — в `routes.test.tsx` (там же сброс таба по `key={id}` при переходе на другой фильм); рендер `Providers` — в `await act`, иначе страница с `use()` не возобновляется
+- [x] переписать помеченные в Task 11 тесты (`providers.test.tsx`, `AppLayout.test.tsx`, `Header.test.tsx`) под новые роуты; сценарии `router.test.tsx` переезжают в `routes.test.tsx` — также `BottomNav.test.tsx` (история) и `Search.test.tsx` (`HeaderQuerySetter` теперь зовёт `submitSearchQuery`; тест «появление `?q`» ждёт отсутствия `?page`, а не `page=1` — поведение Task 13)
+- [x] `grep -rE "from 'react-router" src` находит только файлы, удаляемые в Task 16
+- [x] запустить `make test`, `make typecheck`, `make lint` — зелёные перед Task 16
 
 ### Task 16: Удаление React Router и старого слоя `/search`
 

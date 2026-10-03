@@ -1,8 +1,8 @@
 import { ProfileAvatar } from '@features/profile'
 import { ThemeToggle } from '@features/theme'
+import { urlAtom } from '@reatom/core'
 import { paths } from '@shared/config'
 import { SearchIcon, ChevronLeftIcon } from '@shared/ui'
-import { useNavigate } from 'react-router'
 
 import s from './MobileHeader.module.css'
 
@@ -21,8 +21,8 @@ export const MobileHeader = ({
   onBack,
   rightAction,
 }: MobileHeaderProps) => {
-  const navigate = useNavigate()
-  const handleSearchFocus = onSearchFocus ?? (() => navigate(paths.search()))
+  // Обычный компонент: атомы не читает, только вызывает action в обработчике.
+  const handleSearchFocus = onSearchFocus ?? (() => urlAtom.go(paths.search()))
 
   return (
     <header className={s.header}>

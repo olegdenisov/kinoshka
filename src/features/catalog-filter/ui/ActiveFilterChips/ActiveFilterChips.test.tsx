@@ -1,16 +1,15 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 
-import type { ActiveChip } from '../../model/useFilterState'
+import type { FilterChip } from '../../lib/filterChips'
 import { ActiveFilterChips } from './ActiveFilterChips'
 
-const makeChip = (label: string, onRemove = vi.fn()): ActiveChip => ({
-  label,
-  onRemove,
-})
+const makeChip = (label: string): FilterChip => ({ id: `id:${label}`, label })
 
 describe('ActiveFilterChips — обычный вариант (compact не задан, desktop SearchControls)', () => {
   it('пустой список чипов — ничего не рендерит, включая "Clear all"', () => {
-    render(<ActiveFilterChips chips={[]} onClearAll={vi.fn()} />)
+    render(
+      <ActiveFilterChips chips={[]} onRemove={vi.fn()} onClearAll={vi.fn()} />,
+    )
 
     expect(screen.queryByText('Clear all')).not.toBeInTheDocument()
   })
@@ -19,7 +18,8 @@ describe('ActiveFilterChips — обычный вариант (compact не за
     const onRemove = vi.fn()
     render(
       <ActiveFilterChips
-        chips={[makeChip('Movies', onRemove), makeChip('Drama')]}
+        chips={[makeChip('Movies'), makeChip('Drama')]}
+        onRemove={onRemove}
       />,
     )
 
@@ -30,10 +30,13 @@ describe('ActiveFilterChips — обычный вариант (compact не за
     fireEvent.click(movieChip.querySelector('button')!)
 
     expect(onRemove).toHaveBeenCalledTimes(1)
+    expect(onRemove).toHaveBeenCalledWith('id:Movies')
   })
 
   it('кнопка удаления чипа имеет aria-label "Remove <label>" (a11y baseline, Task 2)', () => {
-    render(<ActiveFilterChips chips={[makeChip('Movies')]} />)
+    render(
+      <ActiveFilterChips chips={[makeChip('Movies')]} onRemove={vi.fn()} />,
+    )
 
     expect(
       screen.getByRole('button', { name: 'Remove Movies' }),
@@ -43,7 +46,7 @@ describe('ActiveFilterChips — обычный вариант (compact не за
   it('"Clear all" рендерится только когда есть чипы и передан onClearAll, клик вызывает его', () => {
     const onClearAll = vi.fn()
     const { rerender } = render(
-      <ActiveFilterChips chips={[makeChip('Movies')]} />,
+      <ActiveFilterChips chips={[makeChip('Movies')]} onRemove={vi.fn()} />,
     )
     // onClearAll не передан — кнопки нет, даже если чипы есть.
     expect(screen.queryByText('Clear all')).not.toBeInTheDocument()
@@ -51,6 +54,7 @@ describe('ActiveFilterChips — обычный вариант (compact не за
     rerender(
       <ActiveFilterChips
         chips={[makeChip('Movies')]}
+        onRemove={vi.fn()}
         onClearAll={onClearAll}
       />,
     )
@@ -65,6 +69,7 @@ describe('ActiveFilterChips — компактный вариант (compact, м
     render(
       <ActiveFilterChips
         chips={[makeChip('Movies'), makeChip('Drama')]}
+        onRemove={vi.fn()}
         onClearAll={vi.fn()}
         compact
       />,
@@ -77,7 +82,7 @@ describe('ActiveFilterChips — компактный вариант (compact, м
 
   it('обрезает список до 6 чипов', () => {
     const chips = Array.from({ length: 8 }, (_, i) => makeChip(`Chip ${i}`))
-    render(<ActiveFilterChips chips={chips} compact />)
+    render(<ActiveFilterChips chips={chips} onRemove={vi.fn()} compact />)
 
     expect(screen.getByText('Chip 0')).toBeInTheDocument()
     expect(screen.getByText('Chip 5')).toBeInTheDocument()
@@ -86,7 +91,13 @@ describe('ActiveFilterChips — компактный вариант (compact, м
   })
 
   it('кнопка удаления компактного чипа имеет aria-label "Remove <label>" (a11y baseline, Task 2)', () => {
-    render(<ActiveFilterChips chips={[makeChip('Movies')]} compact />)
+    render(
+      <ActiveFilterChips
+        chips={[makeChip('Movies')]}
+        onRemove={vi.fn()}
+        compact
+      />,
+    )
 
     expect(
       screen.getByRole('button', { name: 'Remove Movies' }),
@@ -95,11 +106,17 @@ describe('ActiveFilterChips — компактный вариант (compact, м
 
   it('клик по крестику компактного чипа вызывает его onRemove (ветка chipCompactRemove)', () => {
     const onRemove = vi.fn()
-    render(<ActiveFilterChips chips={[makeChip('Movies', onRemove)]} compact />)
+    render(
+      <ActiveFilterChips
+        chips={[makeChip('Movies')]}
+        onRemove={onRemove}
+        compact
+      />,
+    )
 
     const chip = screen.getByText('Movies').closest('span')!
     fireEvent.click(chip.querySelector('button')!)
 
-    expect(onRemove).toHaveBeenCalledTimes(1)
+    expect(onRemove).toHaveBeenCalledWith('id:Movies')
   })
 })
