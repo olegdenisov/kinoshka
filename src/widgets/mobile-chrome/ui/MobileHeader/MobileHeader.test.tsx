@@ -1,9 +1,13 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { initThemeSync } from '@features/theme'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 
 import { MobileHeader } from './MobileHeader'
 
-beforeEach(() => localStorage.clear())
+beforeEach(() => {
+  localStorage.clear()
+  initThemeSync()
+})
 
 // jsdom document общий между тестами файла — ThemeToggle (рендерится в MobileHeader
 // безусловно, см. Task 7) применяет data-theme на document.documentElement, сбрасываем после
@@ -43,7 +47,7 @@ describe('MobileHeader', () => {
     expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
   })
 
-  it('клик по тогглу темы меняет document.documentElement.dataset.theme', () => {
+  it('клик по тогглу темы меняет document.documentElement.dataset.theme', async () => {
     render(
       <MemoryRouter>
         <MobileHeader />
@@ -52,11 +56,13 @@ describe('MobileHeader', () => {
 
     const toggle = screen.getByRole('button', { name: /theme/i })
 
-    fireEvent.click(toggle)
+    await act(async () => fireEvent.click(toggle))
 
     // Global matchMedia stub (src/test/setup.ts) defaults matches: false → theme === 'system'
     // (localStorage empty) resolves to 'light' on mount, so one click flips it to 'dark'.
-    expect(document.documentElement.dataset.theme).toBe('dark')
+    await waitFor(() =>
+      expect(document.documentElement.dataset.theme).toBe('dark'),
+    )
   })
 
   it('аватар — ссылка на /profile с инициалами сохранённого имени', () => {

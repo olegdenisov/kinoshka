@@ -1,10 +1,17 @@
 import { PROFILE_NAME_MAX_LENGTH, useProfile } from '@features/profile'
-import { ThemeToggle } from '@features/theme'
-import { act, render, renderHook, screen, within } from '@testing-library/react'
+import { initThemeSync, ThemeToggle } from '@features/theme'
+import {
+  act,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
-import { seedPersisted } from '../../../../test/persist'
+import { readPersisted, seedPersisted } from '../../../../test/persist'
 import { Profile } from './Profile'
 
 const PROFILE_KEY = 'kinoshka:profile'
@@ -40,6 +47,7 @@ const stubCoarsePointer = () => {
 describe('Profile', () => {
   beforeEach(() => {
     localStorage.clear()
+    initThemeSync()
   })
 
   // jsdom document общий между тестами файла — без сброса data-theme выставленная
@@ -439,23 +447,21 @@ describe('Profile', () => {
     await user.click(screen.getByRole('radio', { name: 'Dark' }))
     expect(screen.getByRole('radio', { name: 'Dark' })).toBeChecked()
     expect(screen.getByRole('radio', { name: 'System' })).not.toBeChecked()
-    expect(JSON.parse(localStorage.getItem('kinoshka:theme') ?? 'null')).toBe(
-      'dark',
+    expect(readPersisted('kinoshka:theme')).toBe('dark')
+    await waitFor(() =>
+      expect(document.documentElement.dataset.theme).toBe('dark'),
     )
-    expect(document.documentElement.dataset.theme).toBe('dark')
 
     await user.click(screen.getByRole('radio', { name: 'Light' }))
     expect(screen.getByRole('radio', { name: 'Light' })).toBeChecked()
-    expect(JSON.parse(localStorage.getItem('kinoshka:theme') ?? 'null')).toBe(
-      'light',
+    expect(readPersisted('kinoshka:theme')).toBe('light')
+    await waitFor(() =>
+      expect(document.documentElement.dataset.theme).toBe('light'),
     )
-    expect(document.documentElement.dataset.theme).toBe('light')
 
     await user.click(screen.getByRole('radio', { name: 'System' }))
     expect(screen.getByRole('radio', { name: 'System' })).toBeChecked()
-    expect(JSON.parse(localStorage.getItem('kinoshka:theme') ?? 'null')).toBe(
-      'system',
-    )
+    expect(readPersisted('kinoshka:theme')).toBe('system')
   })
 
   it('клик по ThemeToggle после выбора system заменяет его на явную тему (задокументированное поведение)', async () => {
@@ -477,10 +483,10 @@ describe('Profile', () => {
 
     expect(screen.getByRole('radio', { name: 'Dark' })).toBeChecked()
     expect(screen.getByRole('radio', { name: 'System' })).not.toBeChecked()
-    expect(JSON.parse(localStorage.getItem('kinoshka:theme') ?? 'null')).toBe(
-      'dark',
+    expect(readPersisted('kinoshka:theme')).toBe('dark')
+    await waitFor(() =>
+      expect(document.documentElement.dataset.theme).toBe('dark'),
     )
-    expect(document.documentElement.dataset.theme).toBe('dark')
   })
 
   it('Clear name не отображается без имени', () => {

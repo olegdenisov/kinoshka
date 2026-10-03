@@ -4,7 +4,7 @@ import {
   normalizeProfileName,
   useProfile,
 } from '@features/profile'
-import { useTheme } from '@features/theme'
+import { theme } from '@features/theme'
 import type { Theme } from '@features/theme'
 import { watchedIds } from '@features/watched'
 import { watchlistIds } from '@features/watchlist'
@@ -44,7 +44,6 @@ type ProfileFailure = { action: 'save' | 'clear'; count: number }
 
 export const Profile = reatomComponent(() => {
   const { name, initials, setName, clearName } = useProfile()
-  const { theme, setTheme } = useTheme()
   const [draft, setDraft] = useState(name)
   const [prevName, setPrevName] = useState(name)
   const [failure, setFailure] = useState<ProfileFailure | null>(null)
@@ -224,8 +223,8 @@ export const Profile = reatomComponent(() => {
                   type='radio'
                   name='theme'
                   value={option.value}
-                  checked={theme === option.value}
-                  onChange={() => setTheme(option.value)}
+                  checked={theme() === option.value}
+                  onChange={() => theme.set(option.value)}
                 />
                 <span className={s.themeLabel}>{option.label}</span>
               </label>

@@ -449,14 +449,14 @@ export const RouterOutlet = reatomComponent(
 - Modify: `index.html`, `vercel.json`; `vercel-headers.test.ts` сам пересчитывает хэш из `index.html` и должен остаться зелёным без правок
 - Delete: `src/features/theme/model/{themeStorage,useTheme}.ts` и их тесты
 
-- [ ] создать `theme`, `prefersDark`, `resolvedTheme`, `toggleTheme`, `initThemeSync`; `resolveTheme` из `lib/` переиспользуется
-- [ ] вызвать `initThemeSync()` в `src/app/reatom-setup.ts`
-- [ ] `ThemeToggle` → `reatomComponent`; `Profile` читает `theme` и пишет `theme.set(...)` через `useAtom` (в `reatomComponent` он переводится в Task 6)
-- [ ] inline-скрипт в `index.html`: читать `data` из конверта `PersistRecord`, при любом сбое — прежний fallback на системную тему
-- [ ] пересчитать sha256 скрипта в CSP (`vercel.json`) по инструкции `csp.md`
-- [ ] тесты: `resolvedTheme` для трёх значений × системной темы; смена media query; `data-theme` обновляется после `initThemeSync`; персист и кросс-таб
-- [ ] тест inline-скрипта на конверте и на мусоре в хранилище
-- [ ] запустить тесты — зелёные перед Task 6
+- [x] создать `theme`, `prefersDark`, `resolvedTheme`, `toggleTheme`, `initThemeSync`; `resolveTheme` из `lib/` переиспользуется
+- [x] вызвать `initThemeSync()` в `src/app/reatom-setup.ts`
+- [x] `ThemeToggle` → `reatomComponent`; `Profile` читает `theme` и пишет `theme.set(...)` через `useAtom` (в `reatomComponent` он переводится в Task 6) — `Profile` уже `reatomComponent`, поэтому читает `theme()` и пишет `theme.set(...)` напрямую, без `useAtom`
+- [x] inline-скрипт в `index.html`: читать `data` из конверта `PersistRecord`, при любом сбое — прежний fallback на системную тему
+- [x] пересчитать sha256 скрипта в CSP (`vercel.json`) по инструкции `csp.md`
+- [x] тесты: `resolvedTheme` для трёх значений × системной темы; смена media query; `data-theme` обновляется после `initThemeSync`; персист и кросс-таб
+- [x] тест inline-скрипта на конверте и на мусоре в хранилище
+- [x] запустить тесты — зелёные перед Task 6
 
 ### Task 6: Модель profile
 

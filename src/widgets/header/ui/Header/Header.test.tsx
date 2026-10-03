@@ -1,4 +1,5 @@
 import { ActiveFilterChips, useFilterState } from '@features/catalog-filter'
+import { initThemeSync } from '@features/theme'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { act, useEffect } from 'react'
 import {
@@ -45,6 +46,7 @@ const renderHeader = (initialEntries: string[]) => {
 beforeEach(() => {
   vi.useFakeTimers()
   localStorage.clear()
+  initThemeSync()
 })
 afterEach(() => {
   vi.useRealTimers()
@@ -533,7 +535,7 @@ describe('Header — переключатель темы (ThemeToggle)', () => {
     expect(screen.getByRole('button', { name: /theme/i })).toBeInTheDocument()
   })
 
-  it('клик по тогглу меняет document.documentElement.dataset.theme', () => {
+  it('клик по тогглу меняет document.documentElement.dataset.theme', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <Header variant='default' />
@@ -542,7 +544,7 @@ describe('Header — переключатель темы (ThemeToggle)', () => {
 
     const toggle = screen.getByRole('button', { name: /theme/i })
 
-    fireEvent.click(toggle)
+    await act(async () => fireEvent.click(toggle))
 
     // Global matchMedia stub (src/test/setup.ts) defaults matches: false → theme === 'system'
     // (localStorage empty) resolves to 'light' on mount, so one click flips it to 'dark'.

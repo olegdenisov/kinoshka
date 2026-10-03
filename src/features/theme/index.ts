@@ -1,4 +1,9 @@
-export { useTheme } from './model/useTheme'
-export type { UseThemeResult } from './model/useTheme'
-export type { Theme } from './model/themeStorage'
+export {
+  initThemeSync,
+  prefersDark,
+  resolvedTheme,
+  theme,
+  toggleTheme,
+} from './model/theme'
+export type { Theme } from './model/theme'
 export { ThemeToggle } from './ui/ThemeToggle'

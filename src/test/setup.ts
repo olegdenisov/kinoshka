@@ -14,12 +14,12 @@ import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 import { abortTestFrames } from './reatomTestScope'
 
 // window.matchMedia — jsdom вообще не реализует этот API (docs/plans/20260819-theme-toggle.md,
-// Task 4). useTheme() безусловно вызывает `window.matchMedia('(prefers-color-scheme: dark)')`,
-// так что без этого стаба любой тест, монтирующий компонент с useTheme()/ThemeToggle, упал бы с
+// Task 4). reatomMediaQuery темы вызывает `window.matchMedia('(prefers-color-scheme: dark)')`,
+// так что без этого стаба любой тест, монтирующий компонент с темой/ThemeToggle, упал бы с
 // "window.matchMedia is not a function". Слушатели хранятся по строке запроса (а не заглушены
 // no-op'ом), чтобы тест мог получить `addEventListener.mock.calls` / переопределить
 // `window.matchMedia` самостоятельно и вызвать сохранённый 'change'-слушатель напрямую, эмулируя
-// смену системной темы — см. паттерн переопределения в useTheme.test.tsx (этот глобальный стаб
+// смену системной темы — см. паттерн переопределения в theme.test.ts (этот глобальный стаб
 // по умолчанию гарантирует только `matches: false` и рабочую подписку/отписку).
 const mediaQueryListeners = new Map<
   string,
