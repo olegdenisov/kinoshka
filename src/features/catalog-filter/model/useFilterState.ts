@@ -1,43 +1,18 @@
 import { trackEvent } from '@shared/lib'
 import { useSearchParams } from 'react-router'
 
-import {
-  type Duration,
-  getCountryLabel,
-  getDurationLabel,
-  getListLabel,
-  getPlatformLabel,
-} from '../lib/filterOptions'
-import { getGenreLabel } from '../lib/genreMap'
+import { getFilterChips, removeChipFromFilters } from '../lib/filterChips'
 import {
   EMPTY_FILTERS,
   FILTER_URL_KEYS,
   filtersToSearchParams,
   getFilterFromSearchParams,
 } from '../lib/searchParams'
-
-export type FilterState = {
-  type: string | null
-  genres: string[]
-  yearFrom: number | null
-  yearTo: number | null
-  rating: number | null
-  countries: string[]
-  duration: Duration | null
-  platforms: string[]
-  list: string | null
-}
+import type { FilterState } from './types'
 
 export type ActiveChip = {
   label: string
   onRemove: () => void
-}
-
-/** UI type-фильтр → лейбл chip'а — те же подписи, что у Header nav pills и SearchSidebar. */
-const TYPE_LABELS: Record<string, string> = {
-  movie: 'Movies',
-  series: 'Series',
-  anime: 'Anime',
 }
 
 /**
@@ -101,73 +76,10 @@ export const useFilterState = () => {
 
   const resetFilters = () => setFilters(EMPTY_FILTERS)
 
-  const activeChips: ActiveChip[] = []
-  if (filters.type) {
-    const label = TYPE_LABELS[filters.type] ?? filters.type
-    activeChips.push({
-      label,
-      onRemove: () => setFilters(f => ({ ...f, type: null })),
-    })
-  }
-  filters.genres.forEach(g =>
-    activeChips.push({
-      label: getGenreLabel(g),
-      onRemove: () => toggleGenre(g),
-    }),
-  )
-  if (filters.yearFrom || filters.yearTo) {
-    // yearFrom/yearTo — независимые nullable-поля (валидный FilterState допускает только
-    // один из них заданным), поэтому не склеиваем "2020–null"/"null–2025" вслепую.
-    const label =
-      filters.yearFrom && filters.yearTo
-        ? `${filters.yearFrom}–${filters.yearTo}`
-        : filters.yearFrom
-          ? `${filters.yearFrom}+`
-          : `–${filters.yearTo}`
-    activeChips.push({
-      label,
-      onRemove: () => setFilters(f => ({ ...f, yearFrom: null, yearTo: null })),
-    })
-  }
-  if (filters.rating) {
-    activeChips.push({
-      label: `Rating ${filters.rating}+`,
-      onRemove: () => setFilters(f => ({ ...f, rating: null })),
-    })
-  }
-
-  filters.countries.forEach(c =>
-    activeChips.push({
-      label: getCountryLabel(c),
-      onRemove: () =>
-        setFilters(f => ({
-          ...f,
-          countries: f.countries.filter(x => x !== c),
-        })),
-    }),
-  )
-  if (filters.duration) {
-    activeChips.push({
-      label: getDurationLabel(filters.duration),
-      onRemove: () => setFilters(f => ({ ...f, duration: null })),
-    })
-  }
-  filters.platforms.forEach(p =>
-    activeChips.push({
-      label: getPlatformLabel(p),
-      onRemove: () =>
-        setFilters(f => ({
-          ...f,
-          platforms: f.platforms.filter(x => x !== p),
-        })),
-    }),
-  )
-  if (filters.list) {
-    activeChips.push({
-      label: getListLabel(filters.list),
-      onRemove: () => setFilters(f => ({ ...f, list: null })),
-    })
-  }
+  const activeChips: ActiveChip[] = getFilterChips(filters).map(chip => ({
+    label: chip.label,
+    onRemove: () => setFilters(f => removeChipFromFilters(f, chip.id)),
+  }))
 
   return {
     filters,

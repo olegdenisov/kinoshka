@@ -1,8 +1,11 @@
-import { EMPTY_FILTERS, filtersToSearchParams } from '@features/catalog-filter'
+import {
+  EMPTY_FILTERS,
+  filtersToSearchParams,
+  QUERY_MIN_LENGTH,
+} from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
 import { paths } from '@shared/config'
 import { SearchIcon } from '@shared/ui'
-import { QUERY_MIN_LENGTH } from '@widgets/header'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 

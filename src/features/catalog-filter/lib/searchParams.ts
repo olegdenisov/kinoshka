@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { FilterState } from '../model/useFilterState'
+import type { FilterState } from '../model/types'
 import { DURATION_VALUES } from './filterOptions'
 
 /** URL-ключи фильтров (без сортировки) — используются и для чтения/записи, и для удаления. */
@@ -130,5 +130,15 @@ export const stripFilterAndSortParams = (
 ): URLSearchParams => {
   const next = new URLSearchParams(params)
   FILTER_AND_SORT_URL_KEYS.forEach(key => next.delete(key))
+  return next
+}
+
+/** `?page` → `1`, если ещё не `1` — иначе возвращает `params` без изменений (no-op). */
+export const resetPageToOne = (params: URLSearchParams): URLSearchParams => {
+  if ((params.get('page') ?? '1') === '1') {
+    return params
+  }
+  const next = new URLSearchParams(params)
+  next.set('page', '1')
   return next
 }

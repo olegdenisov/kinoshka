@@ -1,4 +1,5 @@
 import {
+  resetPageToOne,
   stripFilterAndSortParams,
   type FilterState,
 } from '@features/catalog-filter'
@@ -16,16 +17,6 @@ export type PageSyncParams = {
 export type PageSyncResult = {
   page: number
   goToPage: (p: number) => void
-}
-
-/** `?page` → `1`, если ещё не `1` — иначе возвращает `params` без изменений (no-op). */
-const resetPageToOne = (params: URLSearchParams): URLSearchParams => {
-  if ((params.get('page') ?? '1') === '1') {
-    return params
-  }
-  const next = new URLSearchParams(params)
-  next.set('page', '1')
-  return next
 }
 
 /**

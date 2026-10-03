@@ -1,18 +1,13 @@
 import { apiClient } from '@shared/api'
 import { createCachedFetcher } from '@shared/lib'
 
-import type { Movie } from '../model/types'
+import type { SearchMoviesResult } from '../model/searchMovies'
 import { mapDocToMovie } from './mapDocToMovie'
 import { PER_PAGE, MAX_PAGES } from './paginationConfig'
 
 type RequestParams = {
   query: string
   page?: number
-}
-
-export type SearchMoviesResult = {
-  movies: Movie[]
-  totalPages: number
 }
 
 const fetchSearchMovies = async (

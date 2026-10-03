@@ -8,7 +8,7 @@ import {
   PLATFORM_OPTIONS,
   RATING_VALUES,
 } from '../../lib/filterOptions'
-import type { FilterState } from '../../model/useFilterState'
+import type { FilterState } from '../../model/types'
 import { ChipSelect } from '../ChipSelect'
 import { CountrySelector } from '../CountrySelector'
 import { FilterGroup } from '../FilterGroup'

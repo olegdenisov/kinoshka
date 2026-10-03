@@ -1,4 +1,4 @@
-import type { FilterState } from '../model/useFilterState'
+import type { FilterState } from '../model/types'
 import { LIST_OPTIONS, PLATFORM_OPTIONS } from './filterOptions'
 import { filtersToParams } from './filtersToParams'
 import {

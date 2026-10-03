@@ -1,4 +1,9 @@
-import { EMPTY_FILTERS, filtersToSearchParams } from '@features/catalog-filter'
+import {
+  EMPTY_FILTERS,
+  filtersToSearchParams,
+  QUERY_DEBOUNCE_MS,
+  QUERY_MIN_LENGTH,
+} from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
 import { ProfileAvatar } from '@features/profile'
 import { ThemeToggle } from '@features/theme'
@@ -11,9 +16,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { NavPill } from '../NavPill'
 
 import s from './Header.module.css'
-
-const QUERY_DEBOUNCE_MS = 250
-export const QUERY_MIN_LENGTH = 2
 
 type HeaderProps = {
   variant?: 'default' | 'search'

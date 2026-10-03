@@ -5,7 +5,7 @@ import { vi } from 'vitest'
 
 import { server } from '../../../../test/setup'
 import { EMPTY_FILTERS } from '../../lib/searchParams'
-import type { FilterState } from '../../model/useFilterState'
+import type { FilterState } from '../../model/types'
 import { FilterPanel } from './FilterPanel'
 
 const details = (title: string) =>

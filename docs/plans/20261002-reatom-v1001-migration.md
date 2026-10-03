@@ -604,19 +604,19 @@ export const RouterOutlet = reatomComponent(
 
 Модели в этой задаче не подключены к UI: в тестах атомы подписаны, URL выставляется через `urlAtom`. Экспорты, у которых потребитель появится только в Task 15, в баррели не добавляются до Task 15 (иначе knip).
 
-- [ ] `types.ts`: перенести `FilterState` и `TYPE_LABELS` из `useFilterState.ts`; обновить импорты в `lib/`, `ui/`, тестах и барреле
-- [ ] `searchState.ts`: чтение и запись по Technical Details (`FilterChip` + `removeFilterChip`); `resetPageToOne` переезжает из `usePageSync.ts` в `lib/searchParams.ts`
-- [ ] `QUERY_MIN_LENGTH` и `QUERY_DEBOUNCE_MS` переезжают из `Header.tsx` в `searchState.ts` и экспортируются из `@features/catalog-filter`; `Header` и `HeroSection` импортируют их оттуда, реэкспорт из `@widgets/header` убрать
-- [ ] событие `filter changed` — в actions фильтров, как сейчас
-- [ ] `searchMovies.ts`: `fetchSearchMovies` — `action + withAsync + withQueryCache()`; тип `SearchMoviesResult` переезжает сюда, `getSearchMovies.ts` импортирует его отсюда
-- [ ] `catalog.ts`: `catalog`; `effect` в его connect-hook вызывает `normalizeSearchUrl` при каждой смене URL и отслеживает `search submitted` при каждой смене `q` (`sleep(800)` + `withAbort`, без повторов для того же запроса)
-- [ ] тесты (проверяется URL): deep-link `/search?q=…&page=3&genres=…` — страница сохраняется, фильтры и сортировка вычищены; то же при переходе на такой URL без переподключения `catalog`
-- [ ] тесты: `setFilters` / `toggleGenre` / `resetFilters` / `removeFilterChip` сбрасывают `page`; `setSort` страницу сохраняет; `goToPage` пишет страницу и вызывает `window.scrollTo` (spy); `submitSearchQuery` из режима фильтров оставляет в URL только `q`; каждая мутация — один `replaceState`
-- [ ] тесты: `search submitted` уходит один раз на каждое новое значение `q`, а не только при подключении
-- [ ] тесты: мусор в параметрах даёт дефолты; вне `/search` состояние пустое; запрос короче порога не пишется в `?q`
-- [ ] тесты: `searchDraft` принимает ввод и следует за URL при back/forward; быстрый ввод даёт одну запись после debounce
-- [ ] тесты `catalog`: режим поиска против режима каталога; возврат на уже загруженную страницу не шлёт запрос; старые данные остаются во время обновления; ответ устаревшего запроса не перезаписывает результат более нового при быстрой смене параметров
-- [ ] запустить тесты — зелёные перед Task 14
+- [x] `types.ts`: перенести `FilterState` и `TYPE_LABELS` из `useFilterState.ts`; обновить импорты в `lib/`, `ui/`, тестах и барреле — подписи и снятие чипов вынесены в чистые `lib/filterChips.ts` (`getFilterChips`, `removeChipFromFilters`); `useFilterState` строит `ActiveChip` поверх них, чтобы логика не дублировалась до Task 16
+- [x] `searchState.ts`: чтение и запись по Technical Details (`FilterChip` + `removeFilterChip`); `resetPageToOne` переезжает из `usePageSync.ts` в `lib/searchParams.ts` — `filters` и `catalogParams` с `withMemo(isDeepEqual)`; мусорная `sort` (не из `SORT_LABELS`) даёт `''`; `submitSearchQuery` при смене `q` убирает `?page` целиком; мутации вне `/search` URL не трогают; `searchDraft` не перезаписывается, когда новый `?q` лишь отражает сам черновик (trim, ввод короче порога → пусто) — иначе собственный коммит стирал бы пробел или единственную букву; `commitSearchDraft` — синхронный action с `wrap(sleep).then(...)` + `withAbort()`: async-вариант отдаёт вызывающему промис, который `withAbort` отклоняет на каждом нажатии (unhandled rejection)
+- [x] `QUERY_MIN_LENGTH` и `QUERY_DEBOUNCE_MS` переезжают из `Header.tsx` в `searchState.ts` и экспортируются из `@features/catalog-filter`; `Header` и `HeroSection` импортируют их оттуда, реэкспорт из `@widgets/header` убрать
+- [x] событие `filter changed` — в actions фильтров, как сейчас
+- [x] `searchMovies.ts`: `fetchSearchMovies` — `action + withAsync + withQueryCache()`; тип `SearchMoviesResult` переезжает сюда, `getSearchMovies.ts` импортирует его отсюда — с `{ length: 20, ignoreAbort: true }` по правилу Task 7 для запросов с параметрами; экспортируется из `@entities/movie` (потребитель — `catalog.ts`)
+- [x] `catalog.ts`: `catalog`; `effect` в его connect-hook вызывает `normalizeSearchUrl` при каждой смене URL и отслеживает `search submitted` при каждой смене `q` (`sleep(800)` + `withAbort`, без повторов для того же запроса) — `effect` отменяет прошлый запуск сам, `withAbort` не нужен; отказ `wrap(sleep)` гасится в `.then(…, noop)`, иначе отмена — unhandled rejection
+- [x] тесты (проверяется URL): deep-link `/search?q=…&page=3&genres=…` — страница сохраняется, фильтры и сортировка вычищены; то же при переходе на такой URL без переподключения `catalog`
+- [x] тесты: `setFilters` / `toggleGenre` / `resetFilters` / `removeFilterChip` сбрасывают `page`; `setSort` страницу сохраняет; `goToPage` пишет страницу и вызывает `window.scrollTo` (spy); `submitSearchQuery` из режима фильтров оставляет в URL только `q`; каждая мутация — один `replaceState`
+- [x] тесты: `search submitted` уходит один раз на каждое новое значение `q`, а не только при подключении
+- [x] тесты: мусор в параметрах даёт дефолты; вне `/search` состояние пустое; запрос короче порога не пишется в `?q`
+- [x] тесты: `searchDraft` принимает ввод и следует за URL при back/forward; быстрый ввод даёт одну запись после debounce
+- [x] тесты `catalog`: режим поиска против режима каталога; возврат на уже загруженную страницу не шлёт запрос; старые данные остаются во время обновления; ответ устаревшего запроса не перезаписывает результат более нового при быстрой смене параметров
+- [x] запустить тесты — зелёные перед Task 14
 
 ### Task 14: Листовые ссылки — `<Link>` → `<a href>`
 
