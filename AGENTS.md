@@ -115,7 +115,7 @@ Mobile-first CSS, not paired components: one component + one CSS module per page
 
 - Breakpoint **720px** (`MOBILE_BREAKPOINT` in `src/shared/lib/viewport/useViewport.ts`).
 - `useViewport()` has exactly **two** legitimate consumers — cases where the choice is _which component mounts_, not how it looks:
-  1. `AppLayout.tsx` — `Header` vs `MobileHeader`+`BottomNav`. Can't be CSS-only: `Header` runs a `?q`-debounce effect that mutates the URL even when hidden.
+  1. `AppLayout.tsx` — `Header` vs `MobileHeader`+`BottomNav`. Can't be CSS-only: mounting both would duplicate `Header`'s global ⌘K listener and search-draft state even when hidden.
   2. `src/pages/search/ui/Search/Search.tsx` — `SearchSidebar` vs mobile filter bar + `BottomSheet` (and `SortSelect` vs sort `BottomSheet`).
 - Don't add a third `useViewport()` consumer for anything CSS can express.
 

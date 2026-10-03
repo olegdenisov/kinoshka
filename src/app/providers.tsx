@@ -5,15 +5,8 @@ import { registerChunkPreloadRecovery } from './chunkPreloadRecovery'
 import { GlobalErrorBoundary } from './GlobalErrorBoundary'
 import { layoutRoute } from './routes'
 
-// initSentry() больше не вызывается здесь — переехал в src/app/sentry-bootstrap.ts, импортируемый
-// первой строкой в main.tsx, раньше этого модуля — см. WHY-комментарий в sentry-bootstrap.ts.
-// reportWebVitals() удалён вместе с пайплайном Web Vitals→Plausible (2.5.7) — Web Vitals теперь
-// собирает Sentry Performance (tracesSampleRate в src/app/sentry.ts), отдельный вызов не нужен.
-// Один раз на верхнем уровне модуля, до определения Providers — initAnalytics() рано выходит,
-// если !PROD || !VITE_PLAUSIBLE_DOMAIN (см. src/shared/lib/analytics/analytics.ts) — no-op в
-// dev/test-окружениях. registerChunkPreloadRecovery() — тоже один раз на верхнем уровне: слушает
-// window's vite:preloadError и перезагружает страницу при сбое загрузки чанка (не чаще раза в
-// 10s, только в PROD — в dev обработчик ничего не делает, см. WHY в chunkPreloadRecovery.ts).
+// Один раз на верхнем уровне модуля: initAnalytics() — no-op вне PROD / без VITE_PLAUSIBLE_DOMAIN;
+// registerChunkPreloadRecovery() слушает vite:preloadError (детали — в chunkPreloadRecovery.ts).
 initAnalytics()
 registerChunkPreloadRecovery()
 

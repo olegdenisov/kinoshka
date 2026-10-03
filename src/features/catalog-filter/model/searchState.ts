@@ -1,18 +1,17 @@
+import { MAX_PAGES } from '@entities/movie'
 import {
   action,
   atom,
   computed,
   ifChanged,
   isDeepEqual,
-  sleep,
   urlAtom,
   withAbort,
   withComputed,
   withMemo,
-  wrap,
 } from '@reatom/core'
 import { matchRoutePattern } from '@shared/config'
-import { trackEvent } from '@shared/lib'
+import { afterSleep, trackEvent } from '@shared/lib'
 
 import { getFilterChips, removeChipFromFilters } from '../lib/filterChips'
 import { filtersToParams, SORT_LABELS } from '../lib/filtersToParams'
@@ -29,12 +28,10 @@ import type { FilterState } from './types'
 export const QUERY_MIN_LENGTH = 2
 export const QUERY_DEBOUNCE_MS = 250
 
-/** Demo-тариф: страницы 1–10 (клэмп и на чтении из URL, и на записи через goToPage). */
-const MAX_PAGE = 10
+// Клэмп и на чтении из URL, и на записи через goToPage.
+const clampPage = (page: number) => Math.min(MAX_PAGES, Math.max(1, page))
 
-const clampPage = (page: number) => Math.min(MAX_PAGE, Math.max(1, page))
-
-/** Значение, которое реально попадёт в `?q`: trim, короче порога — пусто. */
+// Значение, которое реально попадёт в `?q`: trim, короче порога — пусто.
 const toUrlQuery = (raw: string) => {
   const trimmed = raw.trim()
   return trimmed.length >= QUERY_MIN_LENGTH ? trimmed : ''
@@ -204,8 +201,5 @@ export const searchDraft = atom('', 'catalogFilter.draft').extend(
 // исход каждого нажатия: action синхронный и промис наружу не отдаёт, иначе отменённые вызовы
 // уходили бы вызывающему unhandled rejection.
 export const commitSearchDraft = action(() => {
-  wrap(sleep(QUERY_DEBOUNCE_MS)).then(
-    wrap(() => submitSearchQuery(searchDraft())),
-    () => {},
-  )
+  afterSleep(QUERY_DEBOUNCE_MS, () => submitSearchQuery(searchDraft()))
 }, 'catalogFilter.commitDraft').extend(withAbort())

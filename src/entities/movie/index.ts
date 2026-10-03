@@ -8,6 +8,7 @@ export type {
   CrewMember,
   PopularMovie,
 } from './model/types'
+export { MAX_PAGES } from './api/paginationConfig'
 export { STATIC_FALLBACK_GENRES } from './model/genre'
 export { countries, genres } from './model/dictionaries'
 export { STATIC_FALLBACK_COUNTRIES } from './model/country'

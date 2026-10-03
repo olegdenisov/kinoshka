@@ -23,8 +23,8 @@ type HeaderProps = {
   activeNav?: string
 }
 
-/** Строим /search-URL через тот же контракт, что HeroSection (@features/catalog-filter), а не
- * хардкодим ?type= вручную — так рефакторинг кодирования фильтра затронет и nav pills. */
+// /search-URL строим через тот же контракт, что HeroSection (@features/catalog-filter), а не
+// хардкодим ?type= — так рефакторинг кодирования фильтра затронет и nav pills.
 const searchPathForType = (type: FilterState['type']) =>
   paths.search(filtersToSearchParams({ ...EMPTY_FILTERS, type }))
 

@@ -6,10 +6,12 @@ const RESTORE_TIMEOUT_MS = 1000
 // Только пользовательский ввод: событие scroll шлёт и наш собственный scrollTo.
 const USER_SCROLL_EVENTS = ['wheel', 'touchstart', 'keydown'] as const
 
+// sessionStorage напрямую, а не withSessionStorage: позиции ключуются записью history (не
+// атомом) и пишутся из обработчиков pagehide/urlAtom вне реактивного контекста.
 const positionsSchema = z.record(z.string(), z.number())
 
 type Session = {
-  /** Ключ текущей записи истории — под ним сохраняется позиция при уходе с неё. */
+  // Ключ текущей записи истории — под ним сохраняется позиция при уходе с неё.
   key: string
   listeners: AbortController
   cancelRestore: () => void
@@ -150,7 +152,7 @@ urlAtom.extend(
   }),
 )
 
-/** Снимает слушатели и отменяет восстановление; модульное состояние вне атомов (тесты). */
+// Снимает слушатели и отменяет восстановление; модульное состояние вне атомов (тесты).
 export const resetScrollRestoration = () => {
   if (!session) return
   session.cancelRestore()

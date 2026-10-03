@@ -65,39 +65,41 @@ const fetchDictionaryNames = async (
 
 // swr выключен: свежий словарь не перезапрашивается; устаревший (старше 7 дней) исчезает из
 // кэша и запрашивается заново. Ошибка не кэшируется, но ресурс ниже не перезапускается сам.
-const fetchGenreNames = action(
-  () => fetchDictionaryNames('genres'),
-  'movie.fetchGenreNames',
-).extend(
-  withAsync(),
-  withCache({
-    swr: false,
-    staleTime: DICTIONARY_STALE_MS,
-    withPersist: persistDictionary('kinoshka:genres'),
-  }),
+// `time: PERSIST_FOREVER_MS` не нужен: дефолтное истечение записи (~24,8 дня) дольше staleTime.
+const reatomDictionary = (
+  type: 'genres' | 'countries',
+  name: string,
+  key: string,
+) => {
+  const fetchNames = action(
+    () => fetchDictionaryNames(type),
+    `movie.fetch${name}Names`,
+  ).extend(
+    withAsync(),
+    withCache({
+      swr: false,
+      staleTime: DICTIONARY_STALE_MS,
+      withPersist: persistDictionary(key),
+    }),
+  )
+
+  return computed(
+    async () => await wrap(fetchNames()),
+    `movie.${type === 'genres' ? 'genre' : 'country'}Dictionary`,
+  ).extend(withAsyncData({ initState: [] }))
+}
+
+export const genreDictionary = reatomDictionary(
+  'genres',
+  'Genre',
+  'kinoshka:genres',
 )
 
-const fetchCountryNames = action(
-  () => fetchDictionaryNames('countries'),
-  'movie.fetchCountryNames',
-).extend(
-  withAsync(),
-  withCache({
-    swr: false,
-    staleTime: DICTIONARY_STALE_MS,
-    withPersist: persistDictionary('kinoshka:countries'),
-  }),
+export const countryDictionary = reatomDictionary(
+  'countries',
+  'Country',
+  'kinoshka:countries',
 )
-
-export const genreDictionary = computed(
-  async () => await wrap(fetchGenreNames()),
-  'movie.genreDictionary',
-).extend(withAsyncData({ initState: [] }))
-
-export const countryDictionary = computed(
-  async () => await wrap(fetchCountryNames()),
-  'movie.countryDictionary',
-).extend(withAsyncData({ initState: [] }))
 
 // Статический шорт-лист вместо пустого списка: до загрузки, при ошибке и пока устаревший
 // словарь перезапрашивается.

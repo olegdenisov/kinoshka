@@ -40,11 +40,8 @@ import {
 
 import s from './Search.module.css'
 
-/**
- * Выдача каталога. Во время обновления (смена страницы/фильтров) показывает прежние данные —
- * `catalog.data()` не сбрасывается, пока идёт новый запрос; `Pagination` подсвечивает живой
- * `page()` сразу, не дожидаясь ответа.
- */
+// Во время обновления показывает прежние данные (`catalog.data()` не сбрасывается), а
+// `Pagination` подсвечивает живой `page()` сразу, не дожидаясь ответа.
 const SearchResults = reatomComponent(() => {
   const { movies, totalPages } = catalog.data()
   const query = searchQuery()
@@ -84,7 +81,7 @@ const SearchResults = reatomComponent(() => {
       {/*
         Genre round-trip: API отдаёт `genres.name` по-русски, `Movie.genre` этих значений не
         переводит обратно в английский — карточки показывают русские жанры как есть, reverse
-        RU→EN не делаем (принятое решение, не баг, см. AGENTS.md "Data state").
+        RU→EN не делаем (принятое решение, не баг, см. .claude/rules/search-catalog.md).
       */}
       <SearchResultsGrid movies={movies} />
       <div className={s.paginationSection}>
@@ -101,46 +98,10 @@ const SearchResults = reatomComponent(() => {
   )
 }, 'SearchResults')
 
-/**
- * Единый адаптивный `Search` (Task 10, план `docs/plans/20260827-mobile-first-adaptive-layout.md`
- * — намеренно последняя и самая сложная задача слияния, см. Development Approach плана).
- * Слил `SearchDesktop`/`SearchMobile`, каждый из которых сам разветвлялся через
- * `SearchPage.tsx`'s `useViewport`.
- *
- * **Осознанное отклонение от буквальной формулировки роадмапа (2.5: "фильтры — drawer на
- * мобильной базе, раскрываются в сайдбар на широких экранах", подразумевающей один компонент
- * для фильтров).** `SearchSidebar` (always-visible aside с radio-rows) и bottom-sheet
- * (открывается по кнопке, портал, свой `filtersOpen`/`sortOpen` стейт) — разные UX-паттерны, не
- * CSS-варианты одного дерева (см. Task 1/Audit и Solution Overview плана). Слияние НЕ сводит их
- * в одну раскладку — оба варианта остаются как разные под-деревья, но выбор между ними (и выбор
- * `Pagination`-варианта — впрочем, тот последний свёлся к чистому CSS, см. `Pagination`'s
- * докблок) переехал в эту единую точку (`Search`) вместо того, чтобы быть разбросанным по
- * `SearchDesktop.tsx`/`SearchMobile.tsx` по отдельности.
- *
- * **Chrome (`Header`/`MobileHeader`+`BottomNav`) сюда не входит** — `/search` подключён под
- * `AppLayout` (см. `src/app/routes.tsx`), который сам решает `Header`'s `variant='search'`/
- * `activeNav` (из `?type`, не из пути — см. `AppLayout.tsx`'s `SEARCH_CHROME`/`isSearchRoute`) и
- * `MobileHeader`+`BottomNav` для мобильного брейкпоинта. `Search` — только контент страницы.
- *
- * **`SearchHeader`/`SearchResultsGrid`/`SearchResultSkeletonGrid` — не были общими компонентами
- * до этой задачи, вопреки предположению плана.** Чтение кода `SearchMobile.tsx` (Task 10)
- * показало, что эти три компонента (и `SearchControls`/`SortSelect`) реально использовались
- * только `SearchDesktop.tsx` — `SearchMobile.tsx` рендерил параллельные инлайновые эквиваленты
- * (`.sectionHeader`/`.eyebrow`+`.title`, `Card`-грид напрямую, свой sticky filter-bar).
- * `SearchResultsGrid`/`SearchResultSkeletonGrid` унифицированы под mobile-first CSS (2 колонки
- * мобильный / 4 десктоп, см. их докблоки) и используются на обоих брейкпоинтах — чистое "просто
- * CSS" слияние. `SearchHeader` тоже унифицирован (mobile-first размеры), но с одной сознательной
- * потерей паритета: мобильный overline-лейбл раньше менялся между "Search results"/"Catalog" по
- * `isSearchMode`, единый `SearchHeader` показывает статичный `Catalog · /search`, как раньше было
- * у десктопа (заголовок `title` при этом по-прежнему меняется по `isSearchMode`, как и раньше) —
- * принятое упрощение, не покрытое ни одним существующим тестом ни на одном брейкпоинте.
- *
- * **`SearchControls` (chips + `SortSelect`-дропдаун) и мобильный sticky filter-bar (кнопки-
- * триггеры + bottom-sheet сортировки) остаются раздельными компонентами того же семейства, что
- * и sidebar/bottom-sheet фильтры** — дропдаун сортировки поверх текста (десктоп, мышь) и
- * полноэкранный bottom-sheet со списком (мобильный, тач) — тоже разный UX, не просто разный CSS,
- * тот же принцип, что применяется к фильтрам выше. Оба выбираются тем же `isMobile`.
- */
+// Выбор между SearchSidebar и мобильной filter-bar + BottomSheet (и между SortSelect и sort
+// BottomSheet) — разные UX-паттерны, а не CSS-варианты одного дерева, поэтому ветвимся по
+// `isMobile` (один из двух законных потребителей useViewport). Chrome (Header/BottomNav) живёт
+// в AppLayout; Search — только контент страницы.
 export const Search = reatomComponent(() => {
   const { isMobile } = useViewport()
   const [filtersOpen, setFiltersOpen] = useState(false)

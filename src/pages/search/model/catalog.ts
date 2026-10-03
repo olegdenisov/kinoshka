@@ -8,13 +8,12 @@ import {
 import {
   computed,
   effect,
-  sleep,
   urlAtom,
   withAsyncData,
   withConnectHook,
   wrap,
 } from '@reatom/core'
-import { trackEvent } from '@shared/lib'
+import { afterSleep, trackEvent } from '@shared/lib'
 
 type CatalogMode = 'search' | 'catalog'
 
@@ -68,16 +67,12 @@ export const catalog = computed(async (): Promise<CatalogResult> => {
         lastTracked = ''
         return
       }
-      // Новая смена ?q отменяет ожидание прошлого запуска effect. Отмена — штатный исход,
-      // поэтому отклонение гасится здесь, а не уходит в unhandled rejection.
-      wrap(sleep(SEARCH_SETTLE_MS)).then(
-        () => {
-          if (query === lastTracked) return
-          lastTracked = query
-          trackEvent('search submitted')
-        },
-        () => {},
-      )
+      // Новая смена ?q отменяет ожидание прошлого запуска effect.
+      afterSleep(SEARCH_SETTLE_MS, () => {
+        if (query === lastTracked) return
+        lastTracked = query
+        trackEvent('search submitted')
+      })
     }, 'searchCatalog.trackSearch')
   }),
 )
