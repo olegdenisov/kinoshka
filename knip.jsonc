@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  // src/main.tsx — единственная точка входа приложения (Vite bootstrap).
+  // src/main.tsx, vite.config.ts и playwright.config.ts knip находит сам (плагины Vite/Playwright).
   // *.test.{ts,tsx} — без этого knip считает тестовые файлы и большинство
   // devDependencies (vitest, msw, testing-library, ...) неиспользуемыми.
   // Root-конфиги (vite.config.ts/sentry.config.ts/apicraft.config.ts) — иначе
@@ -10,13 +10,10 @@
   // @playwright/test/@axe-core/playwright считаются unused devDependencies (knip
   // умеет автоопределять Playwright по playwright.config.ts, но явная запись нагляднее).
   "entry": [
-    "src/main.tsx",
     "**/*.test.{ts,tsx}",
-    "vite.config.ts",
     "sentry.config.ts",
     "apicraft.config.ts",
     "bundle.config.ts",
-    "playwright.config.ts",
     "e2e/**/*.spec.ts",
     // Task 3, docs/plans/20260915-telemetry-dashboard-sentry-alerts.md — provisioning-скрипт
     // поверх `sentry` CLI + его чистый конфиг-модуль. Тестовые файлы уже покрыты глобом
@@ -36,15 +33,11 @@
     // Модуль useFeatureFlag()/FeatureGate/FeatureName намеренно без текущего потребителя —
     // флаги (popularThisWeek, toggleTheme, …) оставлены false без подключения.
     "src/shared/config/**",
-    // Публичные барели слайсов (AGENTS.md, «Public API») — реэкспортируют
-    // getFilterFromSearchParams/CatalogQueryParams, UseFavoritesResult, useTheme/
-    // UseThemeResult/Theme, ErrorBoundary как часть намеренного публичного API,
-    // даже если у конкретного экспорта пока нет внешнего потребителя за пределами
-    // самого слайса (та же причина, что у add(id) в useFavorites).
+    // Публичные барели слайсов (AGENTS.md, «Public API») — реэкспортируют часть
+    // намеренного публичного API, даже если у конкретного экспорта пока нет внешнего
+    // потребителя за пределами самого слайса.
     "src/features/catalog-filter/index.ts",
-    "src/features/favorites/index.ts",
     "src/features/theme/index.ts",
-    "src/shared/ui/index.ts",
   ],
   // `sentry` — глобально установленный CLI-инструмент (см. docs/plans/20260915-telemetry-dashboard-sentry-alerts.md,
   // "sentry CLI — установлен и авторизован на этой машине"), не npm-зависимость репозитория — knip
