@@ -63,29 +63,33 @@
 ## Implementation Steps
 
 ### Task 1: Подключить кнопку Favorite страницы фильма к общему избранному
+
 **Model:** sonnet — изменение расписано, образец (Watched) рядом, тесты покажут результат
 
 **Files:**
+
 - Modify: `src/pages/movie/ui/types.ts`
 - Modify: `src/pages/movie/ui/MovieActions/MovieActions.tsx`
 - Modify: `src/pages/movie/ui/MovieHero/MovieHero.tsx`
 - Modify: `src/pages/movie/ui/Movie/Movie.tsx`
 - Modify: `src/pages/movie/ui/Movie/Movie.test.tsx`
 
-- [ ] убрать `fav` из `LikedState` в `types.ts`
-- [ ] в `MovieActions.tsx` добавить пропсы `favorite` / `onFavoriteToggle` и перевести на них кнопку `Favorite`
-- [ ] в `MovieHero.tsx` добавить те же пропсы и пробросить их в `MovieActions`
-- [ ] в `Movie.tsx` передать `favorite={favoriteIds().has(movie.id)}` и `onFavoriteToggle={wrap(() => toggleFavorite(movie.id))}`, начальное `liked` — `{ rate: false }`
-- [ ] над `onFavoriteToggle` в `Movie.tsx` оставить однострочный WHY-комментарий на русском: через `toggleFavorite`, а не `favoriteIds.toggle`, чтобы ушло событие `favorite added`
-- [ ] добавить в `Movie.test.tsx` блок `Movie — Favorite` по образцу `Movie — Watched`: не нажата по умолчанию; нажата при предустановленном id в `kinoshka:favorites`; клик добавляет id, повторный убирает; состояние переживает перемонтирование
-- [ ] добавить тест: клик по `Favorite` не меняет `kinoshka:watched` и `kinoshka:watchlist`
-- [ ] проверить, что существующий тест «остальные кнопки работают независимо от Watched» проходит без правок
-- [ ] `make test` и `make typecheck` — зелёные до Task 2
+- [x] убрать `fav` из `LikedState` в `types.ts`
+- [x] в `MovieActions.tsx` добавить пропсы `favorite` / `onFavoriteToggle` и перевести на них кнопку `Favorite`
+- [x] в `MovieHero.tsx` добавить те же пропсы и пробросить их в `MovieActions`
+- [x] в `Movie.tsx` передать `favorite={favoriteIds().has(movie.id)}` и `onFavoriteToggle={wrap(() => toggleFavorite(movie.id))}`, начальное `liked` — `{ rate: false }`
+- [x] над `onFavoriteToggle` в `Movie.tsx` оставить однострочный WHY-комментарий на русском: через `toggleFavorite`, а не `favoriteIds.toggle`, чтобы ушло событие `favorite added`
+- [x] добавить в `Movie.test.tsx` блок `Movie — Favorite` по образцу `Movie — Watched`: не нажата по умолчанию; нажата при предустановленном id в `kinoshka:favorites`; клик добавляет id, повторный убирает; состояние переживает перемонтирование
+- [x] добавить тест: клик по `Favorite` не меняет `kinoshka:watched` и `kinoshka:watchlist`
+- [x] проверить, что существующий тест «остальные кнопки работают независимо от Watched» проходит без правок
+- [x] `make test` и `make typecheck` — зелёные до Task 2
 
 ### Task 2: Зафиксировать тестами связку «клик → страница избранного»
+
 **Model:** sonnet — только тесты, поведение уже работает
 
 **Files:**
+
 - Modify: `src/pages/favorites/ui/Favorites/Favorites.test.tsx`
 - Modify: `e2e/favorites.spec.ts`
 
@@ -97,7 +101,9 @@
 - [ ] `make build-only` и `make e2e` (только `favorites.spec.ts`, помнить про квоту) — зелёные до Task 3
 
 ### Task 3: Verify acceptance criteria
+
 **Model:** sonnet — сверка результата с планом
+
 - [ ] кнопка `Favorite` на странице фильма добавляет фильм на `/favorites` и убирает его оттуда
 - [ ] сердечко на карточках и кнопка на странице фильма показывают одно и то же состояние
 - [ ] `make check`
@@ -105,11 +111,14 @@
 - [ ] `make knip` — нет неиспользуемых экспортов после правки `LikedState`
 
 ### Task 4: [Final] Update documentation
+
 **Model:** haiku — перенос файла, решать нечего
+
 - [ ] rule-файлы и `AGENTS.md` не трогать: неочевидных решений план не добавляет
 - [ ] перенести этот план в `docs/plans/completed/`
 
 ## Post-Completion
 
 **Ручная проверка:**
+
 - на `/movie/:id` нажать `Favorite`, перейти на `/favorites` — фильм в гриде; вернуться на фильм — кнопка нажата
