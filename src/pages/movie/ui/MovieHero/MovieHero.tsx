@@ -47,6 +47,8 @@ type MovieHeroProps = {
   onWatchedToggle: () => void
   inWatchlist: boolean
   onWatchlistToggle: () => void
+  favorite: boolean
+  onFavoriteToggle: () => void
 }
 
 export const MovieHero = ({
@@ -57,6 +59,8 @@ export const MovieHero = ({
   onWatchedToggle,
   inWatchlist,
   onWatchlistToggle,
+  favorite,
+  onFavoriteToggle,
 }: MovieHeroProps) => {
   return (
     <section className={s.hero}>
@@ -146,6 +150,8 @@ export const MovieHero = ({
               onWatchedToggle={onWatchedToggle}
               inWatchlist={inWatchlist}
               onWatchlistToggle={onWatchlistToggle}
+              favorite={favorite}
+              onFavoriteToggle={onFavoriteToggle}
             />
 
             <p className={s.synopsis}>

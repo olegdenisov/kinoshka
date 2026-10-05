@@ -1,6 +1,8 @@
 import type { MovieDetail, MovieImage } from '@entities/movie'
+import { favoriteIds, toggleFavorite } from '@features/favorites'
 import { watchedIds } from '@features/watched'
 import { watchlistIds } from '@features/watchlist'
+import { wrap } from '@reatom/core'
 import { reatomComponent } from '@reatom/react'
 import { useState } from 'react'
 
@@ -30,10 +32,7 @@ type MovieProps = {
 // mobile-first `@media (min-width: 720px)`), JS-дерево одно и то же на обоих брейкпоинтах.
 export const Movie = reatomComponent(({ movie, images }: MovieProps) => {
   const [tab, setTab] = useState('Overview')
-  const [liked, setLiked] = useState<LikedState>({
-    rate: false,
-    fav: false,
-  })
+  const [liked, setLiked] = useState<LikedState>({ rate: false })
   const related = movie.similarMovies.slice(0, 6)
 
   return (
@@ -46,6 +45,9 @@ export const Movie = reatomComponent(({ movie, images }: MovieProps) => {
         onWatchedToggle={() => watchedIds.toggle(movie.id)}
         inWatchlist={watchlistIds().has(movie.id)}
         onWatchlistToggle={() => watchlistIds.toggle(movie.id)}
+        favorite={favoriteIds().has(movie.id)}
+        // Через toggleFavorite, а не favoriteIds.toggle: иначе не уйдёт событие `favorite added`
+        onFavoriteToggle={wrap(() => toggleFavorite(movie.id))}
       />
       <MovieTabsNav tabs={TABS} activeTab={tab} onTabChange={setTab} />
       <div className={s.tabContent}>

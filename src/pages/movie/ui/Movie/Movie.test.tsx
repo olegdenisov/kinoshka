@@ -1,5 +1,5 @@
 import type { MovieDetail, MovieImage } from '@entities/movie'
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { readPersisted, seedPersisted } from '../../../../test/persist'
@@ -172,6 +172,69 @@ describe('Movie — Watched', () => {
     expect(screen.getByRole('button', { name: 'Share' })).not.toHaveAttribute(
       'aria-pressed',
     )
+  })
+})
+
+describe('Movie — Favorite', () => {
+  const favoriteButton = () => screen.getByRole('button', { name: 'Favorite' })
+
+  it('по умолчанию не нажата', () => {
+    renderMovie()
+
+    expect(favoriteButton()).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('предустановленный id в storage → нажата с первого рендера', () => {
+    seedPersisted('kinoshka:favorites', [MOVIE.id])
+    renderMovie()
+
+    expect(favoriteButton()).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('клик добавляет id в kinoshka:favorites, повторный клик убирает', async () => {
+    const user = userEvent.setup()
+    renderMovie()
+
+    await user.click(favoriteButton())
+
+    await waitFor(() =>
+      expect(favoriteButton()).toHaveAttribute('aria-pressed', 'true'),
+    )
+    expect(readPersisted('kinoshka:favorites')).toEqual([MOVIE.id])
+
+    await user.click(favoriteButton())
+
+    await waitFor(() =>
+      expect(favoriteButton()).toHaveAttribute('aria-pressed', 'false'),
+    )
+    expect(readPersisted('kinoshka:favorites')).toEqual([])
+  })
+
+  it('состояние переживает перемонтирование страницы', async () => {
+    const user = userEvent.setup()
+    const { unmount } = renderMovie()
+
+    await user.click(favoriteButton())
+    await waitFor(() =>
+      expect(favoriteButton()).toHaveAttribute('aria-pressed', 'true'),
+    )
+    unmount()
+    renderMovie()
+
+    expect(favoriteButton()).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('клик не меняет kinoshka:watched и kinoshka:watchlist', async () => {
+    const user = userEvent.setup()
+    renderMovie()
+
+    await user.click(favoriteButton())
+
+    await waitFor(() =>
+      expect(favoriteButton()).toHaveAttribute('aria-pressed', 'true'),
+    )
+    expect(readPersisted('kinoshka:watched')).toBeNull()
+    expect(readPersisted('kinoshka:watchlist')).toBeNull()
   })
 })
 

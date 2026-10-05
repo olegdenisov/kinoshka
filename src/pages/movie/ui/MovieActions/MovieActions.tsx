@@ -48,6 +48,8 @@ type MovieActionsProps = {
   onWatchedToggle: () => void
   inWatchlist: boolean
   onWatchlistToggle: () => void
+  favorite: boolean
+  onFavoriteToggle: () => void
 }
 
 export const MovieActions = ({
@@ -57,6 +59,8 @@ export const MovieActions = ({
   onWatchedToggle,
   inWatchlist,
   onWatchlistToggle,
+  favorite,
+  onFavoriteToggle,
 }: MovieActionsProps) => {
   return (
     <div className={s.actions}>
@@ -78,10 +82,10 @@ export const MovieActions = ({
         onClick={onWatchedToggle}
       />
       <SecondaryAction
-        icon={<HeartIcon filled={liked.fav} />}
+        icon={<HeartIcon filled={favorite} />}
         label='Favorite'
-        active={liked.fav}
-        onClick={() => onChange({ ...liked, fav: !liked.fav })}
+        active={favorite}
+        onClick={onFavoriteToggle}
       />
       <SecondaryAction icon={<ShareIcon />} label='Share' />
     </div>
