@@ -1,4 +1,5 @@
 import type { MovieDetail, MovieImage } from '@entities/movie'
+import type * as SharedLib from '@shared/lib'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
@@ -6,6 +7,13 @@ import { readPersisted, seedPersisted } from '../../../../test/persist'
 import { renderWithRouter } from '../../../../test/router'
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
 import { Movie } from './Movie'
+
+vi.mock('@shared/lib', async importOriginal => {
+  const actual = await importOriginal<typeof SharedLib>()
+  return { ...actual, trackEvent: vi.fn() }
+})
+
+const { trackEvent } = await import('@shared/lib')
 
 // Слияние MovieDesktop.test.tsx/MovieMobile.test.tsx (Task 9 плана
 // docs/plans/20260827-mobile-first-adaptive-layout.md): оба набора тестов проверяли один и тот
@@ -20,7 +28,10 @@ const renderMovie = (
   images: MovieImage[] = IMAGES,
 ) => renderWithRouter(<Movie movie={movie} images={images} />)
 
-beforeEach(() => localStorage.clear())
+beforeEach(() => {
+  localStorage.clear()
+  vi.mocked(trackEvent).mockClear()
+})
 
 describe('Movie — Overview (дефолтный таб)', () => {
   it('показывает tagline, синопсис-тизер, рейтинги и жанры из movie', () => {
@@ -142,7 +153,7 @@ describe('Movie — Watched', () => {
     expect(readPersisted('kinoshka:watched')).toEqual([])
   })
 
-  it('состояние переживает перемонтирование страницы', async () => {
+  it('in-memory состояние Favorite сохраняется при перемонтировании страницы', async () => {
     const user = userEvent.setup()
     const { unmount } = renderMovie()
 
@@ -201,13 +212,16 @@ describe('Movie — Favorite', () => {
       expect(favoriteButton()).toHaveAttribute('aria-pressed', 'true'),
     )
     expect(readPersisted('kinoshka:favorites')).toEqual([MOVIE.id])
+    expect(trackEvent).toHaveBeenCalledExactlyOnceWith('favorite added')
 
+    vi.mocked(trackEvent).mockClear()
     await user.click(favoriteButton())
 
     await waitFor(() =>
       expect(favoriteButton()).toHaveAttribute('aria-pressed', 'false'),
     )
     expect(readPersisted('kinoshka:favorites')).toEqual([])
+    expect(trackEvent).not.toHaveBeenCalled()
   })
 
   it('состояние переживает перемонтирование страницы', async () => {

@@ -42,9 +42,9 @@ export const Movie = reatomComponent(({ movie, images }: MovieProps) => {
         liked={liked}
         onLikedChange={setLiked}
         watched={watchedIds().has(movie.id)}
-        onWatchedToggle={() => watchedIds.toggle(movie.id)}
+        onWatchedToggle={wrap(() => watchedIds.toggle(movie.id))}
         inWatchlist={watchlistIds().has(movie.id)}
-        onWatchlistToggle={() => watchlistIds.toggle(movie.id)}
+        onWatchlistToggle={wrap(() => watchlistIds.toggle(movie.id))}
         favorite={favoriteIds().has(movie.id)}
         // Через toggleFavorite, а не favoriteIds.toggle: иначе не уйдёт событие `favorite added`
         onFavoriteToggle={wrap(() => toggleFavorite(movie.id))}

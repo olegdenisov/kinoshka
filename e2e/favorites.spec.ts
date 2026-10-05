@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 import { checkA11y } from './utils/a11y'
 import { firstMovieCard } from './utils/movieCard'
 
-test('favorites: add on home, persists after reload, appears on /favorites', async ({
+test('favorites: add on home, persists after reload, appears on /favorites, toggles from movie page', async ({
   page,
 }) => {
   await page.goto('/')
