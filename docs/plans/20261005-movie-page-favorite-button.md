@@ -114,8 +114,8 @@
 
 **Model:** haiku — перенос файла, решать нечего
 
-- [ ] rule-файлы и `AGENTS.md` не трогать: неочевидных решений план не добавляет
-- [ ] перенести этот план в `docs/plans/completed/`
+- [x] rule-файлы и `AGENTS.md` не трогать: неочевидных решений план не добавляет
+- [x] перенести этот план в `docs/plans/completed/` (skipped - harness handles plan moves after all phases)
 
 ## Post-Completion
 
