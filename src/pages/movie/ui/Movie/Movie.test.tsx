@@ -153,7 +153,7 @@ describe('Movie — Watched', () => {
     expect(readPersisted('kinoshka:watched')).toEqual([])
   })
 
-  it('in-memory состояние Favorite сохраняется при перемонтировании страницы', async () => {
+  it('состояние переживает перемонтирование страницы', async () => {
     const user = userEvent.setup()
     const { unmount } = renderMovie()
 
@@ -164,17 +164,12 @@ describe('Movie — Watched', () => {
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('остальные кнопки работают независимо от Watched', async () => {
+  it('Watchlist и Share работают независимо от Watched', async () => {
     const user = userEvent.setup()
     renderMovie()
 
-    await user.click(screen.getByRole('button', { name: 'Favorite' }))
     await user.click(screen.getByRole('button', { name: 'Watchlist' }))
 
-    expect(screen.getByRole('button', { name: 'Favorite' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
     expect(screen.getByRole('button', { name: 'Watchlist' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -224,7 +219,7 @@ describe('Movie — Favorite', () => {
     expect(trackEvent).not.toHaveBeenCalled()
   })
 
-  it('состояние переживает перемонтирование страницы', async () => {
+  it('in-memory состояние сохраняется при перемонтировании страницы', async () => {
     const user = userEvent.setup()
     const { unmount } = renderMovie()
 
