@@ -93,12 +93,12 @@
 - Modify: `src/pages/favorites/ui/Favorites/Favorites.test.tsx`
 - Modify: `e2e/favorites.spec.ts`
 
-- [ ] в `Favorites.test.tsx` добавить один тест: страница смонтирована с пустым избранным → `toggleFavorite(1)` → `No favorites yet` исчезает, появляется карточка фильма
+- [x] в `Favorites.test.tsx` добавить один тест: страница смонтирована с пустым избранным → `toggleFavorite(1)` → `No favorites yet` исчезает, появляется карточка фильма
   - тест «в избранном один фильм → добавили второй» не добавлять: случай покрыт существующими тестами повторного появления карточки и «не шлёт запросов за уже загруженными фильмами»
-- [ ] в `e2e/favorites.spec.ts` после финального `checkA11y(page)` существующего теста дописать шаги: на `/favorites` кликнуть ссылку карточки по сохранённому `title` (`page.getByRole('link', { name: title, exact: true }).first()`) → на странице фильма `page.getByRole('button', { name: 'Favorite', exact: true })` имеет `aria-pressed="true"` → клик → `aria-pressed="false"` → `page.goto('/favorites')` → виден `No favorites yet`
+- [x] в `e2e/favorites.spec.ts` после финального `checkA11y(page)` существующего теста дописать шаги: на `/favorites` кликнуть ссылку карточки по сохранённому `title` (`page.getByRole('link', { name: title, exact: true }).first()`) → на странице фильма `page.getByRole('button', { name: 'Favorite', exact: true })` имеет `aria-pressed="true"` → клик → `aria-pressed="false"` → `page.goto('/favorites')` → виден `No favorites yet`
   - `exact: true` у кнопки обязателен: без него Playwright матчит подстроку и цепляет «Add to favorites» / «Remove from favorites» на карточках `RelatedMovies`; второй `checkA11y` не добавлять (страница фильма покрыта `movie-detail.spec.ts`); цена шагов — около 2 запросов к API
-- [ ] `make test` — зелёный
-- [ ] `make build-only` и `make e2e` (только `favorites.spec.ts`, помнить про квоту) — зелёные до Task 3
+- [x] `make test` — зелёный
+- [x] `make build-only` и `make e2e` (только `favorites.spec.ts`, помнить про квоту) — зелёные до Task 3
 
 ### Task 3: Verify acceptance criteria
 

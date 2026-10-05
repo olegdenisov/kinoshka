@@ -71,4 +71,21 @@ test('favorites: add on home, persists after reload, appears on /favorites', asy
   ).toBeVisible()
 
   await checkA11y(page)
+
+  // Кнопка Favorite на странице фильма делит состояние с сердечком на карточках.
+  // `exact: true` обязателен: иначе подстрока цепляет «Add to favorites» на
+  // карточках RelatedMovies.
+  await page.getByRole('link', { name: title, exact: true }).first().click()
+
+  const pageFavorite = page.getByRole('button', {
+    name: 'Favorite',
+    exact: true,
+  })
+  await expect(pageFavorite).toHaveAttribute('aria-pressed', 'true')
+
+  await pageFavorite.click()
+  await expect(pageFavorite).toHaveAttribute('aria-pressed', 'false')
+
+  await page.goto('/favorites')
+  await expect(page.getByText('No favorites yet')).toBeVisible()
 })

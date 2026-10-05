@@ -97,6 +97,22 @@ describe('Favorites — непустой список избранного', () 
   })
 })
 
+describe('Favorites — добавление через модель', () => {
+  it('toggleFavorite на пустом списке заменяет EmptyState карточкой фильма', async () => {
+    mockMovie(1, { name: 'Added Later' })
+
+    await renderPage()
+    expect(screen.getByText('No favorites yet')).toBeInTheDocument()
+
+    await act(async () => {
+      toggleFavorite(1)
+    })
+
+    expect(await screen.findByText('Added Later')).toBeInTheDocument()
+    expect(screen.queryByText('No favorites yet')).not.toBeInTheDocument()
+  })
+})
+
 describe('Favorites — Watchlist на карточке', () => {
   it('клик по кнопке Add пишет id в watchlist, а карточка остаётся в избранном', async () => {
     const user = userEvent.setup()
