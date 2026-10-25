@@ -2,7 +2,7 @@ import { ApiError } from '@shared/api'
 import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
-import { getPersonDetail } from './getPersonDetail'
+import { fetchPersonDetail, personDetailStore } from './getPersonDetail'
 
 const doc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -36,7 +36,7 @@ describe('getPersonDetail — success', () => {
   it('запрос уходит на /v1.5/person/:id, ответ маппится в PersonDetail', async () => {
     mockSuccess(701, { name: 'Anna Actress' })
 
-    const detail = await getPersonDetail(701)
+    const detail = await fetchPersonDetail(701)
 
     expect(detail.id).toBe(701)
     expect(detail.name).toBe('Anna Actress')
@@ -44,7 +44,7 @@ describe('getPersonDetail — success', () => {
     expect(detail.photo).toBe('https://avatars.mds.yandex.net/photo.jpg')
   })
 
-  it('стабильный промис на один и тот же id (один сетевой запрос)', async () => {
+  it('personDetailStore.fetch: параллельные вызовы — один сетевой запрос', async () => {
     let callCount = 0
     server.use(
       http.get('*/v1.5/person/702', () => {
@@ -54,12 +54,10 @@ describe('getPersonDetail — success', () => {
       }),
     )
 
-    const first = getPersonDetail(702)
-    const second = getPersonDetail(702)
-
-    expect(first).toBe(second)
-    await first
-    await second
+    await Promise.all([
+      personDetailStore.fetch(702),
+      personDetailStore.fetch(702),
+    ])
 
     expect(callCount).toBe(1)
   })
@@ -73,22 +71,22 @@ describe('getPersonDetail — 404', () => {
       error: 'Not Found',
     })
 
-    const error = await getPersonDetail(666).catch((e: unknown) => e)
+    const error = await personDetailStore.fetch(666).catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(ApiError)
     expect((error as ApiError).status).toBe(404)
   })
 })
 
-describe('getPersonDetail — 403 cooldown', () => {
-  it('403 — промис реджектится (регресс на createCachedFetcher)', async () => {
+describe('getPersonDetail — 403', () => {
+  it('403 — промис реджектится', async () => {
     mockError(555, 403, {
       statusCode: 403,
       message: 'Forbidden',
       error: 'Forbidden',
     })
 
-    await expect(getPersonDetail(555)).rejects.toThrow()
+    await expect(personDetailStore.fetch(555)).rejects.toThrow()
   })
 })
 
@@ -103,11 +101,11 @@ describe('getPersonDetail — invalidate', () => {
       }),
     )
 
-    await getPersonDetail(703)
+    await personDetailStore.fetch(703)
     expect(callCount).toBe(1)
 
-    getPersonDetail.invalidate(703)
-    await getPersonDetail(703)
+    personDetailStore.invalidate(703)
+    await personDetailStore.fetch(703)
 
     expect(callCount).toBe(2)
   })

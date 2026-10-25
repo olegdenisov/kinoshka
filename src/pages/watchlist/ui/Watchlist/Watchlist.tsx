@@ -1,7 +1,7 @@
-import { Card, getMoviesByIds } from '@entities/movie'
+import { Card } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { useWatchlist, useWatchlistMovies } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { EmptyState, QueryBoundary, Skeleton } from '@shared/ui'
 
 import s from './Watchlist.module.css'
 
@@ -17,35 +17,41 @@ const WatchlistSkeletonGrid = () => (
 
 const WatchlistGrid = () => {
   // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои
-  // бросает getMoviesByIds и ловит AsyncBoundary, поэтому текст — не про ошибку загрузки.
-  const movies = useWatchlistMovies()
+  // уходят в isError и ловит QueryBoundary, поэтому текст — не про ошибку загрузки.
+  const query = useWatchlistMovies()
   const { isFavorite, toggle } = useFavorites()
 
-  if (movies.length === 0) {
-    return (
-      <div className={s.stateWrap}>
-        <EmptyState
-          title='Watchlist titles unavailable'
-          description='These titles are no longer available in the catalog.'
-        />
-      </div>
-    )
-  }
-
   return (
-    <div className={s.grid}>
-      {/* Без onToggleWatchlist намеренно: снятие меняет ids → новый кэш-ключ getMoviesByIds →
-          перезагрузка всего грида. Убрать из списка можно со страницы фильма или с других списков. */}
-      {movies.map(movie => (
-        <Card
-          key={movie.id}
-          movie={movie}
-          variant='grid'
-          isFavorite={isFavorite(movie.id)}
-          onToggleFavorite={toggle}
-        />
-      ))}
-    </div>
+    <QueryBoundary query={query} fallback={<WatchlistSkeletonGrid />}>
+      {movies => {
+        if (movies.length === 0) {
+          return (
+            <div className={s.stateWrap}>
+              <EmptyState
+                title='Watchlist titles unavailable'
+                description='These titles are no longer available in the catalog.'
+              />
+            </div>
+          )
+        }
+
+        return (
+          <div className={s.grid}>
+            {/* Без onToggleWatchlist намеренно: снятие меняет ids → новый ключ запроса →
+              перезагрузка всего грида. Убрать из списка можно со страницы фильма или с других списков. */}
+            {movies.map(movie => (
+              <Card
+                key={movie.id}
+                movie={movie}
+                variant='grid'
+                isFavorite={isFavorite(movie.id)}
+                onToggleFavorite={toggle}
+              />
+            ))}
+          </div>
+        )
+      }}
+    </QueryBoundary>
   )
 }
 
@@ -66,12 +72,7 @@ export const Watchlist = () => {
             />
           </div>
         ) : (
-          <AsyncBoundary
-            fallback={<WatchlistSkeletonGrid />}
-            onRetry={() => getMoviesByIds.invalidate(ids)}
-          >
-            <WatchlistGrid />
-          </AsyncBoundary>
+          <WatchlistGrid />
         )}
       </main>
     </div>

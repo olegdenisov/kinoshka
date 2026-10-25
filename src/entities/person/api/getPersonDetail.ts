@@ -1,10 +1,10 @@
 import { apiClient, ApiError } from '@shared/api'
-import { createCachedFetcher } from '@shared/lib'
+import { createQueryStore } from '@shared/lib'
 
 import type { PersonDetail } from '../model/types'
 import { mapDtoToPersonDetail } from './mapDtoToPersonDetail'
 
-const fetchPersonDetail = async (id: number): Promise<PersonDetail> => {
+export const fetchPersonDetail = async (id: number): Promise<PersonDetail> => {
   const response = await apiClient.getV15PersonById({ path: { id } })
 
   if ('statusCode' in response.data) {
@@ -15,7 +15,7 @@ const fetchPersonDetail = async (id: number): Promise<PersonDetail> => {
   return mapDtoToPersonDetail(response.data)
 }
 
-export const getPersonDetail = createCachedFetcher<number, PersonDetail>(
-  'person-detail',
-  fetchPersonDetail,
-)
+export const personDetailStore = createQueryStore({
+  name: 'personDetail',
+  fetcher: fetchPersonDetail,
+})

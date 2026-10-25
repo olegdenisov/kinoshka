@@ -1,4 +1,4 @@
-import { AsyncBoundary } from '@shared/ui'
+import { QueryBoundary } from '@shared/ui'
 import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
@@ -29,13 +29,17 @@ const mockMovie = (id: number, overrides: Record<string, unknown> = {}) => {
 }
 
 const Probe = () => {
-  const movies = useFavoriteMovies()
+  const query = useFavoriteMovies()
   return (
-    <ul>
-      {movies.map(movie => (
-        <li key={movie.id}>{movie.title}</li>
-      ))}
-    </ul>
+    <QueryBoundary query={query}>
+      {movies => (
+        <ul>
+          {movies.map(movie => (
+            <li key={movie.id}>{movie.title}</li>
+          ))}
+        </ul>
+      )}
+    </QueryBoundary>
   )
 }
 
@@ -48,11 +52,7 @@ describe('useFavoriteMovies', () => {
     mockMovie(502, { name: 'Second Favorite' })
 
     await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
+      render(<Probe />)
     })
 
     expect(screen.getByText('First Favorite')).toBeInTheDocument()

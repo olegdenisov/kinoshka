@@ -1,12 +1,12 @@
 import {
   Card,
   PopularBadge,
-  invalidatePopularMovies,
+  type PopularMovie,
   usePopularMovies,
 } from '@entities/movie'
 import { useFavorites } from '@features/favorites'
 import { useWatchlist } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { EmptyState, QueryBoundary, Skeleton } from '@shared/ui'
 
 import s from './Popular.module.css'
 
@@ -22,8 +22,9 @@ const PopularSkeletonGrid = () => (
   </div>
 )
 
-const PopularGrid = () => {
-  const movies = usePopularMovies()
+type PopularGridProps = { movies: PopularMovie[] }
+
+const PopularGrid = ({ movies }: PopularGridProps) => {
   const { isFavorite, toggle } = useFavorites()
   const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
 
@@ -67,16 +68,15 @@ const PopularGrid = () => {
 // `/popular` (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
 // Popular больше не вызывает useViewport и не решает, какой chrome показать.
 export const Popular = () => {
+  const query = usePopularMovies()
+
   return (
     <div className={s.page}>
       <main className={s.main}>
         <h1 className={s.heading}>Popular this week</h1>
-        <AsyncBoundary
-          fallback={<PopularSkeletonGrid />}
-          onRetry={() => invalidatePopularMovies()}
-        >
-          <PopularGrid />
-        </AsyncBoundary>
+        <QueryBoundary query={query} fallback={<PopularSkeletonGrid />}>
+          {movies => <PopularGrid movies={movies} />}
+        </QueryBoundary>
       </main>
     </div>
   )

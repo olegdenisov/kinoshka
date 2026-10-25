@@ -4,6 +4,7 @@ import { act, render, renderHook, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
+import { seedStorage } from '../../../../test/seedStorage'
 import { Profile } from './Profile'
 
 const PROFILE_KEY = 'kinoshka:profile'
@@ -104,7 +105,7 @@ describe('Profile', () => {
 
   it('Save задизейблена, пока значение не изменилось, и активируется после правки', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Oleg'))
     renderProfile()
 
     const save = screen.getByRole('button', { name: 'Save' })
@@ -120,7 +121,7 @@ describe('Profile', () => {
 
   it('пробелы в конце существующего имени не активируют Save', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Oleg'))
     renderProfile()
 
     await user.type(screen.getByLabelText('Display name'), '  ')
@@ -130,7 +131,7 @@ describe('Profile', () => {
 
   it('черновик с пробелами по краям поверх другого имени сохраняется тримленным, инпут пересинхронизируется', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Ann'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Ann'))
     renderProfile()
 
     const input = screen.getByLabelText('Display name')
@@ -169,7 +170,7 @@ describe('Profile', () => {
   })
 
   it('невидимое имя в localStorage (мимо UI) даёт Guest и иконку', () => {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('\u200B'))
+    seedStorage(PROFILE_KEY, JSON.stringify('\u200B'))
     const { container } = renderProfile()
 
     const avatar = getAvatar(container)
@@ -335,7 +336,7 @@ describe('Profile', () => {
   })
 
   it('подтягивает имя, изменённое в другой вкладке, и не оставляет Save активной', async () => {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Old'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Old'))
     renderProfile()
     expect(screen.getByLabelText('Display name')).toHaveValue('Old')
 
@@ -354,7 +355,7 @@ describe('Profile', () => {
   })
 
   it('после сброса имени через clearName инпут пустеет, Save не активна', async () => {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Oleg'))
     const { result } = renderHook(() => useProfile())
     renderProfile()
     expect(screen.getByLabelText('Display name')).toHaveValue('Oleg')
@@ -369,7 +370,7 @@ describe('Profile', () => {
   })
 
   it('счётчик избранного отражает содержимое localStorage', () => {
-    localStorage.setItem('kinoshka:favorites', JSON.stringify([1, 2, 3]))
+    seedStorage('kinoshka:favorites', JSON.stringify([1, 2, 3]))
     renderProfile()
 
     expect(screen.getByRole('link', { name: /Favorites/ })).toHaveTextContent(
@@ -386,7 +387,7 @@ describe('Profile', () => {
   })
 
   it('счётчик просмотренного отражает содержимое localStorage', () => {
-    localStorage.setItem('kinoshka:watched', JSON.stringify([1, 2]))
+    seedStorage('kinoshka:watched', JSON.stringify([1, 2]))
     renderProfile()
 
     expect(screen.getByRole('link', { name: /Watched/ })).toHaveTextContent('2')
@@ -397,7 +398,7 @@ describe('Profile', () => {
   })
 
   it('счётчик watchlist отражает содержимое localStorage', () => {
-    localStorage.setItem('kinoshka:watchlist', JSON.stringify([1, 2, 3]))
+    seedStorage('kinoshka:watchlist', JSON.stringify([1, 2, 3]))
     renderProfile()
 
     const link = screen.getByRole('link', { name: /^Watchlist/ })
@@ -492,7 +493,7 @@ describe('Profile', () => {
 
   it('Clear name очищает заданное имя, скрывается и возвращает фокус на инпут (кнопка размонтирована)', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Oleg'))
     renderProfile()
 
     await user.click(screen.getByRole('button', { name: 'Clear name' }))
@@ -510,7 +511,7 @@ describe('Profile', () => {
 
   it('Clear name: недоступное хранилище показывает сообщение об ошибке с текстом про Clear, имя не сбрасывается', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Oleg'))
     renderProfile()
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('full', 'QuotaExceededError')
@@ -529,7 +530,7 @@ describe('Profile', () => {
 
   it('Clear-отказ хранилища не гасится редактированием инпута (гасится только устаревший Save-отказ)', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Oleg'))
     renderProfile()
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('full', 'QuotaExceededError')
@@ -548,7 +549,7 @@ describe('Profile', () => {
 
   it('отказ Clear заменяет прежний отказ Save: текст алерта переключается на "clear"', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Oleg'))
     renderProfile()
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('full', 'QuotaExceededError')
@@ -570,7 +571,7 @@ describe('Profile', () => {
 
   it('стороннее изменение имени убирает и устаревший отказ Clear', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Oleg'))
     renderProfile()
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('full', 'QuotaExceededError')
@@ -596,7 +597,7 @@ describe('Profile', () => {
 
   it('успешный Clear после отказа убирает алерт', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Oleg'))
     renderProfile()
     const spy = vi
       .spyOn(Storage.prototype, 'setItem')
@@ -616,7 +617,7 @@ describe('Profile', () => {
 
   it('Clear name отбрасывает несохранённый черновик', async () => {
     const user = userEvent.setup()
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('Oleg'))
+    seedStorage(PROFILE_KEY, JSON.stringify('Oleg'))
     renderProfile()
 
     await user.type(screen.getByLabelText('Display name'), '2')
@@ -629,7 +630,7 @@ describe('Profile', () => {
   })
 
   it('значение из одних пробелов в localStorage (мимо UI) даёт Guest и не показывает Clear name', () => {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify('   '))
+    seedStorage(PROFILE_KEY, JSON.stringify('   '))
     renderProfile()
 
     expect(screen.getByText('Guest')).toBeInTheDocument()

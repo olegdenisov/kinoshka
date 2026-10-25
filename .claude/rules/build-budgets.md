@@ -13,7 +13,7 @@ paths:
 
 ## Code splitting
 
-- The route-level `<Suspense>` in `AppLayout` is for **code** loading; pages keep their own `AsyncBoundary` for data.
+- The route-level `<Suspense>` in `AppLayout` is for **code** loading; pages keep their own `QueryBoundary` for data.
 - `chunkPreloadRecovery` reloads the page on `vite:preloadError`: `React.lazy` caches a rejected import, so neither a boundary retry nor navigation recovers — a full reload is the only guaranteed fix. The anti-loop window logic and its scenario matrix are in the file.
 - `lazyNamed` turns the `undefined` that `preventDefault()` makes Vite resolve into a never-settling promise (spinner until reload) instead of a misleading `TypeError` — keep that branch.
 - **`shared` must precede the page groups in `codeSplitting.groups`** — otherwise Rolldown dumps cross-page code into the first page chunk. Verify after changes: entry and page chunks import only `rolldown-runtime`/`vendor`/`shared`, never another `page-*`.

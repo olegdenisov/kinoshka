@@ -1,4 +1,4 @@
-import { AsyncBoundary } from '@shared/ui'
+import { QueryBoundary } from '@shared/ui'
 import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
@@ -29,13 +29,17 @@ const mockMovie = (id: number, overrides: Record<string, unknown> = {}) => {
 }
 
 const Probe = () => {
-  const movies = useWatchedMovies()
+  const query = useWatchedMovies()
   return (
-    <ul>
-      {movies.map(movie => (
-        <li key={movie.id}>{movie.title}</li>
-      ))}
-    </ul>
+    <QueryBoundary query={query}>
+      {movies => (
+        <ul>
+          {movies.map(movie => (
+            <li key={movie.id}>{movie.title}</li>
+          ))}
+        </ul>
+      )}
+    </QueryBoundary>
   )
 }
 
@@ -48,11 +52,7 @@ describe('useWatchedMovies', () => {
     mockMovie(602, { name: 'Watched Series', type: 'tv-series' })
 
     await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
+      render(<Probe />)
     })
 
     expect(screen.getByText('Watched Movie')).toBeInTheDocument()
@@ -72,11 +72,7 @@ describe('useWatchedMovies', () => {
     )
 
     await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
+      render(<Probe />)
     })
 
     expect(screen.getByText('Alive')).toBeInTheDocument()
@@ -85,11 +81,7 @@ describe('useWatchedMovies', () => {
 
   it('пустые ids → пустой список', async () => {
     await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
+      render(<Probe />)
     })
 
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)

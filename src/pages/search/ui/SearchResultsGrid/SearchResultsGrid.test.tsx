@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
+import { seedStorage } from '../../../../test/seedStorage'
 import { SearchResultsGrid } from './SearchResultsGrid'
 
 const makeMovie = (id: number): Movie => ({
@@ -75,7 +76,7 @@ describe('SearchResultsGrid — Watchlist', () => {
   })
 
   it('фильм уже в watchlist — кнопка сразу в состоянии «Remove from watchlist»', () => {
-    localStorage.setItem('kinoshka:watchlist', '[1]')
+    seedStorage('kinoshka:watchlist', '[1]')
     renderGrid([makeMovie(1), makeMovie(2)])
 
     expect(

@@ -1,9 +1,8 @@
-import { useStorageSlot } from '@shared/lib'
 import { useEffect, useState } from 'react'
 
 import { resolveTheme } from '../lib/resolveTheme'
-import { themeSlot } from './themeStorage'
 import type { Theme } from './themeStorage'
+import { useThemeStore } from './themeStore'
 
 const DARK_QUERY = '(prefers-color-scheme: dark)'
 
@@ -15,7 +14,8 @@ export type UseThemeResult = {
 }
 
 export const useTheme = (): UseThemeResult => {
-  const [theme, setTheme] = useStorageSlot(themeSlot)
+  const theme = useThemeStore(state => state.theme)
+  const setTheme = useThemeStore(state => state.setTheme)
   const [prefersDark, setPrefersDark] = useState(
     () => window.matchMedia(DARK_QUERY).matches,
   )

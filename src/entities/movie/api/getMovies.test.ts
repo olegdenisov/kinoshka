@@ -2,9 +2,10 @@ import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
 import { hashHue } from '../lib/hashHue'
+import { moviesStore } from './getMovies'
 
-// Механика кэша (дедупликация, TTL, cooldown, sessionStorage) покрыта в createCachedFetcher.test.ts.
-// Здесь — только getMovies-специфика: маппинг docs-элемента в Movie.
+// Механика кэша (дедупликация, TTL, кулдаун) покрыта в createQueryStore.test.ts.
+// Здесь — маппинг docs-элемента в Movie и поведение стора на реальных ответах.
 
 const ENDPOINT = '*/v1.5/movie'
 
@@ -46,53 +47,30 @@ const mockSuccess = (docs = [doc()]) => {
   )
 }
 
-// Свежий модуль на каждый тест — сбрасывает in-memory кэш, чтобы одинаковые params не залипали между тестами.
-const importGetMovies = async () => {
-  vi.resetModules()
-  const mod = await import('./getMovies')
-  return mod.getMovies
-}
-
-beforeEach(() => {
-  vi.stubEnv('DEV', true)
-  sessionStorage.clear()
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
-  vi.unstubAllEnvs()
-})
-
-describe('getMovies — маппинг полей', () => {
+describe('fetchMovies — маппинг полей', () => {
   it('полностью заполненный docs-элемент маппится в Movie', async () => {
     mockSuccess([doc()])
-    const getMovies = await importGetMovies()
-
-    const movies = await getMovies({ type: ['movie'] })
+    const movies = await moviesStore.fetch({ type: ['movie'] })
 
     expect(movies).toEqual([expectedMovie])
   })
 
   it('year отсутствует — undefined, а не текущий год', async () => {
     mockSuccess([doc({ year: null })])
-    const getMovies = await importGetMovies()
-
-    const [movie] = await getMovies({ type: ['movie'] })
+    const [movie] = await moviesStore.fetch({ type: ['movie'] })
 
     expect(movie.year).toBeUndefined()
   })
 
   it('rating.kp равен 0 — используется 0, а не rating.imdb', async () => {
     mockSuccess([doc({ rating: { kp: 0, imdb: 6.5 } })])
-    const getMovies = await importGetMovies()
-
-    const [movie] = await getMovies({ type: ['movie'] })
+    const [movie] = await moviesStore.fetch({ type: ['movie'] })
 
     expect(movie.rating).toBe(0)
   })
 })
 
-describe('getMovies — регресс: sort уже прокидывается без дополнительного кода', () => {
+describe('fetchMovies — регресс: sort уже прокидывается без дополнительного кода', () => {
   it('sortField/sortType уходят в query как есть', async () => {
     let request: Request | undefined
     server.use(
@@ -107,12 +85,44 @@ describe('getMovies — регресс: sort уже прокидывается �
         })
       }),
     )
-    const getMovies = await importGetMovies()
-
-    await getMovies({ sortField: ['rating.kp'], sortType: ['-1'] })
+    await moviesStore.fetch({ sortField: ['rating.kp'], sortType: ['-1'] })
 
     const url = new URL(request!.url)
     expect(url.searchParams.getAll('sortField')).toEqual(['rating.kp'])
     expect(url.searchParams.getAll('sortType')).toEqual(['-1'])
+  })
+})
+
+describe('moviesStore — fetch', () => {
+  it('успех — отдаёт Movie[]', async () => {
+    mockSuccess([doc()])
+
+    await expect(moviesStore.fetch({ type: ['movie'] })).resolves.toEqual([
+      expectedMovie,
+    ])
+  })
+
+  it('пустой docs — []', async () => {
+    mockSuccess([])
+
+    await expect(moviesStore.fetch({ type: ['movie'] })).resolves.toEqual([])
+  })
+
+  it('403 — отклоняется ApiError с сообщением о лимите', async () => {
+    server.use(
+      http.get(ENDPOINT, () =>
+        HttpResponse.json(
+          { statusCode: 403, message: 'Limit reached', error: 'Forbidden' },
+          { status: 403 },
+        ),
+      ),
+    )
+
+    const error = await moviesStore
+      .fetch({ type: ['movie'] })
+      .catch((e: unknown) => e)
+
+    expect(error).toBeInstanceOf(Error)
+    expect((error as Error).message).toContain('Limit reached')
   })
 })

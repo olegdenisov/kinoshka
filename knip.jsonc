@@ -44,7 +44,6 @@
     "src/features/catalog-filter/index.ts",
     "src/features/favorites/index.ts",
     "src/features/theme/index.ts",
-    "src/shared/ui/index.ts",
   ],
   // `sentry` — глобально установленный CLI-инструмент (см. docs/plans/20260915-telemetry-dashboard-sentry-alerts.md,
   // "sentry CLI — установлен и авторизован на этой машине"), не npm-зависимость репозитория — knip

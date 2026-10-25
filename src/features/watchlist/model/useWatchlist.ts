@@ -1,23 +1,12 @@
-import { useStorageSlot } from '@shared/lib'
-
-import { watchlistSlot } from './watchlistStorage'
+import { useWatchlistStore } from './watchlistStore'
 
 export const useWatchlist = () => {
-  const [ids, setIds] = useStorageSlot(watchlistSlot)
+  const ids = useWatchlistStore(state => state.ids)
+  const toggle = useWatchlistStore(state => state.toggle)
 
   return {
     ids,
     isInWatchlist: (id: number) => ids.includes(id),
-    // Читаем актуальное значение из слота, а не из замыкания: два toggle подряд в одном
-    // тике не должны затирать друг друга. При недоступном хранилище set() вернёт false
-    // и подписчики не уведомляются — состояние остаётся прежним.
-    toggle: (id: number) => {
-      const current = watchlistSlot.get()
-      setIds(
-        current.includes(id)
-          ? current.filter(existingId => existingId !== id)
-          : [...current, id],
-      )
-    },
+    toggle,
   }
 }

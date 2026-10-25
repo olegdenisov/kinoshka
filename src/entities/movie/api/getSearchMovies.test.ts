@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 
 import { server } from '../../../test/setup'
 import { hashHue } from '../lib/hashHue'
-import { getSearchMovies } from './getSearchMovies'
+import { fetchSearchMovies } from './getSearchMovies'
 
 const ENDPOINT = '*/v1.5/movie/search'
 
@@ -69,11 +69,11 @@ const mockForbidden = () => {
   )
 }
 
-describe('getSearchMovies — запрос', () => {
+describe('fetchSearchMovies — запрос', () => {
   it('уходит на /v1.5/movie/search с query, page и limit:12', async () => {
     const getRequest = mockSuccess([doc()])
 
-    await getSearchMovies({ query: 'matrix', page: 2 })
+    await fetchSearchMovies({ query: 'matrix', page: 2 })
 
     const url = new URL(getRequest()!.url)
     expect(url.searchParams.get('query')).toBe('matrix')
@@ -84,35 +84,46 @@ describe('getSearchMovies — запрос', () => {
   it('без page — параметр page не отправляется, limit:12 всё равно уходит', async () => {
     const getRequest = mockSuccess([doc()])
 
-    await getSearchMovies({ query: 'no-page' })
+    await fetchSearchMovies({ query: 'no-page' })
 
     const url = new URL(getRequest()!.url)
     expect(url.searchParams.has('page')).toBe(false)
     expect(url.searchParams.get('limit')).toBe('12')
   })
 
-  it('403 — промис реджектится (isError-cooldown в фабрике)', async () => {
+  it('403 — промис реджектится', async () => {
     mockForbidden()
 
-    await expect(getSearchMovies({ query: 'forbidden' })).rejects.toThrow()
+    await expect(fetchSearchMovies({ query: 'forbidden' })).rejects.toThrow()
   })
 
-  it('стабильный промис на один и тот же (query, page)', async () => {
-    mockSuccess([doc()])
+  it('без кеша: каждый вызов — новый запрос (кеширует стор каталога /search)', async () => {
+    let requests = 0
+    server.use(
+      http.get(ENDPOINT, () => {
+        requests += 1
+        return HttpResponse.json({
+          docs: [doc()],
+          total: 1,
+          page: 1,
+          pages: 1,
+          limit: 12,
+        })
+      }),
+    )
 
-    const first = getSearchMovies({ query: 'stable', page: 1 })
-    const second = getSearchMovies({ query: 'stable', page: 1 })
+    await fetchSearchMovies({ query: 'no-cache', page: 1 })
+    await fetchSearchMovies({ query: 'no-cache', page: 1 })
 
-    expect(first).toBe(second)
-    await first
+    expect(requests).toBe(2)
   })
 })
 
-describe('getSearchMovies — форма результата { movies, totalPages }', () => {
+describe('fetchSearchMovies — форма результата { movies, totalPages }', () => {
   it('результат — { movies, totalPages }, totalPages = min(10, pages) из ответа', async () => {
     mockSuccess([doc()], { pages: 4 })
 
-    const result = await getSearchMovies({ query: 'pages-under-cap' })
+    const result = await fetchSearchMovies({ query: 'pages-under-cap' })
 
     expect(result).toEqual({ movies: [expectedMovie], totalPages: 4 })
   })
@@ -120,7 +131,7 @@ describe('getSearchMovies — форма результата { movies, totalPag
   it('pages из ответа превышает demo-потолок — totalPages клампится к 10', async () => {
     mockSuccess([doc()], { pages: 37 })
 
-    const result = await getSearchMovies({ query: 'pages-over-cap' })
+    const result = await fetchSearchMovies({ query: 'pages-over-cap' })
 
     expect(result.totalPages).toBe(10)
   })
@@ -128,7 +139,7 @@ describe('getSearchMovies — форма результата { movies, totalPag
   it('пустой docs — movies: [], totalPages из ответа', async () => {
     mockSuccess([], { pages: 0 })
 
-    const result = await getSearchMovies({ query: 'empty-docs' })
+    const result = await fetchSearchMovies({ query: 'empty-docs' })
 
     expect(result).toEqual({ movies: [], totalPages: 0 })
   })
@@ -138,23 +149,23 @@ describe('getSearchMovies — форма результата { movies, totalPag
       http.get(ENDPOINT, () => HttpResponse.json({ unexpected: true })),
     )
 
-    const result = await getSearchMovies({ query: 'no-docs' })
+    const result = await fetchSearchMovies({ query: 'no-docs' })
 
     expect(result).toEqual({ movies: [], totalPages: 0 })
   })
 })
 
-describe('getSearchMovies — маппинг SearchMovieDtoV14 → Movie', () => {
+describe('fetchSearchMovies — маппинг SearchMovieDtoV14 → Movie', () => {
   it('полностью заполненный docs-элемент маппится в Movie', async () => {
     mockSuccess([doc()])
 
-    const { movies } = await getSearchMovies({ query: 'full-map' })
+    const { movies } = await fetchSearchMovies({ query: 'full-map' })
 
     expect(movies).toEqual([expectedMovie])
   })
 })
 
-describe('getSearchMovies — fallback названия name ?? alternativeName ?? enName', () => {
+describe('fetchSearchMovies — fallback названия name ?? alternativeName ?? enName', () => {
   it('name есть — используется name', async () => {
     mockSuccess([
       doc({ name: 'Primary', alternativeName: 'Alt', enName: 'En' }),
@@ -162,7 +173,7 @@ describe('getSearchMovies — fallback названия name ?? alternativeName 
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'title-name' })
+    } = await fetchSearchMovies({ query: 'title-name' })
 
     expect(movie.title).toBe('Primary')
   })
@@ -172,7 +183,7 @@ describe('getSearchMovies — fallback названия name ?? alternativeName 
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'title-alt' })
+    } = await fetchSearchMovies({ query: 'title-alt' })
 
     expect(movie.title).toBe('Alt')
   })
@@ -182,7 +193,7 @@ describe('getSearchMovies — fallback названия name ?? alternativeName 
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'title-en' })
+    } = await fetchSearchMovies({ query: 'title-en' })
 
     expect(movie.title).toBe('En')
   })
@@ -192,13 +203,13 @@ describe('getSearchMovies — fallback названия name ?? alternativeName 
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'title-empty' })
+    } = await fetchSearchMovies({ query: 'title-empty' })
 
     expect(movie.title).toBe('')
   })
 })
 
-describe('getSearchMovies — постер без серверного notNullFields-отсечения', () => {
+describe('fetchSearchMovies — постер без серверного notNullFields-отсечения', () => {
   // Конвенция из getMovies.ts: берём poster.previewUrl, при отсутствии — пустая строка,
   // плейсхолдер «— poster —» дорисовывает Poster-компонент по пустому movie.poster.
   it('poster.previewUrl отсутствует — пустая строка (плейсхолдер рисует Poster-компонент)', async () => {
@@ -210,7 +221,7 @@ describe('getSearchMovies — постер без серверного notNullFi
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'poster-preview-null' })
+    } = await fetchSearchMovies({ query: 'poster-preview-null' })
 
     expect(movie.poster).toBe('')
   })
@@ -220,19 +231,19 @@ describe('getSearchMovies — постер без серверного notNullFi
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'poster-null' })
+    } = await fetchSearchMovies({ query: 'poster-null' })
 
     expect(movie.poster).toBe('')
   })
 })
 
-describe('getSearchMovies — рейтинг и остальные поля без notNullFields-отсечения', () => {
+describe('fetchSearchMovies — рейтинг и остальные поля без notNullFields-отсечения', () => {
   it('rating.kp отсутствует — используется rating.imdb', async () => {
     mockSuccess([doc({ rating: { kp: null, imdb: 6.5 } })])
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'rating-imdb' })
+    } = await fetchSearchMovies({ query: 'rating-imdb' })
 
     expect(movie.rating).toBe(6.5)
   })
@@ -242,7 +253,7 @@ describe('getSearchMovies — рейтинг и остальные поля бе
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'rating-null' })
+    } = await fetchSearchMovies({ query: 'rating-null' })
 
     expect(movie.rating).toBe(0)
   })
@@ -252,7 +263,7 @@ describe('getSearchMovies — рейтинг и остальные поля бе
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'type-default' })
+    } = await fetchSearchMovies({ query: 'type-default' })
 
     expect(movie.type).toBe('movie')
   })
@@ -262,7 +273,7 @@ describe('getSearchMovies — рейтинг и остальные поля бе
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'genres-empty' })
+    } = await fetchSearchMovies({ query: 'genres-empty' })
 
     expect(movie.genre).toEqual([])
   })
@@ -272,7 +283,7 @@ describe('getSearchMovies — рейтинг и остальные поля бе
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'runtime-zero' })
+    } = await fetchSearchMovies({ query: 'runtime-zero' })
 
     expect(movie.runtime).toBe('0')
   })
@@ -282,7 +293,7 @@ describe('getSearchMovies — рейтинг и остальные поля бе
 
     const {
       movies: [movie],
-    } = await getSearchMovies({ query: 'year-missing' })
+    } = await fetchSearchMovies({ query: 'year-missing' })
 
     expect(movie.year).toBeUndefined()
   })

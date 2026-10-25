@@ -1,3 +1,6 @@
 export { createStorageSlot, setStorageErrorReporter } from './storage'
-export type { StorageErrorContext, StorageErrorReporter } from './storage'
-export { useStorageSlot } from './useStorageSlot'
+export type {
+  StorageErrorContext,
+  StorageErrorReporter,
+  StorageSlot,
+} from './storage'

@@ -1,10 +1,10 @@
 import { apiClient, ApiError } from '@shared/api'
-import { createCachedFetcher } from '@shared/lib'
+import { createQueryStore } from '@shared/lib'
 
 import type { PopularMovie } from '../model/types'
 import { mapDocToMovie } from './mapDocToMovie'
 
-type RequestParams = {
+type PopularRequestParams = {
   slug: string
   limit: number
 }
@@ -14,7 +14,7 @@ type RequestParams = {
 const POPULAR_TTL_MS = 24 * 60 * 60 * 1000
 
 const fetchPopularMovies = async (
-  params: RequestParams,
+  params: PopularRequestParams,
 ): Promise<PopularMovie[]> => {
   const response = await apiClient.getV15ListBySlug({
     path: { slug: params.slug },
@@ -33,7 +33,8 @@ const fetchPopularMovies = async (
   }))
 }
 
-export const getPopularMovies = createCachedFetcher<
-  RequestParams,
-  PopularMovie[]
->('popularMovies', fetchPopularMovies, { ttlMs: POPULAR_TTL_MS })
+export const popularMoviesStore = createQueryStore({
+  name: 'popularMovies',
+  fetcher: fetchPopularMovies,
+  ttlMs: POPULAR_TTL_MS,
+})

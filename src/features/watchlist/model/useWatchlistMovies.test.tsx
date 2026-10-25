@@ -1,4 +1,4 @@
-import { AsyncBoundary } from '@shared/ui'
+import { QueryBoundary } from '@shared/ui'
 import { act, render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
@@ -40,13 +40,17 @@ const mockError = (id: number, status: number) => {
 }
 
 const Probe = () => {
-  const movies = useWatchlistMovies()
+  const query = useWatchlistMovies()
   return (
-    <ul>
-      {movies.map(movie => (
-        <li key={movie.id}>{movie.title}</li>
-      ))}
-    </ul>
+    <QueryBoundary query={query}>
+      {movies => (
+        <ul>
+          {movies.map(movie => (
+            <li key={movie.id}>{movie.title}</li>
+          ))}
+        </ul>
+      )}
+    </QueryBoundary>
   )
 }
 
@@ -59,11 +63,7 @@ describe('useWatchlistMovies', () => {
     mockMovie(702, { name: 'Watchlist Series', type: 'tv-series' })
 
     await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
+      render(<Probe />)
     })
 
     expect(screen.getByText('Watchlist Movie')).toBeInTheDocument()
@@ -77,11 +77,7 @@ describe('useWatchlistMovies', () => {
     mockError(712, 404)
 
     await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
+      render(<Probe />)
     })
 
     expect(screen.getByText('Alive')).toBeInTheDocument()
@@ -94,26 +90,18 @@ describe('useWatchlistMovies', () => {
     mockError(722, 404)
 
     await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
+      render(<Probe />)
     })
 
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
 
-  it('5xx → ошибка уходит в AsyncBoundary, список не рендерится', async () => {
+  it('5xx → ошибка уходит в QueryBoundary, список не рендерится', async () => {
     watchlistSlot.set([731])
     mockError(731, 500)
 
     await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
+      render(<Probe />)
     })
 
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
@@ -124,11 +112,7 @@ describe('useWatchlistMovies', () => {
 
   it('пустые ids → пустой список', async () => {
     await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
+      render(<Probe />)
     })
 
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)

@@ -1,1 +1,1 @@
-export { invalidatePersonDetail, usePersonDetail } from './usePersonDetail'
+export { usePersonDetail } from './usePersonDetail'

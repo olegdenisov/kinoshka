@@ -3,12 +3,13 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
+import { seedStorage } from '../../../../test/seedStorage'
 import { server } from '../../../../test/setup'
 import { Favorites } from './Favorites'
 
 const FAVORITES_KEY = 'kinoshka:favorites'
 const setFavorites = (ids: number[]) =>
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids))
+  seedStorage(FAVORITES_KEY, JSON.stringify(ids))
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -146,7 +147,7 @@ describe('Favorites — полный отказ загрузки (все id 404)
 })
 
 describe('Favorites — полный отказ загрузки (сетевая/5xx ошибка)', () => {
-  it('показывает error-фолбэк AsyncBoundary с Retry, а не EmptyState', async () => {
+  it('показывает error-фолбэк QueryBoundary с Retry, а не EmptyState', async () => {
     setFavorites([500, 501])
     mockMovieError(500, 500)
     mockMovieError(501, 500)

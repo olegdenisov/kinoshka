@@ -6,7 +6,7 @@ import { checkA11y } from './utils/a11y'
 // между тестами по умолчанию (см. план, Task 8), поэтому localStorage
 // kinoshka:favorites пуст и на /recommendations рендерится EmptyState без
 // единого запроса к API — Recommendations.tsx проверяет ids.length === 0
-// до AsyncBoundary/useFavoriteMovies().
+// до QueryBoundary/useFavoriteMovies().
 test('recommendations page renders empty state for empty favorites and has no critical a11y violations', async ({
   page,
 }) => {

@@ -1,23 +1,9 @@
-import { filtersToParams } from '@features/catalog-filter'
 import { EMPTY_FILTERS } from '@features/catalog-filter'
-import { AsyncBoundary } from '@shared/ui'
-import { act, render, screen } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import type { ComponentType } from 'react'
 
 import { server } from '../../../test/setup'
-import type {
-  MovieCatalogParams,
-  useMovieCatalog as UseMovieCatalog,
-} from './useMovieCatalog'
-
-// Оба фетчера (getSearchMovies/getMoviesPage) кешируют промисы в module-scope Map —
-// свежий модуль на каждый тест, чтобы одинаковые (query,page)/(params,page) не залипали.
-const importUseMovieCatalog = async () => {
-  vi.resetModules()
-  const mod = await import('./useMovieCatalog')
-  return mod.useMovieCatalog
-}
+import { type MovieCatalogParams, useMovieCatalog } from './useMovieCatalog'
 
 const SEARCH_ENDPOINT = '*/v1.5/movie/search'
 const CATALOG_ENDPOINT = '*/v1.5/movie'
@@ -87,79 +73,47 @@ const mockCatalog = (
   return () => request
 }
 
-type ProbeProps = {
-  useMovieCatalog: typeof UseMovieCatalog
-  params: MovieCatalogParams
-}
-
-const Probe: ComponentType<ProbeProps> = ({ useMovieCatalog, params }) => {
-  const result = useMovieCatalog(params)
-  return (
-    <div>
-      <span data-testid='mode'>{result.mode}</span>
-      <span data-testid='totalPages'>{result.totalPages}</span>
-      <ul data-testid='movies'>
-        {result.movies.map(m => (
-          <li key={m.id}>{m.title}</li>
-        ))}
-      </ul>
-    </div>
+const mockForbidden = (endpoint: string) => {
+  const counts = { requests: 0 }
+  server.use(
+    http.get(endpoint, () => {
+      counts.requests += 1
+      return HttpResponse.json(
+        { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
+        { status: 403 },
+      )
+    }),
   )
+  return counts
 }
 
-// React 19's `use()` suspends synchronously during the initial render; testing-library's
-// (synchronous) `act` inside plain `render()` warns "act call was not awaited" and the
-// eventual re-render after the promise resolves never flushes. Wrapping in `await act(async …)`
-// gives React's scheduler a real async act scope to await the pending suspended work.
-const renderProbe = async (
-  useMovieCatalog: typeof UseMovieCatalog,
-  params: MovieCatalogParams,
-) => {
-  let result: ReturnType<typeof render> | undefined
-  await act(async () => {
-    result = render(
-      <AsyncBoundary>
-        <Probe useMovieCatalog={useMovieCatalog} params={params} />
-      </AsyncBoundary>,
-    )
+const renderCatalog = (initialProps: MovieCatalogParams) =>
+  renderHook((props: MovieCatalogParams) => useMovieCatalog(props), {
+    initialProps,
   })
-  return result!
-}
 
-const rerenderProbe = async (
-  rerender: ReturnType<typeof render>['rerender'],
-  useMovieCatalog: typeof UseMovieCatalog,
-  params: MovieCatalogParams,
-) => {
-  await act(async () => {
-    rerender(
-      <AsyncBoundary>
-        <Probe useMovieCatalog={useMovieCatalog} params={params} />
-      </AsyncBoundary>,
-    )
-  })
-}
-
-beforeEach(() => {
-  sessionStorage.clear()
-})
+const titles = (result: { current: ReturnType<typeof useMovieCatalog> }) =>
+  result.current.data?.movies.map(m => m.title)
 
 describe('useMovieCatalog — непустой query → режим search', () => {
   it('игнорирует filters, totalPages — из search-ответа (pages)', async () => {
     const getSearchRequest = mockSearch([searchDoc('Matrix')], { pages: 7 })
     const catalogRequest = mockCatalog([catalogDoc('Should Not Appear')])
-    const useMovieCatalog = await importUseMovieCatalog()
 
-    await renderProbe(useMovieCatalog, {
+    const { result } = renderCatalog({
       query: 'matrix',
       filters: { ...EMPTY_FILTERS, genres: ['Drama'] },
       sort: 'Newest',
       page: 1,
     })
 
-    expect(screen.getByTestId('mode')).toHaveTextContent('search')
-    expect(screen.getByTestId('totalPages')).toHaveTextContent('7')
-    expect(screen.getByTestId('movies')).toHaveTextContent('Matrix')
+    expect(result.current.isLoading).toBe(true)
+    await waitFor(() => expect(result.current.data).toBeDefined())
+
+    expect(result.current.data?.mode).toBe('search')
+    expect(result.current.data?.totalPages).toBe(7)
+    expect(titles(result)).toEqual(['Matrix'])
+    expect(result.current.isFetching).toBe(false)
 
     const url = new URL(getSearchRequest()!.url)
     expect(url.searchParams.get('query')).toBe('matrix')
@@ -168,21 +122,22 @@ describe('useMovieCatalog — непустой query → режим search', () 
 })
 
 describe('useMovieCatalog — пустой query → режим catalog', () => {
-  it('вызывает getMoviesPage(filtersToParams(filters, sort), page), totalPages — из total', async () => {
+  it('запрос каталога по filtersToParams(filters, sort), totalPages — из total', async () => {
     const getCatalogRequest = mockCatalog([catalogDoc('Dune')], { total: 15 })
     const searchRequest = mockSearch([searchDoc('Should Not Appear')])
-    const useMovieCatalog = await importUseMovieCatalog()
 
-    await renderProbe(useMovieCatalog, {
+    const { result } = renderCatalog({
       query: '',
       filters: { ...EMPTY_FILTERS, type: 'movie' },
       sort: 'Newest',
       page: 1,
     })
 
-    expect(screen.getByTestId('mode')).toHaveTextContent('catalog')
-    expect(screen.getByTestId('totalPages')).toHaveTextContent('2')
-    expect(screen.getByTestId('movies')).toHaveTextContent('Dune')
+    await waitFor(() => expect(result.current.data).toBeDefined())
+
+    expect(result.current.data?.mode).toBe('catalog')
+    expect(result.current.data?.totalPages).toBe(2)
+    expect(titles(result)).toEqual(['Dune'])
 
     const url = new URL(getCatalogRequest()!.url)
     expect(url.searchParams.getAll('type')).toEqual(['movie'])
@@ -192,268 +147,183 @@ describe('useMovieCatalog — пустой query → режим catalog', () => 
 
   it('query из одних пробелов трактуется как пустой (режим catalog)', async () => {
     mockCatalog([catalogDoc('Dune')])
-    const useMovieCatalog = await importUseMovieCatalog()
 
-    await renderProbe(useMovieCatalog, {
+    const { result } = renderCatalog({
       query: '   ',
       filters: EMPTY_FILTERS,
       sort: '',
       page: 1,
     })
 
-    expect(screen.getByTestId('mode')).toHaveTextContent('catalog')
+    await waitFor(() => expect(result.current.data?.mode).toBe('catalog'))
   })
 })
 
-describe('useMovieCatalog — единый результат { movies, mode, totalPages }', () => {
-  it('форма результата одинакова в обоих режимах', async () => {
-    mockSearch([searchDoc('Matrix')], { pages: 2 })
-    const useMovieCatalogSearch = await importUseMovieCatalog()
-    const { unmount } = await renderProbe(useMovieCatalogSearch, {
-      query: 'matrix',
-      filters: EMPTY_FILTERS,
-      sort: '',
-      page: 1,
-    })
-    expect(screen.getByTestId('mode')).toHaveTextContent('search')
-    unmount()
-
-    mockCatalog([catalogDoc('Dune')], { total: 5 })
-    const useMovieCatalogCatalog = await importUseMovieCatalog()
-    await renderProbe(useMovieCatalogCatalog, {
-      query: '',
-      filters: EMPTY_FILTERS,
-      sort: '',
-      page: 1,
-    })
-
-    expect(screen.getByTestId('mode')).toHaveTextContent('catalog')
-    expect(screen.getByTestId('totalPages')).toHaveTextContent('1')
-  })
-})
-
-describe('useMovieCatalog — смена page/sort/фильтров меняет запрос', () => {
-  it('смена page (search) — новый запрос со следующей страницей', async () => {
+describe('useMovieCatalog — смена параметров (stale-while-fetching)', () => {
+  it('смена page (search) — новый запрос, прежняя выдача держится, пока он идёт', async () => {
     const getSearchRequest = mockSearch([searchDoc('Matrix Page1')], {
       pages: 2,
     })
-    const useMovieCatalog = await importUseMovieCatalog()
-
-    const { rerender } = await renderProbe(useMovieCatalog, {
+    const { result, rerender } = renderCatalog({
       query: 'matrix',
       filters: EMPTY_FILTERS,
       sort: '',
       page: 1,
     })
-    expect(screen.getByTestId('movies')).toHaveTextContent('Matrix Page1')
+    await waitFor(() => expect(titles(result)).toEqual(['Matrix Page1']))
     expect(new URL(getSearchRequest()!.url).searchParams.get('page')).toBe('1')
 
     const getSearchRequest2 = mockSearch([searchDoc('Matrix Page2')], {
       pages: 2,
     })
-    await rerenderProbe(rerender, useMovieCatalog, {
-      query: 'matrix',
-      filters: EMPTY_FILTERS,
-      sort: '',
-      page: 2,
-    })
+    rerender({ query: 'matrix', filters: EMPTY_FILTERS, sort: '', page: 2 })
 
-    expect(screen.getByTestId('movies')).toHaveTextContent('Matrix Page2')
+    // уже в первом рендере нового ключа: старые данные + isFetching, не isLoading
+    expect(titles(result)).toEqual(['Matrix Page1'])
+    expect(result.current.isFetching).toBe(true)
+    expect(result.current.isLoading).toBe(false)
+
+    await waitFor(() => expect(titles(result)).toEqual(['Matrix Page2']))
+    expect(result.current.isFetching).toBe(false)
     expect(new URL(getSearchRequest2()!.url).searchParams.get('page')).toBe('2')
   })
 
   it('смена sort/фильтров (catalog) — новый запрос с новыми параметрами', async () => {
     const getRequest1 = mockCatalog([catalogDoc('Dune')])
-    const useMovieCatalog = await importUseMovieCatalog()
-
-    const { rerender } = await renderProbe(useMovieCatalog, {
+    const { result, rerender } = renderCatalog({
       query: '',
       filters: EMPTY_FILTERS,
       sort: '',
       page: 1,
     })
-    expect(screen.getByTestId('movies')).toHaveTextContent('Dune')
+    await waitFor(() => expect(titles(result)).toEqual(['Dune']))
     expect(
       new URL(getRequest1()!.url).searchParams.getAll('sortField'),
     ).toEqual([])
 
     const getRequest2 = mockCatalog([catalogDoc('Highest Rated Movie')])
-    await rerenderProbe(rerender, useMovieCatalog, {
+    rerender({
       query: '',
       filters: { ...EMPTY_FILTERS, rating: 8 },
       sort: 'Highest rated',
       page: 1,
     })
 
-    expect(screen.getByTestId('movies')).toHaveTextContent(
-      'Highest Rated Movie',
-    )
+    await waitFor(() => expect(titles(result)).toEqual(['Highest Rated Movie']))
     const url2 = new URL(getRequest2()!.url)
     expect(url2.searchParams.getAll('sortField')).toEqual(['rating.kp'])
     expect(url2.searchParams.getAll('rating.kp')).toEqual(['8-10'])
   })
-})
 
-describe('invalidateMovieCatalog — Task 5 (retry реально бьёт в сеть)', () => {
-  // Механика самого кэша (TTL/cooldown/sessionStorage, per-params изоляция) полностью
-  // покрыта createCachedFetcher.test.ts/getMoviesPage.test.ts. Здесь — только то, что
-  // invalidateMovieCatalog бьёт РОВНО по тому же кэш-ключу и той же ветке
-  // (trimmedQuery ? search : catalog), что использует сам useMovieCatalog выше (через
-  // getSearchMovies/getMoviesPage напрямую — see useTopRatedMovies.test.ts за тем же
-  // паттерном), — иначе Retry на /search молча продолжал бы отдавать старый
-  // rejected-промис из cooldown (ERROR_CACHE_TTL_MS).
-  const errorResponse = () =>
-    HttpResponse.json(
-      { statusCode: 403, message: 'Forbidden', error: 'Forbidden' },
-      { status: 403 },
+  it('переключение режима catalog → search держит прежнюю сетку до ответа поиска', async () => {
+    mockCatalog([catalogDoc('Dune')])
+    const { result, rerender } = renderCatalog({
+      query: '',
+      filters: EMPTY_FILTERS,
+      sort: '',
+      page: 1,
+    })
+    await waitFor(() => expect(result.current.data?.mode).toBe('catalog'))
+
+    let resolvePending: ((response: Response) => void) | undefined
+    server.use(
+      http.get(
+        SEARCH_ENDPOINT,
+        () =>
+          new Promise<Response>(resolve => {
+            resolvePending = resolve
+          }),
+      ),
     )
+    rerender({ query: 'matrix', filters: EMPTY_FILTERS, sort: '', page: 1 })
 
-  // Свежий модуль на каждый тест — оба фетчера кешируют промисы в module-scope Map.
-  const importModules = async () => {
-    vi.resetModules()
-    const [{ invalidateMovieCatalog }, { getSearchMovies, getMoviesPage }] =
-      await Promise.all([
-        import('./useMovieCatalog'),
-        import('@entities/movie'),
-      ])
-    return { invalidateMovieCatalog, getSearchMovies, getMoviesPage }
-  }
+    expect(result.current.data?.mode).toBe('catalog')
+    expect(titles(result)).toEqual(['Dune'])
+    expect(result.current.isFetching).toBe(true)
+    expect(result.current.isLoading).toBe(false)
 
-  it('search-режим (непустой query): rejected getSearchMovies → invalidateMovieCatalog → повторный вызов реально идёт в сеть', async () => {
+    await waitFor(() => expect(resolvePending).toBeDefined())
+    await act(async () => {
+      resolvePending!(
+        HttpResponse.json({
+          docs: [searchDoc('Matrix')],
+          total: 1,
+          page: 1,
+          pages: 1,
+          limit: 12,
+        }),
+      )
+    })
+
+    await waitFor(() => expect(result.current.data?.mode).toBe('search'))
+    expect(titles(result)).toEqual(['Matrix'])
+  })
+
+  it('возврат к уже загруженным параметрам — из кеша, без запроса', async () => {
     let requests = 0
     server.use(
-      http.get(SEARCH_ENDPOINT, () => {
+      http.get(SEARCH_ENDPOINT, ({ request }) => {
         requests += 1
-        return errorResponse()
+        const page = new URL(request.url).searchParams.get('page')
+        return HttpResponse.json({
+          docs: [searchDoc(`Page ${page}`)],
+          total: 2,
+          page: Number(page),
+          pages: 2,
+          limit: 12,
+        })
       }),
     )
-    const { invalidateMovieCatalog, getSearchMovies } = await importModules()
+    const params = { query: 'matrix', filters: EMPTY_FILTERS, sort: '' }
+    const { result, rerender } = renderCatalog({ ...params, page: 1 })
+    await waitFor(() => expect(titles(result)).toEqual(['Page 1']))
 
-    const params: MovieCatalogParams = {
+    rerender({ ...params, page: 2 })
+    await waitFor(() => expect(titles(result)).toEqual(['Page 2']))
+
+    rerender({ ...params, page: 1 })
+    expect(titles(result)).toEqual(['Page 1'])
+    expect(result.current.isFetching).toBe(false)
+    expect(requests).toBe(2)
+  })
+})
+
+describe('useMovieCatalog — ошибки и Retry', () => {
+  it('search-режим: 403 → isError, refetch реально идёт в сеть', async () => {
+    const forbidden = mockForbidden(SEARCH_ENDPOINT)
+    const { result } = renderCatalog({
       query: 'matrix-retry',
       filters: EMPTY_FILTERS,
       sort: '',
       page: 1,
-    }
+    })
 
-    await expect(
-      getSearchMovies({ query: 'matrix-retry', page: 1 }),
-    ).rejects.toThrow()
-    expect(requests).toBe(1)
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(forbidden.requests).toBe(1)
 
-    invalidateMovieCatalog(params)
+    const getRequest = mockSearch([searchDoc('Recovered')])
+    act(() => result.current.refetch())
 
-    server.use(
-      http.get(SEARCH_ENDPOINT, () => {
-        requests += 1
-        return HttpResponse.json({
-          docs: [searchDoc('Recovered')],
-          total: 1,
-          page: 1,
-          pages: 1,
-          limit: 12,
-        })
-      }),
-    )
-
-    await getSearchMovies({ query: 'matrix-retry', page: 1 })
-    expect(requests).toBe(2)
+    await waitFor(() => expect(titles(result)).toEqual(['Recovered']))
+    expect(result.current.isError).toBe(false)
+    expect(getRequest()).toBeDefined()
   })
 
-  it('catalog-режим (пустой query): rejected getMoviesPage → invalidateMovieCatalog → повторный вызов реально идёт в сеть', async () => {
-    let requests = 0
-    server.use(
-      http.get(CATALOG_ENDPOINT, () => {
-        requests += 1
-        return errorResponse()
-      }),
-    )
-    const { invalidateMovieCatalog, getMoviesPage } = await importModules()
-
-    const filters = { ...EMPTY_FILTERS, type: 'movie' as const }
-    const params: MovieCatalogParams = { query: '', filters, sort: '', page: 1 }
-    // Тот же filtersToParams(filters, sort), что invalidateMovieCatalog вызывает внутри
-    // себя — иначе тест мог бы пройти, даже если invalidate бьёт не по тому ключу.
-    const catalogParams = filtersToParams(filters, '')
-
-    await expect(getMoviesPage(catalogParams, 1)).rejects.toThrow()
-    expect(requests).toBe(1)
-
-    invalidateMovieCatalog(params)
-
-    server.use(
-      http.get(CATALOG_ENDPOINT, () => {
-        requests += 1
-        return HttpResponse.json({
-          docs: [catalogDoc('Recovered')],
-          limit: 12,
-          next: null,
-          hasNext: false,
-          hasPrev: false,
-          total: 1,
-        })
-      }),
-    )
-
-    await getMoviesPage(catalogParams, 1)
-    expect(requests).toBe(2)
-  })
-
-  it('invalidateMovieCatalog(search-params) не задевает независимую catalog-запись getMoviesPage', async () => {
-    server.use(
-      http.get(SEARCH_ENDPOINT, () =>
-        HttpResponse.json({
-          docs: [searchDoc('Search Hit')],
-          total: 1,
-          page: 1,
-          pages: 1,
-          limit: 12,
-        }),
-      ),
-      http.get(CATALOG_ENDPOINT, () =>
-        HttpResponse.json({
-          docs: [catalogDoc('Catalog Hit')],
-          limit: 12,
-          next: null,
-          hasNext: false,
-          hasPrev: false,
-          total: 1,
-        }),
-      ),
-    )
-    const { invalidateMovieCatalog, getSearchMovies, getMoviesPage } =
-      await importModules()
-
-    const searchParams: MovieCatalogParams = {
-      query: 'isolation-probe',
-      filters: EMPTY_FILTERS,
+  it('catalog-режим: 403 → isError, refetch перезапрашивает шаг курсора', async () => {
+    const forbidden = mockForbidden(CATALOG_ENDPOINT)
+    const { result } = renderCatalog({
+      query: '',
+      filters: { ...EMPTY_FILTERS, rating: 6 },
       sort: '',
       page: 1,
-    }
+    })
 
-    await getSearchMovies({ query: 'isolation-probe', page: 1 })
-    await getMoviesPage({}, 1)
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(forbidden.requests).toBe(1)
 
-    let catalogRequests = 0
-    server.use(
-      http.get(CATALOG_ENDPOINT, () => {
-        catalogRequests += 1
-        return HttpResponse.json({
-          docs: [catalogDoc('Catalog Hit')],
-          limit: 12,
-          next: null,
-          hasNext: false,
-          hasPrev: false,
-          total: 1,
-        })
-      }),
-    )
+    mockCatalog([catalogDoc('Recovered Catalog')])
+    act(() => result.current.refetch())
 
-    invalidateMovieCatalog(searchParams)
-
-    // catalog-запись (пустые params) не задета invalidateMovieCatalog(searchParams) —
-    // из кэша, без сети.
-    await getMoviesPage({}, 1)
-    expect(catalogRequests).toBe(0)
+    await waitFor(() => expect(titles(result)).toEqual(['Recovered Catalog']))
   })
 })

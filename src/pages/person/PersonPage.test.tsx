@@ -129,8 +129,8 @@ describe('PersonPage — /person/666 не найден (404)', () => {
       name: 'Попробовать снова',
     })
 
-    // invalidatePersonDetail инвалидирует кэш-запись до reset(), поэтому клик
-    // реально уходит в сеть сразу, без ожидания ERROR_CACHE_TTL_MS (20с) cooldown.
+    // refetch() обходит кулдаун ошибок, поэтому клик
+    // реально уходит в сеть сразу, без ожидания 20с кулдауна.
     await act(async () => {
       fireEvent.click(retryButton)
     })

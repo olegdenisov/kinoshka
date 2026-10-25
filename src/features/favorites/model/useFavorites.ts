@@ -1,6 +1,6 @@
-import { trackEvent, useStorageSlot } from '@shared/lib'
+import { useShallow } from 'zustand/react/shallow'
 
-import { favoritesSlot } from './favoritesStorage'
+import { useFavoritesStore } from './favoritesStore'
 
 export type UseFavoritesResult = {
   ids: number[]
@@ -12,30 +12,22 @@ export type UseFavoritesResult = {
 }
 
 export const useFavorites = (): UseFavoritesResult => {
-  const [ids, setIds] = useStorageSlot(favoritesSlot)
+  const ids = useFavoritesStore(state => state.ids)
+  const { toggle, add, remove, clear } = useFavoritesStore(
+    useShallow(state => ({
+      toggle: state.toggle,
+      add: state.add,
+      remove: state.remove,
+      clear: state.clear,
+    })),
+  )
 
   return {
     ids,
     isFavorite: id => ids.includes(id),
-    add: id => {
-      const current = favoritesSlot.get()
-      if (!current.includes(id)) {
-        setIds([...current, id])
-      }
-    },
-    remove: id =>
-      setIds(favoritesSlot.get().filter(existingId => existingId !== id)),
-    toggle: id => {
-      const current = favoritesSlot.get()
-      if (current.includes(id)) {
-        setIds(current.filter(existingId => existingId !== id))
-      } else {
-        // trackEvent только при успешной записи: setIds() не бросает при недоступном
-        // хранилище, а возвращает false (см. createStorageSlot.set) — иначе Plausible
-        // считал бы "favorite added" в сессиях, где избранное на самом деле не сохранилось.
-        if (setIds([...current, id])) trackEvent('favorite added')
-      }
-    },
-    clear: () => setIds([]),
+    add,
+    remove,
+    toggle,
+    clear,
   }
 }

@@ -1,12 +1,11 @@
 import { apiClient } from '@shared/api'
-import { createCachedFetcher } from '@shared/lib'
 
 export type MovieImage = {
   url: string
   previewUrl?: string
 }
 
-const fetchMovieImages = async (id: number): Promise<MovieImage[]> => {
+export const fetchMovieImages = async (id: number): Promise<MovieImage[]> => {
   const response = await apiClient.getV15Image({
     query: {
       movieId: [String(id)],
@@ -28,8 +27,3 @@ const fetchMovieImages = async (id: number): Promise<MovieImage[]> => {
       previewUrl: image.previewUrl ?? undefined,
     }))
 }
-
-export const getMovieImages = createCachedFetcher<number, MovieImage[]>(
-  'movie-images',
-  fetchMovieImages,
-)

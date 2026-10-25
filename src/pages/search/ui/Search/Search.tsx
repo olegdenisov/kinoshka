@@ -5,11 +5,10 @@ import {
   useFilterState,
   SORT_LABELS,
 } from '@features/catalog-filter'
-import type { FilterState } from '@features/catalog-filter'
 import { useViewport } from '@shared/lib'
 import {
-  AsyncBoundary,
   EmptyState,
+  QueryBoundary,
   Spinner,
   FilterIcon,
   ChevronDownIcon,
@@ -17,14 +16,12 @@ import {
 } from '@shared/ui'
 import { BottomSheet } from '@widgets/mobile-chrome'
 import { SearchSidebar } from '@widgets/search-sidebar'
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { useSearchParams } from 'react-router'
 
-import { useCatalogUpdateStatus } from '../../model/useCatalogUpdateStatus'
-import {
-  invalidateMovieCatalog,
-  useMovieCatalog,
-} from '../../model/useMovieCatalog'
+import type { MovieCatalogResult } from '../../model/movieCatalogStore'
+import { useSearchUiStore } from '../../model/searchUiStore'
+import { useMovieCatalog } from '../../model/useMovieCatalog'
 import { usePageSync } from '../../model/usePageSync'
 import { useSearchAnalytics } from '../../model/useSearchAnalytics'
 import { Pagination } from '../Pagination'
@@ -38,42 +35,23 @@ import {
 import s from './Search.module.css'
 
 type SearchResultsProps = {
+  result: MovieCatalogResult
   query: string
-  filters: FilterState
-  sort: string
-  page: number
   displayPage: number
   onPageChange: (p: number) => void
 }
 
 /**
- * Отдельный компонент под `use()` внутри `useMovieCatalog` — Suspense должен ловить именно этот
- * узел, а не всю страницу (заголовок/фильтры/сортировка остаются интерактивными во время
- * загрузки). До Task 10 существовал в двух почти идентичных копиях — `SearchResults`
- * (`SearchDesktop.tsx`, использовал `SearchResultsGrid`+`Pagination`) и `MobileSearchResults`
- * (`SearchMobile.tsx`, рендерил `Card` напрямую в собственном гриде + инлайновый
- * `MobilePagination`) — слиты в одну версию, т.к. после унификации `SearchResultsGrid`/
- * `Pagination` под mobile-first CSS (см. их докблоки) разница между вариантами была только в
- * обёртке, не в контенте/логике. Suspense-граница (обёртывающий `AsyncBoundary` в `Search` ниже)
- * сохранена как отдельная от остального дерева страницы — то самое обоснование, что было в обоих
- * исходных докблоках, не потеряно при слиянии.
- *
- * `query`/`filters`/`sort`/`page` здесь — deferred-значения из `useCatalogUpdateStatus`: пока
- * React их не догнал, `use()` внутри `useMovieCatalog` берёт cache-hit на старых параметрах
- * вместо повторного саспенда уже смонтированного дерева. `displayPage` — live-значение, отдельно
- * от `page`, чтобы клик по номеру страницы в `Pagination` подсвечивался мгновенно, а не только
- * после того, как deferred-фетч догонит live `page`.
+ * Выдача `/search`. `result` может быть выдачей прошлых параметров (keepPreviousData в
+ * `useMovieCatalog`), а `displayPage` — всегда live-значение из URL: клик по номеру страницы в
+ * `Pagination` подсвечивается мгновенно, не дожидаясь ответа.
  */
 const SearchResults = ({
+  result: { movies, totalPages },
   query,
-  filters,
-  sort,
-  page,
   displayPage,
   onPageChange,
 }: SearchResultsProps) => {
-  const { movies, totalPages } = useMovieCatalog({ query, filters, sort, page })
-
   if (movies.length === 0) {
     return (
       <div className={s.emptyWrap}>
@@ -169,8 +147,16 @@ const SearchResults = ({
  */
 export const Search = () => {
   const { isMobile } = useViewport()
-  const [filtersOpen, setFiltersOpen] = useState(false)
-  const [sortOpen, setSortOpen] = useState(false)
+  // Каждая шторка подписана только на свой флаг
+  const filtersOpen = useSearchUiStore(state => state.filtersOpen)
+  const sortOpen = useSearchUiStore(state => state.sortOpen)
+  const openFilters = useSearchUiStore(state => state.openFilters)
+  const closeFilters = useSearchUiStore(state => state.closeFilters)
+  const openSort = useSearchUiStore(state => state.openSort)
+  const closeSort = useSearchUiStore(state => state.closeSort)
+  const resetSearchUi = useSearchUiStore(state => state.reset)
+  // Стор module-level: без сброса при уходе со страницы шторка осталась бы открытой при возврате
+  useEffect(() => resetSearchUi, [resetSearchUi])
   const { filters, setFilters, sort, setSort, resetFilters, activeChips } =
     useFilterState()
   const [searchParams] = useSearchParams()
@@ -179,18 +165,9 @@ export const Search = () => {
   useSearchAnalytics(query)
   const isSearchMode = query.trim().length > 0
   const { page, goToPage } = usePageSync({ query, filters })
-  const {
-    deferredQuery,
-    deferredFilters,
-    deferredSort,
-    deferredPage,
-    isUpdating,
-  } = useCatalogUpdateStatus({
-    query,
-    filters,
-    sort,
-    page,
-  })
+  const catalog = useMovieCatalog({ query, filters, sort, page })
+  // Фоновый запрос поверх уже показанной выдачи; первый заход (isLoading) — скелетон, не бейдж
+  const isUpdating = catalog.isFetching && !catalog.isLoading
 
   const title = isSearchMode ? `Results for “${query}”` : 'Browse catalog'
 
@@ -200,7 +177,7 @@ export const Search = () => {
         <div className={`hide-scrollbar ${s.filterBar}`}>
           <button
             type='button'
-            onClick={() => setFiltersOpen(true)}
+            onClick={openFilters}
             disabled={isSearchMode}
             className={`${s.filterBtn} ${activeChips.length ? s.filterBtnActive : ''}`}
           >
@@ -213,7 +190,7 @@ export const Search = () => {
 
           <button
             type='button'
-            onClick={() => setSortOpen(true)}
+            onClick={openSort}
             disabled={isSearchMode}
             className={s.sortBtn}
           >
@@ -253,26 +230,19 @@ export const Search = () => {
             className={`${s.resultsWrapper} ${isUpdating ? s.updating : ''}`}
             aria-busy={isUpdating}
           >
-            <AsyncBoundary
+            <QueryBoundary
+              query={catalog}
               fallback={<SearchResultSkeletonGrid />}
-              onRetry={() =>
-                invalidateMovieCatalog({
-                  query: deferredQuery,
-                  filters: deferredFilters,
-                  sort: deferredSort,
-                  page: deferredPage,
-                })
-              }
             >
-              <SearchResults
-                query={deferredQuery}
-                filters={deferredFilters}
-                sort={deferredSort}
-                page={deferredPage}
-                displayPage={page}
-                onPageChange={goToPage}
-              />
-            </AsyncBoundary>
+              {result => (
+                <SearchResults
+                  result={result}
+                  query={query}
+                  displayPage={page}
+                  onPageChange={goToPage}
+                />
+              )}
+            </QueryBoundary>
             {isUpdating && (
               <div className={s.updatingBadge}>
                 <Spinner size={14} />
@@ -287,7 +257,7 @@ export const Search = () => {
         <>
           <BottomSheet
             open={filtersOpen && !isSearchMode}
-            onClose={() => setFiltersOpen(false)}
+            onClose={closeFilters}
             title='Filters'
           >
             {/* Без `count`: Type — одиночный выбор, значение есть всегда. */}
@@ -328,7 +298,7 @@ export const Search = () => {
               </button>
               <button
                 type='button'
-                onClick={() => setFiltersOpen(false)}
+                onClick={closeFilters}
                 className={s.showResultsBtn}
               >
                 Show results
@@ -338,7 +308,7 @@ export const Search = () => {
 
           <BottomSheet
             open={sortOpen && !isSearchMode}
-            onClose={() => setSortOpen(false)}
+            onClose={closeSort}
             title='Sort by'
             heightVh={50}
           >
@@ -349,7 +319,7 @@ export const Search = () => {
                   key={o}
                   onClick={() => {
                     setSort(o)
-                    setSortOpen(false)
+                    closeSort()
                   }}
                   className={`${s.sortOption} ${sort === o ? s.sortOptionActive : ''}`}
                 >

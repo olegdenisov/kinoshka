@@ -1,21 +1,21 @@
-import { useStorageSlot } from '@shared/lib'
 import { useEffect } from 'react'
 
 import {
-  countryDictionarySlot,
   isCountryDictionaryStale,
   refreshCountryDictionary,
+  useCountryDictionaryStore,
 } from '../api/countryDictionaryCache'
 import { STATIC_FALLBACK_COUNTRIES } from '../model/country'
 
 /**
- * Синхронный хук по образцу useGenreDictionary (без Suspense/`AsyncBoundary`): сразу отдаёт
- * кэш из localStorage или STATIC_FALLBACK_COUNTRIES, устаревший/пустой кэш обновляется в фоне
- * из `useEffect`. Вызывается внутри CountrySelector, который монтируется только в раскрытой
+ * Синхронный хук по образцу useGenreDictionary (без `QueryBoundary`): сразу отдаёт кэш из
+ * localStorage или STATIC_FALLBACK_COUNTRIES, устаревший/пустой кэш обновляется в фоне из
+ * `useEffect`. Вызывается внутри CountrySelector, который монтируется только в раскрытой
  * группе, — запрос словаря уходит при первом раскрытии, а не на каждом заходе на /search.
  */
 export const useCountryDictionary = (): string[] => {
-  const [{ items, fetchedAt }] = useStorageSlot(countryDictionarySlot)
+  const items = useCountryDictionaryStore(state => state.items)
+  const fetchedAt = useCountryDictionaryStore(state => state.fetchedAt)
 
   useEffect(() => {
     if (items.length === 0 || isCountryDictionaryStale(fetchedAt)) {

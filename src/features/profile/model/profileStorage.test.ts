@@ -1,3 +1,4 @@
+import { seedStorage } from '../../../test/seedStorage'
 import {
   PROFILE_NAME_MAX_LENGTH,
   normalizeProfileName,
@@ -18,7 +19,7 @@ describe('profileNameSlot', () => {
   })
 
   it('значение длиннее лимита в code points → fallback ""', () => {
-    localStorage.setItem(
+    seedStorage(
       'kinoshka:profile',
       JSON.stringify('a'.repeat(PROFILE_NAME_MAX_LENGTH + 1)),
     )
@@ -28,7 +29,7 @@ describe('profileNameSlot', () => {
 
   it('значение ровно на лимите проходит валидацию', () => {
     const name = 'a'.repeat(PROFILE_NAME_MAX_LENGTH)
-    localStorage.setItem('kinoshka:profile', JSON.stringify(name))
+    seedStorage('kinoshka:profile', JSON.stringify(name))
 
     expect(profileNameSlot.get()).toBe(name)
   })
@@ -36,7 +37,7 @@ describe('profileNameSlot', () => {
   it('имя из суррогатных пар на границе лимита проходит валидацию', () => {
     // 40 эмодзи = 80 UTF-16 code units, но ровно 40 code points
     const name = '😀'.repeat(PROFILE_NAME_MAX_LENGTH)
-    localStorage.setItem('kinoshka:profile', JSON.stringify(name))
+    seedStorage('kinoshka:profile', JSON.stringify(name))
 
     expect(profileNameSlot.get()).toBe(name)
   })
@@ -44,7 +45,7 @@ describe('profileNameSlot', () => {
   it.each(['   ', ' Ada ', 'Ada '])(
     'значение с пробелами по краям %j (записано мимо UI) → fallback ""',
     value => {
-      localStorage.setItem('kinoshka:profile', JSON.stringify(value))
+      seedStorage('kinoshka:profile', JSON.stringify(value))
 
       expect(profileNameSlot.get()).toBe('')
     },
@@ -61,14 +62,14 @@ describe('profileNameSlot', () => {
   ])(
     'невидимое имя (%s), записанное мимо UI → fallback ""',
     (_label, value) => {
-      localStorage.setItem('kinoshka:profile', JSON.stringify(value))
+      seedStorage('kinoshka:profile', JSON.stringify(value))
 
       expect(profileNameSlot.get()).toBe('')
     },
   )
 
   it('невидимые символы рядом с видимыми не мешают имени', () => {
-    localStorage.setItem('kinoshka:profile', JSON.stringify('A\u200Bda'))
+    seedStorage('kinoshka:profile', JSON.stringify('A\u200Bda'))
 
     expect(profileNameSlot.get()).toBe('A\u200Bda')
   })
@@ -80,13 +81,13 @@ describe('profileNameSlot', () => {
   })
 
   it('невалидный JSON → fallback ""', () => {
-    localStorage.setItem('kinoshka:profile', '{not-json')
+    seedStorage('kinoshka:profile', '{not-json')
 
     expect(profileNameSlot.get()).toBe('')
   })
 
   it('не-строка → fallback ""', () => {
-    localStorage.setItem('kinoshka:profile', JSON.stringify(42))
+    seedStorage('kinoshka:profile', JSON.stringify(42))
 
     expect(profileNameSlot.get()).toBe('')
   })

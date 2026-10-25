@@ -177,8 +177,8 @@ describe('MoviePage — /movie/666 не найден (404)', () => {
       name: 'Попробовать снова',
     })
 
-    // invalidateMovieDetail инвалидирует кэш-запись до reset(), поэтому клик реально
-    // уходит в сеть сразу, без ожидания ERROR_CACHE_TTL_MS (20с) cooldown.
+    // refetch() обходит кулдаун ошибок, поэтому клик реально
+    // уходит в сеть сразу, без ожидания 20с кулдауна.
     await act(async () => {
       fireEvent.click(retryButton)
     })
@@ -225,6 +225,25 @@ describe('MoviePage — /movie/888 общая ошибка → Retry (Task 6, ro
     expect(
       (await screen.findAllByText('Recovered Movie')).length,
     ).toBeGreaterThan(0)
+  })
+})
+
+describe('MoviePage — картинки не загрузились', () => {
+  it('страница фильма всё равно рендерится', async () => {
+    mockMovie(5, { name: 'No Images Movie' })
+    server.use(
+      http.get('*/v1.5/image', () =>
+        HttpResponse.json(
+          { statusCode: 500, message: 'error', error: 'error' },
+          { status: 500 },
+        ),
+      ),
+    )
+
+    await renderMoviePage('/movie/5')
+
+    expect(screen.getAllByText('No Images Movie').length).toBeGreaterThan(0)
+    expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
   })
 })
 

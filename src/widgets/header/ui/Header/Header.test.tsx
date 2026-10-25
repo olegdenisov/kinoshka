@@ -9,6 +9,7 @@ import {
   useNavigate,
 } from 'react-router'
 
+import { seedStorage } from '../../../../test/seedStorage'
 import { Header } from './Header'
 
 /** Читает текущую строку query из роутера — способ проверить, что запись в URL реально произошла. */
@@ -576,7 +577,7 @@ describe('Header — аватар профиля (ProfileAvatar)', () => {
   })
 
   it('с сохранённым именем показывает инициалы', () => {
-    localStorage.setItem('kinoshka:profile', JSON.stringify('Oleg Denisov'))
+    seedStorage('kinoshka:profile', JSON.stringify('Oleg Denisov'))
 
     render(
       <MemoryRouter initialEntries={['/']}>
