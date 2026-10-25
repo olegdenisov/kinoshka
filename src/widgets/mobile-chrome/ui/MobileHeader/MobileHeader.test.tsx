@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { MobileHeader } from './MobileHeader'
 
 beforeEach(() => localStorage.clear())
@@ -14,7 +15,7 @@ afterEach(() => {
 
 describe('MobileHeader', () => {
   it('рендерится успешно с логотипом по умолчанию', () => {
-    render(
+    renderWithStore(
       <MemoryRouter>
         <MobileHeader />
       </MemoryRouter>,
@@ -24,7 +25,7 @@ describe('MobileHeader', () => {
   })
 
   it('содержит кнопку-тоггл темы', () => {
-    render(
+    renderWithStore(
       <MemoryRouter>
         <MobileHeader />
       </MemoryRouter>,
@@ -34,7 +35,7 @@ describe('MobileHeader', () => {
   })
 
   it('кнопка "назад" (onBack передан) имеет aria-label="Back" (a11y baseline, Task 2)', () => {
-    render(
+    renderWithStore(
       <MemoryRouter>
         <MobileHeader onBack={vi.fn()} />
       </MemoryRouter>,
@@ -44,7 +45,7 @@ describe('MobileHeader', () => {
   })
 
   it('клик по тогглу темы меняет document.documentElement.dataset.theme', () => {
-    render(
+    renderWithStore(
       <MemoryRouter>
         <MobileHeader />
       </MemoryRouter>,
@@ -62,7 +63,7 @@ describe('MobileHeader', () => {
   it('аватар — ссылка на /profile с инициалами сохранённого имени', () => {
     localStorage.setItem('kinoshka:profile', JSON.stringify('Oleg Denisov'))
 
-    render(
+    renderWithStore(
       <MemoryRouter>
         <MobileHeader />
       </MemoryRouter>,
@@ -76,7 +77,7 @@ describe('MobileHeader', () => {
   })
 
   it('переданный rightAction перекрывает аватар (регресс-гард для /movie/:id)', () => {
-    render(
+    renderWithStore(
       <MemoryRouter>
         <MobileHeader rightAction={<button type='button'>Share</button>} />
       </MemoryRouter>,

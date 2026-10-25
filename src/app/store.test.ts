@@ -1,0 +1,71 @@
+import { baseApi } from '@shared/api'
+
+import { makeStore as makeAppStore, store } from './store'
+
+// Подписки стора на слоты живут на window — снимаем их после каждого теста, singleton — после файла.
+const created: ReturnType<typeof makeAppStore>[] = []
+const makeStore = (...args: Parameters<typeof makeAppStore>) => {
+  const next = makeAppStore(...args)
+  created.push(next)
+  return next
+}
+
+afterEach(() => {
+  for (const instance of created.splice(0)) instance.teardown()
+})
+
+afterAll(() => store.teardown())
+
+// Тестовый endpoint без сети: нужен, чтобы положить запись в кеш RTK Query одного стора.
+const testApi = baseApi.injectEndpoints({
+  endpoints: build => ({
+    storeTestPing: build.query<string, void>({
+      queryFn: () => ({ data: 'pong' }),
+    }),
+  }),
+})
+
+describe('makeStore', () => {
+  it('в стейте есть срез RTK Query под reducerPath api', () => {
+    expect(makeStore().getState()).toHaveProperty(baseApi.reducerPath)
+  })
+
+  it('два вызова дают независимые сторы — кеш одного не виден в другом', async () => {
+    const first = makeStore()
+    const second = makeStore()
+
+    await first.dispatch(testApi.endpoints.storeTestPing.initiate())
+
+    expect(
+      testApi.endpoints.storeTestPing.select()(first.getState()).data,
+    ).toBe('pong')
+    expect(
+      testApi.endpoints.storeTestPing.select()(second.getState()).data,
+    ).toBeUndefined()
+  })
+
+  it('preloadedState попадает в стор', async () => {
+    const source = makeStore()
+    await source.dispatch(testApi.endpoints.storeTestPing.initiate())
+
+    const restored = makeStore(source.getState())
+
+    expect(
+      testApi.endpoints.storeTestPing.select()(restored.getState()).data,
+    ).toBe('pong')
+  })
+
+  it('teardown снимает подписки, стор остаётся рабочим', async () => {
+    const created = makeStore()
+
+    expect(() => created.teardown()).not.toThrow()
+    await created.dispatch(testApi.endpoints.storeTestPing.initiate())
+    expect(
+      testApi.endpoints.storeTestPing.select()(created.getState()).data,
+    ).toBe('pong')
+  })
+
+  it('singleton store создан тем же makeStore', () => {
+    expect(store.getState()).toHaveProperty(baseApi.reducerPath)
+  })
+})

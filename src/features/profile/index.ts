@@ -4,3 +4,8 @@ export {
   normalizeProfileName,
 } from './model/profileStorage'
 export { ProfileAvatar } from './ui/ProfileAvatar'
+export {
+  profileReducer,
+  profileReducerPath,
+  registerProfilePersistence,
+} from './model/profileSlice'

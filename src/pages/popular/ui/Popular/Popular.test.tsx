@@ -1,14 +1,14 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { Popular } from './Popular'
 
 // Реальные MSW-хендлеры на /v1.5/list/:slug (не мок модуля) — тот же подход, что и
-// HomeDesktop.test.tsx для PopularMoviesRail: usePopularMovies()/invalidatePopularMovies() делят
-// один и тот же реальный createCachedFetcher-кэш, так что клик Retry по-настоящему инвалидирует
-// и бьёт в сеть заново, а не просто перерисовывает закэшированный rejected-промис.
+// HomeDesktop.test.tsx для PopularMoviesRail: Retry идёт через refetch RTK Query
+// и по-настоящему бьёт в сеть заново, а не просто перерисовывает закэшированную ошибку.
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
 
 const movieDoc = (overrides: Record<string, unknown> = {}) => ({
@@ -60,10 +60,10 @@ const setViewportWidth = (width: number) => {
 }
 
 const renderPage = async () => {
-  let result: ReturnType<typeof render> | undefined
+  let result: ReturnType<typeof renderWithStore> | undefined
 
   await act(async () => {
-    result = render(
+    result = renderWithStore(
       <MemoryRouter>
         <Popular />
       </MemoryRouter>,
@@ -167,7 +167,7 @@ describe('Popular — пустой список', () => {
 })
 
 describe('Popular — полный отказ загрузки', () => {
-  it('показывает error-фолбэк AsyncBoundary с Retry, а Retry реально бьёт в сеть заново', async () => {
+  it('показывает error-фолбэк QueryBoundary с Retry, а Retry реально бьёт в сеть заново', async () => {
     let requests = 0
     server.use(
       http.get(LIST_ENDPOINT, () => {

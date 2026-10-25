@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { ThemeToggle } from './ThemeToggle'
 
 beforeEach(() => localStorage.clear())
@@ -15,7 +16,7 @@ afterEach(() => {
 
 describe('ThemeToggle', () => {
   it('клик переключает document.documentElement.dataset.theme light → dark', () => {
-    render(<ThemeToggle />)
+    renderWithStore(<ThemeToggle />)
 
     fireEvent.click(screen.getByRole('button'))
 
@@ -23,7 +24,7 @@ describe('ThemeToggle', () => {
   })
 
   it('повторный клик переключает обратно dark → light', () => {
-    render(<ThemeToggle />)
+    renderWithStore(<ThemeToggle />)
     const button = screen.getByRole('button')
 
     fireEvent.click(button)
@@ -34,7 +35,7 @@ describe('ThemeToggle', () => {
   })
 
   it('aria-label синхронизирован с текущей темой: "Switch to dark theme", когда сейчас light', () => {
-    render(<ThemeToggle />)
+    renderWithStore(<ThemeToggle />)
 
     expect(
       screen.getByRole('button', { name: 'Switch to dark theme' }),
@@ -42,7 +43,7 @@ describe('ThemeToggle', () => {
   })
 
   it('после клика (light → dark) aria-label меняется на "Switch to light theme"', () => {
-    render(<ThemeToggle />)
+    renderWithStore(<ThemeToggle />)
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Switch to dark theme' }),

@@ -1,13 +1,18 @@
 import { useTopRatedMovies } from '@entities/movie'
-import { MovieRail } from '@widgets/movie-rail'
+import { QueryBoundary } from '@shared/ui'
+import { MovieRail, MovieRailSkeleton } from '@widgets/movie-rail'
 
 export const PersonalRails = () => {
-  const movies = useTopRatedMovies()
+  const query = useTopRatedMovies()
   return (
-    <MovieRail
-      title='Because you watched Orbit of Silence'
-      subtitle='Personal'
-      items={movies}
-    />
+    <QueryBoundary query={query} fallback={<MovieRailSkeleton />}>
+      {movies => (
+        <MovieRail
+          title='Because you watched Orbit of Silence'
+          subtitle='Personal'
+          items={movies}
+        />
+      )}
+    </QueryBoundary>
   )
 }

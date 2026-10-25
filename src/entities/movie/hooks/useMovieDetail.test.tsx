@@ -1,9 +1,10 @@
-import { AsyncBoundary } from '@shared/ui'
-import { act, render, screen } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { createStoreWrapper, makeStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
-import { getMovieDetailBundle, useMovieDetail } from './useMovieDetail'
+import { movieDetailApi } from '../api/movieDetailApi'
+import { useMovieDetail } from './useMovieDetail'
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -16,8 +17,6 @@ const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   poster: { previewUrl: 'https://example.com/poster.jpg' },
   persons: [],
   countries: [],
-  slogan: 'Some tagline',
-  description: 'Full synopsis.',
   ...overrides,
 })
 
@@ -66,126 +65,135 @@ const mockImagesError = (status: number) => {
   )
 }
 
-const Probe = ({ id }: { id: number }) => {
-  const { detail, images } = useMovieDetail(id)
-  return (
-    <div>
-      <span data-testid='title'>{detail.title}</span>
-      <span data-testid='images-count'>{images.length}</span>
-    </div>
-  )
-}
-
-const renderProbe = async (id: number) => {
-  await act(async () => {
-    render(
-      <AsyncBoundary>
-        <Probe id={id} />
-      </AsyncBoundary>,
-    )
-  })
-}
-
-describe('useMovieDetail — оба запроса успешны', () => {
-  it('отдаёт detail и images', async () => {
+describe('useMovieDetail', () => {
+  it('оба запроса успешны — data с detail и images', async () => {
     mockMovie(1, { name: 'Orbit of Silence' })
-    mockImages([
-      { movieId: 1, type: 'frame', url: 'https://example.com/frame.jpg' },
-    ])
+    mockImages([{ url: 'https://example.com/frame.jpg' }])
 
-    await renderProbe(1)
+    const { result } = renderHook(() => useMovieDetail(1), {
+      wrapper: createStoreWrapper(),
+    })
 
-    expect(screen.getByTestId('title')).toHaveTextContent('Orbit of Silence')
-    expect(screen.getByTestId('images-count')).toHaveTextContent('1')
+    await waitFor(() => expect(result.current.data).toBeDefined())
+    expect(result.current.data?.detail.title).toBe('Orbit of Silence')
+    expect(result.current.data?.images).toHaveLength(1)
   })
-})
 
-describe('useMovieDetail — фильм успешен, картинки падают', () => {
-  it('images: [] без throw', async () => {
+  it('картинки падают — images: [], без ошибки', async () => {
     mockMovie(2, { name: 'Quiet Archive' })
     mockImagesError(500)
 
-    await renderProbe(2)
+    const { result } = renderHook(() => useMovieDetail(2), {
+      wrapper: createStoreWrapper(),
+    })
 
-    expect(screen.getByTestId('title')).toHaveTextContent('Quiet Archive')
-    expect(screen.getByTestId('images-count')).toHaveTextContent('0')
+    await waitFor(() => expect(result.current.data).toBeDefined())
+    expect(result.current.data?.images).toEqual([])
+    expect(result.current.isError).toBe(false)
   })
-})
 
-describe('useMovieDetail — фильм падает (404)', () => {
-  it('промис реджектится, AsyncBoundary показывает ErrorState', async () => {
+  it('фильм 404 — isError, status в error, data нет', async () => {
     mockMovieError(666, 404)
     mockImages([])
 
-    await renderProbe(666)
+    const { result } = renderHook(() => useMovieDetail(666), {
+      wrapper: createStoreWrapper(),
+    })
 
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
-    expect(screen.queryByTestId('title')).not.toBeInTheDocument()
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.error).toMatchObject({ status: 404 })
+    expect(result.current.data).toBeUndefined()
   })
-})
 
-// Регрессия на баг из истории Task 4 (см. докблок useMovieDetail.ts): 3 более ранние
-// реализации кэша связки (без кэша / useMemo / ручной TTL-Map) ловили бесконечный
-// ре-саспенс, потому что getMovieDetailBundle(id) отдавал новый Promise на каждый вызов.
-// Этот тест — быстрая, читаемая проверка инварианта стабильности ссылки вместо того,
-// чтобы полагаться на то, что регрессия проявится как зависший/таймаутящийся RTL-тест.
-describe('getMovieDetailBundle — стабильность ссылки на промис связки', () => {
-  it('повторный вызов с тем же id возвращает тот же Promise-объект (не пересобирает bundle)', async () => {
-    mockMovie(3, { name: 'Stable Reference' })
+  it('refetch после ошибки detail повторяет запрос и отдаёт data', async () => {
+    mockMovieError(3, 500)
     mockImages([])
 
-    const first = getMovieDetailBundle(3)
-    const second = getMovieDetailBundle(3)
+    const { result } = renderHook(() => useMovieDetail(3), {
+      wrapper: createStoreWrapper(),
+    })
+    await waitFor(() => expect(result.current.isError).toBe(true))
 
-    expect(first).toBe(second)
-    await first
-  })
-})
+    mockMovie(3, { name: 'Recovered' })
+    result.current.refetch()
 
-// Механика кэша (TTL/cooldown/sessionStorage) полностью покрыта createCachedFetcher.test.ts.
-// Здесь — только то, что invalidateMovieDetail бьёт РОВНО по обоим кэш-ключам
-// (getMovieDetail/getMovieImages), что использует getMovieDetailBundle — иначе Retry на
-// /movie/:id молча продолжал бы отдавать старый rejected-промис из cooldown.
-describe('invalidateMovieDetail', () => {
-  it('после rejected getMovieDetail(id) → invalidate → повторный вызов реально идёт в сеть', async () => {
-    let requests = 0
-    server.use(
-      http.get('*/v1.5/movie/4', () => {
-        requests += 1
-        return HttpResponse.json(
-          { statusCode: 500, message: 'error', error: 'error' },
-          { status: 500 },
-        )
-      }),
+    await waitFor(() =>
+      expect(result.current.data?.detail.title).toBe('Recovered'),
     )
+  })
+
+  it('смена id не отдаёт данные прошлого фильма', async () => {
+    mockMovie(4, { name: 'First' })
+    mockMovie(5, { name: 'Second' })
     mockImages([])
 
-    vi.resetModules()
-    const { invalidateMovieDetail, getMovieDetailBundle: getBundle } =
-      await import('./useMovieDetail')
+    const { result, rerender } = renderHook(({ id }) => useMovieDetail(id), {
+      initialProps: { id: 4 },
+      wrapper: createStoreWrapper(makeStore()),
+    })
+    await waitFor(() => expect(result.current.data).toBeDefined())
 
-    await expect(getBundle(4)).rejects.toThrow()
-    expect(requests).toBe(1)
+    rerender({ id: 5 })
 
-    invalidateMovieDetail(4)
-
-    server.use(
-      http.get('*/v1.5/movie/4', () => {
-        requests += 1
-        return HttpResponse.json(
-          movieDoc(4, { name: 'Recovered After Invalidate' }),
-        )
-      }),
+    expect(result.current.data?.detail.title).not.toBe('First')
+    await waitFor(() =>
+      expect(result.current.data?.detail.title).toBe('Second'),
     )
-
-    const bundle = await getBundle(4)
-    expect(requests).toBe(2)
-    expect(bundle.detail.title).toBe('Recovered After Invalidate')
   })
 
-  it('invalidate на несуществующем id — no-op, не бросает', async () => {
-    const { invalidateMovieDetail } = await import('./useMovieDetail')
+  it('detail и картинки упали — refetch повторяет и картинки', async () => {
+    mockMovieError(7, 500)
+    mockImagesError(500)
 
-    expect(() => invalidateMovieDetail(999_999)).not.toThrow()
+    const { result } = renderHook(() => useMovieDetail(7), {
+      wrapper: createStoreWrapper(),
+    })
+    await waitFor(() => expect(result.current.isError).toBe(true))
+
+    mockMovie(7, { name: 'Recovered' })
+    mockImages([{ url: 'https://example.com/frame.jpg' }])
+    act(() => {
+      result.current.refetch()
+    })
+
+    await waitFor(() => expect(result.current.data?.images).toHaveLength(1))
+    expect(result.current.data?.detail.title).toBe('Recovered')
+  })
+
+  it('detail упал, картинки ещё грузятся — уже isError', async () => {
+    mockMovieError(8, 404)
+    server.use(http.get('*/v1.5/image', () => new Promise<never>(() => {})))
+
+    const { result } = renderHook(() => useMovieDetail(8), {
+      wrapper: createStoreWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.error).toMatchObject({ status: 404 })
+    expect(result.current.data).toBeUndefined()
+  })
+
+  it('фоновый перезапрос картинок не прячет уже показанные data', async () => {
+    mockMovie(9)
+    mockImages([{ url: 'https://example.com/frame.jpg' }])
+    const store = makeStore()
+
+    const { result } = renderHook(() => useMovieDetail(9), {
+      wrapper: createStoreWrapper(store),
+    })
+    await waitFor(() => expect(result.current.data).toBeDefined())
+
+    // перезапрос висит — проверяем состояние «идёт фоновый fetch при готовых data»
+    server.use(http.get('*/v1.5/image', () => new Promise<never>(() => {})))
+    act(() => {
+      void store.dispatch(
+        movieDetailApi.endpoints.getMovieImages.initiate(9, {
+          forceRefetch: true,
+        }),
+      )
+    })
+
+    await waitFor(() => expect(result.current.isFetching).toBe(true))
+    expect(result.current.data?.images).toHaveLength(1)
   })
 })

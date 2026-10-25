@@ -1,8 +1,9 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { Watchlist } from './Watchlist'
 
@@ -45,7 +46,7 @@ const mockMovieError = (id: number, status: number) => {
 
 const renderPage = async () => {
   await act(async () => {
-    render(
+    renderWithStore(
       <MemoryRouter>
         <Watchlist />
       </MemoryRouter>,
@@ -161,7 +162,7 @@ describe('Watchlist — полный отказ загрузки', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('5xx → error-фолбэк AsyncBoundary с Retry, а не EmptyState', async () => {
+  it('5xx → error-фолбэк QueryBoundary с Retry, а не EmptyState', async () => {
     setWatchlist([500, 501])
     mockMovieError(500, 500)
     mockMovieError(501, 500)

@@ -1,7 +1,8 @@
-import { AsyncBoundary } from '@shared/ui'
-import { act, render, screen } from '@testing-library/react'
+import { QueryBoundary } from '@shared/ui'
+import { screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { renderWithStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
 import { favoritesSlot } from './favoritesStorage'
 import { useFavoriteMovies } from './useFavoriteMovies'
@@ -29,13 +30,17 @@ const mockMovie = (id: number, overrides: Record<string, unknown> = {}) => {
 }
 
 const Probe = () => {
-  const movies = useFavoriteMovies()
+  const query = useFavoriteMovies()
   return (
-    <ul>
-      {movies.map(movie => (
-        <li key={movie.id}>{movie.title}</li>
-      ))}
-    </ul>
+    <QueryBoundary query={query}>
+      {movies => (
+        <ul>
+          {movies.map(movie => (
+            <li key={movie.id}>{movie.title}</li>
+          ))}
+        </ul>
+      )}
+    </QueryBoundary>
   )
 }
 
@@ -47,15 +52,9 @@ describe('useFavoriteMovies', () => {
     mockMovie(501, { name: 'First Favorite' })
     mockMovie(502, { name: 'Second Favorite' })
 
-    await act(async () => {
-      render(
-        <AsyncBoundary>
-          <Probe />
-        </AsyncBoundary>,
-      )
-    })
+    renderWithStore(<Probe />)
 
-    expect(screen.getByText('First Favorite')).toBeInTheDocument()
+    expect(await screen.findByText('First Favorite')).toBeInTheDocument()
     expect(screen.getByText('Second Favorite')).toBeInTheDocument()
   })
 })

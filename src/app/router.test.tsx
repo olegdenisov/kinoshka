@@ -1,9 +1,10 @@
 import * as Sentry from '@sentry/react'
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { createBrowserRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 
+import { renderWithStore } from '../test/renderWithStore'
 import { server } from '../test/setup'
 import { router } from './router'
 
@@ -72,7 +73,7 @@ describe('router — реальный createBrowserRouter резолвит lazy+
       http.get(LIST_ENDPOINT, () => popularListSuccessResponse()),
     )
 
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     // Footer рендерится безусловно в дереве Home (см. Home.test.tsx) — надёжный маркер того,
     // что настоящая HomePage (не Spinner-фоллбэк) реально смонтировалась через lazyNamed.
@@ -123,7 +124,7 @@ describe('router — оставшиеся 7 роутов резолвят сво
     await act(async () => {
       await router.navigate('/movie/1')
     })
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     expect(
       (await screen.findAllByText('Router Smoke Movie')).length,
@@ -136,7 +137,7 @@ describe('router — оставшиеся 7 роутов резолвят сво
     await act(async () => {
       await router.navigate('/favorites')
     })
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     expect(await screen.findByText('No favorites yet')).toBeInTheDocument()
   })
@@ -145,7 +146,7 @@ describe('router — оставшиеся 7 роутов резолвят сво
     await act(async () => {
       await router.navigate('/watched')
     })
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     expect(await screen.findByText('No watched titles yet')).toBeInTheDocument()
   })
@@ -154,7 +155,7 @@ describe('router — оставшиеся 7 роутов резолвят сво
     await act(async () => {
       await router.navigate('/watchlist')
     })
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     expect(
       await screen.findByText('Nothing in your watchlist yet'),
@@ -182,7 +183,7 @@ describe('router — оставшиеся 7 роутов резолвят сво
     await act(async () => {
       await router.navigate('/popular')
     })
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     expect(
       await screen.findByText('No popular movies right now'),
@@ -195,7 +196,7 @@ describe('router — оставшиеся 7 роутов резолвят сво
     await act(async () => {
       await router.navigate('/recommendations')
     })
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     expect(
       await screen.findByText('Add movies you like to get recommendations'),
@@ -203,7 +204,7 @@ describe('router — оставшиеся 7 роутов резолвят сво
   })
 
   it('/search → SearchPage', async () => {
-    // Пустой ?q → SearchResults идёт через getMoviesPage() (@entities/movie), тот же
+    // Пустой ?q → каталог через getCatalog → getMoviesPage (@entities/movie), тот же
     // MOVIE_ENDPOINT, что и рейлы Home — заголовок 'Browse catalog' рендерится безусловно,
     // независимо от результата каталога.
     server.use(http.get(MOVIE_ENDPOINT, () => successResponse()))
@@ -211,7 +212,7 @@ describe('router — оставшиеся 7 роутов резолвят сво
     await act(async () => {
       await router.navigate('/search')
     })
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     expect(await screen.findByText('Browse catalog')).toBeInTheDocument()
   })
@@ -222,7 +223,7 @@ describe('router — оставшиеся 7 роутов резолвят сво
     await act(async () => {
       await router.navigate('/profile')
     })
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     expect(await screen.findByText(/Local profile\./)).toBeInTheDocument()
   })
@@ -242,7 +243,7 @@ describe('router — оставшиеся 7 роутов резолвят сво
     await act(async () => {
       await router.navigate('/person/1')
     })
-    render(<RouterProvider router={router} />)
+    renderWithStore(<RouterProvider router={router} />)
 
     expect(
       await screen.findByRole('heading', { name: 'Router Smoke Person' }),

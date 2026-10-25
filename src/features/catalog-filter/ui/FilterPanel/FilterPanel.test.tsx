@@ -1,8 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { vi } from 'vitest'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { EMPTY_FILTERS } from '../../lib/searchParams'
 import type { FilterState } from '../../model/useFilterState'
@@ -45,7 +46,7 @@ const setup = (filters: FilterState = EMPTY_FILTERS, disabled?: boolean) => {
   settleGenres()
   const onFiltersChange = vi.fn()
   const user = userEvent.setup()
-  render(
+  renderWithStore(
     <FilterPanel
       filters={filters}
       onFiltersChange={onFiltersChange}

@@ -1,8 +1,9 @@
 import type { Movie } from '@entities/movie'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { SearchResultsGrid } from './SearchResultsGrid'
 
 const makeMovie = (id: number): Movie => ({
@@ -18,7 +19,7 @@ const makeMovie = (id: number): Movie => ({
 })
 
 const renderGrid = (movies: Movie[]) =>
-  render(
+  renderWithStore(
     <MemoryRouter>
       <SearchResultsGrid movies={movies} />
     </MemoryRouter>,

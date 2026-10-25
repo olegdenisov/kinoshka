@@ -1,8 +1,9 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router'
 
+import { renderWithStore } from '../../test/renderWithStore'
 import { server } from '../../test/setup'
 import { MoviePage } from './MoviePage'
 
@@ -71,10 +72,10 @@ const mockImages = (docs: Record<string, unknown>[] = []) => {
 }
 
 const renderMoviePage = async (initialEntry: string) => {
-  let result: ReturnType<typeof render> | undefined
+  let result: ReturnType<typeof renderWithStore> | undefined
 
   await act(async () => {
-    result = render(
+    result = renderWithStore(
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route path='/movie/:id' element={<MoviePage />} />
@@ -86,17 +87,13 @@ const renderMoviePage = async (initialEntry: string) => {
   return result!
 }
 
-beforeEach(() => {
-  sessionStorage.clear()
-})
-
 describe('MoviePage — /movie/1, пока запрос не завершён', () => {
   it('показывает MovieDetailSkeleton, а не реальные данные', () => {
     // Хендлер, который никогда не резолвится — фиксируем состояние "запрос ушёл, ответа нет".
     server.use(http.get('*/v1.5/movie/1', () => new Promise(() => {})))
     mockImages([])
 
-    const { container } = render(
+    const { container } = renderWithStore(
       <MemoryRouter initialEntries={['/movie/1']}>
         <Routes>
           <Route path='/movie/:id' element={<MoviePage />} />
@@ -122,7 +119,9 @@ describe('MoviePage — /movie/1 happy path', () => {
     const user = userEvent.setup()
     const result = await renderMoviePage('/movie/1')
 
-    expect(screen.getAllByText('Orbit of Silence').length).toBeGreaterThan(0)
+    expect(
+      (await screen.findAllByText('Orbit of Silence')).length,
+    ).toBeGreaterThan(0)
     expect(
       result.container.querySelector('[class*="skeleton"]'),
     ).not.toBeInTheDocument()
@@ -148,7 +147,7 @@ describe('MoviePage — /movie/1 happy path', () => {
 })
 
 describe('MoviePage — /movie/666 не найден (404)', () => {
-  it('рендерит ErrorState с not-found текстом и рабочей кнопкой retry (реальный повторный запрос без ожидания cooldown)', async () => {
+  it('рендерит ErrorState с not-found текстом и рабочей кнопкой retry', async () => {
     let requestCount = 0
     server.use(
       http.get('*/v1.5/movie/666', () => {
@@ -177,8 +176,7 @@ describe('MoviePage — /movie/666 не найден (404)', () => {
       name: 'Попробовать снова',
     })
 
-    // invalidateMovieDetail инвалидирует кэш-запись до reset(), поэтому клик реально
-    // уходит в сеть сразу, без ожидания ERROR_CACHE_TTL_MS (20с) cooldown.
+    // Retry = refetch: клик сразу уходит в сеть.
     await act(async () => {
       fireEvent.click(retryButton)
     })
@@ -189,7 +187,7 @@ describe('MoviePage — /movie/666 не найден (404)', () => {
 })
 
 describe('MoviePage — /movie/888 общая ошибка → Retry (Task 6, roadmap 1.6)', () => {
-  it('клик Retry делает реальный повторный запрос без ожидания 20с, рендерит данные', async () => {
+  it('клик Retry делает повторный запрос и рендерит данные', async () => {
     let requestCount = 0
     server.use(
       http.get('*/v1.5/movie/888', () => {
@@ -218,9 +216,6 @@ describe('MoviePage — /movie/888 общая ошибка → Retry (Task 6, ro
       fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
     })
 
-    // Без реальной инвалидации кэша этот клик отдал бы тот же rejected-промис из
-    // ERROR_CACHE_TTL_MS cooldown (20с), и ErrorState остался бы на месте — сеть бы
-    // не была тронута (requestCount остался бы 1).
     expect(requestCount).toBe(2)
     expect(
       (await screen.findAllByText('Recovered Movie')).length,
@@ -268,7 +263,9 @@ describe('MoviePage — навигация между фильмами чере�
     const user = userEvent.setup()
     const { container } = await renderMoviePage('/movie/1')
 
-    expect(screen.getAllByText('Orbit of Silence').length).toBeGreaterThan(0)
+    expect(
+      (await screen.findAllByText('Orbit of Silence')).length,
+    ).toBeGreaterThan(0)
 
     await user.click(screen.getByRole('button', { name: 'Cast' }))
     expect(

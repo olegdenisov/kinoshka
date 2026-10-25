@@ -1,5 +1,5 @@
 import { ActiveFilterChips, useFilterState } from '@features/catalog-filter'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { act, useEffect } from 'react'
 import {
   MemoryRouter,
@@ -9,6 +9,7 @@ import {
   useNavigate,
 } from 'react-router'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { Header } from './Header'
 
 /** Читает текущую строку query из роутера — способ проверить, что запись в URL реально произошла. */
@@ -34,7 +35,7 @@ const NavigateProbe = ({ to }: { to: string | null }) => {
 
 const renderHeader = (initialEntries: string[]) => {
   lastSearch = ''
-  return render(
+  return renderWithStore(
     <MemoryRouter initialEntries={initialEntries}>
       <Header variant='search' activeNav='search' />
       <LocationProbe />
@@ -121,7 +122,7 @@ describe('Header (variant="search")', () => {
 
   it('внешнее изменение ?q (навигация в истории, без ремаунта Header) — draft инпута пересинхронизируется с URL', () => {
     lastSearch = ''
-    const { rerender } = render(
+    const { rerender } = renderWithStore(
       <MemoryRouter initialEntries={['/search?q=dune']}>
         <Header variant='search' activeNav='search' />
         <LocationProbe />
@@ -152,7 +153,7 @@ describe('Header (variant="search")', () => {
 
   it('внешнее изменение ?q на пусто (например, переход назад до состояния без query) — инпут очищается', () => {
     lastSearch = ''
-    const { rerender } = render(
+    const { rerender } = renderWithStore(
       <MemoryRouter initialEntries={['/search?q=dune']}>
         <Header variant='search' activeNav='search' />
         <LocationProbe />
@@ -200,7 +201,7 @@ describe('Header — ?q-эффект не пишет/не чистит URL вн�
   // ?q-debounce-эффект не должен ни писать, ни чистить query-параметры роута, куда перешли.
   it('переход search → другой роут (без ремаунта Header) не оставляет/не чистит ?q целевого роута', () => {
     lastSearch = ''
-    const { rerender } = render(
+    const { rerender } = renderWithStore(
       <MemoryRouter initialEntries={['/search?q=dune']}>
         <HeaderRouteChrome />
         <LocationProbe />
@@ -294,7 +295,7 @@ describe('Header — ⌘K/Ctrl+K фокусирует поле поиска (п�
   })
 
   it('вне variant="search" (инпута нет в DOM) — ⌘K не падает', () => {
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/']}>
         <Header variant='default' />
       </MemoryRouter>,
@@ -327,7 +328,7 @@ const SearchPage = () => (
 
 describe('Header — nav pills синхронизируют ?type с фильтром/chips', () => {
   const renderApp = (initialEntries: string[]) =>
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={initialEntries}>
         <Routes>
           <Route path='/' element={<Header variant='default' />} />
@@ -390,7 +391,7 @@ describe('Header — пункт навигации Favorites', () => {
       return null
     }
 
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/']}>
         <Header variant='default' />
         <PathnameProbe />
@@ -403,7 +404,7 @@ describe('Header — пункт навигации Favorites', () => {
   })
 
   it('activeNav="favorites" подсвечивает пункт "Favorites" как активный', () => {
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/favorites']}>
         <Header variant='default' activeNav='favorites' />
       </MemoryRouter>,
@@ -429,7 +430,7 @@ describe('Header — пункт навигации Popular', () => {
       return null
     }
 
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/']}>
         <Header variant='default' />
         <PathnameProbe />
@@ -442,7 +443,7 @@ describe('Header — пункт навигации Popular', () => {
   })
 
   it('activeNav="popular" подсвечивает пункт "Popular" как активный', () => {
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/popular']}>
         <Header variant='default' activeNav='popular' />
       </MemoryRouter>,
@@ -468,7 +469,7 @@ describe('Header — пункт навигации Picks', () => {
       return null
     }
 
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/']}>
         <Header variant='default' />
         <PathnameProbe />
@@ -481,7 +482,7 @@ describe('Header — пункт навигации Picks', () => {
   })
 
   it('activeNav="recommendations" подсвечивает пункт "Picks" как активный', () => {
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/recommendations']}>
         <Header variant='default' activeNav='recommendations' />
       </MemoryRouter>,
@@ -498,7 +499,7 @@ describe('Header — пункт навигации Picks', () => {
 
 describe('Header — accessible names на иконках без видимого текста (a11y baseline, Task 2)', () => {
   it('кнопка открытия поиска (variant="default") имеет aria-label="Open search"', () => {
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/']}>
         <Header variant='default' />
       </MemoryRouter>,
@@ -510,7 +511,7 @@ describe('Header — accessible names на иконках без видимог�
   })
 
   it('кнопка уведомлений имеет aria-label="Notifications"', () => {
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/']}>
         <Header variant='default' />
       </MemoryRouter>,
@@ -524,7 +525,7 @@ describe('Header — accessible names на иконках без видимог�
 
 describe('Header — переключатель темы (ThemeToggle)', () => {
   it('кнопка-тоггл темы присутствует в actions', () => {
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/']}>
         <Header variant='default' />
       </MemoryRouter>,
@@ -534,7 +535,7 @@ describe('Header — переключатель темы (ThemeToggle)', () => {
   })
 
   it('клик по тогглу меняет document.documentElement.dataset.theme', () => {
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/']}>
         <Header variant='default' />
       </MemoryRouter>,
@@ -552,7 +553,7 @@ describe('Header — переключатель темы (ThemeToggle)', () => {
 
 describe('Header — аватар профиля (ProfileAvatar)', () => {
   it('без имени аватар — ссылка на /profile с доступным именем "Your profile"', () => {
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/']}>
         <Header variant='default' />
       </MemoryRouter>,
@@ -563,7 +564,7 @@ describe('Header — аватар профиля (ProfileAvatar)', () => {
   })
 
   it('в варианте search аватар тоже ссылка на /profile', () => {
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/search']}>
         <Header variant='search' activeNav='search' />
       </MemoryRouter>,
@@ -578,7 +579,7 @@ describe('Header — аватар профиля (ProfileAvatar)', () => {
   it('с сохранённым именем показывает инициалы', () => {
     localStorage.setItem('kinoshka:profile', JSON.stringify('Oleg Denisov'))
 
-    render(
+    renderWithStore(
       <MemoryRouter initialEntries={['/']}>
         <Header variant='default' />
       </MemoryRouter>,

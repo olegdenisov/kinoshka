@@ -1,14 +1,10 @@
-import {
-  getMoviesPage,
-  getSearchMovies,
-  invalidateMoviesPage,
-} from '@entities/movie'
+import { useGetCatalogQuery } from '@entities/movie'
 import type { Movie } from '@entities/movie'
 import { filtersToParams } from '@features/catalog-filter'
 import type { FilterState } from '@features/catalog-filter'
-import { use } from 'react'
+import type { QueryBoundaryQuery } from '@shared/ui'
 
-// не публичный тип: используется только ниже в MovieCatalogResult (knip флагует export как
+// не публичный тип: используется только ниже в MovieCatalogData (knip флагует export как
 // мёртвый — этот файл page-internal, не реэкспортируется через публичный index.ts)
 type CatalogMode = 'search' | 'catalog'
 
@@ -19,68 +15,59 @@ export type MovieCatalogParams = {
   page: number
 }
 
-export type MovieCatalogResult = {
+type MovieCatalogData = {
   movies: Movie[]
   mode: CatalogMode
+  // query, по которому получены movies (а не живой ввод) — для текста пустого результата
+  query: string
   totalPages: number
 }
 
 /**
- * Фасад page-слоя (Task 8): единая точка входа для `SearchDesktop`/`SearchMobile`,
- * скрывающая двухэндпоинтную реальность API (Variant A — query и фильтры не сочетаются
- * в одном запросе).
+ * Фасад page-слоя: скрывает двухэндпоинтную реальность API (query и фильтры не сочетаются в
+ * одном запросе) за одним RTK Query-хуком `useGetCatalogQuery`. Импорт `filtersToParams` из
+ * `@features/catalog-filter` и хука из `@entities/movie` легален только в page-слое.
  *
- * `query.trim()` непустой → текстовый поиск `/v1.5/movie/search` (`getSearchMovies`),
- * `filters`/`sort` игнорируются. `query.trim()` пустой → каталог по фильтрам `/v1.5/movie`
- * (`getMoviesPage(filtersToParams(filters, sort), page)`, курсорная эмуляция numbered-page).
- *
- * Импорт `filtersToParams` из `@features/catalog-filter` и фетчеров из `@entities/movie` —
- * оба вниз по FSD, легально только в page-слое (в `entities` импорт `features` был бы вверх).
- *
- * Обе ветки уже отдают `{ movies, totalPages }` — здесь только нормализуем к единой форме,
- * добавляя `mode`.
+ * Stale-while-fetching даёт сам RTK Query: `data` держит результат предыдущих аргументов, пока
+ * грузятся новые (в том числе при смене режима поиск ↔ каталог — endpoint один). Отсюда
+ * `isUpdating` = идёт запрос при уже показанных данных.
  */
 export const useMovieCatalog = ({
   query,
   filters,
   sort,
   page,
-}: MovieCatalogParams): MovieCatalogResult => {
-  const trimmedQuery = query.trim()
-  const mode: CatalogMode = trimmedQuery ? 'search' : 'catalog'
-
-  const result = trimmedQuery
-    ? use(getSearchMovies({ query: trimmedQuery, page }))
-    : use(getMoviesPage(filtersToParams(filters, sort), page))
-
-  return { movies: result.movies, mode, totalPages: result.totalPages }
-}
-
-/**
- * Companion-инвалидатор для Retry (roadmap 1.6, Task 5): та же ветка `trimmedQuery ? ... : ...`,
- * что в самом хуке чтения выше — иначе retry молча бил бы не по тому кэш-ключу, что читает
- * `useMovieCatalog`, и продолжал бы отдавать старый rejected-промис из cooldown
- * (`ERROR_CACHE_TTL_MS`, см. `createCachedFetcher`/`getMoviesPage`).
- *
- * search-режим (непустой query) → `getSearchMovies.invalidate({ query, page })` — тот же
- * `{ query: trimmedQuery, page }`, что уходит в `getSearchMovies(...)` выше.
- * catalog-режим (пустой query) → `invalidateMoviesPage(filtersToParams(filters, sort), page)`
- * (Task 2) — тот же `filtersToParams(filters, sort)`, что уходит в `getMoviesPage(...)` выше.
- *
- * Вызывается местом использования (`SearchDesktop`/`SearchMobile`, `AsyncBoundary.onRetry`)
- * ДО `reset()`.
- */
-export const invalidateMovieCatalog = ({
-  query,
-  filters,
-  sort,
-  page,
-}: MovieCatalogParams): void => {
+}: MovieCatalogParams): QueryBoundaryQuery<MovieCatalogData> & {
+  isFetching: boolean
+  isUpdating: boolean
+} => {
   const trimmedQuery = query.trim()
 
-  if (trimmedQuery) {
-    getSearchMovies.invalidate({ query: trimmedQuery, page })
-  } else {
-    invalidateMoviesPage(filtersToParams(filters, sort), page)
+  // В search-режиме params не передаём: фильтры с текстом API не сочетает, и ключ кеша
+  // не должен от них зависеть.
+  const { data, isLoading, isFetching, isError, error, refetch } =
+    useGetCatalogQuery(
+      trimmedQuery
+        ? { query: trimmedQuery, page }
+        : { query: '', params: filtersToParams(filters, sort), page },
+    )
+
+  // mode и query — из аргументов, с которыми получены data: пока грузится новый режим, data
+  // ещё прежние, и живой query дал бы им чужой текст пустого результата.
+  const catalog: MovieCatalogData | undefined = data && {
+    movies: data.movies,
+    mode: data.query ? 'search' : 'catalog',
+    query: data.query,
+    totalPages: data.totalPages,
+  }
+
+  return {
+    data: catalog,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+    isUpdating: isFetching && !isLoading,
   }
 }

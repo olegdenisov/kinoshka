@@ -29,7 +29,7 @@ test('filter: selecting a genre chip and a duration preset on /search updates th
 
   // Дожидаемся, что первичный (без фильтров) запрос каталога уже отрисовался,
   // прежде чем менять фильтры — иначе клик по жанру попадает на ещё не
-  // завершившийся первый Suspense-фетч и обе проверки ниже флейково гонятся
+  // завершившийся первый запрос getCatalog и обе проверки ниже флейково гонятся
   // с первым запросом к живому API за один и тот же 10s expect-таймаут.
   await expect(resultsOrEmptyState(page)).toBeVisible()
 
@@ -47,8 +47,8 @@ test('filter: selecting a genre chip and a duration preset on /search updates th
   await expect(resultsOrEmptyState(page)).toBeVisible()
 
   // Длительность — в свёрнутой группе общего FilterPanel. Ждём именно ответ каталога с
-  // `movieLength`: смена только URL без перезапроса (поле забыто в `areFiltersEqual`)
-  // иначе прошла бы незамеченной. +1 запрос к API — шаг здесь, а не отдельным тестом (квота).
+  // `movieLength`: смена только URL без перезапроса (поле не попало в params
+  // `filtersToParams`, а значит и в ключ кеша getCatalog) иначе прошла бы незамеченной. +1 запрос к API — шаг здесь, а не отдельным тестом (квота).
   await page.getByText('Duration', { exact: true }).click()
   const durationResponse = page.waitForResponse(
     r => r.url().includes('/v1.5/movie?') && r.url().includes('movieLength='),

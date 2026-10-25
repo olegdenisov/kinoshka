@@ -1,101 +1,55 @@
-import type * as EntitiesMovie from '@entities/movie'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
-import { vi } from 'vitest'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
+import { server } from '../../../../test/setup'
 import { Watchlist } from './Watchlist'
 
-// Мокаем весь `getMoviesByIds` (а не MSW-эндпоинт) для точного контроля тайминга —
-// реальная композиция (см. getMoviesByIds.ts) тоже умеет реджектиться при полном отказе
-// (см. Watchlist.test.tsx — «полный отказ загрузки (сетевая/5xx ошибка)»), но здесь
-// нужно детерминированно проверить именно порядок вызовов invalidate→refetch, а не сам факт
-// реджекта. Мок ведёт себя как упрощённый `createCachedFetcher`: кэширует промис по
-// `JSON.stringify(ids)`, счётчик `fetchAttempts` растёт только на реальный промах кэша — так
-// тест проверяет то же самое свойство, что и `MoviePage.test.tsx` для Retry: `invalidate`
-// вызывается ДО повторного запроса.
-//
-// Отдельный файл от Watchlist.test.tsx (как Favorites.retry.test.tsx), потому что `vi.mock` здесь подменяет
-// `getMoviesByIds` для ВСЕГО файла — смешивать его с MSW-based тестами в одном файле означало бы
-// либо терять реальные сетевые сценарии, либо городить `vi.doMock`/`vi.resetModules` внутри теста.
-const { invalidate, getMoviesByIdsMock, getFetchAttempts } = vi.hoisted(() => {
-  const cache = new Map<string, Promise<unknown>>()
-  let fetchAttempts = 0
+const STORAGE_KEY = 'kinoshka:watchlist'
 
-  const getMoviesByIdsMock = (ids: number[]) => {
-    const key = JSON.stringify(ids)
-    if (!cache.has(key)) {
-      fetchAttempts++
-      const promise =
-        fetchAttempts === 1
-          ? Promise.reject(new Error('Network error'))
-          : Promise.resolve([
-              {
-                id: ids[0],
-                title: `Recovered Movie ${ids[0]}`,
-                poster: 'https://example.com/poster.jpg',
-                year: 2024,
-                rating: 7.5,
-                genre: ['Drama'],
-                runtime: '120 min',
-                hue: 20,
-                type: 'movie',
-              },
-            ])
-      cache.set(key, promise)
-    }
-    return cache.get(key)
-  }
+beforeEach(() => localStorage.clear())
 
-  const invalidate = vi.fn((ids: number[]) => {
-    cache.delete(JSON.stringify(ids))
-  })
+describe('Watchlist — Retry', () => {
+  it('клик Retry перезапрашивает данные и показывает результат', async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([1]))
+    let attempts = 0
+    server.use(
+      http.get('*/v1.5/movie/1', () => {
+        attempts++
+        if (attempts === 1) {
+          return HttpResponse.json(
+            { statusCode: 500, message: 'boom', error: 'boom' },
+            { status: 500 },
+          )
+        }
+        return HttpResponse.json({
+          id: 1,
+          name: 'Recovered Movie 1',
+          year: 2024,
+          type: 'movie',
+          rating: { kp: 8.1, imdb: 7.9 },
+          genres: [{ name: 'drama' }],
+          movieLength: 120,
+          poster: { previewUrl: 'https://example.com/poster.jpg' },
+          persons: [],
+          countries: [],
+        })
+      }),
+    )
 
-  return {
-    invalidate,
-    getMoviesByIdsMock,
-    getFetchAttempts: () => fetchAttempts,
-  }
-})
-
-vi.mock('@entities/movie', async importOriginal => {
-  const actual = await importOriginal<typeof EntitiesMovie>()
-  return {
-    ...actual,
-    getMoviesByIds: Object.assign(getMoviesByIdsMock, {
-      invalidate,
-      clear: vi.fn(),
-    }),
-  }
-})
-
-const WATCHLIST_KEY = 'kinoshka:watchlist'
-
-beforeEach(() => {
-  localStorage.clear()
-  invalidate.mockClear()
-})
-
-describe('Watchlist — Retry реально переинвалидирует кэш и повторяет запрос', () => {
-  it('клик Retry вызывает invalidate и повторно запрашивает данные', async () => {
-    localStorage.setItem(WATCHLIST_KEY, JSON.stringify([1]))
-
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <Watchlist />
-        </MemoryRouter>,
-      )
-    })
+    renderWithStore(
+      <MemoryRouter>
+        <Watchlist />
+      </MemoryRouter>,
+    )
 
     expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
-    expect(getFetchAttempts()).toBe(1)
+    expect(attempts).toBe(1)
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
-    })
+    fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
 
-    expect(invalidate).toHaveBeenCalledWith([1])
-    expect(getFetchAttempts()).toBe(2)
     expect(await screen.findByText('Recovered Movie 1')).toBeInTheDocument()
+    expect(attempts).toBe(2)
   })
 })

@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 
+import { createStoreWrapper } from '../../../test/renderWithStore'
 import { PROFILE_NAME_MAX_LENGTH } from './profileStorage'
 import { useProfile } from './useProfile'
 
@@ -11,14 +12,18 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('useProfile', () => {
   it('начальное состояние: пустые name и initials', () => {
-    const { result } = renderHook(() => useProfile())
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: createStoreWrapper(),
+    })
 
     expect(result.current.name).toBe('')
     expect(result.current.initials).toBe('')
   })
 
   it('setName сохраняет имя, считает инициалы и пишет в localStorage', () => {
-    const { result } = renderHook(() => useProfile())
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.setName('Oleg Denisov'))
 
@@ -30,7 +35,9 @@ describe('useProfile', () => {
   })
 
   it('setName тримит вход', () => {
-    const { result } = renderHook(() => useProfile())
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.setName('  Oleg  '))
 
@@ -38,7 +45,9 @@ describe('useProfile', () => {
   })
 
   it.each(['', '   '])('setName(%j) сохраняет пустое имя', input => {
-    const { result } = renderHook(() => useProfile())
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.setName('Oleg'))
     act(() => result.current.setName(input))
@@ -51,7 +60,9 @@ describe('useProfile', () => {
   it.each(['\u200B', '\u200D\u200D', '\u00AD', '\u202E'])(
     'setName с невидимым вводом %j сохраняет пустое имя (не пустой кружок)',
     input => {
-      const { result } = renderHook(() => useProfile())
+      const { result } = renderHook(() => useProfile(), {
+        wrapper: createStoreWrapper(),
+      })
 
       act(() => result.current.setName(input))
 
@@ -62,7 +73,9 @@ describe('useProfile', () => {
   )
 
   it('setName возвращает true при успешной записи и false, если хранилище недоступно', () => {
-    const { result } = renderHook(() => useProfile())
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: createStoreWrapper(),
+    })
 
     let ok = false
     act(() => {
@@ -85,7 +98,9 @@ describe('useProfile', () => {
   })
 
   it('смешанная BMP+астральная строка обрезается ровно по лимиту code points', () => {
-    const { result } = renderHook(() => useProfile())
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: createStoreWrapper(),
+    })
     const mixed = 'a😀'.repeat(PROFILE_NAME_MAX_LENGTH)
 
     act(() => result.current.setName(mixed))
@@ -99,7 +114,9 @@ describe('useProfile', () => {
   })
 
   it('обрезка по лимиту, попавшая на пробел, не оставляет хвостовых пробелов и имя переживает чтение', () => {
-    const { result } = renderHook(() => useProfile())
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() =>
       result.current.setName('a'.repeat(PROFILE_NAME_MAX_LENGTH - 1) + ' bcd'),
@@ -115,8 +132,9 @@ describe('useProfile', () => {
   })
 
   it('setName в одном экземпляре хука виден в другом', () => {
-    const first = renderHook(() => useProfile())
-    const second = renderHook(() => useProfile())
+    const wrapper = createStoreWrapper()
+    const first = renderHook(() => useProfile(), { wrapper })
+    const second = renderHook(() => useProfile(), { wrapper })
 
     act(() => first.result.current.setName('Oleg'))
 
@@ -124,7 +142,9 @@ describe('useProfile', () => {
   })
 
   it('имя длиннее лимита обрезается по code points, не разрезая эмодзи', () => {
-    const { result } = renderHook(() => useProfile())
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.setName('😀'.repeat(PROFILE_NAME_MAX_LENGTH + 5)))
 
@@ -135,7 +155,9 @@ describe('useProfile', () => {
   })
 
   it('clearName сбрасывает имя и не ломает подписку', () => {
-    const { result } = renderHook(() => useProfile())
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.setName('Oleg'))
     act(() => result.current.clearName())
@@ -150,7 +172,9 @@ describe('useProfile', () => {
   })
 
   it('clearName возвращает true при успешной записи и false, если хранилище недоступно', () => {
-    const { result } = renderHook(() => useProfile())
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: createStoreWrapper(),
+    })
     act(() => result.current.setName('Oleg'))
 
     let ok = false

@@ -1,14 +1,19 @@
 import { usePopularMovies } from '@entities/movie'
-import { MovieRail } from '@widgets/movie-rail'
+import { QueryBoundary } from '@shared/ui'
+import { MovieRail, MovieRailSkeleton } from '@widgets/movie-rail'
 
 export const PopularMoviesRail = () => {
-  const popularMovies = usePopularMovies()
+  const query = usePopularMovies()
   return (
-    <MovieRail
-      title='Popular this week'
-      subtitle='What everyone is watching'
-      items={popularMovies}
-      href='/popular'
-    />
+    <QueryBoundary query={query} fallback={<MovieRailSkeleton />}>
+      {popularMovies => (
+        <MovieRail
+          title='Popular this week'
+          subtitle='What everyone is watching'
+          items={popularMovies}
+          href='/popular'
+        />
+      )}
+    </QueryBoundary>
   )
 }

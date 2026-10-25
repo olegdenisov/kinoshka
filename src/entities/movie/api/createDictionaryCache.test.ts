@@ -19,14 +19,30 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('createDictionaryCache — успех', () => {
-  it('refresh пишет items и fetchedAt в слот', async () => {
-    const cache = createDictionaryCache({
-      storageKey: nextKey(),
-      fetchItems: () => Promise.resolve(['США', 'Франция']),
-    })
+describe('createDictionaryCache — isFresh', () => {
+  it('пустой слот не свежий', () => {
+    const cache = createDictionaryCache(nextKey())
 
-    await cache.refresh()
+    expect(cache.isFresh()).toBe(false)
+  })
+
+  it('непустой кеш моложе TTL — свежий, старше TTL — нет', () => {
+    const cache = createDictionaryCache(nextKey())
+    cache.save(['США'])
+
+    now += DICTIONARY_TTL_MS
+    expect(cache.isFresh()).toBe(true)
+
+    now += 1
+    expect(cache.isFresh()).toBe(false)
+  })
+})
+
+describe('createDictionaryCache — save', () => {
+  it('пишет items и fetchedAt в слот', () => {
+    const cache = createDictionaryCache(nextKey())
+
+    cache.save(['США', 'Франция'])
 
     expect(cache.slot.get()).toEqual({
       items: ['США', 'Франция'],
@@ -34,189 +50,47 @@ describe('createDictionaryCache — успех', () => {
     })
   })
 
-  it('слот создаётся один раз — get() стабилен между обращениями', async () => {
-    const cache = createDictionaryCache({
-      storageKey: nextKey(),
-      fetchItems: () => Promise.resolve(['США']),
-    })
-    await cache.refresh()
+  it('пустой ответ не затирает существующий кеш', () => {
+    const cache = createDictionaryCache(nextKey())
+    cache.save(['США'])
+    const before = cache.slot.get()
 
-    expect(cache.slot.get()).toBe(cache.slot.get())
-  })
-})
+    now += 1000
+    cache.save([])
 
-describe('createDictionaryCache — in-flight дедупликация', () => {
-  it('параллельные вызовы дают один запрос', async () => {
-    const fetchItems = vi.fn(() => Promise.resolve(['США']))
-    const cache = createDictionaryCache({ storageKey: nextKey(), fetchItems })
-
-    await Promise.all([cache.refresh(), cache.refresh(), cache.refresh()])
-
-    expect(fetchItems).toHaveBeenCalledTimes(1)
+    expect(cache.slot.get()).toEqual(before)
   })
 })
 
 describe('createDictionaryCache — кулдаун', () => {
-  it('после ошибки повтор в пределах кулдауна не делает запрос, после — делает', async () => {
-    const fetchItems = vi.fn(() => Promise.reject(new Error('boom')))
-    const cache = createDictionaryCache({ storageKey: nextKey(), fetchItems })
+  it('повтор в пределах кулдауна запрещён, после — разрешён', () => {
+    const cache = createDictionaryCache(nextKey())
 
-    await cache.refresh()
+    expect(cache.tryStartAttempt()).toBe(true)
     now += BACKGROUND_RETRY_COOLDOWN_MS - 1
-    await cache.refresh()
-    expect(fetchItems).toHaveBeenCalledTimes(1)
+    expect(cache.tryStartAttempt()).toBe(false)
 
-    now += 2
-    await cache.refresh()
-    expect(fetchItems).toHaveBeenCalledTimes(2)
+    now += 1
+    expect(cache.tryStartAttempt()).toBe(true)
   })
 
-  it('ошибка не трогает существующий кэш', async () => {
-    const fetchItems = vi
-      .fn<() => Promise<string[]>>()
-      .mockResolvedValueOnce(['США'])
-      .mockRejectedValueOnce(new Error('boom'))
-    const cache = createDictionaryCache({ storageKey: nextKey(), fetchItems })
+  it('resetCooldown снимает кулдаун, не трогая слот', () => {
+    const cache = createDictionaryCache(nextKey())
+    cache.save(['США'])
+    cache.tryStartAttempt()
 
-    await cache.refresh()
-    const before = cache.slot.get()
-    now += BACKGROUND_RETRY_COOLDOWN_MS + 1
-    await cache.refresh()
+    cache.resetCooldown()
 
-    expect(cache.slot.get()).toEqual(before)
-  })
-
-  it('успешный ответ с пустым items тоже включает кулдаун', async () => {
-    const fetchItems = vi.fn(() => Promise.resolve<string[]>([]))
-    const cache = createDictionaryCache({ storageKey: nextKey(), fetchItems })
-
-    await cache.refresh()
-    expect(cache.slot.get()).toEqual({ items: [], fetchedAt: now })
-    await cache.refresh()
-
-    expect(fetchItems).toHaveBeenCalledTimes(1)
-  })
-})
-
-describe('createDictionaryCache — invalidate и resetState', () => {
-  it('invalidate чистит слот и сбрасывает кулдаун', async () => {
-    const fetchItems = vi.fn(() => Promise.resolve(['США']))
-    const cache = createDictionaryCache({ storageKey: nextKey(), fetchItems })
-    await cache.refresh()
-
-    cache.invalidate()
-    expect(cache.slot.get()).toEqual({ items: [], fetchedAt: 0 })
-
-    await cache.refresh()
-    expect(fetchItems).toHaveBeenCalledTimes(2)
-  })
-
-  it('resetState сбрасывает кулдаун, не трогая слот', async () => {
-    const fetchItems = vi.fn(() => Promise.resolve(['США']))
-    const cache = createDictionaryCache({ storageKey: nextKey(), fetchItems })
-    await cache.refresh()
-
-    cache.resetState()
-    expect(cache.slot.get().items).toEqual(['США'])
-
-    await cache.refresh()
-    expect(fetchItems).toHaveBeenCalledTimes(2)
-  })
-
-  it('ответ запроса, стартовавшего до resetState, не пишет в слот', async () => {
-    let resolveFetch: (items: string[]) => void = () => {}
-    const cache = createDictionaryCache({
-      storageKey: nextKey(),
-      fetchItems: () =>
-        new Promise<string[]>(resolve => {
-          resolveFetch = resolve
-        }),
-    })
-
-    const pending = cache.refresh()
-    cache.resetState()
-    resolveFetch(['США'])
-    await pending
-
-    expect(cache.slot.get()).toEqual({ items: [], fetchedAt: 0 })
-  })
-
-  it('запоздавший старый запрос не сбрасывает in-flight нового после invalidate', async () => {
-    const resolvers: Array<(items: string[]) => void> = []
-    const fetchItems = vi.fn(
-      () =>
-        new Promise<string[]>(resolve => {
-          resolvers.push(resolve)
-        }),
-    )
-    const cache = createDictionaryCache({ storageKey: nextKey(), fetchItems })
-
-    const stale = cache.refresh()
-    cache.invalidate()
-    const fresh = cache.refresh()
-
-    resolvers[0](['старая страна'])
-    await stale
-    // Новый запрос всё ещё in-flight — повторный вызов (уже вне кулдауна) дедуплицируется,
-    // а не стартует третий.
-    now += BACKGROUND_RETRY_COOLDOWN_MS + 1
-    void cache.refresh()
-    expect(fetchItems).toHaveBeenCalledTimes(2)
-
-    resolvers[1](['США'])
-    await fresh
+    expect(cache.tryStartAttempt()).toBe(true)
     expect(cache.slot.get().items).toEqual(['США'])
   })
-})
 
-describe('createDictionaryCache — изоляция экземпляров', () => {
-  it('кулдаун одного экземпляра не блокирует другой', async () => {
-    const failing = vi.fn(() => Promise.reject(new Error('boom')))
-    const working = vi.fn(() => Promise.resolve(['США']))
-    const first = createDictionaryCache({
-      storageKey: nextKey(),
-      fetchItems: failing,
-    })
-    const second = createDictionaryCache({
-      storageKey: nextKey(),
-      fetchItems: working,
-    })
+  it('кулдаун одного экземпляра не блокирует другой', () => {
+    const first = createDictionaryCache(nextKey())
+    const second = createDictionaryCache(nextKey())
 
-    await first.refresh()
-    await second.refresh()
+    first.tryStartAttempt()
 
-    expect(failing).toHaveBeenCalledTimes(1)
-    expect(working).toHaveBeenCalledTimes(1)
-    expect(second.slot.get().items).toEqual(['США'])
-    expect(first.slot.get().items).toEqual([])
-  })
-
-  it('in-flight одного экземпляра не переиспользуется другим', async () => {
-    const first = createDictionaryCache({
-      storageKey: nextKey(),
-      fetchItems: () => Promise.resolve(['драма']),
-    })
-    const second = createDictionaryCache({
-      storageKey: nextKey(),
-      fetchItems: () => Promise.resolve(['США']),
-    })
-
-    await Promise.all([first.refresh(), second.refresh()])
-
-    expect(first.slot.get().items).toEqual(['драма'])
-    expect(second.slot.get().items).toEqual(['США'])
-  })
-})
-
-describe('createDictionaryCache — isStale', () => {
-  it('свежий fetchedAt — не устарел, старше TTL — устарел', () => {
-    const cache = createDictionaryCache({
-      storageKey: nextKey(),
-      fetchItems: () => Promise.resolve([]),
-    })
-
-    expect(cache.isStale(now)).toBe(false)
-    expect(cache.isStale(now - DICTIONARY_TTL_MS)).toBe(false)
-    expect(cache.isStale(now - DICTIONARY_TTL_MS - 1)).toBe(true)
+    expect(second.tryStartAttempt()).toBe(true)
   })
 })

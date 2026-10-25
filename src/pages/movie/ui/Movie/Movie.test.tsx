@@ -1,8 +1,9 @@
 import type { MovieDetail, MovieImage } from '@entities/movie'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
 import { Movie } from './Movie'
 
@@ -18,7 +19,7 @@ const renderMovie = (
   movie: MovieDetail = MOVIE,
   images: MovieImage[] = IMAGES,
 ) =>
-  render(
+  renderWithStore(
     <MemoryRouter>
       <Movie movie={movie} images={images} />
     </MemoryRouter>,

@@ -18,7 +18,7 @@
 - [ ] **Phase 1** — MVP на API (с React 19 Suspense/use/useTransition)
 - [ ] **Phase 2** — Advanced-фичи (с useOptimistic для favorites)
 - [ ] **Phase 2.5** — Pre-launch readiness (Sentry, CSP, E2E, performance budgets)
-- [ ] **Phase 3** — State-libs ветки (multi)
+- [ ] **Phase 3** — State-libs ветки (multi): `rtk` (3.1) готова, остальные ветки впереди
 - [ ] **Phase 4** — SSR ветки (multi)
 - [ ] **Phase 5** — Auth/BFF ветки (multi) + monorepo + Docker
 - [ ] **Phase 6** — Scaling & product polish (Storybook, ADRs, i18n, PWA, visual regression)
@@ -508,14 +508,14 @@
 
 **Приоритизация:** семь веток — это месяцы работы. Для сравнительной таблицы (3.8) достаточно 3-4 идеологически разных подхода: `rtk` (уже начато), `tanstack-query` + Zustand (3.7 — production-default и база для Phase 4 SSR), `jotai` (atomic subscriptions). `mobx`/`reatom`/`effector`/соло-`zustand` — по желанию, как stretch goals.
 
-### 3.1 `rtk` (уже начато)
+### 3.1 `rtk` (реализовано)
 
-- [ ] Favorites в `createSlice` с persist (`redux-persist` или listener middleware).
-- [ ] Theme в `createSlice` с persist.
-- [ ] `RTK Query` mutation для `toggleFavorite` (демо optimistic update).
-- [ ] Server-side pagination в `getMovies` endpoint.
-- [ ] Tag-based invalidation для recommendations.
-- [ ] README ветки: разбор паттернов RTK.
+- [x] Favorites в `createSlice` с persist (`redux-persist` или listener middleware).
+- [x] Theme в `createSlice` с persist.
+- [x] `RTK Query` mutation для `toggleFavorite` (демо optimistic update).
+- [x] Server-side pagination в `getMovies` endpoint.
+- [x] Tag-based invalidation для recommendations.
+- [x] README ветки: разбор паттернов RTK.
 
 **Как лучше:** не дроби slices попасно — один `uiSlice` для глобального UI-стейта + RTK Query для async.
 

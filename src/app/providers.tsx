@@ -1,9 +1,11 @@
 import { initAnalytics } from '@shared/lib'
+import { Provider } from 'react-redux'
 import { RouterProvider } from 'react-router/dom'
 
 import { registerChunkPreloadRecovery } from './chunkPreloadRecovery'
 import { GlobalErrorBoundary } from './GlobalErrorBoundary'
 import { router } from './router'
+import { store } from './store'
 
 // initSentry() больше не вызывается здесь — переехал в src/app/sentry-bootstrap.ts, импортируемый
 // первой строкой в main.tsx, раньше этого модуля (который транзитивно импортирует ./router и
@@ -21,7 +23,9 @@ registerChunkPreloadRecovery()
 export const Providers = () => {
   return (
     <GlobalErrorBoundary>
-      <RouterProvider router={router} />
+      <Provider store={store}>
+        <RouterProvider router={router} />
+      </Provider>
     </GlobalErrorBoundary>
   )
 }

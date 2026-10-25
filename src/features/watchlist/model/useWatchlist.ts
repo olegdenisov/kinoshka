@@ -1,23 +1,20 @@
-import { useStorageSlot } from '@shared/lib'
+import { useDispatch, useSelector } from 'react-redux'
 
-import { watchlistSlot } from './watchlistStorage'
+import { selectWatchlistIds, watchlistToggled } from './watchlistSlice'
+import type { WatchlistRootState } from './watchlistSlice'
 
 export const useWatchlist = () => {
-  const [ids, setIds] = useStorageSlot(watchlistSlot)
+  const ids = useSelector((state: WatchlistRootState) =>
+    selectWatchlistIds(state),
+  )
+  const dispatch = useDispatch()
 
   return {
     ids,
     isInWatchlist: (id: number) => ids.includes(id),
-    // Читаем актуальное значение из слота, а не из замыкания: два toggle подряд в одном
-    // тике не должны затирать друг друга. При недоступном хранилище set() вернёт false
-    // и подписчики не уведомляются — состояние остаётся прежним.
+    // При недоступном хранилище persist откатит стейт синхронно — состояние остаётся прежним.
     toggle: (id: number) => {
-      const current = watchlistSlot.get()
-      setIds(
-        current.includes(id)
-          ? current.filter(existingId => existingId !== id)
-          : [...current, id],
-      )
+      dispatch(watchlistToggled(id))
     },
   }
 }

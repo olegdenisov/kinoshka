@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 
+import { createStoreWrapper } from '../../../test/renderWithStore'
 import { useTheme } from './useTheme'
 
 // Переопределяет глобальный стаб window.matchMedia (src/test/setup.ts) для одного теста:
@@ -47,7 +48,9 @@ afterEach(() => {
 
 describe('useTheme — persist и data-theme', () => {
   it('setTheme персистит значение в localStorage (JSON-строка)', () => {
-    const { result } = renderHook(() => useTheme())
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.setTheme('light'))
 
@@ -55,7 +58,9 @@ describe('useTheme — persist и data-theme', () => {
   })
 
   it('применяет data-theme на document.documentElement при изменении resolvedTheme', () => {
-    const { result } = renderHook(() => useTheme())
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.setTheme('dark'))
 
@@ -69,7 +74,9 @@ describe('useTheme — persist и data-theme', () => {
 
 describe('useTheme — toggleTheme', () => {
   it('переключает dark → light по текущему resolvedTheme', () => {
-    const { result } = renderHook(() => useTheme())
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.setTheme('dark'))
     act(() => result.current.toggleTheme())
@@ -80,7 +87,9 @@ describe('useTheme — toggleTheme', () => {
   })
 
   it('переключает light → dark по текущему resolvedTheme', () => {
-    const { result } = renderHook(() => useTheme())
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.setTheme('light'))
     act(() => result.current.toggleTheme())
@@ -92,7 +101,9 @@ describe('useTheme — toggleTheme', () => {
 
   it('из theme === system toggle даёт предсказуемый результат по resolvedTheme, а не raw theme', () => {
     mockMatchMedia(true) // prefersDark: true → system резолвится в dark
-    const { result } = renderHook(() => useTheme())
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: createStoreWrapper(),
+    })
 
     expect(result.current.theme).toBe('system')
     expect(result.current.resolvedTheme).toBe('dark')
@@ -107,7 +118,9 @@ describe('useTheme — toggleTheme', () => {
 describe('useTheme — реакция на смену системной темы', () => {
   it('theme === system: matchMedia change-событие меняет resolvedTheme и data-theme', () => {
     const { emitChange } = mockMatchMedia(false)
-    const { result } = renderHook(() => useTheme())
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: createStoreWrapper(),
+    })
 
     expect(result.current.resolvedTheme).toBe('light')
 
@@ -119,7 +132,9 @@ describe('useTheme — реакция на смену системной тем�
 
   it('theme !== system: matchMedia change-событие не влияет на resolvedTheme', () => {
     const { emitChange } = mockMatchMedia(false)
-    const { result } = renderHook(() => useTheme())
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: createStoreWrapper(),
+    })
 
     act(() => result.current.setTheme('light'))
     act(() => emitChange(true))

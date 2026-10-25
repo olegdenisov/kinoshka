@@ -1,10 +1,9 @@
-import { AsyncBoundary } from '@shared/ui'
-import type { RenderResult } from '@testing-library/react'
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { createStoreWrapper, makeStore } from '../../../test/renderWithStore'
 import { server } from '../../../test/setup'
-import { invalidatePersonDetail, usePersonDetail } from './usePersonDetail'
+import { usePersonDetail } from './usePersonDetail'
 
 const personDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -14,128 +13,55 @@ const personDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
-const mockPerson = (id: number, overrides: Record<string, unknown> = {}) => {
-  server.use(
-    http.get(`*/v1.5/person/${id}`, () =>
-      HttpResponse.json(personDoc(id, overrides)),
-    ),
-  )
-}
-
-const mockPersonError = (id: number, status: number) => {
-  server.use(
-    http.get(`*/v1.5/person/${id}`, () =>
-      HttpResponse.json(
-        { statusCode: status, message: 'error', error: 'error' },
-        { status },
+describe('usePersonDetail', () => {
+  it('отдаёт data после загрузки', async () => {
+    server.use(
+      http.get('*/v1.5/person/801', () =>
+        HttpResponse.json(personDoc(801, { name: 'Anna Actress' })),
       ),
-    ),
-  )
-}
-
-const Probe = ({ id }: { id: number }) => {
-  const person = usePersonDetail(id)
-  return <span data-testid='name'>{person.name}</span>
-}
-
-const renderProbe = async (id: number) => {
-  await act(async () => {
-    render(
-      <AsyncBoundary>
-        <Probe id={id} />
-      </AsyncBoundary>,
     )
+
+    const { result } = renderHook(() => usePersonDetail(801), {
+      wrapper: createStoreWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.data?.name).toBe('Anna Actress'))
   })
-}
 
-describe('usePersonDetail — успешная загрузка', () => {
-  it('после резолва в DOM видно имя персоны', async () => {
-    mockPerson(801, { name: 'Anna Actress' })
+  it('404 — isError со status 404 в error', async () => {
+    server.use(
+      http.get('*/v1.5/person/802', () =>
+        HttpResponse.json(
+          { statusCode: 404, message: 'nf', error: 'nf' },
+          { status: 404 },
+        ),
+      ),
+    )
 
-    await renderProbe(801)
+    const { result } = renderHook(() => usePersonDetail(802), {
+      wrapper: createStoreWrapper(),
+    })
 
-    expect(screen.getByTestId('name')).toHaveTextContent('Anna Actress')
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.error).toMatchObject({ status: 404 })
   })
-})
 
-describe('usePersonDetail — ошибочный путь', () => {
-  it('404 пробрасывается в ErrorBoundary, а не глотается', async () => {
-    mockPersonError(802, 404)
-
-    await renderProbe(802)
-
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument()
-    expect(screen.queryByTestId('name')).not.toBeInTheDocument()
-  })
-})
-
-describe('usePersonDetail — стабильность промиса', () => {
-  it('повторный рендер не вызывает повторный сетевой запрос', async () => {
+  it('повторный рендер и второй потребитель не делают повторный запрос', async () => {
     let requests = 0
     server.use(
       http.get('*/v1.5/person/803', () => {
         requests += 1
-
         return HttpResponse.json(personDoc(803))
       }),
     )
+    const wrapper = createStoreWrapper(makeStore())
 
-    let rerender: RenderResult['rerender'] = () => {}
-    await act(async () => {
-      ;({ rerender } = render(
-        <AsyncBoundary>
-          <Probe id={803} />
-        </AsyncBoundary>,
-      ))
-    })
-    await act(async () => {
-      rerender(
-        <AsyncBoundary>
-          <Probe id={803} />
-        </AsyncBoundary>,
-      )
-    })
-    await act(async () => {
-      rerender(
-        <AsyncBoundary>
-          <Probe id={803} />
-        </AsyncBoundary>,
-      )
-    })
+    const first = renderHook(() => usePersonDetail(803), { wrapper })
+    await waitFor(() => expect(first.result.current.data).toBeDefined())
+    first.rerender()
+    const second = renderHook(() => usePersonDetail(803), { wrapper })
 
-    expect(screen.getByTestId('name')).toHaveTextContent('Test Person')
+    await waitFor(() => expect(second.result.current.data).toBeDefined())
     expect(requests).toBe(1)
-  })
-})
-
-describe('invalidatePersonDetail', () => {
-  it('после инвалидации следующий вызов снова ходит в сеть', async () => {
-    let requests = 0
-    server.use(
-      http.get('*/v1.5/person/804', () => {
-        requests += 1
-
-        return HttpResponse.json(personDoc(804, { name: 'Before' }))
-      }),
-    )
-
-    await renderProbe(804)
-    expect(screen.getByTestId('name')).toHaveTextContent('Before')
-    expect(requests).toBe(1)
-
-    cleanup()
-    invalidatePersonDetail(804)
-
-    server.use(
-      http.get('*/v1.5/person/804', () => {
-        requests += 1
-
-        return HttpResponse.json(personDoc(804, { name: 'After' }))
-      }),
-    )
-
-    await renderProbe(804)
-    expect(screen.getByTestId('name')).toHaveTextContent('After')
-    expect(requests).toBe(2)
   })
 })

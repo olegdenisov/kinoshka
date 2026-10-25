@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { server } from '../../../../test/setup'
 import { GenreSelector } from './GenreSelector'
 
@@ -45,7 +46,7 @@ describe('GenreSelector', () => {
       'приключения',
     ])
 
-    render(<GenreSelector selected={[]} onToggle={vi.fn()} />)
+    renderWithStore(<GenreSelector selected={[]} onToggle={vi.fn()} />)
 
     STATIC_SHORTLIST_LABELS.forEach(label => {
       expect(screen.getByRole('button', { name: label })).toBeInTheDocument()
@@ -70,7 +71,7 @@ describe('GenreSelector', () => {
       'приключения',
     ])
 
-    render(<GenreSelector selected={['аниме']} onToggle={vi.fn()} />)
+    renderWithStore(<GenreSelector selected={['аниме']} onToggle={vi.fn()} />)
 
     const chip = screen.getByRole('button', { name: 'аниме' })
     expect(chip).toBeInTheDocument()
@@ -84,7 +85,7 @@ describe('GenreSelector', () => {
   it('legacy EN-жанр в selected, чей лейбл совпадает с реальным RU-жанром словаря, не даёт дублирующийся чип', async () => {
     mockDictionary(['боевик', 'драма', 'триллер'])
 
-    render(<GenreSelector selected={['Drama']} onToggle={vi.fn()} />)
+    renderWithStore(<GenreSelector selected={['Drama']} onToggle={vi.fn()} />)
 
     await waitFor(() => {
       expect(screen.getAllByRole('button', { name: 'Drama' })).toHaveLength(1)
@@ -102,7 +103,7 @@ describe('GenreSelector', () => {
       'комедия',
     ])
 
-    render(<GenreSelector selected={[]} onToggle={vi.fn()} />)
+    renderWithStore(<GenreSelector selected={[]} onToggle={vi.fn()} />)
 
     const toggle = await screen.findByRole('button', {
       name: 'Показать все (1): Genre',
@@ -139,7 +140,7 @@ describe('GenreSelector', () => {
     ])
     const onToggle = vi.fn()
 
-    render(<GenreSelector selected={[]} onToggle={onToggle} />)
+    renderWithStore(<GenreSelector selected={[]} onToggle={onToggle} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Action' }))
 
@@ -160,7 +161,7 @@ describe('GenreSelector', () => {
       'приключения',
     ])
 
-    render(<GenreSelector selected={[]} onToggle={vi.fn()} disabled />)
+    renderWithStore(<GenreSelector selected={[]} onToggle={vi.fn()} disabled />)
 
     STATIC_SHORTLIST_LABELS.forEach(label => {
       expect(screen.getByRole('button', { name: label })).toBeDisabled()
@@ -182,7 +183,7 @@ describe('GenreSelector', () => {
       'комедия',
     ])
 
-    render(<GenreSelector selected={[]} onToggle={vi.fn()} />)
+    renderWithStore(<GenreSelector selected={[]} onToggle={vi.fn()} />)
 
     expect(screen.queryByText(/Показать все/)).not.toBeInTheDocument()
 

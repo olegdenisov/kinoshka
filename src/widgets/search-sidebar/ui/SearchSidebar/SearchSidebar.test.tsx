@@ -1,7 +1,8 @@
 import type { FilterState } from '@features/catalog-filter'
 import { EMPTY_FILTERS } from '@features/catalog-filter'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 
+import { renderWithStore } from '../../../../test/renderWithStore'
 import { SearchSidebar } from './SearchSidebar'
 
 const baseFilters: FilterState = { ...EMPTY_FILTERS }
@@ -14,7 +15,7 @@ describe('SearchSidebar', () => {
       yearTo: 2010,
     }
 
-    render(
+    renderWithStore(
       <SearchSidebar
         filters={filters}
         onFiltersChange={vi.fn()}
@@ -39,7 +40,7 @@ describe('SearchSidebar', () => {
     }
     const onFiltersChange = vi.fn()
 
-    render(
+    renderWithStore(
       <SearchSidebar
         filters={filters}
         onFiltersChange={onFiltersChange}
@@ -60,7 +61,7 @@ describe('SearchSidebar', () => {
   })
 
   it('проп disabled пробрасывается в слайдер', () => {
-    render(
+    renderWithStore(
       <SearchSidebar
         filters={baseFilters}
         onFiltersChange={vi.fn()}
@@ -74,7 +75,7 @@ describe('SearchSidebar', () => {
   })
 
   it('группа Type открыта, ниже — группы FilterPanel и кнопка Reset', () => {
-    render(
+    renderWithStore(
       <SearchSidebar
         filters={baseFilters}
         onFiltersChange={vi.fn()}
@@ -101,7 +102,7 @@ describe('SearchSidebar', () => {
     const filters: FilterState = { ...baseFilters, rating: 7 }
     const onFiltersChange = vi.fn()
 
-    render(
+    renderWithStore(
       <SearchSidebar
         filters={filters}
         onFiltersChange={onFiltersChange}
@@ -115,7 +116,7 @@ describe('SearchSidebar', () => {
   })
 
   it('кнопка рейтинга из FilterPanel не продублирована сайдбаром', () => {
-    render(
+    renderWithStore(
       <SearchSidebar
         filters={baseFilters}
         onFiltersChange={vi.fn()}
