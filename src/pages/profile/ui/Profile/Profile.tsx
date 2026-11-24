@@ -1,13 +1,18 @@
-import { useFavorites } from '@features/favorites'
+import { favoriteIds } from '@features/favorites'
 import {
   PROFILE_NAME_MAX_LENGTH,
   normalizeProfileName,
-  useProfile,
+  profileInitials,
+  profileName,
+  setProfileName,
 } from '@features/profile'
-import { useTheme } from '@features/theme'
+import { theme } from '@features/theme'
 import type { Theme } from '@features/theme'
-import { useWatched } from '@features/watched'
-import { useWatchlist } from '@features/watchlist'
+import { watchedIds } from '@features/watched'
+import { watchlistIds } from '@features/watchlist'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
+import { paths } from '@shared/config'
 import {
   AvatarCircle,
   ChevronRightIcon,
@@ -19,7 +24,6 @@ import {
 } from '@shared/ui'
 import { useRef, useState } from 'react'
 import type { SubmitEvent } from 'react'
-import { Link } from 'react-router'
 
 import s from './Profile.module.css'
 
@@ -31,25 +35,11 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
   { value: 'system', label: 'System' },
 ]
 
-// Одно из двух действий отказало ('save' | 'clear') плюс счётчик попыток — вместе описывают один
-// отказ формы, поэтому это один тип и одно состояние, а не два независимых useState: раньше
-// action и счётчик обновлялись из четырёх разных мест по отдельности, и ничто не
-// гарантировало, что они всегда меняются парой (рассинхрон тихо вернул бы баг с неозвучиваемым
-// повторным отказом — см. count ниже). count — не булев флаг: используется как React `key` на
-// алерте, чтобы два отказа подряд (например, два клика по Save без правки инпута между ними) всё
-// равно размонтировали и заново монтировали role='alert' узел — иначе DOM-узел не менялся бы и
-// скринридер озвучивал только первый отказ.
-type ProfileFailure = { action: 'save' | 'clear'; count: number }
-
-export const Profile = () => {
-  const { name, initials, setName, clearName } = useProfile()
-  const { ids } = useFavorites()
-  const { ids: watchedIds } = useWatched()
-  const { ids: watchlistIds } = useWatchlist()
-  const { theme, setTheme } = useTheme()
+export const Profile = reatomComponent(() => {
+  const name = profileName()
+  const initials = profileInitials()
   const [draft, setDraft] = useState(name)
   const [prevName, setPrevName] = useState(name)
-  const [failure, setFailure] = useState<ProfileFailure | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Успешный Save дизейблит кнопку (isDirty → false), а успешный Clear размонтирует свою — в обоих
@@ -65,49 +55,39 @@ export const Profile = () => {
     inputRef.current?.focus()
   }
 
-  // Единственная точка обновления ProfileFailure: action и count меняются строго парой (см.
-  // докблок типа) — вызывать напрямую setFailure с новым отказом нельзя, иначе инвариант снова
-  // держался бы только на дисциплине call-site'ов.
-  const reportFailure = (action: ProfileFailure['action']) => {
-    setFailure(prev => ({ action, count: (prev?.count ?? 0) + 1 }))
-  }
-
   // Сохранённое имя может измениться не через эту форму (другая вкладка через storage-событие,
-  // clearName) — тогда черновик синхронизируем с ним, иначе Save остался бы активным и
+  // очистка) — тогда черновик синхронизируем с ним, иначе Save остался бы активным и
   // одним кликом затёр бы более новое значение старым. Паттерн «adjust state during render»,
   // а не key-ремаунт формы: ремаунт сбросил бы фокус инпута после собственного сабмита.
-  // Это же обновляет черновик после сабмита: setName приводит значение к trim/обрезке, и это
+  // Это же обновляет черновик после сабмита: setProfileName приводит значение к trim/обрезке, и это
   // единственное место, где draft синхронизируется с уже сохранённым именем — handleSubmit не
-  // дублирует эту синхронизацию вручную (см. его комментарий). failure сбрасываем в той же ветке:
-  // имя, изменившееся извне (другая вкладка, clearName), делает прежнее сообщение об ошибке
-  // (Save или Clear) неактуальным — оно относилось к прежнему, уже не действующему состоянию формы.
+  // дублирует эту синхронизацию вручную (см. его комментарий).
   if (name !== prevName) {
     setPrevName(name)
     setDraft(name)
-    setFailure(null)
   }
 
   const quickLinks = [
     {
-      to: '/favorites',
+      to: paths.favorites(),
       label: 'Favorites',
       Icon: ListsIcon,
-      count: ids.length,
+      count: favoriteIds().size,
     },
     {
-      to: '/watched',
+      to: paths.watched(),
       label: 'Watched',
       Icon: EyeIcon,
-      count: watchedIds.length,
+      count: watchedIds().size,
     },
     {
-      to: '/watchlist',
+      to: paths.watchlist(),
       label: 'Watchlist',
       Icon: PlusIcon,
-      count: watchlistIds.length,
+      count: watchlistIds().size,
     },
-    { to: '/popular', label: 'Popular', Icon: TrendingIcon },
-    { to: '/recommendations', label: 'Picks', Icon: StarIcon },
+    { to: paths.popular(), label: 'Popular', Icon: TrendingIcon },
+    { to: paths.recommendations(), label: 'Picks', Icon: StarIcon },
   ]
 
   // Сравниваем нормализованный черновик (trim/обрезка/отсев невидимых символов), ровно то, что
@@ -117,31 +97,18 @@ export const Profile = () => {
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const saved = setName(draft)
-    if (saved) {
-      setFailure(null)
-      // Черновик не трогаем здесь вручную: setName пишет ровно normalizeProfileName(draft), а
-      // name (из useProfile) обновится на следующем рендере и заведёт resync-ветку выше
-      // (name !== prevName), которая и синхронизирует draft — дублировать это вторым setDraft
-      // здесь не нужно.
-      restoreInputFocus()
-    } else {
-      // При отказе хранилища черновик не трогаем — пользователь не теряет набранное.
-      reportFailure('save')
-    }
+    setProfileName(draft)
+    // Черновик не трогаем здесь вручную: name обновится на следующем рендере и заведёт
+    // resync-ветку выше (name !== prevName), которая и синхронизирует draft.
+    restoreInputFocus()
   }
 
   const handleClear = () => {
-    const cleared = clearName()
-    if (cleared) {
-      setFailure(null)
-      // Clear-кнопка размонтируется вместе с условием {name && ...} ниже — без явного переноса
-      // фокус упал бы на <body>, и следующий Tab начинал бы с начала документа. Инпут — ближайший
-      // логичный получатель, туда же перерисуется опустевший черновик (см. restoreInputFocus).
-      restoreInputFocus()
-    } else {
-      reportFailure('clear')
-    }
+    profileName.set('')
+    // Clear-кнопка размонтируется вместе с условием {name && ...} ниже — без явного переноса
+    // фокус упал бы на <body>, и следующий Tab начинал бы с начала документа. Инпут — ближайший
+    // логичный получатель, туда же перерисуется опустевший черновик (см. restoreInputFocus).
+    restoreInputFocus()
   }
 
   return (
@@ -156,7 +123,7 @@ export const Profile = () => {
               просто без ссылки-обёртки; aria-hidden и размер 'lg' — то, что здесь специфично. */}
           <AvatarCircle initials={initials} size='lg' aria-hidden='true' />
           <p className={s.name}>{name || GUEST_NAME}</p>
-          <form className={s.form} onSubmit={handleSubmit}>
+          <form className={s.form} onSubmit={wrap(handleSubmit)}>
             <input
               ref={inputRef}
               className={s.input}
@@ -168,23 +135,12 @@ export const Profile = () => {
               autoComplete='off'
               onChange={event => {
                 setDraft(event.target.value)
-                // Правка инпута снимает только устаревший отказ Save — он про этот же инпут.
-                // Отказ Clear к вводимому тексту не относится и должен остаться видимым, пока
-                // пользователь не повторит Clear (или имя не изменится извне — см. resync выше).
-                setFailure(prev => (prev?.action === 'save' ? null : prev))
               }}
             />
             <button className={s.saveBtn} type='submit' disabled={!isDirty}>
               Save
             </button>
           </form>
-          {failure && (
-            <p key={failure.count} className={s.saveError} role='alert'>
-              {failure.action === 'save'
-                ? "Couldn't save the name: browser storage is unavailable."
-                : "Couldn't clear the name: browser storage is unavailable."}
-            </p>
-          )}
         </section>
 
         <section className={s.section} aria-labelledby='quick-access-heading'>
@@ -194,7 +150,7 @@ export const Profile = () => {
           <ul className={s.linkList}>
             {quickLinks.map(({ to, label, Icon, count }) => (
               <li key={to}>
-                <Link className={s.linkRow} to={to}>
+                <a className={s.linkRow} href={to}>
                   <span className={s.linkIcon} aria-hidden='true'>
                     <Icon size={18} />
                   </span>
@@ -205,7 +161,7 @@ export const Profile = () => {
                   <span className={s.linkChevron} aria-hidden='true'>
                     <ChevronRightIcon />
                   </span>
-                </Link>
+                </a>
               </li>
             ))}
           </ul>
@@ -226,8 +182,8 @@ export const Profile = () => {
                   type='radio'
                   name='theme'
                   value={option.value}
-                  checked={theme === option.value}
-                  onChange={() => setTheme(option.value)}
+                  checked={theme() === option.value}
+                  onChange={wrap(() => theme.set(option.value))}
                 />
                 <span className={s.themeLabel}>{option.label}</span>
               </label>
@@ -236,7 +192,11 @@ export const Profile = () => {
         </fieldset>
 
         {name && (
-          <button className={s.clearBtn} type='button' onClick={handleClear}>
+          <button
+            className={s.clearBtn}
+            type='button'
+            onClick={wrap(handleClear)}
+          >
             Clear name
           </button>
         )}
@@ -250,4 +210,4 @@ export const Profile = () => {
       </main>
     </div>
   )
-}
+}, 'Profile')

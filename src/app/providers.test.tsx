@@ -1,15 +1,14 @@
 import type * as SharedLib from '@shared/lib'
 import { render, screen, within } from '@testing-library/react'
 
-// Лёгкие фейки вместо реального router-объекта/GlobalErrorBoundary — этот тест проверяет только
+// Лёгкие фейки вместо реальных роутов/GlobalErrorBoundary — этот тест проверяет только
 // композицию Providers (initAnalytics() и registerChunkPreloadRecovery() вызваны при импорте
-// модуля, RouterProvider обёрнут в GlobalErrorBoundary), не бизнес-логику
-// router.tsx/GlobalErrorBoundary.tsx/analytics/chunkPreloadRecovery (у них свои тесты). initSentry()
-// больше не импортируется из providers.tsx (переехал в sentry-bootstrap.ts, см.
-// sentry-bootstrap.test.ts/main.test.ts). reportWebVitals() удалён вместе с пайплайном Web
-// Vitals→Plausible (2.5.7, заменён Sentry Performance) — providers.tsx больше не вызывает и не
-// импортирует его.
-vi.mock('./router', () => ({ router: {} }))
+// модуля, outlet роутов обёрнут в GlobalErrorBoundary), не бизнес-логику
+// routes.tsx/GlobalErrorBoundary.tsx/analytics/chunkPreloadRecovery (у них свои тесты; навигация
+// через настоящий Providers — в routes.test.tsx).
+vi.mock('./routes', () => ({
+  layoutRoute: { render: () => <div>router content</div> },
+}))
 vi.mock('@shared/lib', async importOriginal => {
   const actual = await importOriginal<typeof SharedLib>()
   return { ...actual, initAnalytics: vi.fn() }
@@ -21,9 +20,6 @@ vi.mock('./GlobalErrorBoundary', () => ({
   GlobalErrorBoundary: ({ children }: { children: React.ReactNode }) => (
     <div data-testid='global-error-boundary'>{children}</div>
   ),
-}))
-vi.mock('react-router/dom', () => ({
-  RouterProvider: () => <div>router content</div>,
 }))
 
 const { initAnalytics } = await import('@shared/lib')
@@ -39,7 +35,7 @@ describe('Providers', () => {
     expect(registerChunkPreloadRecovery).toHaveBeenCalledTimes(1)
   })
 
-  it('оборачивает RouterProvider в GlobalErrorBoundary', () => {
+  it('оборачивает outlet роутов в GlobalErrorBoundary', () => {
     render(<Providers />)
 
     const boundary = screen.getByTestId('global-error-boundary')

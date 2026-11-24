@@ -1,2 +1,1 @@
-export { useWatchlist } from './model/useWatchlist'
-export { useWatchlistMovies } from './model/useWatchlistMovies'
+export { watchlistIds, watchlistMovies } from './model/watchlist'

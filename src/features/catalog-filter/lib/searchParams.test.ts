@@ -1,4 +1,4 @@
-import type { FilterState } from '../model/useFilterState'
+import type { FilterState } from '../model/types'
 import {
   EMPTY_FILTERS,
   filtersToSearchParams,

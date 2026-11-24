@@ -1,6 +1,6 @@
 import type { MovieControllerFindManyByQueryV15Data } from '@shared/api'
 
-import type { FilterState } from '../model/useFilterState'
+import type { FilterState } from '../model/types'
 import { DURATION_OPTIONS } from './filterOptions'
 
 export type CatalogQueryParams = NonNullable<
@@ -36,7 +36,7 @@ const PAGE_LIMIT = 12
  * (напр. `?yearFrom=2020` — "2020 и позже"). Значения взяты из документации API v1.5
  * (`year`: пример `1874, 2050, !2020, 2020-2024`) — 1874/2050 это её собственные примеры
  * минимального/максимального года, а не произвольная константа. Это держит фактический
- * API-запрос в согласии с чипом фильтра в `useFilterState` (`"2020+"` / `"–2010"`),
+ * API-запрос в согласии с чипом фильтра (`getFilterChips`) (`"2020+"` / `"–2010"`),
  * а не сужает его до точного года.
  */
 const YEAR_RANGE_MIN = 1874

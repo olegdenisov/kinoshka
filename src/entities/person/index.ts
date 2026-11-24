@@ -1,2 +1,2 @@
 export type { PersonDetail, PersonMovieCredit } from './model/types'
-export * from './hooks'
+export { fetchPersonDetail } from './model/personDetail'

@@ -1,8 +1,10 @@
-import { Card, getMoviesByIds } from '@entities/movie'
-import { useFavorites } from '@features/favorites'
-import { useWatched, useWatchedMovies } from '@features/watched'
-import { useWatchlist } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { Card } from '@entities/movie'
+import { favoriteIds, toggleFavorite } from '@features/favorites'
+import { watchedIds, watchedMovies } from '@features/watched'
+import { watchlistIds } from '@features/watchlist'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
+import { AsyncContent, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Watched.module.css'
 
@@ -16,12 +18,10 @@ const WatchedSkeletonGrid = () => (
   </div>
 )
 
-const WatchedGrid = () => {
+const WatchedGrid = reatomComponent(() => {
   // Пусто здесь = все id ответили 404 (удалены из каталога); восстановимые сбои
-  // бросает getMoviesByIds и ловит AsyncBoundary, поэтому текст — не про ошибку загрузки.
-  const movies = useWatchedMovies()
-  const { isFavorite, toggle } = useFavorites()
-  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
+  // бросает reatomMoviesByIds и показывает AsyncContent, поэтому текст — не про ошибку загрузки.
+  const movies = watchedMovies.data()
 
   if (movies.length === 0) {
     return (
@@ -41,26 +41,24 @@ const WatchedGrid = () => {
           key={movie.id}
           movie={movie}
           variant='grid'
-          isFavorite={isFavorite(movie.id)}
-          onToggleFavorite={toggle}
-          inWatchlist={isInWatchlist(movie.id)}
-          onToggleWatchlist={toggleWatchlist}
+          isFavorite={favoriteIds().has(movie.id)}
+          onToggleFavorite={wrap(toggleFavorite)}
+          inWatchlist={watchlistIds().has(movie.id)}
+          onToggleWatchlist={wrap(watchlistIds.toggle)}
         />
       ))}
     </div>
   )
-}
+}, 'WatchedGrid')
 
 // Композиция features/entities прямо в UI — по образцу `Favorites` (без `model/`-фасада).
 // Chrome (Header/MobileHeader+BottomNav) рисует `AppLayout`, страница его не выбирает.
-export const Watched = () => {
-  const { ids } = useWatched()
-
+export const Watched = reatomComponent(() => {
   return (
     <div className={s.page}>
       <main className={s.main}>
         <h1 className={s.heading}>Watched</h1>
-        {ids.length === 0 ? (
+        {watchedIds().size === 0 ? (
           <div className={s.stateWrap}>
             <EmptyState
               title='No watched titles yet'
@@ -68,14 +66,16 @@ export const Watched = () => {
             />
           </div>
         ) : (
-          <AsyncBoundary
+          <AsyncContent
+            pending={watchedMovies.status().isFirstPending}
+            error={watchedMovies.error()}
+            onRetry={wrap(watchedMovies.retry)}
             fallback={<WatchedSkeletonGrid />}
-            onRetry={() => getMoviesByIds.invalidate(ids)}
           >
             <WatchedGrid />
-          </AsyncBoundary>
+          </AsyncContent>
         )}
       </main>
     </div>
   )
-}
+}, 'Watched')

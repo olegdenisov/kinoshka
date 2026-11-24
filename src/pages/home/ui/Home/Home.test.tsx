@@ -1,19 +1,18 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { useEffect } from 'react'
-import { MemoryRouter, useLocation } from 'react-router'
 
+import { renderWithRouter } from '../../../../test/router'
 import { server } from '../../../../test/setup'
 import { Home } from './Home'
 
 // Реальный retry (roadmap 1.6): рейл падает → ErrorState с Retry → клик реально бьёт
-// в сеть заново (invalidateTopRatedMovies/invalidatePopularMovies из hooks/index.ts), а не
-// просто перерисовывает тот же rejected-промис из cooldown. Только TopAnimeRails (единственный
+// в сеть заново (resource.retry() ресурсов из model/rails.ts), а не просто перерисовывает
+// прежнюю ошибку. Только TopAnimeRails (единственный
 // рейл на /v1.5/movie с уникальным ключом query — rating.kp + type=anime, никто другой его не
 // делит) мокается падающим, чтобы у теста была ровно одна ErrorState-инстанция для клика.
 const MOVIE_ENDPOINT = '*/v1.5/movie'
 // PopularMoviesRail не делит эндпоинт/кэш с PersonalRails — он на отдельном курируемом списке
-// /v1.5/list/{slug} (usePopularMovies() → getPopularMovies).
+// /v1.5/list/{slug} (ресурс popularMovies → fetchPopularMovies).
 const LIST_ENDPOINT = '*/v1.5/list/:slug'
 
 const doc = (overrides: Record<string, unknown> = {}) => ({
@@ -75,38 +74,16 @@ const popularListErrorResponse = () =>
 
 const renderHome = async () => {
   await act(async () => {
-    render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Home />)
   })
 }
 
-/** Читает текущие pathname/search из роутера — тот же приём, что HeroSection.test.tsx, для
- * проверки навигации без Routes-дерева (MemoryRouter без Route не размонтирует Home на переходе). */
-let lastPathname = '/'
-let lastSearch = ''
-const LocationProbe = () => {
-  const { pathname, search } = useLocation()
-  useEffect(() => {
-    lastPathname = pathname
-    lastSearch = search
-  }, [pathname, search])
-  return null
-}
-
-const renderHomeWithLocationProbe = async () => {
-  lastPathname = '/'
-  lastSearch = ''
+const renderHomeWithUrl = async () => {
+  let getUrl = () => ''
   await act(async () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Home />
-        <LocationProbe />
-      </MemoryRouter>,
-    )
+    getUrl = renderWithRouter(<Home />, { url: '/' }).getUrl
   })
+  return getUrl
 }
 
 beforeEach(() => {
@@ -164,7 +141,7 @@ describe('Home — HeroSection (общий, не парный) отправля�
       ),
     )
 
-    await renderHomeWithLocationProbe()
+    const getUrl = await renderHomeWithUrl()
 
     const input = screen.getByPlaceholderText(
       'Try "films from 2024 rated 8+" or a title…',
@@ -175,8 +152,36 @@ describe('Home — HeroSection (общий, не парный) отправля�
       fireEvent.keyDown(input, { key: 'Enter' })
     })
 
-    expect(lastPathname).toBe('/search')
-    expect(lastSearch).toBe('?q=dune')
+    expect(getUrl()).toBe('/search?q=dune')
+  })
+})
+
+describe('Home — скелетон рейлов', () => {
+  it('до ответа API рейлы не показывают ни контент, ни ошибку', async () => {
+    let release: () => void = () => {}
+    const gate = new Promise<void>(resolve => {
+      release = resolve
+    })
+    server.use(
+      http.get(MOVIE_ENDPOINT, async () => {
+        await gate
+        return successResponse([doc({ name: 'Late Movie' })])
+      }),
+      http.get(LIST_ENDPOINT, () =>
+        popularListSuccessResponse([popularListItem()]),
+      ),
+    )
+
+    await renderHome()
+
+    expect(screen.queryByText('Late Movie')).not.toBeInTheDocument()
+    expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
+
+    await act(async () => {
+      release()
+    })
+
+    expect((await screen.findAllByText('Late Movie')).length).toBeGreaterThan(0)
   })
 })
 

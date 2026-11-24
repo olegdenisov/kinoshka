@@ -1,1 +1,1 @@
-export { Header, QUERY_MIN_LENGTH } from './ui/Header'
+export { Header } from './ui/Header'

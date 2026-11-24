@@ -18,7 +18,7 @@ test('person detail: navigate from movie Cast tab, filmography required, facts o
 
   await page.getByRole('button', { name: 'Cast' }).click()
 
-  // Селектор по href-паттерну react-router — аналог firstMovieCard()
+  // Селектор по href-паттерну — аналог firstMovieCard()
   // (a[href^="/movie/"]) из e2e/utils/movieCard.ts, оправдан тем же образом:
   // голый getByRole('link').first() рискует зацепить не ту ссылку на странице.
   const firstCastLink = page.locator('a[href^="/person/"]').first()

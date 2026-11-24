@@ -1,16 +1,12 @@
 import type { PersonMovieCredit } from '@entities/person'
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
 
+import { renderWithRouter } from '../../../../test/router'
 import { Filmography } from './Filmography'
 
 const renderFilmography = (credits: PersonMovieCredit[]) =>
-  render(
-    <MemoryRouter>
-      <Filmography credits={credits} />
-    </MemoryRouter>,
-  )
+  renderWithRouter(<Filmography credits={credits} />)
 
 const makeCredits = (
   count: number,

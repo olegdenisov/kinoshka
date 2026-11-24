@@ -1,20 +1,18 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { MemoryRouter } from 'react-router'
 
+import { readPersisted, seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { server } from '../../../../test/setup'
 import { Recommendations } from './Recommendations'
 
-// Реальные MSW-хендлеры (не мок модуля) на /v1.5/movie/:id (favorites, через getMoviesByIds)
-// и /v1.5/movie (каталог, через getMoviesPage) — тот же подход, что FavoritesDesktop.test.tsx/
-// PopularDesktop.test.tsx: composed-хук (useRecommendedMovies) делит один и тот же реальный
-// createCachedFetcher-кэш, так что Retry по-настоящему инвалидирует и бьёт в сеть заново.
+// Реальные MSW-хендлеры (не мок модуля) на /v1.5/movie/:id (избранное, через favoriteMovies)
+// и /v1.5/movie (каталог, через loadMoviesPage): Retry проверяется по реальным запросам.
 const FAVORITES_KEY = 'kinoshka:favorites'
 const MOVIE_ENDPOINT = (id: number) => `*/v1.5/movie/${id}`
 const CATALOG_ENDPOINT = '*/v1.5/movie'
 
-const setFavorites = (ids: number[]) =>
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids))
+const setFavorites = (ids: number[]) => seedPersisted(FAVORITES_KEY, ids)
 
 const favoriteDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -96,14 +94,10 @@ const setViewportWidth = (width: number) => {
 }
 
 const renderPage = async () => {
-  let result: ReturnType<typeof render> | undefined
+  let result: ReturnType<typeof renderWithRouter> | undefined
 
   await act(async () => {
-    result = render(
-      <MemoryRouter>
-        <Recommendations />
-      </MemoryRouter>,
-    )
+    result = renderWithRouter(<Recommendations />)
   })
 
   return result!
@@ -179,11 +173,11 @@ describe('Recommendations — непустое избранное, успешн�
       await screen.findByRole('button', { name: 'Add to watchlist' }),
     )
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[701]')
-    expect(localStorage.getItem(FAVORITES_KEY)).toBe('[601,602]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([701])
+    expect(readPersisted(FAVORITES_KEY)).toEqual([601, 602])
     expect(screen.getByText('Recommended Movie')).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Remove from watchlist' }),
+      await screen.findByRole('button', { name: 'Remove from watchlist' }),
     ).toBeInTheDocument()
   })
 
@@ -201,7 +195,7 @@ describe('Recommendations — непустое избранное, успешн�
 })
 
 describe('Recommendations — все избранные id 404-нулись', () => {
-  it('useRecommendedMovies возвращает null → EmptyState "не удалось загрузить избранное"', async () => {
+  it('recommendedMovies.data() — null → EmptyState "не удалось загрузить избранное"', async () => {
     setFavorites([801, 802])
     mockFavoriteNotFound(801)
     mockFavoriteNotFound(802)
@@ -230,7 +224,7 @@ describe('Recommendations — все избранные id 404-нулись', ()
 })
 
 describe('Recommendations — каталог не вернул совпадений', () => {
-  it('useRecommendedMovies возвращает [] → EmptyState "Nothing to recommend yet"', async () => {
+  it('recommendedMovies.data() — [] → EmptyState "Nothing to recommend yet"', async () => {
     setFavorites([603, 604])
     mockFavorite(603, { genres: [{ name: 'триллер' }], rating: { kp: 8.0 } })
     mockFavorite(604, { genres: [{ name: 'драма' }], rating: { kp: 6.0 } })
@@ -247,8 +241,8 @@ describe('Recommendations — каталог не вернул совпаден�
   })
 })
 
-describe('Recommendations — Retry реально переинвалидирует кэш каталога, а не только избранного', () => {
-  it('клик Retry вызывает invalidateRecommendations и повторно запрашивает каталог', async () => {
+describe('Recommendations — Retry после ошибки каталога', () => {
+  it('клик Retry повторно запрашивает каталог', async () => {
     setFavorites([605, 606])
     mockFavorite(605, { genres: [{ name: 'триллер' }], rating: { kp: 8.0 } })
     mockFavorite(606, { genres: [{ name: 'драма' }], rating: { kp: 6.0 } })

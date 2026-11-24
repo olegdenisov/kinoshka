@@ -11,9 +11,8 @@ production as a static build (Vite), with Sentry error tracking wired for prod b
 ## What a real failure looks like here
 
 - **Runtime crash / blank screen for a user**: unhandled exception outside any `ErrorBoundary`/
-  `AsyncBoundary`, a Suspense boundary that never resolves, an infinite re-render loop (this repo
-  has hit this exact bug before via a `useSyncExternalStore` snapshot that wasn't referentially
-  stable — see `createStorageSlot.get()` history).
+  `AsyncContent`, a Suspense boundary that never resolves, an infinite re-render loop (an unstable
+  Reatom computed returning a fresh object each read is the usual cause).
 - **Data integrity in localStorage/sessionStorage**: favorites, theme, genre-dictionary cache, and
   session-persisted catalog cache are all read back through Zod validation at that boundary
   specifically because they're the one place this app trusts external/mutable state. A missing or
@@ -44,11 +43,10 @@ production as a static build (Vite), with Sentry error tracking wired for prod b
 - `src/shared/**` and `src/app/**` (providers, router, global styles, Sentry init) are the highest
   blast-radius layers — a bug here affects every page.
 - `src/entities/movie/**` is the next tier — most pages read data through its hooks
-  (`useNewMovies`, `useMovieDetail`, `usePopularMovies`, etc.) and its `createCachedFetcher`/
-  `createSessionCache` caching layer; a caching bug here (stale reads, wrong invalidation, cache
+  (Reatom atoms/actions such as `newMovies`, `movieDetail`, `popularMovies`) and the
+  `withQueryCache` caching layer in `@shared/lib/query`; a caching bug here (stale reads, wrong invalidation, cache
   key collisions) silently serves wrong data across the whole app, not just one page.
-- `src/pages/<page>/model/*.ts` "page-slice facade" hooks (`useMovieCatalog`, `useRecommendedMovies`,
-  `usePageSync`) are deliberately allowed to import both `@features/*` and `@entities/*` downward —
+- `src/pages/<page>/model/*.ts` "page-slice facade" models (`catalog.ts`, `recommendations.ts`) are deliberately allowed to import both `@features/*` and `@entities/*` downward —
   this is NOT an FSD violation, it's the documented escape hatch for cross-slice composition. Don't
   flag these files for "importing from two different lower layers."
 - Generated files (`src/shared/api/instance.gen.ts`, `types.gen.ts`) are out of scope entirely —
@@ -88,11 +86,9 @@ typecheck` was previously a no-op checking 0 files — this was fixed as of the 
   applies to `widgets/`/`features/`, not to `app/`.
 - Root-level `<tool>.config.ts` files (`vite.config.ts`, `apicraft.config.ts`, `sentry.config.ts`)
   are Node-context build tooling, not FSD app code — don't apply FSD layering rules to them.
-- `useDeferredValue` over `useSearchParams()`-derived state requires mirroring through a
-  `useEffect` + local `useState` first, because `setSearchParams` navigates inside
-  `React.startTransition` — a `useDeferredValue` called directly on a URL-derived value is a
-  documented, known gotcha in this codebase (`useCatalogUpdateStatus.ts`), not something every new
-  usage needs to be warned about again if it already follows this pattern.
+- URL state lives in `urlAtom` (Reatom); every `/search` mutation goes through a single
+  `updateSearchUrl` write by design (see `search-catalog.md`) — don't flag it as missing
+  `withSearchParams`.
 - Accepted/known limitations, not regressions to fix: `VITE_API_KEY` inlined into the client bundle
   (pre-BFF); `MovieInListDto` (from `/list` endpoints) lacking `type`/`genres`, defaulting to
   `'movie'`/`[]`; no reverse RU→EN mapping on displayed genre names from search results;

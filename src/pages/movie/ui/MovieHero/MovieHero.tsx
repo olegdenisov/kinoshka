@@ -1,7 +1,7 @@
 import type { MovieDetail } from '@entities/movie'
 import { Poster } from '@entities/movie'
+import { paths } from '@shared/config'
 import { StarIcon, PlayIcon } from '@shared/ui'
-import { Link } from 'react-router'
 
 import { MovieActions } from '../MovieActions'
 import type { LikedState } from '../types'
@@ -47,6 +47,8 @@ type MovieHeroProps = {
   onWatchedToggle: () => void
   inWatchlist: boolean
   onWatchlistToggle: () => void
+  favorite: boolean
+  onFavoriteToggle: () => void
 }
 
 export const MovieHero = ({
@@ -57,6 +59,8 @@ export const MovieHero = ({
   onWatchedToggle,
   inWatchlist,
   onWatchlistToggle,
+  favorite,
+  onFavoriteToggle,
 }: MovieHeroProps) => {
   return (
     <section className={s.hero}>
@@ -75,13 +79,13 @@ export const MovieHero = ({
 
       <div className={s.inner}>
         <nav className={s.breadcrumbs}>
-          <Link to='/' className={s.breadcrumbLink}>
+          <a href={paths.home()} className={s.breadcrumbLink}>
             Home
-          </Link>
+          </a>
           <span className={s.breadcrumbSep}>/</span>
-          <Link to='/search' className={s.breadcrumbLink}>
+          <a href={paths.search()} className={s.breadcrumbLink}>
             Catalog
-          </Link>
+          </a>
           <span className={s.breadcrumbSep}>/</span>
           <span className={s.breadcrumbCurrent}>{movie.title}</span>
         </nav>
@@ -146,6 +150,8 @@ export const MovieHero = ({
               onWatchedToggle={onWatchedToggle}
               inWatchlist={inWatchlist}
               onWatchlistToggle={onWatchlistToggle}
+              favorite={favorite}
+              onFavoriteToggle={onFavoriteToggle}
             />
 
             <p className={s.synopsis}>

@@ -1,16 +1,12 @@
 import type { MovieDetail } from '@entities/movie'
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router'
+import { screen } from '@testing-library/react'
 
+import { renderWithRouter } from '../../../../../test/router'
 import { MOVIE } from '../../../testFixtures'
 import { OverviewTab } from './OverviewTab'
 
 const renderOverviewTab = (movie: MovieDetail = MOVIE) =>
-  render(
-    <MemoryRouter>
-      <OverviewTab m={movie} />
-    </MemoryRouter>,
-  )
+  renderWithRouter(<OverviewTab m={movie} />)
 
 describe('OverviewTab — синопсис, жанры, страны, рейтинги', () => {
   it('показывает synopsis, жанры, страны и рейтинги без изменений', () => {

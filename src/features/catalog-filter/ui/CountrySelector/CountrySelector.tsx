@@ -1,7 +1,5 @@
-import {
-  STATIC_FALLBACK_COUNTRIES,
-  useCountryDictionary,
-} from '@entities/movie'
+import { countries, STATIC_FALLBACK_COUNTRIES } from '@entities/movie'
+import { reatomComponent } from '@reatom/react'
 
 import { getCountryLabel } from '../../lib/filterOptions'
 import { ChipSelect } from '../ChipSelect'
@@ -13,18 +11,11 @@ type CountrySelectorProps = {
   compact?: boolean
 }
 
-/** Синхронный хук словаря без Suspense: шорт-лист виден сразу, полный список подменяется фоном. */
-export const CountrySelector = ({
-  selected,
-  onToggle,
-  disabled,
-  compact,
-}: CountrySelectorProps) => {
-  const countries = useCountryDictionary()
-
-  return (
+/** Словарь без Suspense: шорт-лист виден сразу, полный список подменяется фоном. */
+export const CountrySelector = reatomComponent(
+  ({ selected, onToggle, disabled, compact }: CountrySelectorProps) => (
     <ChipSelect
-      items={countries}
+      items={countries()}
       defaults={STATIC_FALLBACK_COUNTRIES}
       selected={selected}
       getLabel={getCountryLabel}
@@ -34,5 +25,6 @@ export const CountrySelector = ({
       groupLabel='Country'
       searchable
     />
-  )
-}
+  ),
+  'CountrySelector',
+)

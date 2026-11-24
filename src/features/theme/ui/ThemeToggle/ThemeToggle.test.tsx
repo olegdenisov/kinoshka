@@ -1,11 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 
+import { initThemeSync } from '../../model/theme'
 import { ThemeToggle } from './ThemeToggle'
 
-beforeEach(() => localStorage.clear())
+beforeEach(() => initThemeSync())
 
 // jsdom document общий между тестами файла — без сброса data-theme, выставленный
-// предыдущим тестом атрибут утёк бы в следующий (см. useTheme.test.tsx).
+// предыдущим тестом атрибут утёк бы в следующий (см. theme.test.ts).
 afterEach(() => {
   document.documentElement.removeAttribute('data-theme')
 })
@@ -14,23 +15,29 @@ afterEach(() => {
 // → theme === 'system' (localStorage пуст) резолвится в 'light' (resolveTheme('system', false)).
 
 describe('ThemeToggle', () => {
-  it('клик переключает document.documentElement.dataset.theme light → dark', () => {
+  it('клик переключает document.documentElement.dataset.theme light → dark', async () => {
     render(<ThemeToggle />)
 
-    fireEvent.click(screen.getByRole('button'))
+    await act(async () => fireEvent.click(screen.getByRole('button')))
 
-    expect(document.documentElement.dataset.theme).toBe('dark')
+    await waitFor(() =>
+      expect(document.documentElement.dataset.theme).toBe('dark'),
+    )
   })
 
-  it('повторный клик переключает обратно dark → light', () => {
+  it('повторный клик переключает обратно dark → light', async () => {
     render(<ThemeToggle />)
     const button = screen.getByRole('button')
 
-    fireEvent.click(button)
-    expect(document.documentElement.dataset.theme).toBe('dark')
+    await act(async () => fireEvent.click(button))
+    await waitFor(() =>
+      expect(document.documentElement.dataset.theme).toBe('dark'),
+    )
 
-    fireEvent.click(button)
-    expect(document.documentElement.dataset.theme).toBe('light')
+    await act(async () => fireEvent.click(button))
+    await waitFor(() =>
+      expect(document.documentElement.dataset.theme).toBe('light'),
+    )
   })
 
   it('aria-label синхронизирован с текущей темой: "Switch to dark theme", когда сейчас light', () => {
@@ -41,15 +48,17 @@ describe('ThemeToggle', () => {
     ).toBeInTheDocument()
   })
 
-  it('после клика (light → dark) aria-label меняется на "Switch to light theme"', () => {
+  it('после клика (light → dark) aria-label меняется на "Switch to light theme"', async () => {
     render(<ThemeToggle />)
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Switch to dark theme' }),
+    await act(async () =>
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Switch to dark theme' }),
+      ),
     )
 
     expect(
-      screen.getByRole('button', { name: 'Switch to light theme' }),
+      await screen.findByRole('button', { name: 'Switch to light theme' }),
     ).toBeInTheDocument()
   })
 })

@@ -1,50 +1,49 @@
-import { ActiveFilterChips, useFilterState } from '@features/catalog-filter'
-import { fireEvent, render, screen } from '@testing-library/react'
-import { act, useEffect } from 'react'
 import {
-  MemoryRouter,
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-} from 'react-router'
+  ActiveFilterChips,
+  activeChips,
+  filters,
+  removeFilterChip,
+} from '@features/catalog-filter'
+import { initThemeSync } from '@features/theme'
+import { urlAtom } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
+import { fireEvent, screen } from '@testing-library/react'
+import { act } from 'react'
 
+import { seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { Header } from './Header'
 
-/** Читает текущую строку query из роутера — способ проверить, что запись в URL реально произошла. */
-let lastSearch = ''
-const LocationProbe = () => {
-  const { search } = useLocation()
-  useEffect(() => {
-    lastSearch = search
-  }, [search])
-  return null
+/** Текущая строка query — способ проверить, что запись в URL реально произошла. */
+let getUrl = () => ''
+const currentSearch = () => {
+  const url = getUrl()
+  const i = url.indexOf('?')
+  return i < 0 ? '' : url.slice(i)
 }
 
 /** Программная навигация без ремаунта Header — эмулирует смену ?q извне (browser back/forward, deep-link). */
-const NavigateProbe = ({ to }: { to: string | null }) => {
-  const navigate = useNavigate()
-  useEffect(() => {
-    if (to !== null) {
-      navigate(to)
-    }
-  }, [to, navigate])
-  return null
-}
+const navigateTo = (to: string) => act(async () => urlAtom.go(to))
+
+/** Debounce-таймер + цепочка промисов коммита и асинхронная перерисовка reatomComponent. */
+const advance = (ms: number) =>
+  act(async () => {
+    await vi.advanceTimersByTimeAsync(ms)
+  })
 
 const renderHeader = (initialEntries: string[]) => {
-  lastSearch = ''
-  return render(
-    <MemoryRouter initialEntries={initialEntries}>
-      <Header variant='search' activeNav='search' />
-      <LocationProbe />
-    </MemoryRouter>,
+  const result = renderWithRouter(
+    <Header variant='search' activeNav='search' />,
+    { url: initialEntries[0] },
   )
+  getUrl = result.getUrl
+  return result
 }
 
 beforeEach(() => {
   vi.useFakeTimers()
   localStorage.clear()
+  initThemeSync()
 })
 afterEach(() => {
   vi.useRealTimers()
@@ -60,53 +59,59 @@ describe('Header (variant="search")', () => {
     expect(screen.getByRole('search')).toBeInTheDocument()
   })
 
-  it('ввод → через 250ms пишет ?q (replace: true, без лишней записи в историю)', () => {
+  it('ввод → через 250ms пишет ?q (replace: true, без лишней записи в историю)', async () => {
     renderHeader(['/search'])
     const input = screen.getByPlaceholderText('Search movies, series, anime…')
+    const push = vi.spyOn(window.history, 'pushState')
 
     fireEvent.change(input, { target: { value: 'dune' } })
-    expect(lastSearch).toBe('')
+    await advance(200)
+    expect(currentSearch()).toBe('')
 
-    act(() => vi.advanceTimersByTime(250))
-    expect(lastSearch).toBe('?q=dune')
+    await advance(50)
+    expect(currentSearch()).toBe('?q=dune')
+    await advance(0)
+    expect(push).not.toHaveBeenCalled()
   })
 
-  it('min-length ровно QUERY_MIN_LENGTH (2 символа) — граница: ?q пишется', () => {
+  it('min-length ровно QUERY_MIN_LENGTH (2 символа) — граница: ?q пишется', async () => {
     renderHeader(['/search'])
     const input = screen.getByPlaceholderText('Search movies, series, anime…')
 
     fireEvent.change(input, { target: { value: 'du' } })
-    act(() => vi.advanceTimersByTime(250))
+    await advance(250)
 
-    expect(lastSearch).toBe('?q=du')
+    expect(currentSearch()).toBe('?q=du')
   })
 
-  it('min-length < 2 — ?q не пишется', () => {
+  it('min-length < 2 — ?q не пишется', async () => {
     renderHeader(['/search'])
     const input = screen.getByPlaceholderText('Search movies, series, anime…')
 
     fireEvent.change(input, { target: { value: 'd' } })
-    act(() => vi.advanceTimersByTime(250))
+    await advance(250)
 
-    expect(lastSearch).toBe('')
+    expect(currentSearch()).toBe('')
   })
 
-  it('min-length < 2 после непустого — ?q чистится', () => {
+  it('min-length < 2 после непустого — ?q чистится', async () => {
     renderHeader(['/search?q=dune'])
     const input = screen.getByPlaceholderText('Search movies, series, anime…')
 
     fireEvent.change(input, { target: { value: 'd' } })
-    act(() => vi.advanceTimersByTime(250))
+    await advance(250)
 
-    expect(lastSearch).toBe('')
+    expect(currentSearch()).toBe('')
   })
 
-  it('кнопка × при непустом q сбрасывает ?q немедленно (без ожидания дебаунса)', () => {
+  it('кнопка × при непустом q сбрасывает ?q немедленно (без ожидания дебаунса)', async () => {
     renderHeader(['/search?q=dune'])
 
-    fireEvent.click(screen.getByRole('button', { name: 'Clear search' }))
+    await act(async () =>
+      fireEvent.click(screen.getByRole('button', { name: 'Clear search' })),
+    )
 
-    expect(lastSearch).toBe('')
+    expect(currentSearch()).toBe('')
     expect(
       screen.getByPlaceholderText('Search movies, series, anime…'),
     ).toHaveValue('')
@@ -119,60 +124,29 @@ describe('Header (variant="search")', () => {
     ).toHaveValue('dune')
   })
 
-  it('внешнее изменение ?q (навигация в истории, без ремаунта Header) — draft инпута пересинхронизируется с URL', () => {
-    lastSearch = ''
-    const { rerender } = render(
-      <MemoryRouter initialEntries={['/search?q=dune']}>
-        <Header variant='search' activeNav='search' />
-        <LocationProbe />
-        <NavigateProbe to={null} />
-      </MemoryRouter>,
-    )
+  it('внешнее изменение ?q (навигация в истории, без ремаунта Header) — draft инпута пересинхронизируется с URL', async () => {
+    renderHeader(['/search?q=dune'])
 
     expect(
       screen.getByPlaceholderText('Search movies, series, anime…'),
     ).toHaveValue('dune')
 
-    // Header не размонтируется (тот же MemoryRouter/тот же /search) — только меняется ?q,
-    // как при browser back/forward внутри /search.
-    act(() => {
-      rerender(
-        <MemoryRouter initialEntries={['/search?q=dune']}>
-          <Header variant='search' activeNav='search' />
-          <LocationProbe />
-          <NavigateProbe to='/search?q=matrix' />
-        </MemoryRouter>,
-      )
-    })
+    // Header не размонтируется — меняется только ?q, как при browser back/forward внутри /search.
+    await navigateTo('/search?q=matrix')
 
     expect(
       screen.getByPlaceholderText('Search movies, series, anime…'),
     ).toHaveValue('matrix')
   })
 
-  it('внешнее изменение ?q на пусто (например, переход назад до состояния без query) — инпут очищается', () => {
-    lastSearch = ''
-    const { rerender } = render(
-      <MemoryRouter initialEntries={['/search?q=dune']}>
-        <Header variant='search' activeNav='search' />
-        <LocationProbe />
-        <NavigateProbe to={null} />
-      </MemoryRouter>,
-    )
+  it('внешнее изменение ?q на пусто (например, переход назад до состояния без query) — инпут очищается', async () => {
+    renderHeader(['/search?q=dune'])
 
     expect(
       screen.getByPlaceholderText('Search movies, series, anime…'),
     ).toHaveValue('dune')
 
-    act(() => {
-      rerender(
-        <MemoryRouter initialEntries={['/search?q=dune']}>
-          <Header variant='search' activeNav='search' />
-          <LocationProbe />
-          <NavigateProbe to='/search' />
-        </MemoryRouter>,
-      )
-    })
+    await navigateTo('/search')
 
     expect(
       screen.getByPlaceholderText('Search movies, series, anime…'),
@@ -182,51 +156,35 @@ describe('Header (variant="search")', () => {
 
 /** Тот же `Header`, что и в `AppLayout`: variant пересчитывается из текущего pathname — компонент
  * не размонтируется при смене роута (одна и та же позиция в дереве), меняются только пропы. */
-const HeaderRouteChrome = () => {
-  const { pathname } = useLocation()
-  const variant = pathname === '/search' ? 'search' : 'default'
+const HeaderRouteChrome = reatomComponent(() => {
+  const variant = urlAtom().pathname === '/search' ? 'search' : 'default'
   return (
     <Header
       variant={variant}
       activeNav={variant === 'search' ? 'search' : undefined}
     />
   )
-}
+}, 'HeaderRouteChrome')
 
-describe('Header — ?q-эффект не пишет/не чистит URL вне variant="search"', () => {
+describe('Header — ввод не пишет/не чистит URL вне variant="search"', () => {
   // `Header` не размонтируется между роутами внутри `AppLayout` (см. его докблок и
-  // `HeaderRouteChrome` выше) — регрессионный тест на сценарий оттуда: смонтированный на /search
-  // с набранным ?q `Header` переключается в variant='default' при уходе на другой роут, и его
-  // ?q-debounce-эффект не должен ни писать, ни чистить query-параметры роута, куда перешли.
-  it('переход search → другой роут (без ремаунта Header) не оставляет/не чистит ?q целевого роута', () => {
-    lastSearch = ''
-    const { rerender } = render(
-      <MemoryRouter initialEntries={['/search?q=dune']}>
-        <HeaderRouteChrome />
-        <LocationProbe />
-        <NavigateProbe to={null} />
-      </MemoryRouter>,
-    )
-
-    expect(
-      screen.getByPlaceholderText('Search movies, series, anime…'),
-    ).toHaveValue('dune')
-
-    act(() => {
-      rerender(
-        <MemoryRouter initialEntries={['/search?q=dune']}>
-          <HeaderRouteChrome />
-          <LocationProbe />
-          <NavigateProbe to='/favorites?foo=bar' />
-        </MemoryRouter>,
-      )
+  // `HeaderRouteChrome` выше): набранный на /search черновик, коммит которого ещё спит, не должен
+  // ни писать, ни чистить query-параметры роута, куда перешли.
+  it('переход search → другой роут (без ремаунта Header) не оставляет/не чистит ?q целевого роута', async () => {
+    const result = renderWithRouter(<HeaderRouteChrome />, {
+      url: '/search?q=dune',
     })
+    getUrl = result.getUrl
 
-    // Debounce-таймер (250ms) успевает истечь — если бы эффект был безусловным, он бы догнал
-    // унаследованный draft='dune' и дописал/перезаписал ?q поверх ?foo=bar на новом роуте.
-    act(() => vi.advanceTimersByTime(250))
+    const input = screen.getByPlaceholderText('Search movies, series, anime…')
+    expect(input).toHaveValue('dune')
+    fireEvent.change(input, { target: { value: 'dune 2' } })
 
-    expect(lastSearch).toBe('?foo=bar')
+    await navigateTo('/favorites?foo=bar')
+    // Debounce-таймер успевает истечь — отложенный коммит не должен дописать ?q на новом роуте.
+    await advance(250)
+
+    expect(getUrl()).toBe('/favorites?foo=bar')
     expect(
       screen.queryByPlaceholderText('Search movies, series, anime…'),
     ).not.toBeInTheDocument()
@@ -294,11 +252,7 @@ describe('Header — ⌘K/Ctrl+K фокусирует поле поиска (п�
   })
 
   it('вне variant="search" (инпута нет в DOM) — ⌘K не падает', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Header variant='default' />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Header variant='default' />, { url: '/' })
 
     expect(() =>
       fireEvent.keyDown(window, { code: 'KeyK', metaKey: true }),
@@ -306,35 +260,35 @@ describe('Header — ⌘K/Ctrl+K фокусирует поле поиска (п�
   })
 })
 
-/** Читает useFilterState() поверх текущего URL — проверяет, что после навигации по nav pill
+/** Читает модель фильтров поверх текущего URL — проверяет, что после навигации по nav pill
  * реально применился фильтр и chip, а не только сменился ?type в адресной строке. */
-const FilterProbe = () => {
-  const { filters, activeChips } = useFilterState()
-  return (
+const FilterProbe = reatomComponent(
+  () => (
     <>
-      <div data-testid='filter-type'>{filters.type ?? ''}</div>
-      <ActiveFilterChips chips={activeChips} />
+      <div data-testid='filter-type'>{filters().type ?? ''}</div>
+      <ActiveFilterChips chips={activeChips()} onRemove={removeFilterChip} />
     </>
-  )
-}
+  ),
+  'FilterProbe',
+)
 
-const SearchPage = () => (
-  <>
-    <Header variant='search' activeNav='search' />
-    <FilterProbe />
-  </>
+/** Мини-роутинг по pathname: `/` — обычный Header, `/search` — поисковый Header + фильтры. */
+const App = reatomComponent(
+  () =>
+    urlAtom().pathname === '/search' ? (
+      <>
+        <Header variant='search' activeNav='search' />
+        <FilterProbe />
+      </>
+    ) : (
+      <Header variant='default' />
+    ),
+  'HeaderTestApp',
 )
 
 describe('Header — nav pills синхронизируют ?type с фильтром/chips', () => {
   const renderApp = (initialEntries: string[]) =>
-    render(
-      <MemoryRouter initialEntries={initialEntries}>
-        <Routes>
-          <Route path='/' element={<Header variant='default' />} />
-          <Route path='/search' element={<SearchPage />} />
-        </Routes>
-      </MemoryRouter>,
-    )
+    renderWithRouter(<App />, { url: initialEntries[0] })
 
   it.each([
     ['Movies', 'movie'],
@@ -342,10 +296,12 @@ describe('Header — nav pills синхронизируют ?type с фильт�
     ['Anime', 'anime'],
   ])(
     'клик по "%s" на главной → /search?type=%s, фильтр и chip применяются',
-    (label, type) => {
+    async (label, type) => {
       renderApp(['/'])
 
-      fireEvent.click(screen.getByRole('button', { name: label }))
+      await act(async () =>
+        fireEvent.click(screen.getByRole('button', { name: label })),
+      )
 
       expect(screen.getByTestId('filter-type')).toHaveTextContent(type)
       // nav pill + chip — оба должны показывать один и тот же лейбл после применения фильтра.
@@ -353,13 +309,15 @@ describe('Header — nav pills синхронизируют ?type с фильт�
     },
   )
 
-  it('переключение Movies → Series на /search обновляет ?type и chip без переоткрытия страницы', () => {
+  it('переключение Movies → Series на /search обновляет ?type и chip без переоткрытия страницы', async () => {
     renderApp(['/search?type=movie'])
 
     expect(screen.getByTestId('filter-type')).toHaveTextContent('movie')
     expect(screen.getAllByText('Movies')).toHaveLength(2) // nav pill + chip
 
-    fireEvent.click(screen.getByRole('button', { name: 'Series' }))
+    await act(async () =>
+      fireEvent.click(screen.getByRole('button', { name: 'Series' })),
+    )
 
     expect(screen.getByTestId('filter-type')).toHaveTextContent('series')
     expect(screen.getAllByText('Series')).toHaveLength(2) // nav pill + chip
@@ -381,33 +339,19 @@ describe('Header (variant="search") — панель type-фильтров', () 
 
 describe('Header — пункт навигации Favorites', () => {
   it('клик по "Favorites" ведёт на /favorites', () => {
-    let lastPathname = ''
-    const PathnameProbe = () => {
-      const { pathname } = useLocation()
-      useEffect(() => {
-        lastPathname = pathname
-      }, [pathname])
-      return null
-    }
-
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Header variant='default' />
-        <PathnameProbe />
-      </MemoryRouter>,
-    )
+    const { getUrl } = renderWithRouter(<Header variant='default' />, {
+      url: '/',
+    })
 
     fireEvent.click(screen.getByRole('button', { name: 'Favorites' }))
 
-    expect(lastPathname).toBe('/favorites')
+    expect(getUrl()).toBe('/favorites')
   })
 
   it('activeNav="favorites" подсвечивает пункт "Favorites" как активный', () => {
-    render(
-      <MemoryRouter initialEntries={['/favorites']}>
-        <Header variant='default' activeNav='favorites' />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Header variant='default' activeNav='favorites' />, {
+      url: '/favorites',
+    })
 
     expect(screen.getByRole('button', { name: 'Favorites' }).className).toMatch(
       /navPillActive/,
@@ -420,33 +364,19 @@ describe('Header — пункт навигации Favorites', () => {
 
 describe('Header — пункт навигации Popular', () => {
   it('клик по "Popular" ведёт на /popular', () => {
-    let lastPathname = ''
-    const PathnameProbe = () => {
-      const { pathname } = useLocation()
-      useEffect(() => {
-        lastPathname = pathname
-      }, [pathname])
-      return null
-    }
-
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Header variant='default' />
-        <PathnameProbe />
-      </MemoryRouter>,
-    )
+    const { getUrl } = renderWithRouter(<Header variant='default' />, {
+      url: '/',
+    })
 
     fireEvent.click(screen.getByRole('button', { name: 'Popular' }))
 
-    expect(lastPathname).toBe('/popular')
+    expect(getUrl()).toBe('/popular')
   })
 
   it('activeNav="popular" подсвечивает пункт "Popular" как активный', () => {
-    render(
-      <MemoryRouter initialEntries={['/popular']}>
-        <Header variant='default' activeNav='popular' />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Header variant='default' activeNav='popular' />, {
+      url: '/popular',
+    })
 
     expect(screen.getByRole('button', { name: 'Popular' }).className).toMatch(
       /navPillActive/,
@@ -459,33 +389,19 @@ describe('Header — пункт навигации Popular', () => {
 
 describe('Header — пункт навигации Picks', () => {
   it('клик по "Picks" ведёт на /recommendations', () => {
-    let lastPathname = ''
-    const PathnameProbe = () => {
-      const { pathname } = useLocation()
-      useEffect(() => {
-        lastPathname = pathname
-      }, [pathname])
-      return null
-    }
-
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Header variant='default' />
-        <PathnameProbe />
-      </MemoryRouter>,
-    )
+    const { getUrl } = renderWithRouter(<Header variant='default' />, {
+      url: '/',
+    })
 
     fireEvent.click(screen.getByRole('button', { name: 'Picks' }))
 
-    expect(lastPathname).toBe('/recommendations')
+    expect(getUrl()).toBe('/recommendations')
   })
 
   it('activeNav="recommendations" подсвечивает пункт "Picks" как активный', () => {
-    render(
-      <MemoryRouter initialEntries={['/recommendations']}>
-        <Header variant='default' activeNav='recommendations' />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Header variant='default' activeNav='recommendations' />, {
+      url: '/recommendations',
+    })
 
     expect(screen.getByRole('button', { name: 'Picks' }).className).toMatch(
       /navPillActive/,
@@ -498,11 +414,7 @@ describe('Header — пункт навигации Picks', () => {
 
 describe('Header — accessible names на иконках без видимого текста (a11y baseline, Task 2)', () => {
   it('кнопка открытия поиска (variant="default") имеет aria-label="Open search"', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Header variant='default' />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Header variant='default' />, { url: '/' })
 
     expect(
       screen.getByRole('button', { name: 'Open search' }),
@@ -510,11 +422,7 @@ describe('Header — accessible names на иконках без видимог�
   })
 
   it('кнопка уведомлений имеет aria-label="Notifications"', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Header variant='default' />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Header variant='default' />, { url: '/' })
 
     expect(
       screen.getByRole('button', { name: 'Notifications' }),
@@ -524,25 +432,17 @@ describe('Header — accessible names на иконках без видимог�
 
 describe('Header — переключатель темы (ThemeToggle)', () => {
   it('кнопка-тоггл темы присутствует в actions', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Header variant='default' />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Header variant='default' />, { url: '/' })
 
     expect(screen.getByRole('button', { name: /theme/i })).toBeInTheDocument()
   })
 
-  it('клик по тогглу меняет document.documentElement.dataset.theme', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Header variant='default' />
-      </MemoryRouter>,
-    )
+  it('клик по тогглу меняет document.documentElement.dataset.theme', async () => {
+    renderWithRouter(<Header variant='default' />, { url: '/' })
 
     const toggle = screen.getByRole('button', { name: /theme/i })
 
-    fireEvent.click(toggle)
+    await act(async () => fireEvent.click(toggle))
 
     // Global matchMedia stub (src/test/setup.ts) defaults matches: false → theme === 'system'
     // (localStorage empty) resolves to 'light' on mount, so one click flips it to 'dark'.
@@ -552,22 +452,16 @@ describe('Header — переключатель темы (ThemeToggle)', () => {
 
 describe('Header — аватар профиля (ProfileAvatar)', () => {
   it('без имени аватар — ссылка на /profile с доступным именем "Your profile"', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Header variant='default' />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Header variant='default' />, { url: '/' })
 
     const link = screen.getByRole('link', { name: 'Your profile' })
     expect(link).toHaveAttribute('href', '/profile')
   })
 
   it('в варианте search аватар тоже ссылка на /profile', () => {
-    render(
-      <MemoryRouter initialEntries={['/search']}>
-        <Header variant='search' activeNav='search' />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Header variant='search' activeNav='search' />, {
+      url: '/search',
+    })
 
     expect(screen.getByRole('link', { name: 'Your profile' })).toHaveAttribute(
       'href',
@@ -576,13 +470,9 @@ describe('Header — аватар профиля (ProfileAvatar)', () => {
   })
 
   it('с сохранённым именем показывает инициалы', () => {
-    localStorage.setItem('kinoshka:profile', JSON.stringify('Oleg Denisov'))
+    seedPersisted('kinoshka:profile', 'Oleg Denisov')
 
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Header variant='default' />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Header variant='default' />, { url: '/' })
 
     const link = screen.getByRole('link', {
       name: 'Your profile: Oleg Denisov',

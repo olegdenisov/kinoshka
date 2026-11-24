@@ -1,12 +1,9 @@
-import {
-  Card,
-  PopularBadge,
-  invalidatePopularMovies,
-  usePopularMovies,
-} from '@entities/movie'
-import { useFavorites } from '@features/favorites'
-import { useWatchlist } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { Card, PopularBadge, popularMovies } from '@entities/movie'
+import { favoriteIds, toggleFavorite } from '@features/favorites'
+import { watchlistIds } from '@features/watchlist'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
+import { AsyncContent, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Popular.module.css'
 
@@ -22,10 +19,8 @@ const PopularSkeletonGrid = () => (
   </div>
 )
 
-const PopularGrid = () => {
-  const movies = usePopularMovies()
-  const { isFavorite, toggle } = useFavorites()
-  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
+const PopularGrid = reatomComponent(() => {
+  const movies = popularMovies.data()
 
   if (movies.length === 0) {
     return (
@@ -45,10 +40,10 @@ const PopularGrid = () => {
           key={movie.id}
           movie={movie}
           variant='grid'
-          isFavorite={isFavorite(movie.id)}
-          onToggleFavorite={toggle}
-          inWatchlist={isInWatchlist(movie.id)}
-          onToggleWatchlist={toggleWatchlist}
+          isFavorite={favoriteIds().has(movie.id)}
+          onToggleFavorite={wrap(toggleFavorite)}
+          inWatchlist={watchlistIds().has(movie.id)}
+          onToggleWatchlist={wrap(watchlistIds.toggle)}
           rankBadge={
             <PopularBadge
               position={movie.position}
@@ -59,24 +54,33 @@ const PopularGrid = () => {
       ))}
     </div>
   )
-}
+}, 'PopularGrid')
+
+const PopularContent = reatomComponent(
+  () => (
+    <AsyncContent
+      pending={popularMovies.status().isFirstPending}
+      error={popularMovies.error()}
+      onRetry={wrap(popularMovies.retry)}
+      fallback={<PopularSkeletonGrid />}
+    >
+      <PopularGrid />
+    </AsyncContent>
+  ),
+  'PopularContent',
+)
 
 // Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
 // единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6
 // плана docs/plans/20260827-mobile-first-adaptive-layout.md), которая оборачивает роут
-// `/popular` (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
+// `/popular` (см. `src/app/routes.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
 // Popular больше не вызывает useViewport и не решает, какой chrome показать.
 export const Popular = () => {
   return (
     <div className={s.page}>
       <main className={s.main}>
         <h1 className={s.heading}>Popular this week</h1>
-        <AsyncBoundary
-          fallback={<PopularSkeletonGrid />}
-          onRetry={() => invalidatePopularMovies()}
-        >
-          <PopularGrid />
-        </AsyncBoundary>
+        <PopularContent />
       </main>
     </div>
   )

@@ -1,4 +1,4 @@
-import { normalizeProfileName } from '../model/profileStorage'
+import { normalizeProfileName } from '../model/profile'
 import { getInitials } from './getInitials'
 import { isInvisibleCodePoint } from './visibleChars'
 

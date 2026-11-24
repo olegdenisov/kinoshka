@@ -1,11 +1,13 @@
 import { CloseIcon } from '@shared/ui'
 
-import type { ActiveChip } from '../../model/useFilterState'
+import type { FilterChip } from '../../lib/filterChips'
 
 import s from './ActiveFilterChips.module.css'
 
 type ActiveFilterChipsProps = {
-  chips: ActiveChip[]
+  chips: FilterChip[]
+  /** Снятие чипа по `id` — чипы без замыканий (`removeFilterChip` модели). */
+  onRemove: (id: string) => void
   onClearAll?: () => void
   /**
    * При `true` рендерит полностью другое DOM-поддерево (`chipCompact`/`chipCompactRemove`, без
@@ -28,18 +30,19 @@ type ActiveFilterChipsProps = {
 
 export const ActiveFilterChips = ({
   chips,
+  onRemove,
   onClearAll,
   compact = false,
 }: ActiveFilterChipsProps) => {
   if (compact) {
     return (
       <>
-        {chips.slice(0, 6).map((c, i) => (
-          <span key={i} className={s.chipCompact}>
+        {chips.slice(0, 6).map(c => (
+          <span key={c.id} className={s.chipCompact}>
             {c.label}
             <button
               type='button'
-              onClick={c.onRemove}
+              onClick={() => onRemove(c.id)}
               aria-label={`Remove ${c.label}`}
               className={s.chipCompactRemove}
             >
@@ -53,12 +56,12 @@ export const ActiveFilterChips = ({
 
   return (
     <div className={s.container}>
-      {chips.map((c, i) => (
-        <span key={i} className={s.chip}>
+      {chips.map(c => (
+        <span key={c.id} className={s.chip}>
           {c.label}
           <button
             type='button'
-            onClick={c.onRemove}
+            onClick={() => onRemove(c.id)}
             aria-label={`Remove ${c.label}`}
             className={s.chipRemove}
           >

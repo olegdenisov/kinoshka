@@ -12,7 +12,11 @@
     "rules-of-hooks": "error",
     "exhaustive-deps": "error",
     // Port of eslint-plugin-react-refresh's vite preset.
-    "only-export-components": ["error", { "allowConstantExport": true }],
+    // customHOCs: reatomComponent(...) оборачивает экспортируемые компоненты.
+    "only-export-components": [
+      "error",
+      { "allowConstantExport": true, "customHOCs": ["reatomComponent"] }
+    ],
     // ul[role=listbox] > li > [role=option] is the standard WAI-ARIA listbox pattern
     // (SortSelect) — oxlint's jsx-a11y is stricter here than eslint-plugin-jsx-a11y's
     // recommended config and would push toward a native <select>, which can't carry

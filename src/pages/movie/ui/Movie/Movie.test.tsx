@@ -1,10 +1,19 @@
 import type { MovieDetail, MovieImage } from '@entities/movie'
-import { render, screen } from '@testing-library/react'
+import type * as SharedLib from '@shared/lib'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
 
+import { readPersisted, seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { MOVIE, MOVIE_NO_OPTIONALS, IMAGES } from '../../testFixtures'
 import { Movie } from './Movie'
+
+vi.mock('@shared/lib', async importOriginal => {
+  const actual = await importOriginal<typeof SharedLib>()
+  return { ...actual, trackEvent: vi.fn() }
+})
+
+const { trackEvent } = await import('@shared/lib')
 
 // Слияние MovieDesktop.test.tsx/MovieMobile.test.tsx (Task 9 плана
 // docs/plans/20260827-mobile-first-adaptive-layout.md): оба набора тестов проверяли один и тот
@@ -17,14 +26,12 @@ import { Movie } from './Movie'
 const renderMovie = (
   movie: MovieDetail = MOVIE,
   images: MovieImage[] = IMAGES,
-) =>
-  render(
-    <MemoryRouter>
-      <Movie movie={movie} images={images} />
-    </MemoryRouter>,
-  )
+) => renderWithRouter(<Movie movie={movie} images={images} />)
 
-beforeEach(() => localStorage.clear())
+beforeEach(() => {
+  localStorage.clear()
+  vi.mocked(trackEvent).mockClear()
+})
 
 describe('Movie — Overview (дефолтный таб)', () => {
   it('показывает tagline, синопсис-тизер, рейтинги и жанры из movie', () => {
@@ -109,9 +116,9 @@ describe('Movie — RelatedMovies', () => {
       screen.getAllByRole('button', { name: 'Add to favorites' })[0],
     )
 
-    expect(localStorage.getItem('kinoshka:favorites')).toBe(
-      `[${MOVIE.similarMovies[0].id}]`,
-    )
+    expect(readPersisted('kinoshka:favorites')).toEqual([
+      MOVIE.similarMovies[0].id,
+    ])
   })
 })
 
@@ -125,7 +132,7 @@ describe('Movie — Watched', () => {
   })
 
   it('предустановленный id в storage → нажата с первого рендера', () => {
-    localStorage.setItem('kinoshka:watched', JSON.stringify([MOVIE.id]))
+    seedPersisted('kinoshka:watched', [MOVIE.id])
     renderMovie()
 
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
@@ -138,12 +145,12 @@ describe('Movie — Watched', () => {
     await user.click(watchedButton())
 
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
-    expect(localStorage.getItem('kinoshka:watched')).toBe(`[${MOVIE.id}]`)
+    expect(readPersisted('kinoshka:watched')).toEqual([MOVIE.id])
 
     await user.click(watchedButton())
 
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'false')
-    expect(localStorage.getItem('kinoshka:watched')).toBe('[]')
+    expect(readPersisted('kinoshka:watched')).toEqual([])
   })
 
   it('состояние переживает перемонтирование страницы', async () => {
@@ -157,17 +164,12 @@ describe('Movie — Watched', () => {
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('остальные кнопки работают независимо от Watched', async () => {
+  it('Watchlist и Share работают независимо от Watched', async () => {
     const user = userEvent.setup()
     renderMovie()
 
-    await user.click(screen.getByRole('button', { name: 'Favorite' }))
     await user.click(screen.getByRole('button', { name: 'Watchlist' }))
 
-    expect(screen.getByRole('button', { name: 'Favorite' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
     expect(screen.getByRole('button', { name: 'Watchlist' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -176,6 +178,72 @@ describe('Movie — Watched', () => {
     expect(screen.getByRole('button', { name: 'Share' })).not.toHaveAttribute(
       'aria-pressed',
     )
+  })
+})
+
+describe('Movie — Favorite', () => {
+  const favoriteButton = () => screen.getByRole('button', { name: 'Favorite' })
+
+  it('по умолчанию не нажата', () => {
+    renderMovie()
+
+    expect(favoriteButton()).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('предустановленный id в storage → нажата с первого рендера', () => {
+    seedPersisted('kinoshka:favorites', [MOVIE.id])
+    renderMovie()
+
+    expect(favoriteButton()).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('клик добавляет id в kinoshka:favorites, повторный клик убирает', async () => {
+    const user = userEvent.setup()
+    renderMovie()
+
+    await user.click(favoriteButton())
+
+    await waitFor(() =>
+      expect(favoriteButton()).toHaveAttribute('aria-pressed', 'true'),
+    )
+    expect(readPersisted('kinoshka:favorites')).toEqual([MOVIE.id])
+    expect(trackEvent).toHaveBeenCalledExactlyOnceWith('favorite added')
+
+    vi.mocked(trackEvent).mockClear()
+    await user.click(favoriteButton())
+
+    await waitFor(() =>
+      expect(favoriteButton()).toHaveAttribute('aria-pressed', 'false'),
+    )
+    expect(readPersisted('kinoshka:favorites')).toEqual([])
+    expect(trackEvent).not.toHaveBeenCalled()
+  })
+
+  it('in-memory состояние сохраняется при перемонтировании страницы', async () => {
+    const user = userEvent.setup()
+    const { unmount } = renderMovie()
+
+    await user.click(favoriteButton())
+    await waitFor(() =>
+      expect(favoriteButton()).toHaveAttribute('aria-pressed', 'true'),
+    )
+    unmount()
+    renderMovie()
+
+    expect(favoriteButton()).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('клик не меняет kinoshka:watched и kinoshka:watchlist', async () => {
+    const user = userEvent.setup()
+    renderMovie()
+
+    await user.click(favoriteButton())
+
+    await waitFor(() =>
+      expect(favoriteButton()).toHaveAttribute('aria-pressed', 'true'),
+    )
+    expect(readPersisted('kinoshka:watched')).toBeNull()
+    expect(readPersisted('kinoshka:watchlist')).toBeNull()
   })
 })
 
@@ -197,12 +265,12 @@ describe('Movie — Watchlist', () => {
     await user.click(watchlistButton())
 
     expect(watchlistButton()).toHaveAttribute('aria-pressed', 'true')
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe(`[${MOVIE.id}]`)
+    expect(readPersisted('kinoshka:watchlist')).toEqual([MOVIE.id])
 
     await user.click(watchlistButton())
 
     expect(watchlistButton()).toHaveAttribute('aria-pressed', 'false')
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([])
   })
 
   it('состояние переживает перемонтирование страницы', async () => {
@@ -223,7 +291,7 @@ describe('Movie — Watchlist', () => {
     await user.click(watchedButton())
 
     expect(watchlistButton()).toHaveAttribute('aria-pressed', 'false')
-    expect(localStorage.getItem('kinoshka:watchlist')).toBeNull()
+    expect(readPersisted('kinoshka:watchlist')).toBeNull()
 
     await user.click(watchlistButton())
     await user.click(watchedButton())
@@ -233,7 +301,7 @@ describe('Movie — Watchlist', () => {
   })
 
   it('просмотренный тайтл можно добавить в watchlist', async () => {
-    localStorage.setItem('kinoshka:watched', JSON.stringify([MOVIE.id]))
+    seedPersisted('kinoshka:watched', [MOVIE.id])
     const user = userEvent.setup()
     renderMovie()
 
@@ -241,7 +309,7 @@ describe('Movie — Watchlist', () => {
 
     expect(watchedButton()).toHaveAttribute('aria-pressed', 'true')
     expect(watchlistButton()).toHaveAttribute('aria-pressed', 'true')
-    expect(localStorage.getItem('kinoshka:watched')).toBe(`[${MOVIE.id}]`)
+    expect(readPersisted('kinoshka:watched')).toEqual([MOVIE.id])
   })
 })
 

@@ -1,4 +1,4 @@
-import type { Theme } from '../model/themeStorage'
+import type { Theme } from '../model/theme'
 
 export const resolveTheme = (
   theme: Theme,

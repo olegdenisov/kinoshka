@@ -1,7 +1,13 @@
-import { Card, getMoviesByIds } from '@entities/movie'
-import { useFavoriteMovies, useFavorites } from '@features/favorites'
-import { useWatchlist } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { Card } from '@entities/movie'
+import {
+  favoriteIds,
+  favoriteMovies,
+  toggleFavorite,
+} from '@features/favorites'
+import { watchlistIds } from '@features/watchlist'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
+import { AsyncContent, EmptyState, Skeleton } from '@shared/ui'
 
 import s from './Favorites.module.css'
 
@@ -15,10 +21,8 @@ const FavoritesSkeletonGrid = () => (
   </div>
 )
 
-const FavoritesGrid = () => {
-  const movies = useFavoriteMovies()
-  const { isFavorite, toggle } = useFavorites()
-  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
+const FavoritesGrid = reatomComponent(() => {
+  const movies = favoriteMovies.data()
 
   if (movies.length === 0) {
     return (
@@ -38,29 +42,27 @@ const FavoritesGrid = () => {
           key={movie.id}
           movie={movie}
           variant='grid'
-          isFavorite={isFavorite(movie.id)}
-          onToggleFavorite={toggle}
-          inWatchlist={isInWatchlist(movie.id)}
-          onToggleWatchlist={toggleWatchlist}
+          isFavorite={favoriteIds().has(movie.id)}
+          onToggleFavorite={wrap(toggleFavorite)}
+          inWatchlist={watchlistIds().has(movie.id)}
+          onToggleWatchlist={wrap(watchlistIds.toggle)}
         />
       ))}
     </div>
   )
-}
+}, 'FavoritesGrid')
 
 // Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
 // единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6
 // плана docs/plans/20260827-mobile-first-adaptive-layout.md), которая оборачивает роут
-// `/favorites` (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
+// `/favorites` (см. `src/app/routes.tsx`) и рендерит Header/MobileHeader+BottomNav снаружи.
 // Favorites больше не вызывает useViewport и не решает, какой chrome показать.
-export const Favorites = () => {
-  const { ids } = useFavorites()
-
+export const Favorites = reatomComponent(() => {
   return (
     <div className={s.page}>
       <main className={s.main}>
         <h1 className={s.heading}>Favorites</h1>
-        {ids.length === 0 ? (
+        {favoriteIds().size === 0 ? (
           <div className={s.stateWrap}>
             <EmptyState
               title='No favorites yet'
@@ -68,14 +70,16 @@ export const Favorites = () => {
             />
           </div>
         ) : (
-          <AsyncBoundary
+          <AsyncContent
+            pending={favoriteMovies.status().isFirstPending}
+            error={favoriteMovies.error()}
+            onRetry={wrap(favoriteMovies.retry)}
             fallback={<FavoritesSkeletonGrid />}
-            onRetry={() => getMoviesByIds.invalidate(ids)}
           >
             <FavoritesGrid />
-          </AsyncBoundary>
+          </AsyncContent>
         )}
       </main>
     </div>
   )
-}
+}, 'Favorites')

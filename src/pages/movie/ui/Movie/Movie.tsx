@@ -1,6 +1,9 @@
 import type { MovieDetail, MovieImage } from '@entities/movie'
-import { useWatched } from '@features/watched'
-import { useWatchlist } from '@features/watchlist'
+import { favoriteIds, toggleFavorite } from '@features/favorites'
+import { watchedIds } from '@features/watched'
+import { watchlistIds } from '@features/watchlist'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
 import { useState } from 'react'
 
 import { MovieHero } from '../MovieHero'
@@ -27,14 +30,9 @@ type MovieProps = {
 // за контент страницы. Раскладка/размеры меняются через CSS (Movie.module.css, MovieHero.module.css,
 // MovieTabsNav.module.css, RelatedMovies.module.css, ui/tabs/*/*.module.css — все переведены на
 // mobile-first `@media (min-width: 720px)`), JS-дерево одно и то же на обоих брейкпоинтах.
-export const Movie = ({ movie, images }: MovieProps) => {
+export const Movie = reatomComponent(({ movie, images }: MovieProps) => {
   const [tab, setTab] = useState('Overview')
-  const [liked, setLiked] = useState<LikedState>({
-    rate: false,
-    fav: false,
-  })
-  const { isWatched, toggle } = useWatched()
-  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
+  const [liked, setLiked] = useState<LikedState>({ rate: false })
   const related = movie.similarMovies.slice(0, 6)
 
   return (
@@ -43,10 +41,13 @@ export const Movie = ({ movie, images }: MovieProps) => {
         movie={movie}
         liked={liked}
         onLikedChange={setLiked}
-        watched={isWatched(movie.id)}
-        onWatchedToggle={() => toggle(movie.id)}
-        inWatchlist={isInWatchlist(movie.id)}
-        onWatchlistToggle={() => toggleWatchlist(movie.id)}
+        watched={watchedIds().has(movie.id)}
+        onWatchedToggle={wrap(() => watchedIds.toggle(movie.id))}
+        inWatchlist={watchlistIds().has(movie.id)}
+        onWatchlistToggle={wrap(() => watchlistIds.toggle(movie.id))}
+        favorite={favoriteIds().has(movie.id)}
+        // Через toggleFavorite, а не favoriteIds.toggle: иначе не уйдёт событие `favorite added`
+        onFavoriteToggle={wrap(() => toggleFavorite(movie.id))}
       />
       <MovieTabsNav tabs={TABS} activeTab={tab} onTabChange={setTab} />
       <div className={s.tabContent}>
@@ -58,4 +59,4 @@ export const Movie = ({ movie, images }: MovieProps) => {
       <RelatedMovies movies={related} movieTitle={movie.title} />
     </div>
   )
-}
+}, 'Movie')

@@ -1,14 +1,15 @@
-import { act, render, screen } from '@testing-library/react'
+import { toggleFavorite } from '@features/favorites'
+import { act, fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { MemoryRouter } from 'react-router'
 
+import { readPersisted, seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { server } from '../../../../test/setup'
 import { Favorites } from './Favorites'
 
 const FAVORITES_KEY = 'kinoshka:favorites'
-const setFavorites = (ids: number[]) =>
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids))
+const setFavorites = (ids: number[]) => seedPersisted(FAVORITES_KEY, ids)
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -53,14 +54,10 @@ const setViewportWidth = (width: number) => {
 }
 
 const renderPage = async () => {
-  let result: ReturnType<typeof render> | undefined
+  let result: ReturnType<typeof renderWithRouter> | undefined
 
   await act(async () => {
-    result = render(
-      <MemoryRouter>
-        <Favorites />
-      </MemoryRouter>,
-    )
+    result = renderWithRouter(<Favorites />)
   })
 
   return result!
@@ -100,6 +97,22 @@ describe('Favorites — непустой список избранного', () 
   })
 })
 
+describe('Favorites — добавление через модель', () => {
+  it('toggleFavorite на пустом списке заменяет EmptyState карточкой фильма', async () => {
+    mockMovie(1, { name: 'Added Later' })
+
+    await renderPage()
+    expect(screen.getByText('No favorites yet')).toBeInTheDocument()
+
+    await act(async () => {
+      toggleFavorite(1)
+    })
+
+    expect(await screen.findByText('Added Later')).toBeInTheDocument()
+    expect(screen.queryByText('No favorites yet')).not.toBeInTheDocument()
+  })
+})
+
 describe('Favorites — Watchlist на карточке', () => {
   it('клик по кнопке Add пишет id в watchlist, а карточка остаётся в избранном', async () => {
     const user = userEvent.setup()
@@ -111,8 +124,8 @@ describe('Favorites — Watchlist на карточке', () => {
       await screen.findByRole('button', { name: 'Add to watchlist' }),
     )
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
-    expect(localStorage.getItem(FAVORITES_KEY)).toBe('[1]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([1])
+    expect(readPersisted(FAVORITES_KEY)).toEqual([1])
     expect(screen.getByText('First Favorite')).toBeInTheDocument()
   })
 })
@@ -146,7 +159,7 @@ describe('Favorites — полный отказ загрузки (все id 404)
 })
 
 describe('Favorites — полный отказ загрузки (сетевая/5xx ошибка)', () => {
-  it('показывает error-фолбэк AsyncBoundary с Retry, а не EmptyState', async () => {
+  it('показывает error-фолбэк AsyncContent с Retry, а не EmptyState', async () => {
     setFavorites([500, 501])
     mockMovieError(500, 500)
     mockMovieError(501, 500)
@@ -212,5 +225,69 @@ describe('Favorites — снятие с избранного на самой с�
     expect(
       screen.getAllByRole('button', { name: 'Remove from favorites' }),
     ).toHaveLength(1)
+  })
+})
+
+describe('Favorites — Retry после полного отказа', () => {
+  it('клик Retry повторяет запрос и показывает фильмы', async () => {
+    setFavorites([1])
+    let attempts = 0
+    server.use(
+      http.get('*/v1.5/movie/1', () => {
+        attempts += 1
+        return attempts === 1
+          ? HttpResponse.json(
+              { statusCode: 500, message: 'boom', error: 'error' },
+              { status: 500 },
+            )
+          : HttpResponse.json(movieDoc(1, { name: 'Recovered Movie' }))
+      }),
+    )
+
+    await renderPage()
+
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
+    expect(attempts).toBe(1)
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
+    })
+
+    expect(await screen.findByText('Recovered Movie')).toBeInTheDocument()
+    expect(attempts).toBe(2)
+  })
+})
+
+describe('Favorites — переключение избранного на странице', () => {
+  it('не шлёт запросов за уже загруженными фильмами', async () => {
+    const user = userEvent.setup()
+    setFavorites([1, 2])
+    const requests: number[] = []
+    server.use(
+      http.get('*/v1.5/movie/:id', ({ params }) => {
+        const id = Number(params.id)
+        requests.push(id)
+        return HttpResponse.json(movieDoc(id, { name: `Favorite ${id}` }))
+      }),
+    )
+
+    await renderPage()
+    expect(await screen.findByText('Favorite 2')).toBeInTheDocument()
+    expect(requests.sort()).toEqual([1, 2])
+
+    await user.click(
+      screen.getAllByRole('button', { name: 'Remove from favorites' })[0],
+    )
+    await vi.waitFor(() =>
+      expect(screen.queryByText('Favorite 1')).not.toBeInTheDocument(),
+    )
+    expect(screen.getByText('Favorite 2')).toBeInTheDocument()
+
+    // Возврат в избранное через модель — фильм 1 берётся из кэша запроса.
+    await act(async () => {
+      toggleFavorite(1)
+    })
+    expect(await screen.findByText('Favorite 1')).toBeInTheDocument()
+    expect(requests).toHaveLength(2)
   })
 })

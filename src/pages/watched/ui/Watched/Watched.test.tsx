@@ -1,14 +1,14 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { MemoryRouter } from 'react-router'
 
+import { readPersisted, seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { server } from '../../../../test/setup'
 import { Watched } from './Watched'
 
 const WATCHED_KEY = 'kinoshka:watched'
-const setWatched = (ids: number[]) =>
-  localStorage.setItem(WATCHED_KEY, JSON.stringify(ids))
+const setWatched = (ids: number[]) => seedPersisted(WATCHED_KEY, ids)
 
 const movieDoc = (id: number, overrides: Record<string, unknown> = {}) => ({
   id,
@@ -45,11 +45,7 @@ const mockMovieError = (id: number, status: number) => {
 
 const renderPage = async () => {
   await act(async () => {
-    render(
-      <MemoryRouter>
-        <Watched />
-      </MemoryRouter>,
-    )
+    renderWithRouter(<Watched />)
   })
 }
 
@@ -103,7 +99,7 @@ describe('Watched — непустой список', () => {
       await screen.findByRole('button', { name: 'Add to favorites' }),
     )
 
-    expect(localStorage.getItem('kinoshka:favorites')).toBe('[1]')
+    expect(readPersisted('kinoshka:favorites')).toEqual([1])
     expect(screen.getByText('Watched Movie')).toBeInTheDocument()
   })
 })
@@ -119,8 +115,8 @@ describe('Watched — Watchlist на карточке', () => {
       await screen.findByRole('button', { name: 'Add to watchlist' }),
     )
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
-    expect(localStorage.getItem(WATCHED_KEY)).toBe('[1]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([1])
+    expect(readPersisted(WATCHED_KEY)).toEqual([1])
     expect(screen.getByText('Watched Movie')).toBeInTheDocument()
   })
 })
@@ -152,7 +148,7 @@ describe('Watched — полный отказ загрузки', () => {
     expect(screen.queryByText('No watched titles yet')).not.toBeInTheDocument()
   })
 
-  it('5xx → error-фолбэк AsyncBoundary с Retry, а не EmptyState', async () => {
+  it('5xx → error-фолбэк AsyncContent с Retry, а не EmptyState', async () => {
     setWatched([500, 501])
     mockMovieError(500, 500)
     mockMovieError(501, 500)
@@ -163,5 +159,35 @@ describe('Watched — полный отказ загрузки', () => {
     expect(
       screen.queryByText('Watched titles unavailable'),
     ).not.toBeInTheDocument()
+  })
+})
+
+describe('Watched — Retry после полного отказа', () => {
+  it('клик Retry повторяет запрос и показывает фильмы', async () => {
+    setWatched([1])
+    let attempts = 0
+    server.use(
+      http.get('*/v1.5/movie/1', () => {
+        attempts += 1
+        return attempts === 1
+          ? HttpResponse.json(
+              { statusCode: 500, message: 'boom', error: 'error' },
+              { status: 500 },
+            )
+          : HttpResponse.json(movieDoc(1, { name: 'Recovered Movie' }))
+      }),
+    )
+
+    await renderPage()
+
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument()
+    expect(attempts).toBe(1)
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Попробовать снова' }))
+    })
+
+    expect(await screen.findByText('Recovered Movie')).toBeInTheDocument()
+    expect(attempts).toBe(2)
   })
 })

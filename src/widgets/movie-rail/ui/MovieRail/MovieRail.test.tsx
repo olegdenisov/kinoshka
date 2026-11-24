@@ -1,8 +1,9 @@
 import type { Movie, PopularMovie } from '@entities/movie'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
 
+import { readPersisted, seedPersisted } from '../../../../test/persist'
+import { renderWithRouter } from '../../../../test/router'
 import { MovieRail } from './MovieRail'
 
 const makeMovie = (id: number): Movie => ({
@@ -24,15 +25,8 @@ const makePopularMovie = (id: number, position: number): PopularMovie => ({
 })
 
 const renderRail = (items: (Movie | PopularMovie)[], href?: string) =>
-  render(
-    <MemoryRouter>
-      <MovieRail
-        title='Popular'
-        subtitle='Trending'
-        items={items}
-        href={href}
-      />
-    </MemoryRouter>,
+  renderWithRouter(
+    <MovieRail title='Popular' subtitle='Trending' items={items} href={href} />,
   )
 
 beforeEach(() => localStorage.clear())
@@ -80,7 +74,7 @@ describe('MovieRail — избранное', () => {
 
     await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
 
-    expect(localStorage.getItem('kinoshka:favorites')).toBe('[1]')
+    expect(readPersisted('kinoshka:favorites')).toEqual([1])
   })
 
   it('повторный клик по уже избранной карточке снимает избранное (toggle туда-обратно)', async () => {
@@ -88,13 +82,13 @@ describe('MovieRail — избранное', () => {
     renderRail([makeMovie(1)])
 
     await user.click(screen.getByRole('button', { name: 'Add to favorites' }))
-    expect(localStorage.getItem('kinoshka:favorites')).toBe('[1]')
+    expect(readPersisted('kinoshka:favorites')).toEqual([1])
 
     await user.click(
       screen.getByRole('button', { name: 'Remove from favorites' }),
     )
 
-    expect(localStorage.getItem('kinoshka:favorites')).toBe('[]')
+    expect(readPersisted('kinoshka:favorites')).toEqual([])
   })
 })
 
@@ -105,8 +99,8 @@ describe('MovieRail — Watchlist', () => {
 
     await user.click(screen.getByRole('button', { name: 'Add to watchlist' }))
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[1]')
-    expect(localStorage.getItem('kinoshka:favorites')).toBeNull()
+    expect(readPersisted('kinoshka:watchlist')).toEqual([1])
+    expect(readPersisted('kinoshka:favorites')).toBeNull()
   })
 
   it('повторный клик снимает фильм из watchlist (toggle туда-обратно)', async () => {
@@ -118,11 +112,11 @@ describe('MovieRail — Watchlist', () => {
       screen.getByRole('button', { name: 'Remove from watchlist' }),
     )
 
-    expect(localStorage.getItem('kinoshka:watchlist')).toBe('[]')
+    expect(readPersisted('kinoshka:watchlist')).toEqual([])
   })
 
   it('фильм уже в watchlist — кнопка сразу в состоянии «Remove from watchlist»', () => {
-    localStorage.setItem('kinoshka:watchlist', '[1]')
+    seedPersisted('kinoshka:watchlist', [1])
     renderRail([makeMovie(1), makeMovie(2)])
 
     expect(

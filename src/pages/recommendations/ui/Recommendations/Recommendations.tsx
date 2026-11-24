@@ -1,12 +1,14 @@
 import { Card } from '@entities/movie'
-import { useFavorites } from '@features/favorites'
-import { useWatchlist } from '@features/watchlist'
-import { AsyncBoundary, EmptyState, Skeleton } from '@shared/ui'
+import { favoriteIds } from '@features/favorites'
+import { watchlistIds } from '@features/watchlist'
+import { wrap } from '@reatom/core'
+import { reatomComponent } from '@reatom/react'
+import { AsyncContent, EmptyState, Skeleton } from '@shared/ui'
 
 import {
-  invalidateRecommendations,
-  useRecommendedMovies,
-} from '../../model/useRecommendedMovies'
+  recommendedMovies,
+  retryRecommendations,
+} from '../../model/recommendations'
 
 import s from './Recommendations.module.css'
 
@@ -20,15 +22,11 @@ const RecommendationsSkeletonGrid = () => (
   </div>
 )
 
-// Без isFavorite/onToggleFavorite — намеренно (см. Technical Details плана
-// docs/plans/20260825-recommendations-rule-based.md): передача toggle сюда меняла бы
-// `ids` в useFavorites() при каждом клике по сердечку → новый кэш-ключ getMoviesByIds(ids)
-// → весь грид уходит в Suspense заново → новый computeRecommendationQuery → новый запрос
-// getMoviesPage — полный skeleton-flash и пересчёт подборки на каждый клик.
-// Watchlist сюда подключён спокойно: подборка от него не зависит, кэш-ключ не меняется.
-const RecommendationsGrid = () => {
-  const movies = useRecommendedMovies()
-  const { isInWatchlist, toggle: toggleWatchlist } = useWatchlist()
+// Без isFavorite/onToggleFavorite — намеренно: клик по сердечку менял бы избранное — вход
+// правила (recommendationQuery), и подборка пересчитывалась бы новым запросом на каждый клик.
+// Watchlist сюда подключён спокойно: подборка от него не зависит.
+const RecommendationsGrid = reatomComponent(() => {
+  const movies = recommendedMovies.data()
 
   if (movies === null) {
     return (
@@ -59,27 +57,25 @@ const RecommendationsGrid = () => {
           key={movie.id}
           movie={movie}
           variant='grid'
-          inWatchlist={isInWatchlist(movie.id)}
-          onToggleWatchlist={toggleWatchlist}
+          inWatchlist={watchlistIds().has(movie.id)}
+          onToggleWatchlist={wrap(watchlistIds.toggle)}
         />
       ))}
     </div>
   )
-}
+}, 'RecommendationsGrid')
 
 // Навигационный chrome (Header vs MobileHeader+BottomNav) больше не выбирается здесь —
 // единая точка композиции chrome теперь `AppLayout` (`src/app/layouts/AppLayout.tsx`, Task 6
 // плана docs/plans/20260827-mobile-first-adaptive-layout.md), которая оборачивает роут
-// `/recommendations` (см. `src/app/router.tsx`) и рендерит Header/MobileHeader+BottomNav
+// `/recommendations` (см. `src/app/routes.tsx`) и рендерит Header/MobileHeader+BottomNav
 // снаружи. Recommendations больше не вызывает useViewport и не решает, какой chrome показать.
-export const Recommendations = () => {
-  const { ids } = useFavorites()
-
+export const Recommendations = reatomComponent(() => {
   return (
     <div className={s.page}>
       <main className={s.main}>
         <h1 className={s.heading}>Recommended for you</h1>
-        {ids.length === 0 ? (
+        {favoriteIds().size === 0 ? (
           <div className={s.stateWrap}>
             <EmptyState
               title='No favorites yet'
@@ -87,14 +83,16 @@ export const Recommendations = () => {
             />
           </div>
         ) : (
-          <AsyncBoundary
+          <AsyncContent
+            pending={recommendedMovies.status().isFirstPending}
+            error={recommendedMovies.error()}
+            onRetry={wrap(retryRecommendations)}
             fallback={<RecommendationsSkeletonGrid />}
-            onRetry={() => invalidateRecommendations(ids)}
           >
             <RecommendationsGrid />
-          </AsyncBoundary>
+          </AsyncContent>
         )}
       </main>
     </div>
   )
-}
+}, 'Recommendations')

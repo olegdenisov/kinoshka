@@ -41,7 +41,7 @@
       ;(function () {
         try {
           var raw = localStorage.getItem('kinoshka:theme')
-          var theme = raw === null ? 'system' : JSON.parse(raw)
+          var theme = raw === null ? 'system' : JSON.parse(raw).data
           var resolved
           if (theme === 'light' || theme === 'dark') {
             resolved = theme

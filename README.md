@@ -11,14 +11,14 @@
 ## Стек
 
 - **React 19** + **TypeScript 7** + **Vite 8**
-- **React Router 7** — клиентская маршрутизация
+- **Reatom v1001** (`@reatom/core`, `@reatom/react`) — client state, server state, URL-состояние и роутинг (`reatomRoute`); React Router удалён
 - **React Compiler** — автоматическая мемоизация (`babel-plugin-react-compiler`); ручные `useMemo` / `useCallback` / `memo` не нужны
 - **Vitest** + **Testing Library** + **MSW** — юнит и интеграционные тесты, мокирование API-запросов
 - **Playwright** + **axe-core** — E2E-тесты в реальном браузере против production preview-сборки (`vite preview`) и реального API, с a11y-проверкой (`AxeBuilder`) в каждом сценарии; отдельный mobile-viewport project (`devices['iPhone 13']`) на `/`, `/search`, `/movie/:id`
 - **Zod** — валидация данных (localStorage, API-границы)
 - **oxlint** — Rust-линтер (TS/React/jsx-a11y правила)
 - **husky** + **lint-staged** + **commitlint** — pre-commit линтинг и conventional commits (`pnpm commit`)
-- **Sentry** (`@sentry/react` + `@sentry/vite-plugin`) — error tracking и Performance-трейсинг (`tracesSampleRate=0.2`, параметризованные роуты типа `/movie/:id` группируются в один transaction через `reactRouterBrowserTracingIntegration`/`wrapCreateBrowserRouter`) в prod-сборке, аплоад source maps на этапе билда; alert/dashboard-провижининг as code (`make sentry-telemetry`) поверх `sentry` CLI
+- **Sentry** (`@sentry/react` + `@sentry/vite-plugin`) — error tracking и Performance-трейсинг (`tracesSampleRate=0.2`, спаны pageload/navigation создаются вручную в `src/app/model/routeTracing.ts` с именем по шаблону роута, так что `/movie/:id` — один transaction) в prod-сборке, аплоад source maps на этапе билда; alert/dashboard-провижининг as code (`make sentry-telemetry`) поверх `sentry` CLI
 - **Plausible** — privacy-friendly event tracking (page view, search submitted, filter changed, favorite added) в prod-сборке; Core Web Vitals (LCP/INP/CLS) теперь собираются через Sentry Performance (см. выше), а не через отдельный `web-vitals`-пайплайн
 
 ## Команды
@@ -91,11 +91,49 @@ import { Header } from '@widgets/header/ui/Header' // ✗
 
 ## Соглашения
 
-- **Типы:** использовать `type`, не `interface`
+- **Типы:** использовать `type`, не `interface` (исключения: `Window` в `src/vite-env.d.ts` и `RouteChild` в `src/app/reatom.d.ts` — declaration merging)
 - **TypeScript:** включены `noUnusedLocals`, `noUnusedParameters`, `erasableSyntaxOnly` — `enum` и `namespace` запрещены
 - **Стили:** CSS Modules (`ComponentName.module.css`), hover-состояния через `:hover`, не через `useState`
-- **Иконки:** SVG-спрайт `public/icons.svg`; ссылка через `<use href="/icons.svg#<id>" />`
+- **Иконки:** React-компоненты из `@shared/ui`; `public/icons.svg` — спрайт только с соцсетями
 - **Шрифты:** Instrument Serif, Instrument Sans, JetBrains Mono (Google Fonts, загружаются в `index.html`) — новые шрифты не добавлять
+
+## Ветка `reatom`: миграция на Reatom v1001
+
+Сравнительная ветка фазы 3 роадмапа (пункт 3.3), в `main` не мержится. Реализация — на **Reatom v1001** (`@reatom/core@1001.3.0`), а не на v3, как написан пункт роадмапа. Охват «полный стек»:
+
+| Слой          | `main`                                       | Ветка `reatom`                                                                                       |
+| ------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| client state  | `createStorageSlot` + `useSyncExternalStore` | `atom` / `reatomSet` / `reatomEnum` + `withLocalStorage(persistOptions(...))`                        |
+| server state  | `createCachedFetcher` + `use()` + Suspense   | `action + withAsync + withQueryCache`, ресурсы — `computed(async) + withAsyncData({ status: true })` |
+| URL-состояние | `useSearchParams`                            | `computed` поверх `urlAtom`, каждая мутация — один `urlAtom.set(fn, true)` в action                  |
+| роутинг       | React Router 7                               | `reatomRoute` (layout-роут, `render`/`outlet()`, loaders для `/movie/:id` и `/person/:id`)           |
+
+### Паттерны
+
+- Компонент, читающий атомы, — `reatomComponent(..., 'Name')`; обработчики — `wrap(...)`. Обычный компонент с прямым вызовом атома ломает React Compiler: результат кэшируется один раз и устаревает.
+- Persist — штатный `withLocalStorage`; ключ, TTL «навсегда» и Zod-валидацию задаёт хелпер `persistOptions` (`src/shared/lib/persist`).
+- Кэш запросов — только на `action` через `withQueryCache` (5 минут, под квоту API). Данные страницы — по `status()` и презентационному `AsyncContent`; Suspense остался только для ленивых чанков страниц.
+- Все роуты — в `src/app/routes.tsx`; нижние слои знают только строители путей `paths` (`@shared/config`) и обычные `<a href>`.
+- Тесты изолируются одним `afterEach` в `src/test/setup.ts`; URL в компонентных тестах задаёт `renderWithRouter`.
+
+### Плюсы и минусы
+
+- Плюс: гранулярные подписки, один механизм для state/async/URL/роутов, нативные persist, кросс-таб синхронизация и fallback на память без своего кода; бандл `vendor` меньше на ~9 KB.
+- Минус: больше неочевидных ловушек (React Compiler, TTL persist, `withCache` на `computed`, `withSearchParams`), документация местами расходится с `1001.3.0`; требует дисциплины с `reatomComponent`; нет из коробки восстановления скролла и интеграции с Sentry — написаны вручную.
+
+### Дельта бандла (gzip, с `VITE_SENTRY_DSN`, относительно `main`)
+
+- entry: ~3.5 KB -> ~4.5 KB (+~1 KB)
+- vendor: ~160.6 KB -> ~151.6 KB (-~9 KB)
+- shared: ~19.7 KB -> ~20.4 KB (+~0.7 KB)
+
+### Принятые изменения поведения
+
+- Нет сигнала о сбое записи в `localStorage`: Reatom проглатывает ошибку `setItem`, состояние живёт в памяти. `/profile` не показывает «не удалось сохранить», событие `favorite added` не зависит от успеха записи, отчёта о сбое хранилища в Sentry нет.
+- Нет 20-секундного кэша ошибок: ресурс без зависимостей после ошибки не перезапрашивается до `retry()`, loader при повторном заходе на упавший роут шлёт один новый запрос.
+- Словари жанров и стран: пока идёт перезапрос устаревшего словаря, показывается статический fallback; 60-секундный кулдаун после ошибки заменён на «без повтора до перезагрузки страницы».
+- Неизвестный путь показывает страницу `NotFound` (на `main` catch-all роута нет).
+- Старые «сырые» значения `localStorage` читаются как отсутствующие и дают дефолт (формат с `main` несовместим).
 
 ## Sentry MCP
 

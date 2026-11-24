@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test'
 
-// Стабильный селектор карточки фильма — по href-паттерну react-router
+// Стабильный селектор карточки фильма — по href-паттерну
 // (/movie/:id), не голый getByRole('link').first(), который резолвится в
 // логотип шапки. См. Technical Details в плане
 // docs/plans/20260912-e2e-playwright-axe.md.

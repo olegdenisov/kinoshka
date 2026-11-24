@@ -1,14 +1,6 @@
 import * as Sentry from '@sentry/react'
-import { PROFILE_ARIA_LABEL_PREFIX, setStorageErrorReporter } from '@shared/lib'
-import type { StorageErrorReporter } from '@shared/lib'
+import { PROFILE_ARIA_LABEL_PREFIX } from '@shared/lib'
 import type { ErrorInfo } from 'react'
-import { useEffect } from 'react'
-import {
-  createRoutesFromChildren,
-  matchRoutes,
-  useLocation,
-  useNavigationType,
-} from 'react-router'
 
 import { SENTRY_TRACES_SAMPLE_RATE } from '../../sentry.config'
 
@@ -144,27 +136,6 @@ export const scrubProfileNameSpan: BeforeSendSpan = span => {
   return { ...span, description, data }
 }
 
-// Репортер ошибок localStorage (createStorageSlot, @shared/lib) — раньше эти исключения
-// (QuotaExceededError/SecurityError из тем/избранного/профиля в приватном режиме) долетали до
-// Sentry сами через globalHandlersIntegration; try/catch вокруг localStorage их проглотил, так
-// что без явной переотправки сюда отказ хранилища стал бы полностью невидимым в проде. captureException,
-// не breadcrumb: это самостоятельное событие уровня warning, а не контекст для будущей ошибки —
-// само хранилище содержимого (значение, которое не удалось записать) сюда не передаётся, только
-// ключ/операция/исключение (см. StorageErrorContext, @shared/lib/storage/storage.ts).
-const reportStorageErrorToSentry: StorageErrorReporter = ({
-  key,
-  operation,
-  error,
-}) => {
-  Sentry.captureException(
-    error instanceof Error ? error : new Error(String(error)),
-    {
-      level: 'warning',
-      tags: { storageKey: key, storageOperation: operation },
-    },
-  )
-}
-
 // Перехватывается раньше GlobalErrorBoundary — требует явного репортинга. captureReactException —
 // тот же путь, что у Sentry.ErrorBoundary: componentStack прикрепляется и в contexts.react, и как
 // `cause` ошибки (лучше группировка), mechanism выставляет сам SDK — не собираем это вручную.
@@ -183,9 +154,9 @@ export const captureChunkLoadError = (error: unknown): void => {
 // VITE_SENTRY_DSN через vi.stubEnv. Изначально (план 20260905-sentry-error-tracking.md) скоуп
 // был только error tracking, без integrations/tracesSampleRate — трейсинг (2.5.2) сознательно
 // не включался из-за параметризованного роута /movie/:id (риск одного transaction на фильм).
-// Task 2b (план 20260915-telemetry-dashboard-sentry-alerts.md) закрывает этот блокер через
-// reactRouterBrowserTracingIntegration + wrapCreateBrowserRouter (см. router.tsx) — они вместе
-// группируют параметризованные роуты в один transaction name.
+// Task 2b (план 20260915-telemetry-dashboard-sentry-alerts.md) закрывал этот блокер через
+// интеграцию React Router; после перехода на reatomRoute группировку по шаблону роута
+// восстанавливает initRouteTracing (src/app/model/routeTracing.ts).
 //
 // tracePropagationTargets НЕ передаётся: дефолт SDK матчит только same-origin/localhost, а все
 // вызовы API идут на абсолютный кросс-origin https://api.poiskkino.dev — заголовки sentry-trace/
@@ -209,17 +180,15 @@ export const initSentry = (): void => {
     // callback, обёрнутый через withStreamedSpan, с другой сигнатурой StreamedSpanJSON) —
     // скраб придётся переносить/оборачивать заново, а не просто оставлять как есть.
     beforeSendSpan: scrubProfileNameSpan,
+    // Роутер — reatomRoute, интеграции под него у Sentry нет. Авто-спаны pageload/navigation
+    // выключены: их создаёт initRouteTracing (src/app/model/routeTracing.ts) с именем по
+    // шаблону роута (`/movie/:id`) — почему не beforeStartSpan, см. там.
     integrations: [
-      Sentry.reactRouterBrowserTracingIntegration({
-        useEffect,
-        useLocation,
-        useNavigationType,
-        createRoutesFromChildren,
-        matchRoutes,
+      Sentry.browserTracingIntegration({
+        instrumentPageLoad: false,
+        instrumentNavigation: false,
       }),
     ],
     tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
   })
-
-  setStorageErrorReporter(reportStorageErrorToSentry)
 }

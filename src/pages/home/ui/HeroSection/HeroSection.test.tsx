@@ -1,30 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { useEffect } from 'react'
-import { MemoryRouter, useLocation } from 'react-router'
+import { fireEvent, screen } from '@testing-library/react'
 
+import { renderWithRouter } from '../../../../test/router'
 import { HeroSection } from './HeroSection'
 
-/** Читает текущие pathname/search из роутера — способ проверить, что навигация реально произошла (не только что search пуст). */
-let lastPathname = '/'
-let lastSearch = ''
-const LocationProbe = () => {
-  const { pathname, search } = useLocation()
-  useEffect(() => {
-    lastPathname = pathname
-    lastSearch = search
-  }, [pathname, search])
-  return null
-}
+let getUrl = () => ''
 
 const renderHero = () => {
-  lastPathname = '/'
-  lastSearch = ''
-  return render(
-    <MemoryRouter initialEntries={['/']}>
-      <HeroSection />
-      <LocationProbe />
-    </MemoryRouter>,
-  )
+  getUrl = renderWithRouter(<HeroSection />, { url: '/' }).getUrl
 }
 
 const getInput = () =>
@@ -37,8 +19,7 @@ describe('HeroSection', () => {
     fireEvent.change(getInput(), { target: { value: '  dune  ' } })
     fireEvent.keyDown(getInput(), { key: 'Enter' })
 
-    expect(lastPathname).toBe('/search')
-    expect(lastSearch).toBe('?q=dune')
+    expect(getUrl()).toBe('/search?q=dune')
   })
 
   it('запрос ровно QUERY_MIN_LENGTH (2 символа) + Enter — граница: q попадает в URL', () => {
@@ -47,8 +28,7 @@ describe('HeroSection', () => {
     fireEvent.change(getInput(), { target: { value: 'du' } })
     fireEvent.keyDown(getInput(), { key: 'Enter' })
 
-    expect(lastPathname).toBe('/search')
-    expect(lastSearch).toBe('?q=du')
+    expect(getUrl()).toBe('/search?q=du')
   })
 
   it('чип типа при пустом запросе + клик "Search" → /search?type=movie', () => {
@@ -57,8 +37,7 @@ describe('HeroSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Movies' }))
     fireEvent.click(screen.getByRole('button', { name: 'Search' }))
 
-    expect(lastPathname).toBe('/search')
-    expect(lastSearch).toBe('?type=movie')
+    expect(getUrl()).toBe('/search?type=movie')
   })
 
   it('запрос + чип типа одновременно → /search?type=<type>&q=<query>', () => {
@@ -68,8 +47,7 @@ describe('HeroSection', () => {
     fireEvent.change(getInput(), { target: { value: 'dune' } })
     fireEvent.click(screen.getByRole('button', { name: 'Search' }))
 
-    expect(lastPathname).toBe('/search')
-    expect(lastSearch).toBe('?type=series&q=dune')
+    expect(getUrl()).toBe('/search?type=series&q=dune')
   })
 
   it('запрос короче QUERY_MIN_LENGTH (1 символ) + Enter → q не попадает в URL, но навигация на /search происходит', () => {
@@ -78,8 +56,7 @@ describe('HeroSection', () => {
     fireEvent.change(getInput(), { target: { value: 'd' } })
     fireEvent.keyDown(getInput(), { key: 'Enter' })
 
-    expect(lastPathname).toBe('/search')
-    expect(lastSearch).toBe('')
+    expect(getUrl()).toBe('/search')
   })
 
   it('дефолт (Everything, пустой запрос) + клик "Search" → /search без query-строки, но навигация происходит', () => {
@@ -87,8 +64,7 @@ describe('HeroSection', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Search' }))
 
-    expect(lastPathname).toBe('/search')
-    expect(lastSearch).toBe('')
+    expect(getUrl()).toBe('/search')
   })
 
   it('клик по чипу подсвечивает его (chipActive) и снимает подсветку с остальных', () => {
@@ -113,7 +89,6 @@ describe('HeroSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Everything' }))
     fireEvent.click(screen.getByRole('button', { name: 'Search' }))
 
-    expect(lastPathname).toBe('/search')
-    expect(lastSearch).toBe('')
+    expect(getUrl()).toBe('/search')
   })
 })

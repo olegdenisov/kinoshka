@@ -15,8 +15,7 @@ const dispatchPreloadError = (payload: unknown = new Error('chunk 404')) => {
 
 // window.location.reload недоступен для прямого мока в jsdom (window.location — read-only
 // объект) — переопределяем через Object.defineProperty на самом window.location, как это принято
-// для jsdom-стабов навигации (аналог vi.stubGlobal('scrollTo', ...) в usePageSync.test.tsx, но
-// scrollTo можно переопределить напрямую, а location.reload — нет).
+// для jsdom-стабов навигации (scrollTo можно переопределить напрямую, а location.reload — нет).
 const reloadSpy = vi.fn()
 
 // Один тест иногда вызывает setup() несколько раз (эмулируя несколько «загрузок страницы» подряд)

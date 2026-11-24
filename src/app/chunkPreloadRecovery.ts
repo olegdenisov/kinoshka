@@ -28,8 +28,7 @@ import { captureChunkLoadError } from './sentry'
 //  7. sessionStorage не пишется → без reload (без метки guard не сработает — лучше ошибка, чем цикл);
 //  8. dev → обработчик ничего не делает;
 //  9. повторная регистрация → один слушатель.
-// sessionStorage напрямую, а не createStorageSlot (тот только для localStorage) — метка нужна одной
-// вкладке и одной сессии.
+// sessionStorage напрямую, а не localStorage — метка нужна одной вкладке и одной сессии.
 const RELOAD_GUARD_KEY = 'kinoshka:chunk-reload-at'
 const RELOAD_GUARD_MS = 10_000
 const RECOVERY_DOC_WINDOW_MS = 120_000

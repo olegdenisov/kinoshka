@@ -1,7 +1,7 @@
 import type { CastMember } from '@entities/movie'
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router'
+import { screen } from '@testing-library/react'
 
+import { renderWithRouter } from '../../../../../test/router'
 import { CastTab } from './CastTab'
 
 const makeCast = (overrides: Partial<CastMember> = {}): CastMember => ({
@@ -13,11 +13,7 @@ const makeCast = (overrides: Partial<CastMember> = {}): CastMember => ({
 })
 
 const renderCastTab = (cast: CastMember[]) =>
-  render(
-    <MemoryRouter>
-      <CastTab cast={cast} />
-    </MemoryRouter>,
-  )
+  renderWithRouter(<CastTab cast={cast} />)
 
 describe('CastTab — ссылки на страницу персоны', () => {
   it('рендерит карточку актёра как ссылку на /person/:id с фото, загруженным асинхронно', () => {
